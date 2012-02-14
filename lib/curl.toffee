@@ -1,0 +1,95 @@
+try
+  {Curl} = require __dirname + '/../build/Release/node-curl'
+catch e
+  {Curl} = require __dirname + '/../build/default/node-curl'
+
+Curl::setopt = (ooption, value) ->
+  option = ooption.toUpperCase()
+  if (option_id = Curl.integer_options[option])?
+    @setopt_int_ option_id, value >> 0
+  else if (option_id = Curl.string_options[option])?
+    @setopt_str_ option_id, value.toString()
+  else
+    throw new Error("unsupported option #{option}")
+
+Curl::getinfo = (oinfo) ->
+  info = oinfo.toUpperCase()
+  if (info_id = Curl.integer_infos[info])?
+    @getinfo_int_(info_id)
+  else if (info_id = Curl.string_infos[info])?
+    @getinfo_str_(info_id)
+  else if (info_id = Curl.double_infos[info])?
+    @getinfo_double_(info_id)
+  else
+    throw new Error("unsupproted info #{oinfo}")
+
+Curl::perform = ->
+  @perform_()
+  Curl.process()
+
+Curl.process = ->
+  if Curl.in_process
+    return
+  do once = ->
+    num = Curl.process_()
+    if num > 0
+      Curl.in_process = true
+      setTimeout once, 80
+    else
+      Curl.in_process = false
+
+# url, [options], cb
+curl_id = 0
+curl = (args...) ->
+  cb = args.pop()
+  [url, options] = args
+  options ?= {}
+
+  c = new Curl()
+  c.id = ++curl_id
+  c.setopt 'FOLLOWLOCATION', 1
+  c.setopt 'ACCEPT_ENCODING', 'gzip'
+  chunks = []
+  length = 0
+  res = {}
+
+  for own k, v of options
+    c.setopt k, v
+
+  c.on_write = (chunk) ->
+    chunks.push chunk
+    length += chunk.length
+    console.info "on_write #{c.id} #{chunk.length}"
+
+  c.on_end = ->
+    data = new Buffer(length)
+    position = 0
+    for chunk in chunks
+      chunk.copy data, position
+      position += chunk.length
+    # Strange Issue
+    # use data.toString() will cause parallel http request terminated? eg yahoo.com
+    st = Date.now()
+    i = 0
+    while Date.now() - st < 500
+      ++i
+
+
+    res.body = data #.toString()
+    res.status = res.code = c.getinfo('RESPONSE_CODE')
+    res.info = (info)->
+      c.getinfo(info)
+    # 当curl返回过快，且cb循环调用回导致堆栈溢出
+    # process.nextTick!
+    console.info "id: #{c.id}"
+    cb null, res
+
+  c.on_error = (err)->
+    process.nextTick!
+    cb err, null
+
+  c.setopt('URL', url)
+  c.perform()
+
+curl.Curl = Curl
+module.exports = curl

@@ -1,0 +1,7 @@
+#include "node-curl.h"
+
+extern "C"
+void init(v8::Handle<v8::Object> target)
+{
+	NodeCurl::Initialize(target);
+}
