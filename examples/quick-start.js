@@ -14,7 +14,8 @@ curl(url, options, function(err, res) {
   res.close();
 });
 
-curl('www.google.com', {VERBOSE: 1, RAW: 1}, function(err, res) {
+curl('https://www.google.com', {VERBOSE: 1, RAW: 1}, function(err, res) {
+  console.info("\x1b[33meffetcive url: " + res.info('EFFECTIVE_URL') + "\x1b[0m");
   console.info(res);
   res.close();
 });

@@ -14,8 +14,6 @@
 #define NODE_CURL_OPTION(name) NODE_CURL_OPTION_NX(name , CURLOPT_##name)
 #define NODE_CURL_EXPORT(name) export_curl_options(t, #name, name, sizeof(name) / sizeof(CurlOption));
 
-
-
 class NodeCurl
 {
 	struct CurlOption {
@@ -37,6 +35,7 @@ class NodeCurl
 	: in_curlm(false)
 	{
 		++count;
+		// I know 2*4096 is magical world, but I have no idea the real memory curl will occupied
 		v8::V8::AdjustAmountOfExternalAllocatedMemory(2*4096);
 		object->SetPointerInInternalField(0, this);
 		handle = v8::Persistent<v8::Object>::New(object);
@@ -329,6 +328,8 @@ class NodeCurl
 				if (msg->msg == CURLMSG_DONE)
 				{
 					NodeCurl * curl = curls[msg->easy_handle];
+					// ensure curl still exists, 
+					// gc will delete the curl if there is no reference.
 					if (msg->data.result == CURLE_OK)
 						curl->on_end(msg);
 					else
@@ -385,20 +386,20 @@ class NodeCurl
 		t->InstanceTemplate()->SetInternalFieldCount(1);
 
 		// Set prototype methods
-		NODE_SET_PROTOTYPE_METHOD(t, "perform_", perform);
-		NODE_SET_PROTOTYPE_METHOD(t, "setopt_int_", setopt_int);
-		NODE_SET_PROTOTYPE_METHOD(t, "setopt_str_", setopt_str);
-		NODE_SET_PROTOTYPE_METHOD(t, "setopt_slist_", setopt_slist);
+		NODE_SET_PROTOTYPE_METHOD(t , "perform_"      , perform);
+		NODE_SET_PROTOTYPE_METHOD(t , "setopt_int_"   , setopt_int);
+		NODE_SET_PROTOTYPE_METHOD(t , "setopt_str_"   , setopt_str);
+		NODE_SET_PROTOTYPE_METHOD(t , "setopt_slist_" , setopt_slist);
 
-		NODE_SET_PROTOTYPE_METHOD(t, "getinfo_int_", getinfo_int);
-		NODE_SET_PROTOTYPE_METHOD(t, "getinfo_str_", getinfo_str);
-		NODE_SET_PROTOTYPE_METHOD(t, "getinfo_double_", getinfo_double);
-		NODE_SET_PROTOTYPE_METHOD(t, "getinfo_slist_", getinfo_slist);
+		NODE_SET_PROTOTYPE_METHOD(t , "getinfo_int_"    , getinfo_int);
+		NODE_SET_PROTOTYPE_METHOD(t , "getinfo_str_"    , getinfo_str);
+		NODE_SET_PROTOTYPE_METHOD(t , "getinfo_double_" , getinfo_double);
+		NODE_SET_PROTOTYPE_METHOD(t , "getinfo_slist_"  , getinfo_slist);
 
 		NODE_SET_PROTOTYPE_METHOD(t, "close", close);
 
-		NODE_SET_METHOD(t, "process_", process);
-		NODE_SET_METHOD(t, "get_count", get_count);
+		NODE_SET_METHOD(t , "process_"  , process);
+		NODE_SET_METHOD(t , "get_count" , get_count);
 
 		// Set curl constants 
 		#include "string_options.h"
