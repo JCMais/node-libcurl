@@ -3,9 +3,19 @@ try
 catch e
   {Curl} = require __dirname + '/../build/default/node-curl'
 
+Curl::setopt_user_ = (option_id, value) ->
+  @options[option_id] = value
+
 Curl::setopt = (ooption, value) ->
   option = ooption.toUpperCase()
-  if (option_id = Curl.integer_options[option])?
+
+  # slist must be at the top of condition
+  # the option exists in string_options too
+  if (option_id = Curl.user_options[option])?
+    @setopt_user_ option_id, value
+  else if (option_id = Curl.slist_options[option])?
+    @setopt_slist_ option_id, value
+  else if (option_id = Curl.integer_options[option])?
     @setopt_int_ option_id, value >> 0
   else if (option_id = Curl.string_options[option])?
     @setopt_str_ option_id, value.toString()
@@ -14,18 +24,23 @@ Curl::setopt = (ooption, value) ->
 
 Curl::getinfo = (oinfo) ->
   info = oinfo.toUpperCase()
-  if (info_id = Curl.integer_infos[info])?
+  if (info_id = Curl.slist_infos[info])?
+    @getinfo_slist_(info_id)
+  else if (info_id = Curl.integer_infos[info])?
     @getinfo_int_(info_id)
   else if (info_id = Curl.string_infos[info])?
     @getinfo_str_(info_id)
   else if (info_id = Curl.double_infos[info])?
     @getinfo_double_(info_id)
   else
-    throw new Error("unsupproted info #{oinfo}")
+    throw new Error("unsupported info #{oinfo}")
 
 Curl::perform = ->
   @perform_()
   Curl.process()
+
+Curl.user_options =
+  RAW: 'RAW'
 
 Curl.process = ->
   if Curl.in_process
@@ -40,56 +55,75 @@ Curl.process = ->
 
 # url, [options], cb
 curl_id = 0
+curls = {}
 curl = (args...) ->
   cb = args.pop()
   [url, options] = args
   options ?= {}
 
   c = new Curl()
+  c.options = {}
   c.id = ++curl_id
+  # after the scope c will not valid any more, so add to curls to keep c alive
+  curls[c.id] = c
+
   c.setopt 'FOLLOWLOCATION', 1
   c.setopt 'ACCEPT_ENCODING', 'gzip'
-  chunks = []
+  c.chunks = []
   length = 0
-  res = {}
 
   for own k, v of options
     c.setopt k, v
 
   c.on_write = (chunk) ->
-    chunks.push chunk
+    c.chunks.push chunk
     length += chunk.length
-    console.info "on_write #{c.id} #{chunk.length}"
 
   c.on_end = ->
     data = new Buffer(length)
     position = 0
-    for chunk in chunks
+    for chunk in c.chunks
       chunk.copy data, position
       position += chunk.length
-    # Strange Issue
-    # use data.toString() will cause parallel http request terminated? eg yahoo.com
-    st = Date.now()
-    i = 0
-    while Date.now() - st < 500
-      ++i
+    c.chunks = []
 
+    res = {}
+    # now the c is in res.curl, delete curl in curls
+    # if res destruct, curl will be destruct after gc
+    res.curl_ = c
+    delete curls[c.id]
 
-    res.body = data #.toString()
+    if c.options.RAW
+      res.body = data
+    else
+      res.body = data.toString() #.toString()
     res.status = res.code = c.getinfo('RESPONSE_CODE')
+
     res.info = (info)->
-      c.getinfo(info)
-    # 当curl返回过快，且cb循环调用回导致堆栈溢出
-    # process.nextTick!
-    console.info "id: #{c.id}"
+      unless @curl_?
+        throw new Error('curl is closed')
+      @curl_.getinfo(info)
+
+    res.close = ->
+      @curl_.close() if @curl_?
+      @curl_ = null
+      @body  = null
+
+    # if curl returns to fast, avoid cb recursive call
+    process.nextTick!
     cb null, res
 
   c.on_error = (err)->
+    curls[c.id].close()
+    delete curls[c.id]
     process.nextTick!
     cb err, null
 
   c.setopt('URL', url)
   c.perform()
+  c
 
 curl.Curl = Curl
+curl.get_count = ->
+  Curl.get_count()
 module.exports = curl

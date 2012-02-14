@@ -1,0 +1,22 @@
+curl = require '../index'
+fs   = require 'fs'
+util = require 'util'
+p = console.info
+
+url = 'www.google.com'
+err, res = curl! url, 
+  HTTPHEADER: 'BAR'
+  VERBOSE: 1
+  COOKIEFILE: 'node-curl-cookie.txt'
+
+p "\x1b[33m" + util.inspect(res.info('COOKIELIST')) + "\x1b[0m"
+url = 'www.yahoo.com'
+err, res = curl! url, 
+  HTTPHEADER: ['foo', 'bar']
+  VERBOSE: 1
+  COOKIEFILE: 'node-curl-cookie.txt'
+  RAW: 1
+
+p "\x1b[33m" + util.inspect(res.info('COOKIELIST')) + "\x1b[0m"
+p res.body
+fs.unlink 'node-curl-cookie.txt'
