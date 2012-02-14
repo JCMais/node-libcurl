@@ -10,13 +10,12 @@
 #include <map>
 #include <vector>
 
-#define NODE_CURL_OPTION_NX(name, value) {#name, value}
-#define NODE_CURL_OPTION(name) NODE_CURL_OPTION_NX(name , CURLOPT_##name)
 #define NODE_CURL_EXPORT(name) export_curl_options(t, #name, name, sizeof(name) / sizeof(CurlOption));
 
 class NodeCurl
 {
-	struct CurlOption {
+	struct CurlOption 
+	{
 		const char *name;
 		int   value;
 	};
@@ -31,11 +30,11 @@ class NodeCurl
 	v8::Persistent<v8::Object> handle;
 	bool  in_curlm;
 	std::vector<curl_slist*> slists;
+
 	NodeCurl(v8::Handle<v8::Object> object)
 	: in_curlm(false)
 	{
 		++count;
-		// I know 2*4096 is magical world, but I have no idea the real memory curl will occupied
 		v8::V8::AdjustAmountOfExternalAllocatedMemory(2*4096);
 		object->SetPointerInInternalField(0, this);
 		handle = v8::Persistent<v8::Object>::New(object);
