@@ -1,8 +1,6 @@
 #ifndef NODE_CURL_NOHE_CURL_H
 #define NODE_CURL_NOHE_CURL_H
 
-
-#include <unistd.h>
 #include <v8.h>
 #include <node.h>
 #include <node_buffer.h>
@@ -327,18 +325,22 @@ class NodeCurl
 				if (msg->msg == CURLMSG_DONE)
 				{
 					NodeCurl * curl = curls[msg->easy_handle];
-					// ensure curl still exists, 
-					// gc will delete the curl if there is no reference.
-					if (msg->data.result == CURLE_OK)
-						curl->on_end(msg);
-					else
-						curl->on_error(msg);
+					// copy CURLMsg
+					// on_error may delete the whole NodeCurl
+					CURLMsg msg_copy = *msg;
 					code = curl_multi_remove_handle(curlm, msg->easy_handle);
 					curl->in_curlm = false;
 					if (code != CURLM_OK)
 					{
 						return raise("curl_multi_remove_handle failed", curl_multi_strerror(code));
 					}
+
+					// ensure curl still exists, 
+					// gc will delete the curl if there is no reference.
+					if (msg_copy.data.result == CURLE_OK)
+						curl->on_end(&msg_copy);
+					else
+						curl->on_error(&msg_copy);
 				}
 			}
 		}
@@ -350,11 +352,11 @@ class NodeCurl
 	{
 		NodeCurl *curl = unwrap(args.This());
 		CURLMcode code = curl_multi_add_handle(curlm, curl->curl);
-		curl->in_curlm = true;
 		if (code != CURLM_OK)
 		{
 			return raise("curl_multi_add_handle failed", curl_multi_strerror(code));
 		}
+		curl->in_curlm = true;
 		++running_handles;
 		return args.This();
 	}
