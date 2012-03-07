@@ -285,29 +285,7 @@ class NodeCurl
 		if (running_handles > 0)
 		{
 			CURLMcode code;
-			int max_fd = FD_SETSIZE;
-			fd_set read_fds;
-			fd_set write_fds;
-			fd_set error_fds;
-			FD_ZERO(&read_fds);
-			FD_ZERO(&write_fds);
-			FD_ZERO(&error_fds);
-			// use select because of libuv didn't support sockfd well
-			code = curl_multi_fdset(curlm, &read_fds, &write_fds, &error_fds, &max_fd);
-			if (code != CURLM_OK)
-			{
-				return raise("curl_multi_fdset failed", curl_multi_strerror(code));
-			}
-			if (max_fd > 0)
-			{
-				timeval tv = {0};
-				int n = select(max_fd+1, &read_fds, &write_fds, &error_fds, &tv);
-				if (n == 0)
-				{
-					return v8::Integer::New(running_handles);
-				}
-			}
-
+			// remove select totally for timeout doesn't work properly
 			do
 			{
 				code = curl_multi_perform(curlm, &running_handles);
