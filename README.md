@@ -25,6 +25,9 @@ Quick Start
           console.info(this);
         });
 
+* run the example/test.js
+
+        node examples/test.js
 Usage
 -----
 
@@ -44,11 +47,16 @@ Usage
           info(name) - Get information of result, see 'info' section
 
 * Curl Control
+
+        members
+            debug (default: false)
+                - logging node-curl debug info
+
         methods:
-            void reset() 
+            void reset()
                 - reset curl and set options to default options
 
-            void setDefaultOptions(options, reset = true) 
+            void setDefaultOptions(options, reset = true)
                 - set default options
 
             curl create(defaultOptions)
