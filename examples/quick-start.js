@@ -1,28 +1,23 @@
-curl = require('../index');
+Curl = require('../index');
+options = {CONNECTTIMEOUT: 2};
+curl = Curl.create(options)
 url = 'www.nodejs.org';
-options = {CONNECTTIMEOUT: 2, VERBOSE: 1};
-curl(url,  options, function(err, res) {
-  console.info("\x1b[33meffetcive url: " + res.info('EFFECTIVE_URL') + "\x1b[0m");
-  console.info("body length: " + res.body.length);
-  res.close();
+curl(url,  function(err) {
+  console.info("\x1b[33meffetcive url: " + this.info('EFFECTIVE_URL') + "\x1b[0m");
+  console.info("body length: " + this.body.length);
+  this.close()
 });
 
+curl = Curl.create(options)
 url = 'www.yahoo.com'
-curl(url, options, function(err, res) {
-  console.info("\x1b[33meffetcive url: " + res.info('EFFECTIVE_URL') + "\x1b[0m");
-  console.info("body length: " + res.body.length);
-  res.close();
+curl(url, function(err) {
+  console.info("\x1b[33meffetcive url: " + this.info('EFFECTIVE_URL') + "\x1b[0m");
+  console.info("body length: " + this.body.length);
+  this.close()
 });
 
-curl('https://www.google.com', {VERBOSE: 1, RAW: 1}, function(err, res) {
-  console.info("\x1b[33meffetcive url: " + res.info('EFFECTIVE_URL') + "\x1b[0m");
-  console.info(res);
-  res.close();
+curl = Curl.create(options)
+curl('https://www.google.com', {VERBOSE: 1, RAW: 1}, function(err) {
+  console.info("\x1b[33meffetcive url: " + this.info('EFFECTIVE_URL') + "\x1b[0m");
+  this.close()
 });
-
-/*
-console.info('-----');
-console.info("status: " + res.status);
-console.info('-----');
-console.info("size download: " + res.info('SIZE_DOWNLOAD'));
-*/
