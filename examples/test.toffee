@@ -25,6 +25,7 @@ stream = fs.createReadStream(cookieFile)
 stream.pipe(process.stdout)
 stream.on 'end', ->
   p "----"
+  curl.close()
   p "deleting #{cookieFile}"
   fs.unlink! cookieFile
   p "done."

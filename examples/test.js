@@ -42,6 +42,7 @@
       return stream.on('end', function() {
         var _this = this;
         p("----");
+        curl.close();
         p("deleting " + cookieFile);
         return fs.unlink(cookieFile, function() {
           return p("done.");
