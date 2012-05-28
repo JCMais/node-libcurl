@@ -187,7 +187,7 @@ class NodeCurl
 			cur = slist;
 			while (cur)
 			{
-				array->Set(array->Length(), v8::String::New(slist->data));
+				array->Set(array->Length(), v8::String::New(cur->data));
 				cur = cur->next;
 			}
 			curl_slist_free_all(slist);

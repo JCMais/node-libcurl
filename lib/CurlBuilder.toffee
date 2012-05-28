@@ -1,0 +1,136 @@
+try
+  {Curl} = require __dirname + '/../build/Release/node-curl'
+catch e
+  {Curl} = require __dirname + '/../build/default/node-curl'
+
+class CurlBuilder
+  @curls: {}
+  @id: 0
+  @close_all: =>
+    for own id, curl of @curls
+      curl.end()
+      delete @curls[id]
+    @
+
+  @create: (defaultOptions) =>
+    curl = ->
+      curl.perform.apply curl, arguments
+
+    curl.perform = (args...) ->
+      if @running
+        throw new Error 'the cURL session is busy, use CurlBuilder.create to create another cURL Session'
+
+      if !@curl_
+        throw new Error 'the cURL is closed.'
+
+      @running = true
+      cb = args.pop()
+      [url, options] = args
+      options ?= {}
+
+      c = @curl_
+      options['URL'] = url
+      c.chunks = []
+      length = 0
+
+      @setOptions options
+
+      c.on_write = (chunk) ->
+        curl.log "receive #{chunk.length} bytes"
+        c.chunks.push chunk
+        length += chunk.length
+
+      c.on_end = ->
+        curl.log "receive succeeded."
+        curl.running = false
+        data = new Buffer(length)
+        position = 0
+        for chunk in c.chunks
+          chunk.copy data, position
+          position += chunk.length
+        c.chunks = []
+
+        if c.options.RAW
+          curl.body = data
+        else
+          curl.body = data.toString()
+        curl.status = curl.code = c.getinfo('RESPONSE_CODE')
+
+        # if curl returns to fast, avoid cb recursive call
+        process.nextTick!
+        cb.call curl, null, curl
+
+      c.on_error = (err)->
+        curl.log "receive failed: #{err.message}"
+        curl.running = false
+        process.nextTick!
+        cb.call curl, err, null
+
+      @log 'perform'
+      c.perform()
+
+
+
+    curl.setDefaultOptions = (options = {}, reset = true) ->
+      defaultOptions = options
+      if reset
+        @log 'Set default options and reset cURL'
+        @reset()
+
+    curl.log = (text) ->
+      if @debug
+        console.info "[cURL #{@id}] " + text
+    curl.setOptions = (options = {}) ->
+      for own k, v of options
+        @log "Set option '#{k}' to '#{v}'"
+        @curl_.setopt k, v
+      @
+
+    curl.setopts = (options = {}) ->
+      @setOptions options
+
+    curl.info = (info)->
+      unless @curl_?
+        throw new Error('curl is closed')
+      @curl_.getinfo(info)
+
+    curl.end = ->
+      @curl_.close() if @curl_?
+      @curl_ = null
+      @body  = null
+      delete CurlBuilder.curls[@id]
+      @log "closed."
+
+    curl.close = ->
+      @end()
+
+    curl.open = ->
+      unless curl.id?
+        curl.id = ++CurlBuilder.id
+      @log "opening."
+      @curl_ = new Curl()
+      @curl_.options = {}
+      @setOptions defaultOptions
+      CurlBuilder.curls[curl.id] = curl
+      @log "opened."
+
+    curl.reset = ->
+      @log 'reset'
+      if @curl_
+        @end()
+      @open()
+
+    curl.Curl = Curl
+    curl.Builder = CurlBuilder
+    curl.create = (defaultOptions) ->
+      CurlBuilder.create(defaultOptions)
+    curl.get_count = ->
+      Curl.get_count()
+
+    curl.open()
+    curl
+
+process.on 'exit', ->
+  CurlBuilder.close_all()
+
+module.exports = CurlBuilder

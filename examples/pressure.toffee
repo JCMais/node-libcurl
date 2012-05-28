@@ -1,16 +1,18 @@
-curl   = require '../index'
+Curl   = require '../index'
 assert = require 'assert'
 j = 0;
 do next = ->
-  console.info "curl instances: ", curl.get_count()
+  console.info "curl instances: ", Curl.get_count()
   setTimeout next, 1000
 
 for i in [1..100]
-  do once = ->
-    err, res = curl! 'localhost/test.html'
-    assert.equal res.body.length, 1468
-    if ++j % 100 == 0
-      console.info j
-    if j < 20000
-      once()
-    # res.close()
+  do ->
+    curl = Curl.create()
+    do once = ->
+      err, res = curl! 'localhost/test.html'
+      assert.equal res.body.length, 1468
+      if ++j % 100 == 0
+        console.info j
+      if j < 5000
+        once()
+      # res.close()

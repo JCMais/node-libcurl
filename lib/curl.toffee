@@ -3,6 +3,8 @@ try
 catch e
   {Curl} = require __dirname + '/../build/default/node-curl'
 
+CurlBuilder = require __dirname + '/CurlBuilder'
+
 Curl::setopt_user_ = (option_id, value) ->
   @options[option_id] = value
 
@@ -35,12 +37,12 @@ Curl::getinfo = (oinfo) ->
   else
     throw new Error("unsupported info #{oinfo}")
 
+Curl.user_options =
+  RAW: 'RAW'
+
 Curl::perform = ->
   @perform_()
   Curl.process()
-
-Curl.user_options =
-  RAW: 'RAW'
 
 Curl.process = ->
   if Curl.in_process
@@ -53,77 +55,5 @@ Curl.process = ->
     else
       Curl.in_process = false
 
-# url, [options], cb
-curl_id = 0
-curls = {}
-curl = (args...) ->
-  cb = args.pop()
-  [url, options] = args
-  options ?= {}
-
-  c = new Curl()
-  c.options = {}
-  c.id = ++curl_id
-  # after the scope c will not valid any more, so add to curls to keep c alive
-  curls[c.id] = c
-
-  c.setopt 'FOLLOWLOCATION', 1
-  c.setopt 'ACCEPT_ENCODING', 'gzip'
-  c.chunks = []
-  length = 0
-
-  for own k, v of options
-    c.setopt k, v
-
-  c.on_write = (chunk) ->
-    c.chunks.push chunk
-    length += chunk.length
-
-  c.on_end = ->
-    data = new Buffer(length)
-    position = 0
-    for chunk in c.chunks
-      chunk.copy data, position
-      position += chunk.length
-    c.chunks = []
-
-    res = {}
-    # now the c is in res.curl, delete curl in curls
-    # if res destruct, curl will be destruct after gc
-    res.curl_ = c
-    delete curls[c.id]
-
-    if c.options.RAW
-      res.body = data
-    else
-      res.body = data.toString() #.toString()
-    res.status = res.code = c.getinfo('RESPONSE_CODE')
-
-    res.info = (info)->
-      unless @curl_?
-        throw new Error('curl is closed')
-      @curl_.getinfo(info)
-
-    res.close = ->
-      @curl_.close() if @curl_?
-      @curl_ = null
-      @body  = null
-
-    # if curl returns to fast, avoid cb recursive call
-    process.nextTick!
-    cb null, res
-
-  c.on_error = (err)->
-    curls[c.id].close()
-    delete curls[c.id]
-    process.nextTick!
-    cb err, null
-
-  c.setopt('URL', url)
-  c.perform()
-  c
-
-curl.Curl = Curl
-curl.get_count = ->
-  Curl.get_count()
+curl = CurlBuilder.create()
 module.exports = curl
