@@ -7,6 +7,7 @@
 #include <curl/curl.h>
 #include <map>
 #include <vector>
+#include <string>
 
 #define NODE_CURL_EXPORT(name) export_curl_options(t, #name, name, sizeof(name) / sizeof(CurlOption));
 
@@ -28,6 +29,7 @@ class NodeCurl
 	v8::Persistent<v8::Object> handle;
 	bool  in_curlm;
 	std::vector<curl_slist*> slists;
+	std::map<int, std::string> strings;
 
 	NodeCurl(v8::Handle<v8::Object> object)
 	: in_curlm(false)
@@ -215,7 +217,14 @@ class NodeCurl
 
 	static v8::Handle<v8::Value> setopt_str(const v8::Arguments & args)
 	{
-		return unwrap(args.This())->setopt(args[0], *v8::String::Utf8Value(args[1]) );
+		// Create a string copy
+		// https://github.com/jiangmiao/node-curl/issues/3
+		NodeCurl   * node_curl = unwrap(args.This());
+		int key = args[0]->Int32Value();
+		v8::String::Utf8Value value(args[1]);
+		int length = value.length();
+		node_curl->strings[key] = std::string(*value, length);
+		return unwrap(args.This())->setopt(args[0], node_curl->strings[key].c_str() );
 	}
 
 	static v8::Handle<v8::Value> setopt_slist(const v8::Arguments & args)
