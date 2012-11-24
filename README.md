@@ -28,6 +28,7 @@ Quick Start
 * run the example/test.js
 
         node examples/test.js
+
 Usage
 -----
 
