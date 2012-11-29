@@ -13,7 +13,7 @@
 
 class NodeCurl
 {
-	struct CurlOption 
+	struct CurlOption
 	{
 		const char *name;
 		int   value;
@@ -204,7 +204,7 @@ class NodeCurl
 		return v8::Integer::New(
 			curl_easy_setopt(
 				curl,
-				(CURLoption)option->Int32Value(), 
+				(CURLoption)option->Int32Value(),
 				value
 			)
 		);
@@ -322,7 +322,7 @@ class NodeCurl
 						return raise("curl_multi_remove_handle failed", curl_multi_strerror(code));
 					}
 
-					// ensure curl still exists, 
+					// ensure curl still exists,
 					// gc will delete the curl if there is no reference.
 					if (msg_copy.data.result == CURLE_OK)
 						curl->on_end(&msg_copy);
@@ -389,7 +389,7 @@ class NodeCurl
 		NODE_SET_METHOD(t , "process_"  , process);
 		NODE_SET_METHOD(t , "get_count" , get_count);
 
-		// Set curl constants 
+		// Set curl constants
 		#include "string_options.h"
 		#include "integer_options.h"
 		#include "string_infos.h"
@@ -398,13 +398,22 @@ class NodeCurl
 
 		#define X(name) {#name, CURLOPT_##name}
 		CurlOption slist_options[] = {
+			#if LIBCURL_VERSION_NUM >= 0x070a03
+				X(HTTP200ALIASES),
+			#endif
+
+			#if LIBCURL_VERSION_NUM >= 0x071400
+				X(MAIL_RCPT),
+			#endif
+
+			#if LIBCURL_VERSION_NUM >= 0x071503
+				X(RESOLVE),
+			#endif
+
 			X(HTTPHEADER),
-			X(HTTP200ALIASES),
-			X(MAIL_RCPT),
 			X(QUOTE),
 			X(POSTQUOTE),
 			X(PREQUOTE),
-			X(RESOLVE),
 			X(TELNETOPTIONS)
 		};
 		#undef X
