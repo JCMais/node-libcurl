@@ -24,17 +24,28 @@ class CurlBuilder
         throw new Error 'the cURL is closed.'
 
       @running = true
+
+      # pop arguments (url, [options = {}], callback)
       cb = args.pop()
-      [url, options] = args
-      @url = url
-      options ?= {}
+      [@url, @options] = args
+      @options ?= {}
 
       c = @curl_
-      options['URL'] = url
       c.chunks = []
       length = 0
 
-      @setOptions options
+      @debug = @defaultOptions.DEBUG ? @options.DEBUG ? @debug
+
+
+      @effective_options = {}
+      for k, v of @defaultOptions
+        @effective_options[k] = v
+      for k, v of @options
+        @effective_options[k] = v
+
+      @setOptions @effective_options
+
+      @curl_.setopt('URL', @url)
 
       c.on_write = (chunk) ->
         curl.log "receive #{chunk.length} bytes"
@@ -73,7 +84,7 @@ class CurlBuilder
 
 
     curl.setDefaultOptions = (options = {}, reset = true) ->
-      defaultOptions = options
+      @defaultOptions = options
       if reset
         @log 'Set default options and reset cURL'
         @reset()
@@ -81,6 +92,7 @@ class CurlBuilder
     curl.log = (text) ->
       if @debug
         console.info "[cURL #{@id}] " + text
+
     curl.setOptions = (options = {}) ->
       for own k, v of options
         @log "Set option '#{k}' to '#{v}'"
@@ -111,7 +123,7 @@ class CurlBuilder
       @log "opening."
       @curl_ = new Curl()
       @curl_.options = {}
-      @setOptions defaultOptions
+      @defaultOptions = defaultOptions ? {}
       CurlBuilder.curls[curl.id] = curl
       @log "opened."
 
@@ -121,10 +133,9 @@ class CurlBuilder
         @end()
       @open()
 
-    curl.Curl = Curl
-    curl.Builder = CurlBuilder
     curl.create = (defaultOptions) ->
       CurlBuilder.create(defaultOptions)
+
     curl.get_count = ->
       Curl.get_count()
 
