@@ -39,6 +39,7 @@ Curl::getinfo = (oinfo) ->
 
 Curl.user_options =
   RAW: 'RAW'
+  DEBUG: 'DEBUG'
 
 Curl::perform = ->
   @perform_()
