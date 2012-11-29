@@ -1,32 +1,28 @@
-Curl = require('../index');
-options = {CONNECTTIMEOUT: 2};
-keys = ["EFFECTIVE_URL", "CONTENT_TYPE", "PRIVATE", "FTP_ENTRY_PATH", "REDIRECT_URL", "PRIMARY_IP", "RTSP_SESSION_ID", "LOCAL_IP"]
-curl = Curl.create(options)
-url = 'www.nodejs.org';
-curl(url,  function(err) {
-  self = this
-  keys.forEach(function(key) {
-    console.info("\x1b[33m" + key + ": [" + self.info(key) + "]\x1b[0m");
-  })
-  console.info("body length: " + this.body.length);
-  this.close()
+curl = require('../index');
+
+// second argument 'options' is omitted.
+url = 'www.google.com';
+console.info("GET " + url);
+curl('www.google.com', function(err) {
+  console.info("\x1b[32mGet " + this.url + " finished.\x1b[0m");
+  console.info("\tstatus: " + this.status);
+  console.info("\tbody length: " + this.body.length);
+  console.info("\tinfo SIZE_DOWNLOAD: " + this.info('SIZE_DOWNLOAD'));
+  console.info("\tinfo EFFECTIVE_URL " + this.info('EFFECTIVE_URL'));
+  this.close();
 });
-curl = Curl.create(options)
-url = 'www.yahoo.com'
-curl(url, function(err) {
-  self = this
-  keys.forEach(function(key) {
-    console.info("\x1b[33m" + key + ": [" + self.info(key) + "]\x1b[0m");
-  })
-  console.info("body length: " + this.body.length);
-  this.close()
-});
-curl = Curl.create(options)
-curl('https://www.google.com', {VERBOSE: 1, RAW: 1}, function(err) {
-  self = this
-  keys.forEach(function(key) {
-    console.info("\x1b[33m" + key + ": [" + self.info(key) + "]\x1b[0m");
-  })
-  console.info("body length: " + this.body.length);
-  this.close()
+
+// because we uses curl in parallel. and each curl is only for one session.
+// so use curl.create(defaultOptions = {}) to create new curl/session.
+curl2 = curl.create({RAW: 1});
+url2 = 'www.google.com';
+options2 = {FOLLOWLOCATION: 1};
+console.info("GET " + url + " with default options " + JSON.stringify(curl2.defaultOptions) + ' and options ' + JSON.stringify(options2));
+curl2(url2, options2, function(err) {
+  console.info("\x1b[32mGet " + this.url + " with " + JSON.stringify(this.effective_options) + " finished.\x1b[0m");
+  console.info("\tstatus: " + this.status);
+  console.info("\tbody length: " + this.body.length);
+  console.info("\tinfo SIZE_DOWNLOAD: " + this.info('SIZE_DOWNLOAD'));
+  console.info("\tinfo EFFECTIVE_URL " + this.info('EFFECTIVE_URL'));
+  this.close();
 });
