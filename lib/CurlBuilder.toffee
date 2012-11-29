@@ -26,6 +26,7 @@ class CurlBuilder
       @running = true
       cb = args.pop()
       [url, options] = args
+      @url = url
       options ?= {}
 
       c = @curl_
