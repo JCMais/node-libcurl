@@ -4,3 +4,4 @@ build/
 build/.*
 src/*_infos.h
 src/*_options.h
+*.tgz
