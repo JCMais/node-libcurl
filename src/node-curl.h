@@ -155,7 +155,7 @@ class NodeCurl
 		{
 			return raise("curl_easy_getinfo failed", curl_easy_strerror(code));
 		}
-		return JsClass::New(result);
+		return result ? JsClass::New(result) : v8::Null();
 	}
 
 	static v8::Handle<v8::Value> getinfo_int(const v8::Arguments & args)

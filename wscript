@@ -4,7 +4,7 @@ def set_options(opt):
 def configure(conf):
   conf.check_tool('compiler_cxx')
   conf.check_tool('node_addon')
-  conf.env.append_unique('CXXFLAGS', ['-Wall', '-O2'])
+  conf.env.append_unique('CXXFLAGS', ['-Wall', '-O2', '-fno-inline-functions'])
   conf.env['LIB_CURL'] = 'curl'
 
 def build(bld):
