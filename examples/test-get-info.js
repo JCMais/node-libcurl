@@ -29,7 +29,7 @@ requests.forEach(function(request) {
   curl = Curl.create(defaultOptions);
   print('GET ' + url, 'green')
   curl(url, options, function(err) {
-    print('GET ' + this.url + ' ' + JSON.stringify(this.effective_options) + " finished.",  'green');
+    print('GET ' + this.url + ' ' + JSON.stringify(this.effectiveOptions) + " finished.",  'green');
 
     if (err)
       return print(err, 'red');
