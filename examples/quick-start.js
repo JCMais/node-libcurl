@@ -19,7 +19,7 @@ url2 = 'www.google.com';
 options2 = {FOLLOWLOCATION: 1};
 console.info("GET " + url + " with default options " + JSON.stringify(curl2.defaultOptions) + ' and options ' + JSON.stringify(options2));
 curl2(url2, options2, function(err) {
-  console.info("\x1b[32mGet " + this.url + " with " + JSON.stringify(this.effective_options) + " finished.\x1b[0m");
+  console.info("\x1b[32mGet " + this.url + " with " + JSON.stringify(this.effectiveOptions) + " finished.\x1b[0m");
   console.info("\tstatus: " + this.status);
   console.info("\tbody length: " + this.body.length);
   console.info("\tinfo SIZE_DOWNLOAD: " + this.info('SIZE_DOWNLOAD'));
