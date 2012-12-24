@@ -3,10 +3,6 @@
 root=`dirname $0`
 
 if [ "$NODE_CURL_H" != "" ] ; then
-  if [ ! -f "$NODE_CURL_H" ] ; then
-    echo "cannot find curl's header file $NODE_CURL_H ."
-    exit 1
-  fi
   curl_header=$NODE_CURL_H
 elif [ -f "/usr/local/include/curl/curl.h" ] ; then
   curl_header="/usr/local/include/curl/curl.h"
@@ -14,7 +10,12 @@ elif [ -f "/usr/include/curl/curl.h" ] ; then
   curl_header="/usr/include/curl/curl.h"
 fi
 
-echo "extract constants from $curl_header"
+if [ ! -f $curl_header ] ; then
+  echo "cannot find curl's header file $curl_header"
+  exit 1
+else
+  echo "extract constants from $curl_header"
+fi
 
 generate() {
   name=$1
