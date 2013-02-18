@@ -116,7 +116,7 @@ class NodeCurl
 		{
 			node::Buffer * buffer = node::Buffer::New(data, n);
 			v8::Handle<v8::Value> argv[] = { buffer->handle_ };
-			cb->ToObject()->CallAsFunction(handle, 1, argv);
+			n = cb->ToObject()->CallAsFunction(handle, 1, argv)->Int32Value();
 		}
 		return n;
 	}
