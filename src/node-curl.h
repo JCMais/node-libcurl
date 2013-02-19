@@ -24,6 +24,7 @@ class NodeCurl
 	static bool    is_ref;
 	static std::map< CURL*, NodeCurl* > curls;
 	static int     count;
+	static int     transfered;
 
 	CURL  * curl;
 	v8::Persistent<v8::Object> handle;
@@ -107,6 +108,7 @@ class NodeCurl
 	// curl write function mapping
 	static size_t write_function(char *ptr, size_t size, size_t nmemb, void *userdata)
 	{
+		transfered += size * nmemb;
 		NodeCurl *nodecurl = (NodeCurl*)userdata;
 		return nodecurl->on_write(ptr, size * nmemb);
 	}
@@ -294,6 +296,7 @@ class NodeCurl
 	// int process()
 	static v8::Handle<v8::Value> process(const v8::Arguments & args)
 	{
+		transfered = 0;
 		if (running_handles > 0)
 		{
 			CURLMcode code;
@@ -333,7 +336,7 @@ class NodeCurl
 				}
 			}
 		}
-		return v8::Integer::New(running_handles);
+		return v8::Integer::New(transfered + (int)(running_handles > 0));
 	}
 
 	// perform()
@@ -452,5 +455,6 @@ int     NodeCurl::running_handles = 0;
 bool    NodeCurl::is_ref = false;
 std::map< CURL*, NodeCurl* > NodeCurl::curls;
 int     NodeCurl::count = 0;
+int     NodeCurl::transfered = 0;
 
 #endif

@@ -16,6 +16,7 @@ class CurlBuilder
     curl = ->
       curl.perform.apply curl, arguments
 
+    curl.Curl = Curl
     curl.perform = (args...) ->
       if @running
         throw new Error 'the cURL session is busy, use curl.create to create another cURL Session'

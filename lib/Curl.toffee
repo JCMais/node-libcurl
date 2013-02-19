@@ -62,14 +62,24 @@ Curl::perform = ->
   Curl.process()
   @
 
+m = 0
+p = console.log
 Curl.process = ->
   if Curl.in_process
     return
   do once = ->
-    num = Curl.process_()
-    if num > 0
+    n = Curl.process_()
+    if n > 0
       Curl.in_process = true
-      setTimeout once, 80
+      if n > 8192 && m < 10
+        ++m
+        process.nextTick once
+      else
+        m = 0
+        w = (8192 - n) * 80 / 8192
+        if w < 0
+          w = 0
+        setTimeout once, w
     else
       Curl.in_process = false
 
