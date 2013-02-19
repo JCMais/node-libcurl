@@ -1,6 +1,6 @@
 {
   "name": "node-curl",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "author" : "Jiang Miao <jiangfriend@gmail.com>",
   "description": "node wrapper for multi curl, fully implemented.",
   "keywords" : ["node-curl", "curl", "multi-curl", "mcurl"],
@@ -10,7 +10,7 @@
     "url" : "git://github.com/jiangmiao/node-curl.git"
   },
   "main" : "./lib",
-  "scripts" : { 
+  "scripts" : {
     "install" : "sh src/generate_curl_options_list.sh && (node-gyp rebuild || node-waf configure build)"
   },
   "engines" : { "node": ">= 0.6.0" }
