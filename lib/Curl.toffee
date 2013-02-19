@@ -6,8 +6,8 @@ catch e
 Curl::setopt_user_ = (option_id, value) ->
   @options[option_id] = value
 
-Curl::setopt = (ooption, value) ->
-  option = ooption.toUpperCase()
+Curl::setopt = (option_name, value) ->
+  option = option_name.toUpperCase()
 
   # slist must be at the top of condition
   # the option exists in string_options too
@@ -18,6 +18,8 @@ Curl::setopt = (ooption, value) ->
   else if (option_id = Curl.integer_options[option])?
     @setopt_int_ option_id, value >> 0
   else if (option_id = Curl.string_options[option])?
+    if !value?
+      throw new Error("Cannot set option #{option_name} to #{value}.")
     @setopt_str_ option_id, value.toString()
   else
     throw new Error("unsupported option #{option}")
