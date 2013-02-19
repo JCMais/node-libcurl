@@ -39,13 +39,17 @@ Curl.user_options =
   RAW: 'RAW'
   DEBUG: 'DEBUG'
 
+# on 'data' must be returns the chunk length
 Curl::on = (event, callback) ->
   switch event
     when 'data'
+      # (Buffer chunk) ->
       @on_write = callback
     when 'error'
+      # (Error error) ->
       @on_error = callback
     when 'end'
+      # () ->
       @on_end = callback
     else
       throw new Error("invalid event type #{event}")
