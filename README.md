@@ -115,6 +115,7 @@ Methods:
     Curl setopt(optionName, optionValue)
     Curl perform()
     Curl on(eventType, callback)
+    Mixed getinfo(infoName)
 
 Events:
 

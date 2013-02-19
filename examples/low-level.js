@@ -24,7 +24,8 @@ curl.on('error', function(e) {
 
 
 curl.on('end', function() {
-	p('done.')
+	p('done.');
+	p('code: ' + curl.getinfo('RESPONSE_CODE'));
 	curl.close();
 });
 
