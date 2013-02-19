@@ -35,7 +35,6 @@ Curl::getinfo = (oinfo) ->
     @getinfo_double_(info_id)
   else
     throw new Error("unsupported info #{oinfo}")
-  @
 
 Curl.user_options =
   RAW: 'RAW'
