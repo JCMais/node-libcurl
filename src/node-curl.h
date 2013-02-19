@@ -27,6 +27,9 @@ class NodeCurl
 
 	CURL  * curl;
 	v8::Persistent<v8::Object> handle;
+
+	// keep the object alive when performing
+	v8::Persistent<v8::Object> refer;
 	bool  in_curlm;
 	std::vector<curl_slist*> slists;
 	std::map<int, std::string> strings;
@@ -312,8 +315,6 @@ class NodeCurl
 				if (msg->msg == CURLMSG_DONE)
 				{
 					NodeCurl * curl = curls[msg->easy_handle];
-					// copy CURLMsg
-					// on_error may delete the whole NodeCurl
 					CURLMsg msg_copy = *msg;
 					code = curl_multi_remove_handle(curlm, msg->easy_handle);
 					curl->in_curlm = false;
@@ -322,12 +323,13 @@ class NodeCurl
 						return raise("curl_multi_remove_handle failed", curl_multi_strerror(code));
 					}
 
-					// ensure curl still exists,
-					// gc will delete the curl if there is no reference.
 					if (msg_copy.data.result == CURLE_OK)
 						curl->on_end(&msg_copy);
 					else
 						curl->on_error(&msg_copy);
+
+					curl->refer.Dispose();
+					curl->refer.Clear();
 				}
 			}
 		}
@@ -338,6 +340,12 @@ class NodeCurl
 	static v8::Handle<v8::Value> perform(const v8::Arguments & args)
 	{
 		NodeCurl *curl = unwrap(args.This());
+
+		if (!curl->refer.IsEmpty())
+			return raise("The curl session is running, use curl.create() to create another session.");
+
+		curl->refer = v8::Persistent<v8::Object>::New(args.This());
+
 		CURLMcode code = curl_multi_add_handle(curlm, curl->curl);
 		if (code != CURLM_OK)
 		{

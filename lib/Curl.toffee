@@ -21,6 +21,7 @@ Curl::setopt = (ooption, value) ->
     @setopt_str_ option_id, value.toString()
   else
     throw new Error("unsupported option #{option}")
+  @
 
 Curl::getinfo = (oinfo) ->
   info = oinfo.toUpperCase()
@@ -34,6 +35,7 @@ Curl::getinfo = (oinfo) ->
     @getinfo_double_(info_id)
   else
     throw new Error("unsupported info #{oinfo}")
+  @
 
 Curl.user_options =
   RAW: 'RAW'
@@ -58,6 +60,7 @@ Curl::on = (event, callback) ->
 Curl::perform = ->
   @perform_()
   Curl.process()
+  @
 
 Curl.process = ->
   if Curl.in_process
