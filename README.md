@@ -144,6 +144,8 @@ Example: examples/low-level.js
         return chunk.length;
     });
 
+    // curl.close() should be called in event 'error' and 'end' if the curl won't use any more.
+    // or the resource will not release until V8 garbage mark sweep.
     curl.on('error', function(e) {
         p("error: " + e.message)
         curl.close();
@@ -151,8 +153,8 @@ Example: examples/low-level.js
 
 
     curl.on('end', function() {
-        p('done.')
         p('code: ' + curl.getinfo('RESPONSE_CODE'));
+        p('done.')
         curl.close();
     });
 

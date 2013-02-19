@@ -10,6 +10,7 @@ if (!url)
 
 curl.setopt('URL', url);
 curl.setopt('CONNECTTIMEOUT', 2);
+curl.setopt('VERBOSE', 1);
 
 // on 'data' must be returns chunk.length, or means interrupt the transfer
 curl.on('data', function(chunk) {
@@ -25,7 +26,7 @@ curl.on('error', function(e) {
 
 
 curl.on('end', function() {
-	curl.getinfo('RESPONSE_CODE');
+	p("code: " + curl.getinfo('RESPONSE_CODE'));
 	curl.close();
 	p('done.');
 });
