@@ -1,7 +1,7 @@
 try
-  {Curl} = require __dirname + '/../build/Release/node-curl'
+  Curl = require __dirname + '/Curl'
 catch e
-  {Curl} = require __dirname + '/../build/default/node-curl'
+  Curl = require __dirname + '/Curl'
 
 class CurlBuilder
   @curls: {}
@@ -47,12 +47,13 @@ class CurlBuilder
       @setOptions @effectiveOptions
       @setOptions {URL: @url}
 
-      c.on_write = (chunk) ->
+      c.on 'data', (chunk) ->
         curl.log "receive #{chunk.length} bytes"
         c.chunks.push chunk
         length += chunk.length
+        chunk.length
 
-      c.on_end = ->
+      c.on 'end', ->
         curl.log "receive succeeded."
         curl.running = false
         data = new Buffer(length)
@@ -72,7 +73,7 @@ class CurlBuilder
         process.nextTick!
         cb.call curl, null, curl
 
-      c.on_error = (err)->
+      c.on 'error', (err)->
         curl.log "receive failed: #{err.message}"
         curl.running = false
         process.nextTick!
@@ -146,3 +147,5 @@ process.on 'exit', ->
   CurlBuilder.close_all()
 
 module.exports = CurlBuilder
+
+# vim: sw=2 ts=2 sts=2 expandtab :

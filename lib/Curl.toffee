@@ -3,8 +3,6 @@ try
 catch e
   {Curl} = require __dirname + '/../build/default/node-curl'
 
-CurlBuilder = require __dirname + '/CurlBuilder'
-
 Curl::setopt_user_ = (option_id, value) ->
   @options[option_id] = value
 
@@ -41,6 +39,18 @@ Curl.user_options =
   RAW: 'RAW'
   DEBUG: 'DEBUG'
 
+Curl::on = (event, callback) ->
+  switch event
+    when 'data'
+      @on_write = callback
+    when 'error'
+      @on_error = callback
+    when 'end'
+      @on_end = callback
+    else
+      throw new Error("invalid event type #{event}")
+  @
+
 Curl::perform = ->
   @perform_()
   Curl.process()
@@ -56,5 +66,6 @@ Curl.process = ->
     else
       Curl.in_process = false
 
-curl = CurlBuilder.create()
-module.exports = curl
+
+module.exports = Curl
+# vim: sw=2 ts=2 sts=2 expandtab :
