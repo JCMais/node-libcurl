@@ -1,4 +1,4 @@
-var Curl = require('..').Curl
+var Curl = require('../lib/Curl')
 
 var p = console.log;
 var url = process.argv[2];
