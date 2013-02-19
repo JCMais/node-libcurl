@@ -1,0 +1,8 @@
+curl = require '../index'
+p = console.info
+
+err, res = curl! process.argv[2], {VERBOSE: 1, DEBUG: 1}
+if err
+  p err
+else
+  p res
