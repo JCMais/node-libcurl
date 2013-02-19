@@ -20,13 +20,14 @@ curl.on('data', function(chunk) {
 curl.on('error', function(e) {
 	p("error: " + e.message)
 	curl.close();
+	once();
 });
 
 
 curl.on('end', function() {
-	p('done.');
-	p('code: ' + curl.getinfo('RESPONSE_CODE'));
+	curl.getinfo('RESPONSE_CODE');
 	curl.close();
+	p('done.');
 });
 
 curl.perform();

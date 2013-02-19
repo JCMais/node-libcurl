@@ -3,6 +3,8 @@ try
 catch e
   {Curl} = require __dirname + '/../build/default/node-curl'
 
+curls = {}
+id = 0
 Curl::setopt_user_ = (option_id, value) ->
   @options[option_id] = value
 
@@ -50,15 +52,24 @@ Curl::on = (event, callback) ->
       @on_write = callback
     when 'error'
       # (Error error) ->
-      @on_error = callback
+      @on_error = =>
+        rt = callback()
+        curls[@id] = null
+        rt
+
     when 'end'
       # () ->
-      @on_end = callback
+      @on_end = =>
+        rt = callback()
+        curls[@id] = null
+        rt
     else
       throw new Error("invalid event type #{event}")
   @
 
 Curl::perform = ->
+  @id = ++id
+  curls[@id] = @
   @perform_()
   Curl.process()
   @
@@ -77,7 +88,7 @@ Curl.process = ->
         process.nextTick once
       else
         m = 0
-        w = (8192 - n) * 80 / 8192
+        w = (8192 - n) * 80 / 8192 >> 0
         if w < 0
           w = 0
         setTimeout once, w

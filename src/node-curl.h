@@ -29,8 +29,6 @@ class NodeCurl
 	CURL  * curl;
 	v8::Persistent<v8::Object> handle;
 
-	// keep the object alive when performing
-	v8::Persistent<v8::Object> refer;
 	bool  in_curlm;
 	std::vector<curl_slist*> slists;
 	std::map<int, std::string> strings;
@@ -331,8 +329,7 @@ class NodeCurl
 					else
 						curl->on_error(&msg_copy);
 
-					curl->refer.Dispose();
-					curl->refer.Clear();
+					// Handle should not released in curl.process, or will cause segment fault.
 				}
 			}
 		}
@@ -343,12 +340,6 @@ class NodeCurl
 	static v8::Handle<v8::Value> perform(const v8::Arguments & args)
 	{
 		NodeCurl *curl = unwrap(args.This());
-
-		if (!curl->refer.IsEmpty())
-			return raise("The curl session is running, use curl.create() to create another session.");
-
-		curl->refer = v8::Persistent<v8::Object>::New(args.This());
-
 		CURLMcode code = curl_multi_add_handle(curlm, curl->curl);
 		if (code != CURLM_OK)
 		{
