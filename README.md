@@ -104,3 +104,54 @@ Infos
 
           slist will be returns in Array
           eg: CURLINFO_COOKIELIST
+
+Low Level Curl Usage
+--------------------
+
+require 'node-curl/lib/Curl'
+
+Methods:
+
+    Curl setopt(optionName, optionValue)
+    Curl perform()
+    Curl on(eventType, callback)
+
+Events:
+
+    'data', function(Buffer chunk) {}
+    'error', function(Error error) {}
+    'end', function() {}
+
+Example: examples/low-level.js
+
+    var Curl = require('node-curl/lib/Curl')
+
+    var p = console.log;
+    var url = process.argv[2];
+
+    var curl = new Curl();
+
+    if (!url)
+        url = 'www.yahoo.com';
+
+    curl.setopt('URL', url);
+    curl.setopt('CONNECTTIMEOUT', 2);
+
+    // on 'data' must be returns chunk.length, or means interrupt the transfer
+    curl.on('data', function(chunk) {
+        p("receive " + chunk.length)
+        return chunk.length;
+    });
+
+    curl.on('error', function(e) {
+        p("error: " + e.message)
+        curl.close();
+    });
+
+
+    curl.on('end', function() {
+        p('done.')
+        curl.close();
+    });
+
+    curl.perform();
