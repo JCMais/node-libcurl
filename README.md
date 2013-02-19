@@ -152,6 +152,7 @@ Example: examples/low-level.js
 
     curl.on('end', function() {
         p('done.')
+        p('code: ' + curl.getinfo('RESPONSE_CODE'));
         curl.close();
     });
 
