@@ -29,12 +29,14 @@ class NodeCurl
 	CURL  * curl;
 	v8::Persistent<v8::Object> handle;
 
+	v8::Persistent<v8::Object> ref;
+	int ref_no;
 	bool  in_curlm;
 	std::vector<curl_slist*> slists;
 	std::map<int, std::string> strings;
 
 	NodeCurl(v8::Handle<v8::Object> object)
-	: in_curlm(false)
+	: in_curlm(false), ref_no(0)
 	{
 		++count;
 		v8::V8::AdjustAmountOfExternalAllocatedMemory(2*4096);
@@ -329,7 +331,11 @@ class NodeCurl
 					else
 						curl->on_error(&msg_copy);
 
-					// Handle should not released in curl.process, or will cause segment fault.
+					--curl->ref_no;
+					if (curl->ref_no == 0)
+						curl->ref.Dispose();
+
+
 				}
 			}
 		}
@@ -340,6 +346,12 @@ class NodeCurl
 	static v8::Handle<v8::Value> perform(const v8::Arguments & args)
 	{
 		NodeCurl *curl = unwrap(args.This());
+		if (!curl)
+			return raise("curl is closed.");
+
+		if (curl->in_curlm)
+			return raise("curl session is running.");
+
 		CURLMcode code = curl_multi_add_handle(curlm, curl->curl);
 		if (code != CURLM_OK)
 		{
@@ -347,6 +359,11 @@ class NodeCurl
 		}
 		curl->in_curlm = true;
 		++running_handles;
+
+		if (curl->ref_no == 0)
+			curl->ref=v8::Persistent<v8::Object>::New(curl->handle);
+		++curl->ref_no;
+
 		return args.This();
 	}
 
@@ -386,7 +403,7 @@ class NodeCurl
 		NODE_SET_PROTOTYPE_METHOD(t , "getinfo_double_" , getinfo_double);
 		NODE_SET_PROTOTYPE_METHOD(t , "getinfo_slist_"  , getinfo_slist);
 
-		NODE_SET_PROTOTYPE_METHOD(t, "close", close);
+		NODE_SET_PROTOTYPE_METHOD(t, "close_", close);
 
 		NODE_SET_METHOD(t , "process_"  , process);
 		NODE_SET_METHOD(t , "get_count" , get_count);

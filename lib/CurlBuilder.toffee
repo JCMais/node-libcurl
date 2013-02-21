@@ -30,13 +30,9 @@ class CurlBuilder
       [@url, @options] = args
       @options ?= {}
 
-      c = @curl_
-      c.chunks = []
       length = 0
 
       @debug = @defaultOptions.DEBUG ? @options.DEBUG ? @debug
-
-
       @effectiveOptions = {}
       for k, v of @defaultOptions
         @effectiveOptions[k] = v
@@ -47,6 +43,8 @@ class CurlBuilder
       @setOptions @effectiveOptions
       @setOptions {URL: @url}
 
+      c = @curl_
+      c.chunks = []
       c.on 'data', (chunk) ->
         curl.log "receive #{chunk.length} bytes"
         c.chunks.push chunk

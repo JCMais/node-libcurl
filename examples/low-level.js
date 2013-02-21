@@ -19,7 +19,7 @@ curl.on('data', function(chunk) {
 });
 
 curl.on('error', function(e) {
-	p("error: " + e.message)
+	p("error: " + e.message);
 	curl.close();
 	once();
 });
