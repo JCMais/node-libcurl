@@ -29,14 +29,12 @@ class NodeCurl
 	CURL  * curl;
 	v8::Persistent<v8::Object> handle;
 
-	v8::Persistent<v8::Object> ref;
-	int ref_no;
 	bool  in_curlm;
 	std::vector<curl_slist*> slists;
 	std::map<int, std::string> strings;
 
 	NodeCurl(v8::Handle<v8::Object> object)
-	: in_curlm(false), ref_no(0)
+	: in_curlm(false)
 	{
 		++count;
 		v8::V8::AdjustAmountOfExternalAllocatedMemory(2*4096);
@@ -121,7 +119,11 @@ class NodeCurl
 		{
 			node::Buffer * buffer = node::Buffer::New(data, n);
 			v8::Handle<v8::Value> argv[] = { buffer->handle_ };
-			n = cb->ToObject()->CallAsFunction(handle, 1, argv)->Int32Value();
+			v8::Handle<v8::Value> rt = cb->ToObject()->CallAsFunction(handle, 1, argv);
+			if (rt.IsEmpty())
+				return 0;
+			else
+				return rt->Int32Value();
 		}
 		return n;
 	}
@@ -330,12 +332,6 @@ class NodeCurl
 						curl->on_end(&msg_copy);
 					else
 						curl->on_error(&msg_copy);
-
-					--curl->ref_no;
-					if (curl->ref_no == 0)
-						curl->ref.Dispose();
-
-
 				}
 			}
 		}
@@ -359,10 +355,6 @@ class NodeCurl
 		}
 		curl->in_curlm = true;
 		++running_handles;
-
-		if (curl->ref_no == 0)
-			curl->ref=v8::Persistent<v8::Object>::New(curl->handle);
-		++curl->ref_no;
 
 		return args.This();
 	}
