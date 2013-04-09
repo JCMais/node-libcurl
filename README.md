@@ -105,6 +105,25 @@ Infos
           slist will be returns in Array
           eg: CURLINFO_COOKIELIST
 
+MultiPart Upload
+----------------
+Use MULTIPART option
+
+There are 4 options in MULTIPART, `name`, `file`, `type`, `contents`
+
+```javascript
+curl('127.0.0.1/upload.php', {
+    MULTIPART: [
+        {name: 'file', file: '/file/path', type: 'text/html'},
+        {name: 'sumbit', contents: 'send'}
+    ]
+}, function(e) {
+    console.log(e);
+    console.log(this.body);
+    this.close()
+});
+```
+
 Low Level Curl Usage
 --------------------
 
