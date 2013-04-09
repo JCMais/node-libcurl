@@ -8,8 +8,83 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <stdlib.h>
 
 #define NODE_CURL_EXPORT(name) export_curl_options(t, #name, name, sizeof(name) / sizeof(CurlOption));
+
+class NodeCurlHttppost
+{
+    public:
+	curl_httppost *first;
+	curl_httppost *last;
+
+    public:
+	NodeCurlHttppost()
+	: first(NULL), last(NULL)
+	{
+		reset();
+	}
+
+	void reset()
+	{
+		curl_httppost *cur  = first;
+		while (cur) {
+			curl_httppost *next = cur->next;
+			if (cur->contenttype)
+				free(cur->contenttype);
+			if (cur->contents && cur->flags & HTTPPOST_FILENAME)
+				free(cur->contents);
+			if (cur->buffer)
+				free(cur->buffer);
+			if (cur->name)
+				free(cur->buffer);
+			free(cur);
+			cur = next;
+		}
+		first = NULL;
+		last  = NULL;
+	}
+
+	void append()
+	{
+		if (!first) {
+			first = (curl_httppost*)calloc(1, sizeof(curl_httppost));
+			last  = first;
+		} else {
+			last->next = (curl_httppost*)calloc(1, sizeof(curl_httppost));
+			last = last->next;
+		}
+	}
+
+	enum {
+		NAME,
+		FILE,
+		VALUE,
+		TYPE
+	};
+
+	void set(int field, char *value, long length)
+	{
+		switch (field) {
+		    case NAME:
+			value = strndup(value, length);
+			last->name = value;
+			last->namelength = length;
+			break;
+		    case TYPE:
+			value = strndup(value, length);
+			last->contenttype = value;
+			break;
+		    case FILE:
+			value = strndup(value, length);
+			last->flags |= HTTPPOST_FILENAME;
+		    case VALUE:
+			last->contents = value;
+			last->contentslength = length;
+			break;
+		}
+	}
+};
 
 class NodeCurl
 {
@@ -32,6 +107,7 @@ class NodeCurl
 	bool  in_curlm;
 	std::vector<curl_slist*> slists;
 	std::map<int, std::string> strings;
+	NodeCurlHttppost httppost;
 
 	NodeCurl(v8::Handle<v8::Object> object)
 	: in_curlm(false)
@@ -242,6 +318,30 @@ class NodeCurl
 		return node_curl->setopt(args[0], slist);
 	}
 
+	static v8::Handle<v8::Value> setopt_httppost(const v8::Arguments & args)
+	{
+		NodeCurl * node_curl = unwrap(args.This());
+		NodeCurlHttppost &httppost = node_curl->httppost;
+		v8::Handle<v8::Array> rows = v8::Handle<v8::Array>::Cast(args[0]);
+		httppost.reset();
+		for (uint32_t i=0, len = rows->Length(); i<len; ++i)
+		{
+			v8::Handle<v8::Array> cols = v8::Handle<v8::Array>::Cast(rows->Get(i));
+			uint32_t j=0, cols_len = cols->Length();
+			httppost.append();
+			while (j<cols_len)
+			{
+				int field = cols->Get(j++)->Int32Value();
+				v8::Handle<v8::Object> buffer = cols->Get(j++)->ToObject();
+				char *value = node::Buffer::Data(buffer);
+				int length = node::Buffer::Length(buffer);
+				httppost.set(field, value, length);
+			}
+		}
+		curl_easy_setopt(node_curl->curl, CURLOPT_HTTPPOST, node_curl->httppost.first);
+		return args.This();
+	}
+
 	static curl_slist * value_to_slist(v8::Handle<v8::Value> value)
 	{
 		curl_slist * slist = NULL;
@@ -389,6 +489,7 @@ class NodeCurl
 		NODE_SET_PROTOTYPE_METHOD(t , "setopt_int_"   , setopt_int);
 		NODE_SET_PROTOTYPE_METHOD(t , "setopt_str_"   , setopt_str);
 		NODE_SET_PROTOTYPE_METHOD(t , "setopt_slist_" , setopt_slist);
+		NODE_SET_PROTOTYPE_METHOD(t , "setopt_httppost_" , setopt_httppost);
 
 		NODE_SET_PROTOTYPE_METHOD(t , "getinfo_int_"    , getinfo_int);
 		NODE_SET_PROTOTYPE_METHOD(t , "getinfo_str_"    , getinfo_str);
@@ -434,6 +535,15 @@ class NodeCurl
 			X(SSL_ENGINES),
 			X(COOKIELIST)
 		};
+
+		#undef X
+		#define X(name) {#name, NodeCurlHttppost::name}
+		CurlOption httppost_options[] = {
+			X(NAME),
+			X(FILE),
+			X(VALUE),
+			X(TYPE)
+		};
 		#undef X
 
 		NODE_CURL_EXPORT(string_options);
@@ -444,6 +554,8 @@ class NodeCurl
 		NODE_CURL_EXPORT(integer_infos);
 		NODE_CURL_EXPORT(double_infos);
 		NODE_CURL_EXPORT(slist_infos);
+
+		NODE_CURL_EXPORT(httppost_options);
 
 		target->Set(v8::String::NewSymbol("Curl"), t->GetFunction());
 		return target;

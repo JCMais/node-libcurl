@@ -6,13 +6,38 @@ catch e
 Curl::setopt_user_ = (option_id, value) ->
   @options[option_id] = value
 
+Curl::setopt_httppost = (rows) ->
+  # convert object-rows to array-rows
+  # format
+  # [
+  #    [OPTION_ID, VALUE]
+  # ]
+  @httppost = for row in rows
+    cols = []
+    for own k, v of row
+      k = k.toUpperCase()
+      if (option_id = Curl.httppost_options[k])?
+        cols.push option_id
+        unless v instanceof Buffer
+          v = new Buffer(v.toString())
+        cols.push v
+      else
+        throw new Error("invalid http post option #{k}")
+    cols
+  @setopt_httppost_(@httppost)
+  @
+
+
 Curl::setopt = (option_name, value) ->
   option = option_name.toUpperCase()
 
   # slist must be at the top of condition
   # the option exists in string_options too
   if (option_id = Curl.user_options[option])?
-    @setopt_user_ option_id, value
+    if (option == 'MULTIPART')
+      @setopt_httppost value
+    else
+      @setopt_user_ option_id, value
   else if (option_id = Curl.slist_options[option])?
     @setopt_slist_ option_id, value
   else if (option_id = Curl.integer_options[option])?
@@ -41,6 +66,7 @@ Curl::getinfo = (oinfo) ->
 Curl.user_options =
   RAW: 'RAW'
   DEBUG: 'DEBUG'
+  MULTIPART: 'MULTIPART'
 
 id = 0
 curls = {}
