@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <stdlib.h>
+#include <string.h>
 
 #define NODE_CURL_EXPORT(name) export_curl_options(t, #name, name, sizeof(name) / sizeof(CurlOption));
 
