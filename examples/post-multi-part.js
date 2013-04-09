@@ -10,18 +10,12 @@
 
   curl('127.0.0.1/upload.php', {
     multipart: [
-      {
-        name: 'file',
-        file: '/home/miao/test.js',
-        type: 'text/html'
-      }, {
-        name: 'sumbit',
-        value: 'send'
-      }
+		{name: 'file', file: '/home/miao/test.js', type: 'text/html'},
+		{name: 'sumbit', value: 'send'}
     ]
   }, function(e) {
     console.log(e);
-    return console.log(curl.body);
+    console.log(curl.body);
   });
 
 }).call(this);

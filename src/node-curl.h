@@ -59,7 +59,7 @@ class NodeCurlHttppost
 	enum {
 		NAME,
 		FILE,
-		VALUE,
+		CONTENTS,
 		TYPE
 	};
 
@@ -78,7 +78,7 @@ class NodeCurlHttppost
 		    case FILE:
 			value = strndup(value, length);
 			last->flags |= HTTPPOST_FILENAME;
-		    case VALUE:
+		    case CONTENTS:
 			last->contents = value;
 			last->contentslength = length;
 			break;
@@ -541,7 +541,7 @@ class NodeCurl
 		CurlOption httppost_options[] = {
 			X(NAME),
 			X(FILE),
-			X(VALUE),
+			X(CONTENTS),
 			X(TYPE)
 		};
 		#undef X

@@ -5,8 +5,9 @@ p 'start'
 curl '127.0.0.1/upload.php', {
 	multipart: [
 		{name: 'file', file: '/home/miao/test.js', type: 'text/html'},
-		{name: 'sumbit', value: 'send'}
+		{name: 'sumbit', contents: 'send'}
 	],
 }, (e) ->
 	console.log e
-	console.log curl.body
+	console.log @body
+	@close()
