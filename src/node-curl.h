@@ -26,6 +26,11 @@ class NodeCurlHttppost
 		reset();
 	}
 
+	~NodeCurlHttppost()
+	{
+		reset();
+	}
+
 	void reset()
 	{
 		curl_httppost *cur  = first;
