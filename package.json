@@ -1,6 +1,6 @@
 {
   "name": "node-curl",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author" : "Jiang Miao <jiangfriend@gmail.com>",
   "description": "node wrapper for multi curl, fully implemented.",
   "keywords" : ["node-curl", "curl", "multi-curl", "mcurl"],
