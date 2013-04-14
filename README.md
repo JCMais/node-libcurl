@@ -86,8 +86,8 @@ Options
         node-curl support slist which map to Javascript Array
 
         eg:
-            HTTP_HEADER: ['FOO', 'BAR']
-            HTTP_HEADER: 'FOO'
+            HTTPHEADER: ['FOO', 'BAR']
+            HTTPHEADER: 'FOO'
 
             any non-array parameter will convert to [ parameter.toString() ]
 
