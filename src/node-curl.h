@@ -38,7 +38,7 @@ class NodeCurlHttppost
 			curl_httppost *next = cur->next;
 			if (cur->contenttype)
 				free(cur->contenttype);
-			if (cur->contents && cur->flags & HTTPPOST_FILENAME)
+			if (cur->contents)
 				free(cur->contents);
 			if (cur->buffer)
 				free(cur->buffer);
@@ -71,22 +71,24 @@ class NodeCurlHttppost
 
 	void set(int field, char *value, long length)
 	{
+		value = strndup(value, length);
 		switch (field) {
 		    case NAME:
-			value = strndup(value, length);
 			last->name = value;
 			last->namelength = length;
 			break;
 		    case TYPE:
-			value = strndup(value, length);
 			last->contenttype = value;
 			break;
 		    case FILE:
-			value = strndup(value, length);
 			last->flags |= HTTPPOST_FILENAME;
 		    case CONTENTS:
 			last->contents = value;
 			last->contentslength = length;
+			break;
+		    default:
+			// `default` should never be reached.
+			free(value);
 			break;
 		}
 	}
