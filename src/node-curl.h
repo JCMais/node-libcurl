@@ -132,6 +132,8 @@ class NodeCurl
 		}
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_function);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA,     this);
+		curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION,  header_function);
+		curl_easy_setopt(curl, CURLOPT_HEADERDATA,      this);
 		curls[curl] = this;
 	}
 
@@ -193,10 +195,34 @@ class NodeCurl
 		return nodecurl->on_write(ptr, size * nmemb);
 	}
 
+	static size_t header_function(char *ptr, size_t size, size_t nmemb, void *userdata)
+	{
+		transfered += size * nmemb;
+		NodeCurl *nodecurl = (NodeCurl*)userdata;
+		return nodecurl->on_header(ptr, size * nmemb);
+	}
+
 	size_t on_write(char *data, size_t n)
 	{
 		static v8::Persistent<v8::String> SYM_ON_WRITE = v8::Persistent<v8::String>::New(v8::String::NewSymbol("on_write"));
 		v8::Handle<v8::Value> cb = handle->Get(SYM_ON_WRITE);
+		if (cb->IsFunction())
+		{
+			node::Buffer * buffer = node::Buffer::New(data, n);
+			v8::Handle<v8::Value> argv[] = { buffer->handle_ };
+			v8::Handle<v8::Value> rt = cb->ToObject()->CallAsFunction(handle, 1, argv);
+			if (rt.IsEmpty())
+				return 0;
+			else
+				return rt->Int32Value();
+		}
+		return n;
+	}
+
+	size_t on_header(char *data, size_t n)
+	{
+		static v8::Persistent<v8::String> SYM_ON_HEADER = v8::Persistent<v8::String>::New(v8::String::NewSymbol("on_header"));
+		v8::Handle<v8::Value> cb = handle->Get(SYM_ON_HEADER);
 		if (cb->IsFunction())
 		{
 			node::Buffer * buffer = node::Buffer::New(data, n);

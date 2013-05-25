@@ -3,6 +3,14 @@ try
 catch e
   Curl = require __dirname + '/Curl'
 
+merge_chunks = (chunks, length) ->
+    data = new Buffer(length)
+    position = 0
+    for chunk in chunks
+      chunk.copy data, position
+      position += chunk.length
+    data
+
 class CurlBuilder
   @curls: {}
   @id: 0
@@ -31,6 +39,7 @@ class CurlBuilder
       @options ?= {}
 
       length = 0
+      header_length = 0
 
       @debug = @defaultOptions.DEBUG ? @options.DEBUG ? @debug
       @effectiveOptions = {}
@@ -45,26 +54,33 @@ class CurlBuilder
 
       c = @curl_
       c.chunks = []
+      c.header_chunks = []
       c.on 'data', (chunk) ->
         curl.log "receive #{chunk.length} bytes"
         c.chunks.push chunk
         length += chunk.length
         chunk.length
 
+      c.on 'header', (chunk) ->
+        curl.log "receive #{chunk.length} header"
+        c.header_chunks.push chunk
+        header_length += chunk.length
+        chunk.length
+
       c.on 'end', ->
         curl.log "receive succeeded."
         curl.running = false
-        data = new Buffer(length)
-        position = 0
-        for chunk in c.chunks
-          chunk.copy data, position
-          position += chunk.length
+        data = merge_chunks(c.chunks, length)
+        header = merge_chunks(c.header_chunks, header_length)
         c.chunks = []
+        c.header_chunks = []
 
         if c.options.RAW
           curl.body = data
+          curl.header = header
         else
           curl.body = data.toString()
+          curl.header = header.toString()
         curl.status = curl.code = c.getinfo('RESPONSE_CODE')
 
         # if curl returns to fast, avoid cb recursive call

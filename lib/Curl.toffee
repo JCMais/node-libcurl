@@ -78,6 +78,9 @@ Curl::on = (event, callback) ->
       # (Buffer chunk) ->
       @on_write = (chunk) =>
         callback.call @, chunk
+    when 'header'
+      @on_header = (chunk) =>
+        callback.call @, chunk
     when 'error'
       # (Error error) ->
       @on_error = (e) =>
