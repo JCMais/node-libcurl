@@ -2,10 +2,6 @@
   'targets': [
     {
 		'target_name': 'node-curl',
-		'cflags': ['-Wall', '-O1', '-g', '-fno-inline-functions', '/MD'],
-		'cflags_cc': ['-Wall', '-O1', '-g', '-fno-inline-functions'],
-		'cflags!': [ '-fno-exceptions' ],
-        'cflags_cc!': [ '-fno-exceptions' ],
 		'sources': [
             'src/node-curl.cc',
             'src/strndup.cc',
