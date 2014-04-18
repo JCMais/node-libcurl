@@ -11,6 +11,7 @@
     },
     "main" : "./lib",
     "scripts" : {
+        "prepublish" : "git submodule update --init --recursive && python deps/curl-for-windows/configure.py",
         "install" : "node src/generate-stubs && (node-gyp rebuild)"
     },
     "engines" : { "node": ">= 0.6.0" }

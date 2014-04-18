@@ -2,14 +2,16 @@ var fs = require( 'fs' ),
     path = require( 'path' ),
     util = require( 'util' );
 
-process.env.NODE_CURL_INCLUDE_PATH = 'E:/devel/includes';
-
 var files = [
     process.env.NODE_CURL_INCLUDE_PATH ? path.join( process.env.NODE_CURL_INCLUDE_PATH, 'curl', 'curl.h' ) : '',
     '/usr/local/include/curl/curl.h',
     '/usr/include/curl/curl.h',
     '/usr/include/curl/curl.h'
 ];
+
+//add path to deps only on Windows
+if ( process.platform == 'win32' )
+    files.push( path.resolve( __dirname, '..', 'deps', 'curl-for-windows', 'curl', 'include', 'curl', 'curl.h'  ) );
 
 var curlHeaderFile = '',
     EOL = ( process.platform === 'win32' ? '\r\n' : '\n' );

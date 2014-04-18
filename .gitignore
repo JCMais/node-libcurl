@@ -3,3 +3,4 @@ build
 .lock-wscript
 node_modules
 .idea
+npm-debug.log
