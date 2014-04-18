@@ -1,17 +1,17 @@
 {
-  "name": "node-curl",
-  "version": "0.3.2",
-  "author" : "Jiang Miao <jiangfriend@gmail.com>",
-  "description": "node wrapper for multi curl, fully implemented.",
-  "keywords" : ["node-curl", "curl", "multi-curl", "mcurl"],
-  "homepage": "http://github.com/jiangmiao/node-curl",
-  "repository" : {
-    "type" : "git",
-    "url" : "git://github.com/jiangmiao/node-curl.git"
-  },
-  "main" : "./lib",
-  "scripts" : {
-    "install" : "sh src/generate_curl_options_list.sh && (node-gyp rebuild || node-waf configure build)"
-  },
-  "engines" : { "node": ">= 0.6.0" }
+    "name": "node-curl",
+    "version": "0.3.2",
+    "author" : "Jiang Miao <jiangfriend@gmail.com>",
+    "description": "node wrapper for multi curl, fully implemented.",
+    "keywords" : ["node-curl", "curl", "multi-curl", "mcurl"],
+    "homepage": "http://github.com/jiangmiao/node-curl",
+    "repository" : {
+        "type" : "git",
+        "url" : "git://github.com/jiangmiao/node-curl.git"
+    },
+    "main" : "./lib",
+    "scripts" : {
+        "install" : "node src/generate-stubs && (node-gyp rebuild)"
+    },
+    "engines" : { "node": ">= 0.6.0" }
 }
