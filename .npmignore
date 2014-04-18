@@ -2,6 +2,6 @@
 raw/
 build/
 build/.*
-src/*_infos.h
-src/*_options.h
+src/generated-stubs/*_infos.h
+src/generated-stubs/*_options.h
 *.tgz
