@@ -1,12 +1,22 @@
 {
     'targets': [
         {
-            'target_name': 'node-curl',
+            'target_name': 'node-libcurl',
             'sources': [
-                'src/node-curl.cc',
+                'src/node-libcurl.cc',
+                'src/Curl.cc',
+                'src/CurlHttpPost.cc',
                 'src/strndup.cc',
                 'src/psnprintf.cc'
             ],
+            'cflags!': [ '-O3' ],
+            'cflags': [ '-O1' ],
+            'msvs_settings': {
+                'VCCLCompilerTool': {
+                    'Optimization': 1, # /Ox, full optimization
+                    'InlineFunctionExpansion': 0 # /Obx, inline anything eligible
+                }
+            },
             'conditions': [
                 ['OS=="win"', {
                     'dependencies': [

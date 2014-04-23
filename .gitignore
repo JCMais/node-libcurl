@@ -4,3 +4,4 @@ build
 node_modules
 .idea
 npm-debug.log
+update-deps.cmd

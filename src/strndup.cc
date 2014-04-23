@@ -1,7 +1,7 @@
 //Taken from http://cgit.haiku-os.org/haiku/plain/src/system/libroot/posix/string/strndup.cpp
 #include "strndup.h";
 
-char* strndup(const char* string, size_t size)
+char* strndup( const char* string, size_t size )
 {
     // While POSIX does not mention it, we handle NULL pointers gracefully
 	if (string == NULL)

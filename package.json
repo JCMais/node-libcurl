@@ -1,18 +1,25 @@
 {
-    "name": "node-curl",
-    "version": "0.3.2",
-    "author" : "Jiang Miao <jiangfriend@gmail.com>",
-    "description": "node wrapper for multi curl, fully implemented.",
-    "keywords" : ["node-curl", "curl", "multi-curl", "mcurl"],
-    "homepage": "http://github.com/jiangmiao/node-curl",
+    "name": "node-libcurl",
+    "version": "0.0.1",
+    "author" : "Jonathan Cardoso <me@jonathancardoso.com>",
+    "description": "Node wrapper for libcurl. Based on the work from node-curl.",
+    "keywords" : ["node-curl", "curl", "libcurl", "node-libcurl"],
+    "homepage": "https://github.com/JCMais/node-libcurl",
     "repository" : {
         "type" : "git",
-        "url" : "git://github.com/jiangmiao/node-curl.git"
+        "url" : "git://github.com/JCMais/node-libcurl.git"
     },
     "main" : "./lib",
     "scripts" : {
-        "prepublish" : "git submodule update --init --recursive && python deps/curl-for-windows/configure.py",
-        "install" : "node src/generate-stubs && (node-gyp rebuild)"
+        "install" : "node tools/retrieve-win-deps && node tools/generate-stubs && node-gyp rebuild"
+    },
+    "dependencies" : {
+        "bindings" : "~1.2.0"
+    },
+    "devDependencies" : {
+        "mocha" : "~1.18.2",
+        "should": "~3.3.1",
+        "express": "~4.0.0"
     },
     "engines" : { "node": ">= 0.6.0" }
 }
