@@ -1,52 +1,59 @@
 # node-libcurl
 
+[![NPM version](https://badge.fury.io/js/node-libcurl.svg)](http://badge.fury.io/js/node-libcurl)
+[![Dependencies](https://gemnasium.com/JCMais/node-libcurl.png)](https://gemnasium.com/JCMais/node-libcurl)
+
 Libcurl bindings for Node.js.
 _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-curl)._
 
 Work in progress.
 
 ## Quick Start
+
+### Install
+```npm install node-libcurl```
+
 ### Simple Request
-  ```javascript
-  var Curl = require( 'node-libcurl' ).Curl;
+```javascript
+var Curl = require( 'node-libcurl' ).Curl;
 
-  var curl = new Curl();
+var curl = new Curl();
 
-  curl.setOpt( 'URL', 'www.google.com' );
-  curl.setOpt( 'FOLLOWLOCATION', true );
+curl.setOpt( 'URL', 'www.google.com' );
+curl.setOpt( 'FOLLOWLOCATION', true );
 
-  curl.on( 'end', function( statusCode, body, headers ) {
+curl.on( 'end', function( statusCode, body, headers ) {
 
-  	console.info( statusCode );
-  	console.info( '---' );
-  	console.info( body.length );
-  	console.info( '---' );
-  	console.info( this.getInfo( 'TOTAL_TIME' ) );
+    console.info( statusCode );
+    console.info( '---' );
+    console.info( body.length );
+    console.info( '---' );
+    console.info( this.getInfo( 'TOTAL_TIME' ) );
 
-  	this.close();
-  });
+    this.close();
+});
 
-  curl.on( 'error', curl.close.bind( curl ) );
-  curl.perform();
-  ```
+curl.on( 'error', curl.close.bind( curl ) );
+curl.perform();
+```
   
 ### MultiPart Upload / HttpPost libcurl Option
 
-  ```javascript
-  var Curl = require( 'node-libcurl' ).Curl;
+```javascript
+var Curl = require( 'node-libcurl' ).Curl;
   
-  var curl = new Curl(),
-      close = curl.close.bind( curl );
+var curl = new Curl(),
+    close = curl.close.bind( curl );
 
-  curl.setOpt( curl.option.URL, '127.0.0.1/upload.php' );
-  curl.setOpt( curl.option.HTTPPOST, [
+curl.setOpt( curl.option.URL, '127.0.0.1/upload.php' );
+curl.setOpt( curl.option.HTTPPOST, [
     { name: 'input-name', file: '/file/path', type: 'text/html' },
     { name: 'input-name2', contents: 'field-contents' }
-  ]);
+]);
 
-  curl.on( 'end', close );
-  curl.on( 'error', close );
-  ```
+curl.on( 'end', close );
+curl.on( 'error', close );
+```
 
 For more examples check the [examples folder](examples).
 
