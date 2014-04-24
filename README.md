@@ -7,8 +7,6 @@ Work in progress.
 
 ## Quick Start
 
-
-
   ```javascript
   var Curl = require( 'node-libcurl' );
 
@@ -32,6 +30,8 @@ Work in progress.
   curl.perform();
   ```
 
+For more examples check the [examples folder](examples).
+
 ## API
 
 ### Curl
@@ -46,8 +46,8 @@ Work in progress.
   * header - Received a chunk of headers
     * Buffer header
   * error - Libcurl found an error
-    Error err
-    int cURLErrorCode
+    * Error err
+    * int cURLErrorCode
 
 * methods:
   * getInfo - Get information from the current header handler
@@ -56,7 +56,11 @@ Work in progress.
   * setOpt - Set an option to the curl instance
     * String|Int optionIdOrName    Option id or the option name as string, constants on Curl.option
     * Mixed optionValue            Value is based on the given option, check libcurl documentation for more info.
-  * close - Close the current curl instance, after calling this method, this handler is not usable anymore. You **MUST** call this on error and on the end method, it's **not** called by default.
+  * close - Close the current curl instance, after calling this method, this handler is not usable anymore. You **MUST** call this on `error` and `end` events, it's **NOT** called by default.
+
+* members:
+  * raw - bool - Get raw data on `data` and `header` events.
+  * debug - bool - Enable debug messages, currently there are none.
 
 * static methods:
   * getCount - Get amount of Curl instances active
