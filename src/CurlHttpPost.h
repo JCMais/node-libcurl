@@ -2,6 +2,7 @@
 #define CURLHTTPPOST_H
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <curl/curl.h>
 #ifdef _WIN32
