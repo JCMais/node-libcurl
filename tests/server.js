@@ -1,6 +1,10 @@
-(function( window, $, , undefined ){
-	"use strict";
+(function(){
 
+    var express = require( 'express' );
 
+    var app = express();
 
-}( window, window.jQuery,  || {} ));
+    app.listen();
+
+    module.exports = app;
+}());
