@@ -1,5 +1,8 @@
 # node-libcurl
 
+[![NPM version](https://badge.fury.io/js/node-libcurl.svg)](http://badge.fury.io/js/node-libcurl)
+[![Dependencies](https://gemnasium.com/JCMais/node-libcurl.png)](https://gemnasium.com/JCMais/node-libcurl)
+
 Libcurl bindings for Node.js.
 _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-curl)._
 
@@ -7,28 +10,50 @@ Work in progress.
 
 ## Quick Start
 
-  ```javascript
-  var Curl = require( 'node-libcurl' ).Curl;
+### Install
+```npm install node-libcurl```
 
-  var curl = new Curl();
+### Simple Request
+```javascript
+var Curl = require( 'node-libcurl' ).Curl;
 
-  curl.setOpt( 'URL', 'www.google.com' );
-  curl.setOpt( 'FOLLOWLOCATION', true );
+var curl = new Curl();
 
-  curl.on( 'end', function( statusCode, body, headers ) {
+curl.setOpt( 'URL', 'www.google.com' );
+curl.setOpt( 'FOLLOWLOCATION', true );
 
-  	console.info( statusCode );
-  	console.info( '---' );
-  	console.info( body.length );
-  	console.info( '---' );
-  	console.info( this.getInfo( 'TOTAL_TIME' ) );
+curl.on( 'end', function( statusCode, body, headers ) {
 
-  	this.close();
-  });
+    console.info( statusCode );
+    console.info( '---' );
+    console.info( body.length );
+    console.info( '---' );
+    console.info( this.getInfo( 'TOTAL_TIME' ) );
 
-  curl.on( 'error', curl.close.bind( curl ) );
-  curl.perform();
-  ```
+    this.close();
+});
+
+curl.on( 'error', curl.close.bind( curl ) );
+curl.perform();
+```
+  
+### MultiPart Upload / HttpPost libcurl Option
+
+```javascript
+var Curl = require( 'node-libcurl' ).Curl;
+  
+var curl = new Curl(),
+    close = curl.close.bind( curl );
+
+curl.setOpt( curl.option.URL, '127.0.0.1/upload.php' );
+curl.setOpt( curl.option.HTTPPOST, [
+    { name: 'input-name', file: '/file/path', type: 'text/html' },
+    { name: 'input-name2', contents: 'field-contents' }
+]);
+
+curl.on( 'end', close );
+curl.on( 'error', close );
+```
 
 For more examples check the [examples folder](examples).
 
@@ -70,22 +95,11 @@ For more examples check the [examples folder](examples).
   * option - Object with all options available.
   * info - Object with all infos available.
 
-## MultiPart Upload / HTTPPOST option
 
-There are 4 options in , `name`, `file`, `type`, `contents`
+## Installing on Windows
 
-```javascript
-var Curl = require( 'node-libcurl' ).Curl;
+#### What you need to have installed:
 
-var curl = new Curl(),
-    close = curl.close.bind( curl );
-
-curl.setOpt( curl.option.URL, '127.0.0.1/upload.php' );
-curl.setOpt( curl.option.HTTPPOST, [
-    { name: 'input-name', file: '/file/path', type: 'text/html' },
-    { name: 'input-name2', contents: 'field-contents' }
-]);
-
-curl.on( 'end', close );
-curl.on( 'error', close );
-```
+* [Python 2.7](https://www.python.org/download/releases/2.7)
+* [Visual Studio 2010/2012](http://www.visualstudio.com/downloads/download-visual-studio-vs) (Express version works!)
+* Just that, really.
