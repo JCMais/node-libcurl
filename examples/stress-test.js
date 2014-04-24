@@ -8,11 +8,11 @@ var Curl = require( '../lib/Curl' ),
     util = require( 'util' );
 
 /*
- * Under a nginx running on a virtual box, I've got 12s, 368.155ms with the following config:
+ * Under a nginx running on a virtual box, I've got 15s, 245.152ms with the following config:
  */
 var url = 'http://local.vm/', //local.vm in this case was the default nginx page.
     file= 'file:///' + path.join( __dirname, 'test.txt' ),
-    instances   = 100,
+    instances   = 300,
     maxRequests = 10000,
     shouldTestFile = false,
     shouldUseHeaderRequest = true,
