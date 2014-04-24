@@ -11,7 +11,8 @@ if ( process.platform !== 'win32' ) {
  */
 
 var exec = require( 'child_process' ).exec,
-    path = require( 'path' );
+    path = require( 'path' ),
+    fs   = require( 'fs' );
 
 var child, i, len,
     moduleKey, modulePath,
@@ -19,20 +20,21 @@ var child, i, len,
     moduleInfo,
     paths = [],
     execConfig = {
-        //cwd : path.resolve( __dirname, '..' )
+        cwd : path.resolve( __dirname, '..' )
     };
 
 exec( 'git rev-parse', function( err ) {
 
     if ( !err ) {
 
-        //already a git repo, dev machine? Just ignore.
+        //already a git repo, dev machine? Go directly to the replacement.
+        replaceTokensOnGypFiles();
         process.exit( 0 );
     }
 
     parseSubmodulesConfig();
 
-});
+}, execConfig );
 
 function parseSubmodulesConfig() {
 
@@ -53,44 +55,46 @@ function parseSubmodulesConfig() {
             moduleKey = moduleInfo[0];
             modulePath= moduleInfo[1];
 
-            paths.push( modulePath );
+            paths.push(  modulePath );
 
             urlKey = moduleKey.replace( '.path', '.url' );
 
-            exec( 'git config -f .gitmodules --get ' + urlKey, initGitSubmodule.bind( this, modulePath ) );
+            exec( 'git config -f .gitmodules --get ' + urlKey, initGitSubmodule.bind( this, modulePath ), execConfig );
         }
 
     }, execConfig );
 
 }
 
-function initGitSubmodule( path, err, url ) {
+function initGitSubmodule( depsPath, err, url ) {
 
     if ( err ) {
         console.log( err.toString() );
         process.exit( 1 );
     }
 
-    exec( 'git submodule add ' + url + ' ' + path, function ( path, err ) {
+    exec( 'git init -q && git submodule add ' + url.trim() + ' ' + depsPath, function ( depsPath, err ) {
 
         if ( err ) {
             console.log( err.toString() );
             process.exit( 1 );
         }
 
-        paths.splice( paths.indexOf( path ), 1 );
+        paths.splice( paths.indexOf( depsPath ), 1 );
 
         if ( paths.length === 0 ) {
 
             //everything processed, configure
-            exec(
-                'git submodule update --init --recursive && python deps/curl-for-windows/configure.py',
+            exec( 'git submodule update --init --recursive && python deps/curl-for-windows/configure.py',
                 function ( err ) {
 
                     if ( err ) {
                         console.log( err.toString() );
                         process.exit( 1 );
                     }
+
+                    //Grab gyp config files and replace <(library) with static_library
+                    replaceTokensOnGypFiles();
 
                     process.exit( 0 );
 
@@ -99,6 +103,40 @@ function initGitSubmodule( path, err, url ) {
             )
         }
 
-    }.bind( this, path ), execConfig );
+    }.bind( this, depsPath ), execConfig );
 
+}
+
+
+function replaceTokensOnGypFiles() {
+
+    var filesToCheck = [ 'libssh2.gyp', 'openssl.gyp', 'zlib.gyp', 'curl.gyp' ],
+        search = /<\(library\)/g,
+        replacement = 'static_library',
+        i, len, file;
+
+    for ( i = 0, len = filesToCheck.length; i < len; i++ ) {
+
+        file = path.resolve( __dirname, '..', 'deps', 'curl-for-windows', filesToCheck[i] );
+
+        replaceOnFile( file, search, replacement );
+
+    }
+}
+
+function replaceOnFile( file, search, replacement ) {
+
+    var fileContent;
+
+    if ( !fs.existsSync( file ) ) {
+
+        console.error( 'File: ', file, ' not found.' );
+        process.exit( 1 );
+    }
+
+    fileContent = fs.readFileSync( file ).toString();
+
+    fileContent = fileContent.replace( search, replacement );
+
+    fs.writeFileSync( file, fileContent );
 }
