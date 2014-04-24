@@ -6,7 +6,7 @@ _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-
 Work in progress.
 
 ## Quick Start
-
+### Simple Request
   ```javascript
   var Curl = require( 'node-libcurl' ).Curl;
 
@@ -28,6 +28,24 @@ Work in progress.
 
   curl.on( 'error', curl.close.bind( curl ) );
   curl.perform();
+  ```
+  
+### MultiPart Upload / HttpPost libcurl Option
+
+  ```javascript
+  var Curl = require( 'node-libcurl' ).Curl;
+  
+  var curl = new Curl(),
+      close = curl.close.bind( curl );
+
+  curl.setOpt( curl.option.URL, '127.0.0.1/upload.php' );
+  curl.setOpt( curl.option.HTTPPOST, [
+    { name: 'input-name', file: '/file/path', type: 'text/html' },
+    { name: 'input-name2', contents: 'field-contents' }
+  ]);
+
+  curl.on( 'end', close );
+  curl.on( 'error', close );
   ```
 
 For more examples check the [examples folder](examples).
@@ -70,22 +88,11 @@ For more examples check the [examples folder](examples).
   * option - Object with all options available.
   * info - Object with all infos available.
 
-## MultiPart Upload / HTTPPOST option
 
-There are 4 options in , `name`, `file`, `type`, `contents`
+## Installing on Windows
 
-```javascript
-var Curl = require( 'node-libcurl' ).Curl;
+#### What you need to have installed:
 
-var curl = new Curl(),
-    close = curl.close.bind( curl );
-
-curl.setOpt( curl.option.URL, '127.0.0.1/upload.php' );
-curl.setOpt( curl.option.HTTPPOST, [
-    { name: 'input-name', file: '/file/path', type: 'text/html' },
-    { name: 'input-name2', contents: 'field-contents' }
-]);
-
-curl.on( 'end', close );
-curl.on( 'error', close );
-```
+* [Python 2.7](https://www.python.org/download/releases/2.7)
+* [Visual Studio 2010/2012](http://www.visualstudio.com/downloads/download-visual-studio-vs) (Express version works!)
+* Just that, really.
