@@ -135,7 +135,7 @@ int isInsideCurlOption( const Curl::CurlOption *curlOptions, const int lenOfOpti
 
         const Curl::CurlOption &curr = curlOptions[i];
 
-        if ( isString && curr.name == optionName || isInt && curr.value == optionId  )
+        if ( (isString && curr.name == optionName) || (isInt && curr.value == optionId)  )
             return curlOptions[i].value;
     }
 
@@ -309,7 +309,7 @@ v8::Handle<v8::Value> Curl::New( const v8::Arguments &args ) {
         v8::Handle<v8::Value> cb = obj->handle->Get( SYM_ON_HEADER );
 
         if ( cb->IsFunction() ) {
-	        v8::Handle<v8::Value> retVal = cb->ToObject()->CallAsFunction( obj->handle, 0, NULL );
+	        cb->ToObject()->CallAsFunction( obj->handle, 0, NULL );
         }
 
         return args.This();
@@ -416,7 +416,7 @@ size_t Curl::OnHeader( char *data, size_t n )
 
 void Curl::OnEnd( CURLMsg *msg )
 {
-    v8::HandleScope;
+    v8::HandleScope scope;
 
 	static v8::Persistent<v8::String> SYM_ON_END = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onEnd" ) );
 

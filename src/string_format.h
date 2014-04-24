@@ -7,4 +7,4 @@
 
 std::string string_format( const std::string, ... );
 
-#endif;
+#endif
