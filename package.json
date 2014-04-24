@@ -1,25 +1,32 @@
 {
-    "name": "node-libcurl",
-    "version": "0.0.5",
-    "author" : "Jonathan Cardoso <me@jonathancardoso.com>",
-    "description": "Node bindings for libcurl. Based on the work from node-curl.",
-    "keywords" : ["node-curl", "curl", "libcurl", "node-libcurl"],
-    "homepage": "https://github.com/JCMais/node-libcurl",
-    "repository" : {
-        "type" : "git",
-        "url" : "git://github.com/JCMais/node-libcurl.git"
-    },
-    "main" : "./index.js",
-    "scripts" : {
-        "install" : "node tools/retrieve-win-deps && node tools/generate-stubs && node-gyp rebuild"
-    },
-    "dependencies" : {
-        "bindings" : "~1.2.0"
-    },
-    "devDependencies" : {
-        "mocha" : "~1.18.2",
-        "should": "~3.3.1",
-        "express": "~4.0.0"
-    },
-    "engines" : { "node": ">= 0.6.0" }
+  "name": "node-libcurl",
+  "version": "0.0.6",
+  "author": "Jonathan Cardoso <me@jonathancardoso.com>",
+  "description": "Node bindings for libcurl. Based on the work from node-curl.",
+  "keywords": [
+    "node-curl",
+    "curl",
+    "libcurl",
+    "node-libcurl"
+  ],
+  "homepage": "https://github.com/JCMais/node-libcurl",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/JCMais/node-libcurl.git"
+  },
+  "main": "./index.js",
+  "scripts": {
+    "install": "node tools/retrieve-win-deps && node tools/generate-stubs && node-gyp rebuild"
+  },
+  "dependencies": {
+    "bindings": "~1.2.0"
+  },
+  "devDependencies": {
+    "mocha": "~1.18.2",
+    "should": "~3.3.1",
+    "express": "~4.0.0"
+  },
+  "engines": {
+    "node": ">= 0.6.0"
+  }
 }
