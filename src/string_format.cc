@@ -1,5 +1,9 @@
 #include "string_format.h"
 
+#include <string.h>
+#include <stdarg.h>  // for va_start, etc
+#include <memory>    // for std::unique_ptr
+
 //SOOP: stack overflow oriented programming
 // http://stackoverflow.com/a/8098080/710693
 std::string string_format( const std::string fmt_str, ... ) {

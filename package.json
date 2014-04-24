@@ -1,6 +1,6 @@
 {
     "name": "node-libcurl",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "author" : "Jonathan Cardoso <me@jonathancardoso.com>",
     "description": "Node bindings for libcurl. Based on the work from node-curl.",
     "keywords" : ["node-curl", "curl", "libcurl", "node-libcurl"],
@@ -9,7 +9,7 @@
         "type" : "git",
         "url" : "git://github.com/JCMais/node-libcurl.git"
     },
-    "main" : "./lib",
+    "main" : "./index.js",
     "scripts" : {
         "install" : "node tools/retrieve-win-deps && node tools/generate-stubs && node-gyp rebuild"
     },

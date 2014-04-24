@@ -1,2 +1,0 @@
-CurlBuilder = require './lib/CurlBuilder'
-module.exports = CurlBuilder.create()

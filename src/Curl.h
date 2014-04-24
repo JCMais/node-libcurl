@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "CurlHttpPost.h"
+#include "string_format.h"
 
 class Curl {
 

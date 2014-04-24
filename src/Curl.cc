@@ -1,8 +1,4 @@
 #include "Curl.h"
-#include "string_format.h"
-#ifdef _WIN32
-	#include "strndup.h"
-#endif
 
 // Set curl constants
 #include "generated-stubs/curlOptionsString.h"
@@ -94,7 +90,7 @@ void stringToUpper( std::string &s )
         s[i] = toupper( s[i] );
 }
 
-//Function that checks if given option is inside the given Curl::CurlOption struct, if it is, returns the optionId + 1
+//Function that checks if given option is inside the given Curl::CurlOption struct, if it is, returns the optionId
 #define isInsideOption( options, option ) isInsideCurlOption( options, sizeof( options ), option )
 int isInsideCurlOption( const Curl::CurlOption *curlOptions, const int lenOfOption, const v8::Handle<v8::Value> &option ) {
 
@@ -103,8 +99,8 @@ int isInsideCurlOption( const Curl::CurlOption *curlOptions, const int lenOfOpti
     bool isString = option->IsString();
     bool isInt    = option->IsInt32();
 
-    std::string optionName;
-    int32_t optionId;
+    std::string optionName = "";
+    int32_t optionId = -1;
 
     if ( !isString && !isInt ) {
         v8::ThrowException(v8::Exception::TypeError(

@@ -9,6 +9,7 @@
                 'src/strndup.cc',
                 'src/string_format.cc'
             ],
+            'cflags' : ['-std=c++11'],
             'conditions': [
                 ['OS=="win"', {
                     'dependencies': [

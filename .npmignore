@@ -2,6 +2,7 @@
 raw/
 build/
 build/.*
+deps/
 src/generated-stubs/*_infos.h
 src/generated-stubs/*_options.h
 *.tgz

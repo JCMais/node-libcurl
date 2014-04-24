@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <curl/curl.h>
+
 #ifdef _WIN32
 	#include "strndup.h"
 #endif

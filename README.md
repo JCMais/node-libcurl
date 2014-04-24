@@ -8,7 +8,7 @@ Work in progress.
 ## Quick Start
 
   ```javascript
-  var Curl = require( 'node-libcurl' );
+  var Curl = require( 'node-libcurl' ).Curl;
 
   var curl = new Curl();
 
@@ -75,7 +75,7 @@ For more examples check the [examples folder](examples).
 There are 4 options in , `name`, `file`, `type`, `contents`
 
 ```javascript
-var Curl = require( 'node-libcurl' );
+var Curl = require( 'node-libcurl' ).Curl;
 
 var curl = new Curl(),
     close = curl.close.bind( curl );
