@@ -1,5 +1,4 @@
 #include "Curl.h"
-#include <sstream>
 #include "string_format.h"
 #ifdef _WIN32
 	#include "strndup.h"
