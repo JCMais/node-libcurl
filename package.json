@@ -1,8 +1,8 @@
 {
     "name": "node-libcurl",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "author" : "Jonathan Cardoso <me@jonathancardoso.com>",
-    "description": "Node wrapper for libcurl. Based on the work from node-curl.",
+    "description": "Node bindings for libcurl. Based on the work from node-curl.",
     "keywords" : ["node-curl", "curl", "libcurl", "node-libcurl"],
     "homepage": "https://github.com/JCMais/node-libcurl",
     "repository" : {

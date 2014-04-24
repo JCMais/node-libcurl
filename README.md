@@ -1,190 +1,87 @@
-node-curl [![Build Status](https://secure.travis-ci.org/jiangmiao/node-curl.png?branch=master)](http://travis-ci.org/jiangmiao/node-curl)
-=========
+# node-libcurl
 
-node cURL wrapper, support all options and infos.
+Libcurl bindings for Node.js.
+_Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-curl)._
 
-Quick Start
------------
+Work in progress.
 
-* quick start
-
-        curl = require('node-curl');
-        curl('www.google.com', function(err) {
-          console.info(this.status);
-          console.info('-----');
-          console.info(this.body);
-          console.info('-----');
-          console.info(this.info('SIZE_DOWNLOAD'));
-        });
-
-* with options
-
-        curl = require('node-curl')
-        curl('www.google.com', {VERBOSE: 1, RAW: 1}, function(err) {
-          console.info(this);
-        });
-
-* run the example/test.js
-
-        node examples/test.js
-
-Usage
------
-
-* curl
-
-        curl(url, [options = {}], callback)
-        callback includes 1 parameters (error)
-        result is stored in curl
-
-* Retrieve Data from curl
-
-        members:
-          status           - Http Response code
-          body             - Http body
-          header           - Http header
-
-          url              - the url set by curl(...)
-          options          - the options set by curl(...)
-          defaultOptions   - the defaultOptions
-          effectiveOptions - the options curl used
-
-        methods:
-          info(name) - Get information of result, see 'info' section
-
-        REMARK:
-            If the http is redirected, then header will contain at least 2 http headers.
+## Quick Start
 
 
-* Curl Control
 
-        members
-            debug (default: false)
-                - logging node-curl debug info
+  ```javascript
+  var Curl = require( 'node-libcurl' );
 
-        methods:
-            void reset()
-                - reset curl and set options to default options
+  var curl = new Curl();
 
-            void setDefaultOptions(options, reset = true)
-                - set default options
+  curl.setOpt( 'URL', 'www.google.com' );
+  curl.setOpt( 'FOLLOWLOCATION', true );
 
-            curl create(defaultOptions)
-                - create a new curl with default options
+  curl.on( 'end', function( statusCode, body, headers ) {
 
-Options
--------
-* Any cURL Easy Options
+  	console.info( statusCode );
+  	console.info( '---' );
+  	console.info( body.length );
+  	console.info( '---' );
+  	console.info( this.getInfo( 'TOTAL_TIME' ) );
 
-        eg: CURLOPT_VERBOSE will be VERBOSE, CURLOPT_HEADER will be HEADER
+  	this.close();
+  });
 
-        Full list at http://curl.haxx.se/libcurl/c/curl_easy_setopt.html
+  curl.on( 'error', curl.close.bind( curl ) );
+  curl.perform();
+  ```
 
-* node-curl Extra Options
+## API
 
-        RAW   - Returns Buffer instead of String in result.body
-        DEBUG - Replace curl.debug
+### Curl
 
-* About slist parameters
+* events:
+  * end - Request finished without errors
+    * int statusCode
+    * string|[if raw => Buffer] body
+    * Array\<Object>|[if raw => Buffer] headers
+  * data - Received a chunk of data
+    * Buffer chunk
+  * header - Received a chunk of headers
+    * Buffer header
+  * error - Libcurl found an error
+    Error err
+    int cURLErrorCode
 
-        node-curl support slist which map to Javascript Array
+* methods:
+  * getInfo - Get information from the current header handler
+    * String|Int infoIdOrName      Info id or the info name as string, you can use the constants from Curl.info
+    * returns Array|String|Number  Return value is based on the requested info.
+  * setOpt - Set an option to the curl instance
+    * String|Int optionIdOrName    Option id or the option name as string, constants on Curl.option
+    * Mixed optionValue            Value is based on the given option, check libcurl documentation for more info.
+  * close - Close the current curl instance, after calling this method, this handler is not usable anymore. You **MUST** call this on error and on the end method, it's **not** called by default.
 
-        eg:
-            HTTPHEADER: ['FOO', 'BAR']
-            HTTPHEADER: 'FOO'
+* static methods:
+  * getCount - Get amount of Curl instances active
+    * returns int
 
-            any non-array parameter will convert to [ parameter.toString() ]
+* static members:
+  * option - Object with all options available.
+  * info - Object with all infos available.
 
-Infos
------
-* Any cURL Info options
+## MultiPart Upload / HTTPPOST option
 
-        eg: CURLINFO_EFFECTIVE_URL will be EFFETCTIVE_URL
-
-        full list at http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html
-
-
-* About slist
-
-          slist will be returns in Array
-          eg: CURLINFO_COOKIELIST
-
-MultiPart Upload
-----------------
-Use MULTIPART option
-
-There are 4 options in MULTIPART, `name`, `file`, `type`, `contents`
+There are 4 options in , `name`, `file`, `type`, `contents`
 
 ```javascript
-curl('127.0.0.1/upload.php', {
-    MULTIPART: [
-        {name: 'file', file: '/file/path', type: 'text/html'},
-        {name: 'sumbit', contents: 'send'}
-    ]
-}, function(e) {
-    console.log(e);
-    console.log(this.body);
-    this.close()
-});
+var Curl = require( 'node-libcurl' );
+
+var curl = new Curl(),
+    close = curl.close.bind( curl );
+
+curl.setOpt( curl.option.URL, '127.0.0.1/upload.php' );
+curl.setOpt( curl.option.HTTPPOST, [
+    { name: 'input-name', file: '/file/path', type: 'text/html' },
+    { name: 'input-name2', contents: 'field-contents' }
+]);
+
+curl.on( 'end', close );
+curl.on( 'error', close );
 ```
-
-Low Level Curl Usage
---------------------
-
-require 'node-curl/lib/Curl'
-
-Methods:
-
-    Curl setopt(optionName, optionValue)
-    Curl perform()
-    Curl on(eventType, callback)
-    Mixed getinfo(infoName)
-
-Events:
-
-    'data', function(Buffer chunk) {}
-    'header', function(Buffer chunk) {}
-    'error', function(Error error) {}
-    'end', function() {}
-
-Example: examples/low-level.js
-
-    var Curl = require('node-curl/lib/Curl')
-
-    var p = console.log;
-    var url = process.argv[2];
-
-    var curl = new Curl();
-
-    if (!url)
-        url = 'www.yahoo.com';
-
-    curl.setopt('URL', url);
-    curl.setopt('CONNECTTIMEOUT', 2);
-
-    // on 'data' must be returns chunk.length, or means interrupt the transfer
-    curl.on('data', function(chunk) {
-        p("receive " + chunk.length);
-        return chunk.length;
-    });
-
-    curl.on('header', function(chunk) {
-        p("receive header " + chunk.length);
-        return chunk.length;
-    })
-
-    // curl.close() should be called in event 'error' and 'end' if the curl won't use any more.
-    // or the resource will not release until V8 garbage mark sweep.
-    curl.on('error', function(e) {
-        p("error: " + e.message);
-        curl.close();
-    });
-
-
-    curl.on('end', function() {
-        p('code: ' + curl.getinfo('RESPONSE_CODE'));
-        p('done.');
-        curl.close();
-    });
-
-    curl.perform();

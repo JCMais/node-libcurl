@@ -7,16 +7,8 @@
                 'src/Curl.cc',
                 'src/CurlHttpPost.cc',
                 'src/strndup.cc',
-                'src/psnprintf.cc'
+                'src/string_format.cc'
             ],
-            'cflags!': [ '-O3' ],
-            'cflags': [ '-O1' ],
-            'msvs_settings': {
-                'VCCLCompilerTool': {
-                    'Optimization': 1, # /Ox, full optimization
-                    'InlineFunctionExpansion': 0 # /Obx, inline anything eligible
-                }
-            },
             'conditions': [
                 ['OS=="win"', {
                     'dependencies': [
@@ -28,8 +20,7 @@
                 }, { # OS != "win"
                     'libraries': ['-lcurl'],
                     'sources!': [
-                        'src/strndup.cc', #remove strndup function declaration on non-windows systems.
-                        'src/psnprintf.cc'
+                        'src/strndup.cc' #remove strndup function declaration on non-windows systems.
                     ]
                 }]
             ]

@@ -1,8 +1,8 @@
 #include "Curl.h"
+#include <sstream>
+#include "string_format.h"
 #ifdef _WIN32
 	#include "strndup.h"
-	#include "psnprintf.h"
-	#define snprintf psnprintf;
 #endif
 
 // Set curl constants
@@ -162,6 +162,20 @@ int v8AllocatedMemoryAmount = 2*4096;
 // Add Curl constructor to the exports
 void Curl::Initialize( v8::Handle<v8::Object> exports ) {
 
+    //Initialize cURL
+	CURLcode code = curl_global_init( CURL_GLOBAL_ALL );
+
+	if ( code != CURLE_OK ) {
+		Curl::Raise( "curl_global_init failed!" );
+	}
+
+	Curl::curlMulti = curl_multi_init();
+
+	if ( Curl::curlMulti == NULL ) {
+
+		Curl::Raise( "curl_multi_init failed!" );
+	}
+
     // Prepare constructor template
     v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New( New );
 
@@ -201,20 +215,6 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
 
     //Creates the Constructor from the template and assign it to the static constructor property for future use, if necessary.
     Curl::constructor = v8::Persistent<v8::Function>::New( tplFunction );
-
-    //Initialize cURL
-	CURLcode code = curl_global_init( CURL_GLOBAL_ALL );
-
-	if ( code != CURLE_OK ) {
-		Curl::Raise( "curl_global_init failed!" );
-	}
-
-	Curl::curlMulti = curl_multi_init();
-
-	if ( Curl::curlMulti == NULL ) {
-
-		Curl::Raise( "curl_multi_init failed!" );
-	}
 
     exports->Set( v8::String::NewSymbol( "Curl" ), Curl::constructor );
 }
@@ -305,6 +305,13 @@ v8::Handle<v8::Value> Curl::New( const v8::Arguments &args ) {
 
         Curl *obj = new Curl( args.This() );
 
+        static v8::Persistent<v8::String> SYM_ON_HEADER = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onCreated" ) );
+        v8::Handle<v8::Value> cb = obj->handle->Get( SYM_ON_HEADER );
+
+        if ( cb->IsFunction() ) {
+	        v8::Handle<v8::Value> retVal = cb->ToObject()->CallAsFunction( obj->handle, 0, NULL );
+        }
+
         return args.This();
 
     } else {
@@ -330,15 +337,6 @@ v8::Handle<v8::Value> Curl::Close( const v8::Arguments &args )
     v8::HandleScope scope;
 
     Curl *obj = Curl::Unwrap( args.This() );
-
-    /*
-    static v8::Persistent<v8::String> SYM_ON_HEADER = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onClose" ) );
-    v8::Handle<v8::Value> cb = obj->handle->Get( SYM_ON_HEADER );
-
-    if ( cb->IsFunction() ) {
-		v8::Handle<v8::Value> retVal = cb->ToObject()->CallAsFunction( obj->handle, 0, NULL );
-    }
-    */
 
     //std::cout << "[cURL] " << "Hi! My size is -> " << sizeof( *obj ) << std::endl;
 
@@ -424,6 +422,12 @@ void Curl::OnEnd( CURLMsg *msg )
 
 	v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_END );
 
+    //Curl *crl = Curl::Unwrap( this->handle );
+    //char *result;
+    //curl_easy_getinfo( crl->curl, (CURLINFO) CURLINFO_CONNECT_TIME, &result );
+
+    //std::cout << "[cURL] " << result << std::endl;
+
 	if ( cb->IsFunction() ) {
 
 		cb->ToObject()->CallAsFunction( this->handle, 0, NULL );
@@ -456,7 +460,13 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
     int optionId;
 
     //check if option is string, and the value is correct
-    if ( ( optionId = isInsideOption( curlOptionsString, opt ) ) && value->IsString() ) {
+    if ( ( optionId = isInsideOption( curlOptionsString, opt ) ) ) {
+
+        if ( !value->IsString() ) {
+            return scope.Close( v8::ThrowException(v8::Exception::TypeError(
+                v8::String::New( "Option value should be a string." )
+            )));
+        }
 
         // Create a string copy
         bool isNull = value->IsNull();
@@ -478,11 +488,18 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
 
 
     //check if option is a integer, and the value is correct
-    } else if ( ( optionId = isInsideOption( curlOptionsInteger, opt ) ) && value->IsInt32() ) {
+    } else if ( ( optionId = isInsideOption( curlOptionsInteger, opt ) )  ) {
+
+        int32_t val = value->Int32Value();
+
+        //If not integer, but a not falsy value, val = 1
+        if ( !value->IsInt32() ) {
+            val = value->BooleanValue();
+        }
 
         optCallResult = v8::Integer::New(
             curl_easy_setopt(
-                obj->curl, (CURLoption) optionId, value->Int32Value()
+                obj->curl, (CURLoption) optionId, val
             )
         );
 
@@ -529,8 +546,6 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
 
                     }
 
-                    std::cout << optionName << std::endl;
-
                     if ( httpPostId == -1 ) {
                         //not found
                     }
@@ -542,6 +557,9 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
                     strcpy( str, *string );
 
                     httpPost.set( httpPostId, str, string.length() );
+
+                    //should we?
+                    delete str;
                 }
 		    }
 
@@ -586,6 +604,24 @@ v8::Handle<v8::Value> Curl::GetInfoTmpl( const Curl &obj, int infoId )
     return v8MappingType::New( result );
 }
 
+template<> //workaround for null pointer, aka, hack
+v8::Handle<v8::Value> Curl::GetInfoTmpl<char*,v8::String>( const Curl &obj, int infoId )
+{
+    char *result;
+
+    CURLINFO info = (CURLINFO) infoId;
+    CURLcode code = curl_easy_getinfo( obj.curl, info, &result );
+
+    if ( !result ) { //null pointer
+        return v8::String::New( "" );
+    }
+
+    if ( code != CURLE_OK )
+        return Curl::Raise( "curl_easy_getinfo failed!", curl_easy_strerror( code ) );
+
+    return v8::String::New( result );
+}
+
 
 v8::Handle<v8::Value> Curl::GetInfo( const v8::Arguments &args )
 {
@@ -601,6 +637,9 @@ v8::Handle<v8::Value> Curl::GetInfo( const v8::Arguments &args )
 
     CURLINFO info;
     CURLcode code;
+
+    v8::String::Utf8Value val( infoVal );
+    std::string valStr = std::string( *val );
 
     //String Info
     if ( (infoId = isInsideOption( curlInfosString, infoVal ) ) ) {
@@ -648,6 +687,8 @@ v8::Handle<v8::Value> Curl::GetInfo( const v8::Arguments &args )
 
 }
 
+static bool isRunning = 0;
+
 //Keep in mind that this is a static method on javascript side.
 //process current pending handles, returns the amount of transfered data, plus 1 if there are running handles.
 v8::Handle<v8::Value> Curl::Process( const v8::Arguments &args )
@@ -659,29 +700,24 @@ v8::Handle<v8::Value> Curl::Process( const v8::Arguments &args )
     if ( Curl::runningHandles > 0 ) {
 
 		CURLMcode code;
-
+	    
+        // remove select totally for timeout doesn't work properly
 		do {
-
             code = curl_multi_perform( Curl::curlMulti, &Curl::runningHandles );
+        } while ( code == CURLM_CALL_MULTI_PERFORM );
 
-		} while ( code == CURLM_CALL_MULTI_PERFORM );
-
-		if ( code != CURLM_OK ) {
-
-			return Curl::Raise( "curl_multi_perform Failed", curl_multi_strerror( code ) );
+        if ( code != CURLM_OK ) {
+            return Curl::Raise( "curl_multi_perform failed", curl_multi_strerror( code ) );
 		}
 
 		int msgs = 0;
 		CURLMsg *msg = NULL;
 
-        long timeout;
-
-        //curl_multi_timeout( Curl::curlMulti, &timeout );
-
         //check status of each handler
 		while ( ( msg = curl_multi_info_read( Curl::curlMulti, &msgs ) ) ) {
+            
 
-			if ( msg->msg == CURLMSG_DONE ) {
+            if ( msg->msg == CURLMSG_DONE ) {
 
 				Curl *curl = Curl::curls[msg->easy_handle];
 				CURLMsg msgCopy = *msg;
@@ -749,14 +785,20 @@ v8::Handle<v8::Value> Curl::Raise( const char *data, const char *reason )
 {
     v8::HandleScope scope;
 
-	static char message[256];
+    isRunning = false;
+
 	const char *what = data;
+    std::string msg;
 
 	if ( reason ) {
 
-		snprintf( message, sizeof( message ), "%s: %s", data, reason );
-		what = message;
+        msg = string_format( "%s: %s", data, reason );
+        what = msg.c_str();
+        
 	}
 
+    std::cerr << "Hello" << std::endl;
+
     return scope.Close( v8::ThrowException( v8::Exception::Error( v8::String::New( what ) ) ) );
+    //return scope.Close( v8::String::New( "ada" ) );
 }
