@@ -149,10 +149,10 @@ v8::Persistent<v8::Function> Curl::constructor;
 CURLM *Curl::curlMulti = NULL;
 int    Curl::runningHandles = 0;
 int    Curl::count = 0;
-int    Curl::transfered = 0;
+int32_t Curl::transfered = 0;
 std::map< CURL*, Curl* > Curl::curls;
 
-int v8AllocatedMemoryAmount = 2*4096;
+int v8AllocatedMemoryAmount = 4*4096;
 
 // Add Curl constructor to the exports
 void Curl::Initialize( v8::Handle<v8::Object> exports ) {
@@ -176,7 +176,7 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
 
     tpl->SetClassName( v8::String::NewSymbol( "Curl" ) );
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
-
+    
     // Prototype Methods
     NODE_SET_PROTOTYPE_METHOD( tpl, "_setOpt", SetOpt );
     NODE_SET_PROTOTYPE_METHOD( tpl, "_getInfo", GetInfo );
@@ -214,6 +214,7 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     exports->Set( v8::String::NewSymbol( "Curl" ), Curl::constructor );
 }
 
+FILE *file = fopen( "E:\\Projetos\\Pessoais\\node\\node-libcurl\\examples\\curl.log", "w" );
 
 Curl::Curl( v8::Handle<v8::Object> obj ) : isInsideMultiCurl( false )
 {
@@ -229,17 +230,18 @@ Curl::Curl( v8::Handle<v8::Object> obj ) : isInsideMultiCurl( false )
 
     this->curl = curl_easy_init();
 
-    if ( !curl ) {
+    if ( !this->curl ) {
 
         Curl::Raise( "curl_easy_init Failed!" );
 
     }
 
     //set callbacks
-    curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, Curl::WriteFunction );
-    curl_easy_setopt( curl, CURLOPT_WRITEDATA, this );
-    curl_easy_setopt( curl, CURLOPT_HEADERFUNCTION, Curl::HeaderFunction );
-    curl_easy_setopt( curl, CURLOPT_HEADERDATA, this );
+    curl_easy_setopt( this->curl, CURLOPT_WRITEFUNCTION, Curl::WriteFunction );
+    curl_easy_setopt( this->curl, CURLOPT_WRITEDATA, this );
+    curl_easy_setopt( this->curl, CURLOPT_HEADERFUNCTION, Curl::HeaderFunction );
+    curl_easy_setopt( this->curl, CURLOPT_HEADERDATA, this );
+    curl_easy_setopt( this->curl, CURLOPT_STDERR, file );
 
     Curl::curls[curl] = this;
 }
@@ -250,7 +252,7 @@ Curl::~Curl(void)
     --Curl::count;
 
     //"return" the memory allocated by the object
-    v8::V8::AdjustAmountOfExternalAllocatedMemory( -v8AllocatedMemoryAmount );
+    //v8::V8::AdjustAmountOfExternalAllocatedMemory( -v8AllocatedMemoryAmount );
 
     //cleanup curl related stuff
 
@@ -261,9 +263,9 @@ Curl::~Curl(void)
             curl_multi_remove_handle( this->curlMulti, this->curl );
 
         }
-
-        curl_easy_cleanup( this->curl );
+        
         Curl::curls.erase( this->curl );
+        curl_easy_cleanup( this->curl );
 
     }
 
@@ -275,7 +277,6 @@ Curl::~Curl(void)
 
 				curl_slist_free_all( linkedList );
 			}
-
     }
 }
 
@@ -293,6 +294,7 @@ Curl* Curl::Unwrap( v8::Handle<v8::Object> value )
 }
 
 v8::Handle<v8::Value> Curl::New( const v8::Arguments &args ) {
+
     v8::HandleScope scope;
 
     if ( args.IsConstructCall() ) {
@@ -333,8 +335,6 @@ v8::Handle<v8::Value> Curl::Close( const v8::Arguments &args )
 
     Curl *obj = Curl::Unwrap( args.This() );
 
-    //std::cout << "[cURL] " << "Hi! My size is -> " << sizeof( *obj ) << std::endl;
-
 	if ( obj )
 		obj->Dispose();
 
@@ -346,14 +346,18 @@ size_t Curl::WriteFunction( char *ptr, size_t size, size_t nmemb, void *userdata
 {
 	Curl::transfered += size * nmemb;
 	Curl *obj = (Curl*) userdata;
-	return obj->OnData( ptr, size * nmemb );
+	obj->OnData( ptr, size * nmemb );
+
+    return size * nmemb;
 }
 
 size_t Curl::HeaderFunction( char *ptr, size_t size, size_t nmemb, void *userdata )
 {
 	Curl::transfered += size * nmemb;
 	Curl *obj = (Curl*) userdata;
-	return obj->OnHeader( ptr, size * nmemb );
+	obj->OnHeader( ptr, size * nmemb );
+
+    return size * nmemb;
 }
 
 size_t Curl::OnData( char *data, size_t n )
@@ -390,8 +394,6 @@ size_t Curl::OnHeader( char *data, size_t n )
 	static v8::Persistent<v8::String> SYM_ON_HEADER = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onHeader" ) );
 	v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_HEADER );
 
-    //std::cout << "[cURL] " << data << std::endl;
-
     size_t ret = n;
 
 	if ( cb->IsFunction() ) {
@@ -416,12 +418,6 @@ void Curl::OnEnd( CURLMsg *msg )
 	static v8::Persistent<v8::String> SYM_ON_END = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onEnd" ) );
 
 	v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_END );
-
-    //Curl *crl = Curl::Unwrap( this->handle );
-    //char *result;
-    //curl_easy_getinfo( crl->curl, (CURLINFO) CURLINFO_CONNECT_TIME, &result );
-
-    //std::cout << "[cURL] " << result << std::endl;
 
 	if ( cb->IsFunction() ) {
 
@@ -454,52 +450,8 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
 
     int optionId;
 
-    //check if option is string, and the value is correct
-    if ( ( optionId = isInsideOption( curlOptionsString, opt ) ) ) {
-
-        if ( !value->IsString() ) {
-            return scope.Close( v8::ThrowException(v8::Exception::TypeError(
-                v8::String::New( "Option value should be a string." )
-            )));
-        }
-
-        // Create a string copy
-        bool isNull = value->IsNull();
-        std::string valueAsString;
-
-        if ( !isNull ) {
-
-            //Curl don't copies the string before version 7.17
-		    v8::String::Utf8Value value( args[1] );
-		    int length = value.length();
-		    obj->curlStrings[optionId] = std::string( *value, length );
-        }
-
-        optCallResult = v8::Integer::New(
-            curl_easy_setopt(
-                obj->curl, (CURLoption) optionId, ( !isNull ) ? obj->curlStrings[optionId].c_str() : NULL
-            )
-        );
-
-
-    //check if option is a integer, and the value is correct
-    } else if ( ( optionId = isInsideOption( curlOptionsInteger, opt ) )  ) {
-
-        int32_t val = value->Int32Value();
-
-        //If not integer, but a not falsy value, val = 1
-        if ( !value->IsInt32() ) {
-            val = value->BooleanValue();
-        }
-
-        optCallResult = v8::Integer::New(
-            curl_easy_setopt(
-                obj->curl, (CURLoption) optionId, val
-            )
-        );
-
     //check if option is linked list, and the value is correct
-    } else if ( ( optionId = isInsideOption( curlOptionsLinkedList, opt ) ) && value->IsArray() ) {
+    if ( ( optionId = isInsideOption( curlOptionsLinkedList, opt ) ) ) {
 
         //special case, array of objects
         if ( optionId == CURLOPT_HTTPPOST ) {
@@ -563,23 +515,84 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
 
         } else {
 
-            //convert value to curl linked list (curl_slist)
-		    curl_slist *slist = NULL;
-		    v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast( value );
+            if ( value->IsNull() ) {
+		        optCallResult = v8::Integer::New(
+                    curl_easy_setopt(
+                        obj->curl, (CURLoption) optionId, NULL
+                    )
+                );
 
-		    for ( uint32_t i = 0, len = array->Length(); i < len; ++i )
-		    {
-			    slist = curl_slist_append( slist, *v8::String::Utf8Value( array->Get( i ) ) );
-		    }
+            } else {
 
-            obj->curlLinkedLists.push_back( slist );
+                if ( !value->IsArray() ) {
+                    return scope.Close( v8::ThrowException(v8::Exception::TypeError(
+                        v8::String::New( "Option value should be an array." )
+                    )));
+                }
 
-		    optCallResult = v8::Integer::New(
-                curl_easy_setopt(
-                    obj->curl, (CURLoption) optionId, slist
-                )
-            );
+                //convert value to curl linked list (curl_slist)
+		        curl_slist *slist = NULL;
+		        v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast( value );
+
+		        for ( uint32_t i = 0, len = array->Length(); i < len; ++i )
+		        {
+			        slist = curl_slist_append( slist, *v8::String::Utf8Value( array->Get( i ) ) );
+		        }
+
+                obj->curlLinkedLists.push_back( slist );
+
+		        optCallResult = v8::Integer::New(
+                    curl_easy_setopt(
+                        obj->curl, (CURLoption) optionId, slist
+                    )
+                );
+            }
         }
+
+        //check if option is string, and the value is correct
+    } else if ( ( optionId = isInsideOption( curlOptionsString, opt ) ) ) {
+
+        if ( !value->IsString() ) {
+            return scope.Close( v8::ThrowException(v8::Exception::TypeError(
+                v8::String::New( "Option value should be a string." )
+            )));
+        }
+
+        // Create a string copy
+        bool isNull = value->IsNull();
+        std::string valueAsString;
+
+        if ( !isNull ) {
+
+            //Curl don't copies the string before version 7.17
+		    v8::String::Utf8Value value( args[1] );
+		    int length = value.length();
+		    obj->curlStrings[optionId] = std::string( *value, length );
+        }
+
+        optCallResult = v8::Integer::New(
+            curl_easy_setopt(
+                obj->curl, (CURLoption) optionId, ( !isNull ) ? obj->curlStrings[optionId].c_str() : NULL
+            )
+        );
+
+
+    //check if option is a integer, and the value is correct
+    } else if ( ( optionId = isInsideOption( curlOptionsInteger, opt ) )  ) {
+
+        int32_t val = value->Int32Value();
+
+        //If not integer, but a not falsy value, val = 1
+        if ( !value->IsInt32() ) {
+            val = value->BooleanValue();
+        }
+
+        optCallResult = v8::Integer::New(
+            curl_easy_setopt(
+                obj->curl, (CURLoption) optionId, val
+            )
+        );
+
     }
 
     return optCallResult;

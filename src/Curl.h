@@ -33,6 +33,7 @@ class Curl {
 
         CURL  *curl;
         CurlHttpPost httpPost;
+        FILE *logfile;
         
         std::vector<curl_slist*> curlLinkedLists;
         std::map<int, std::string> curlStrings;
