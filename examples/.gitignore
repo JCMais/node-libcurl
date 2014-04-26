@@ -1,1 +1,2 @@
-cookiejar.txt
+*.txt
+*.pem

@@ -1,5 +1,5 @@
 //Taken from http://cgit.haiku-os.org/haiku/plain/src/system/libroot/posix/string/strndup.cpp
-#include "strndup.h";
+#include "strndup.h"
 
 char* strndup( const char* string, size_t size )
 {

@@ -36,12 +36,12 @@ curl.on( 'end', function( statusCode, body, headers ) {
 curl.on( 'error', curl.close.bind( curl ) );
 curl.perform();
 ```
-  
+
 ### MultiPart Upload / HttpPost libcurl Option
 
 ```javascript
 var Curl = require( 'node-libcurl' ).Curl;
-  
+
 var curl = new Curl(),
     close = curl.close.bind( curl );
 
@@ -75,12 +75,13 @@ For more examples check the [examples folder](examples).
     * int cURLErrorCode
 
 * methods:
-  * getInfo - Get information from the current header handler
+  * getInfo - Get information from the handler
     * String|Int infoIdOrName      Info id or the info name as string, you can use the constants from Curl.info
     * returns Array|String|Number  Return value is based on the requested info.
-  * setOpt - Set an option to the curl instance
+  * setOpt - Set an option to the handler
     * String|Int optionIdOrName    Option id or the option name as string, constants on Curl.option
     * Mixed optionValue            Value is based on the given option, check libcurl documentation for more info.
+  * perform - Process this handler.
   * close - Close the current curl instance, after calling this method, this handler is not usable anymore. You **MUST** call this on `error` and `end` events, it's **NOT** called by default.
 
 * members:

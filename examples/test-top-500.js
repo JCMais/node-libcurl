@@ -3,7 +3,7 @@ var Curl = require( '../lib/Curl' ),
     sites = require( './top-sites' ),
     sitesKeys = Object.keys( sites );
 
-var maxNumberOfConnections = 3,
+var maxNumberOfConnections = 50,
     running = 0,
     i, j;
 
@@ -19,9 +19,6 @@ function doRequest() {
     if ( !siteKey )
         return;
 
-    if ( sitesKeys.length % 50 === 0 )
-        console.info( 'Remaining: ', sitesKeys.length, ' - Current Instances: ', Curl.getCount() );
-
     siteUrl = sites[siteKey];
 
     var curl = new Curl();
@@ -32,13 +29,11 @@ function doRequest() {
     curl.setOpt( Curl.option.URL, siteUrl );
     curl.setOpt( Curl.option.FOLLOWLOCATION, 1 );
     curl.setOpt( Curl.option.PRIVATE, siteUrl );
-    curl.setOpt( Curl.option.TIMEOUT, 300 );
+    curl.setOpt( Curl.option.TIMEOUT, 30 );
     curl.setOpt( Curl.option.USERAGENT, "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:28.0) Gecko/20100101 Firefox/28.0 FirePHP/0.7.4" );
     curl.setOpt( Curl.option.REFERER, 'http://www.google.com' );
     curl.setOpt( Curl.option.AUTOREFERER, true );
-    curl.setOpt( Curl.option.VERBOSE, 1 );
-    curl.setOpt( 'SSL_VERIFYHOST', 2 );
-    curl.setOpt( 'SSL_VERIFYPEER', 0 );
+    curl.setOpt( Curl.option.CAINFO, path.join( __dirname, 'cacert.pem' ) );
 
     curl.on( 'end', onEnd );
     curl.on( 'error', onError );
@@ -57,9 +52,7 @@ function onEnd( statusCode ) {
     var siteName = this.getInfo( Curl.info.PRIVATE );
 
     console.info(
-        siteName, ': ', statusCode,
-        ' - Redirects: ', redirects,
-        ' - Url: ', effectiveUrl
+        siteName, ': ', statusCode
     );
 
     doRequest();
@@ -80,3 +73,15 @@ function onError( err ) {
 
     this.close();
 }
+
+var delay = 1000;
+
+setTimeout(function once(){
+
+    console.info( 'To be processed: ', sitesKeys.length, ' - Current Instances: ', Curl.getCount() );
+
+    if ( !(sitesKeys.length === 0 && Curl.getCount() === 0) ) {
+        setTimeout( once, delay );
+    }
+
+}, delay );
