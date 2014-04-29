@@ -3,16 +3,24 @@ var Curl = require( '../lib/Curl' ),
     sites = require( './top-sites' ),
     sitesKeys = Object.keys( sites );
 
-var maxNumberOfConnections = 50,
-    running = 0,
-    i, j;
+var maxNumberOfConnections = 200,
+    certfile = path.join( __dirname, 'cacert.pem' );
+
+
+var running = 0,
+    timeStart = process.hrtime(), timeEnd,
+    finished = false, i, j;
+
+
+//start the timing
+for ( i = 0; i < maxNumberOfConnections; i++ ) {
+
+    doRequest();
+}
 
 function doRequest() {
 
     var siteKey, siteUrl;
-
-    if ( running >= maxNumberOfConnections )
-        return;
 
     siteKey = sitesKeys.pop();
 
@@ -33,45 +41,43 @@ function doRequest() {
     curl.setOpt( Curl.option.USERAGENT, "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:28.0) Gecko/20100101 Firefox/28.0 FirePHP/0.7.4" );
     curl.setOpt( Curl.option.REFERER, 'http://www.google.com' );
     curl.setOpt( Curl.option.AUTOREFERER, true );
-    curl.setOpt( Curl.option.CAINFO, path.join( __dirname, 'cacert.pem' ) );
+    if ( certfile )
+        curl.setOpt( Curl.option.CAINFO, certfile );
 
-    curl.on( 'end', onEnd );
-    curl.on( 'error', onError );
+    curl.on( 'end', cb );
+    curl.on( 'error', cb );
 
+    ++running;
     curl.perform();
 
 }
 
-for ( i = 0; i < maxNumberOfConnections; i++ ) {
-
-    doRequest();
-}
-
-function onEnd( statusCode ) {
+function cb( statusOrError ) {
 
     var siteName = this.getInfo( Curl.info.PRIVATE );
 
-    console.info(
-        siteName, ': ', statusCode
-    );
+    this.close();
+    --running;
+
+    if ( typeof statusOrError !== "number" ) { //we have an error
+        console.error(
+            siteName,
+            ' - Error: ', statusOrError
+        );
+    } else {
+        console.info(
+            siteName, ': ', statusOrError
+        );
+    }
+
+    if ( running === 0 && !sitesKeys.length ) { //nothing more to process
+
+        finished = true;
+        return;
+
+    }
 
     doRequest();
-
-    this.close();
-}
-
-function onError( err ) {
-
-    var siteName = this.getInfo( Curl.info.PRIVATE );
-
-    console.error(
-        siteName,
-        ' - Error: ', err
-    );
-
-    doRequest();
-
-    this.close();
 }
 
 var delay = 1000;
@@ -80,8 +86,15 @@ setTimeout(function once(){
 
     console.info( 'To be processed: ', sitesKeys.length, ' - Current Instances: ', Curl.getCount() );
 
-    if ( !(sitesKeys.length === 0 && Curl.getCount() === 0) ) {
-        setTimeout( once, delay );
+    if ( finished ) {
+
+        timeEnd = process.hrtime( timeStart );
+
+        console.info( 'Total Time ------------ ', timeEnd[0] + 's', timeEnd[1] / 1e6 + 'ms' );
+
+        return;
     }
+
+    setTimeout( once, delay );
 
 }, delay );
