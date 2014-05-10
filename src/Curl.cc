@@ -305,8 +305,6 @@ int Curl::HandleSocket( CURL *easy, curl_socket_t s, int action, void *userp, vo
 
         ctx = static_cast<CurlSocketContext*>( socketp );
 
-        uv_mutex_lock( &ctx->mutex );
-
         uv_poll_stop( &ctx->pollHandle );
         curl_multi_assign( Curl::curlMulti, s, NULL );
 
@@ -347,8 +345,6 @@ Curl::CurlSocketContext* Curl::CreateCurlSocketContext( curl_socket_t sockfd )
         ctx->pollHandle.data = ctx;
 
     }
-
-    uv_mutex_init( &ctx->mutex );
 
     return ctx;
 }
@@ -453,8 +449,6 @@ void Curl::DestroyCurlSocketContext( Curl::CurlSocketContext* ctx )
 void Curl::OnCurlSocketClose( uv_handle_t *handle )
 {
     CurlSocketContext *ctx = static_cast<CurlSocketContext*>( handle->data );
-    uv_mutex_unlock( &ctx->mutex );
-    uv_mutex_destroy( &ctx->mutex );
     free( ctx );
 }
 
