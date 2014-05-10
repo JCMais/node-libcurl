@@ -97,7 +97,14 @@ function initGitSubmodule( depsPath, err, url ) {
                     replaceTokensOnGypFiles();
 
                     //remove git folder
-                    deleteFolderRecursiveSync( path.resolve( __dirname, '..', '.git' ) );
+                    exec( 'rmdir .git /S /Q', function(){
+                        if ( err ) {
+                            console.log( err.toString() );
+                            process.exit( 1 );
+                        }
+
+                        process.exit( 0 );
+                    }, execConfig );
 
                     process.exit( 0 );
 
@@ -143,30 +150,3 @@ function replaceOnFile( file, search, replacement ) {
 
     fs.writeFileSync( file, fileContent );
 }
-
-//http://stackoverflow.com/a/12761924/710693
-function deleteFolderRecursiveSync( path ) {
-
-    var files = [];
-
-    if( fs.existsSync( path ) ) {
-
-        files = fs.readdirSync( path );
-
-        files.forEach( function( file, index ) {
-
-            var curPath = path + '/' + file;
-
-            if( fs.lstatSync( curPath ).isDirectory() ) { // recurse
-
-                deleteFolderRecursiveSync( curPath );
-
-            } else { // delete file
-
-                fs.unlinkSync( curPath );
-            }
-        });
-
-        fs.rmdirSync( path );
-    }
-};

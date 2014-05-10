@@ -141,6 +141,7 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     //set curl_multi callbacks to use libuv
     curl_multi_setopt( Curl::curlMulti, CURLMOPT_SOCKETFUNCTION, Curl::HandleSocket );
     curl_multi_setopt( Curl::curlMulti, CURLMOPT_TIMERFUNCTION, Curl::HandleTimeout );
+    //curl_multi_setopt( Curl::curlMulti, CURLMOPT_MAXCONNECTS, 20 );
 
     //** Construct Curl js "class"
     v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New( Curl::New );
@@ -185,7 +186,6 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     exports->Set( v8::String::NewSymbol( "Curl" ), Curl::constructor );
 }
 
-
 Curl::Curl( v8::Handle<v8::Object> obj ) : isInsideMultiCurl( false )
 {
     v8::HandleScope scope;
@@ -213,6 +213,7 @@ Curl::Curl( v8::Handle<v8::Object> obj ) : isInsideMultiCurl( false )
     curl_easy_setopt( this->curl, CURLOPT_WRITEDATA, this );
     curl_easy_setopt( this->curl, CURLOPT_HEADERFUNCTION, Curl::HeaderFunction );
     curl_easy_setopt( this->curl, CURLOPT_HEADERDATA, this );
+    //curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, my_trace);
 
     Curl::curls[curl] = this;
 }
@@ -268,34 +269,56 @@ int Curl::HandleSocket( CURL *easy, curl_socket_t s, int action, void *userp, vo
     CurlSocketContext *ctx;
     uv_err_s error;
 
-    if ( action == CURL_POLL_IN || action == CURL_POLL_OUT ) {
+    std::cerr << "Action: " << action << std::endl;
+    std::cerr << "Socket: " << socketp << std::endl;
+
+    if ( action == CURL_POLL_IN || action == CURL_POLL_OUT || action == CURL_POLL_INOUT || action == CURL_POLL_NONE ) {
 
         //create ctx if it doesn't exists and assign it to the current socket,
         ctx = ( socketp ) ? static_cast<Curl::CurlSocketContext*>(socketp) : Curl::CreateCurlSocketContext( s );
         curl_multi_assign( Curl::curlMulti, s, static_cast<void*>( ctx ) );
 
         //set event based on the current action
-        int events = ( action == CURL_POLL_IN ) ? UV_READABLE : UV_WRITABLE;
+        int events = 0;
+        
+        switch ( action ) {
+
+            case CURL_POLL_IN:
+                events |= UV_READABLE;
+                break;
+            case CURL_POLL_OUT:
+                events |= UV_WRITABLE;
+                break;
+            case CURL_POLL_INOUT:
+                events |= UV_READABLE | UV_WRITABLE;
+                break;
+        }
 
         //call process when possible
         return uv_poll_start( &ctx->pollHandle, events, Curl::Process );
 
     }
-
-    if ( action != CURL_POLL_REMOVE ) { //this should NEVER happen
-        error = uv_last_error( uv_default_loop() );
-        std::cerr << uv_err_name( error ) << uv_strerror( error );
-        abort();
-    }
+    
 
     //action == CURL_POLL_REMOVE
-    if ( socketp ) {
-        uv_poll_stop( &( static_cast<CurlSocketContext*>( socketp ) )->pollHandle );
-        Curl::DestroyCurlSocketContext( static_cast<CurlSocketContext*>( socketp ) );
+    if ( action == CURL_POLL_REMOVE && socketp ) {
+
+        ctx = static_cast<CurlSocketContext*>( socketp );
+
+        uv_mutex_lock( &ctx->mutex );
+
+        uv_poll_stop( &ctx->pollHandle );
         curl_multi_assign( Curl::curlMulti, s, NULL );
+
+        Curl::DestroyCurlSocketContext( ctx );
+
+        return 0;
     }
 
-    return 0;
+    //this should NEVER happen, I don't even know why this is here.
+    error = uv_last_error( uv_default_loop() );
+    std::cerr << uv_err_name( error ) << " " << uv_strerror( error );
+    abort();
 }
 
 //Creates a Context to be used to store data between events
@@ -325,6 +348,8 @@ Curl::CurlSocketContext* Curl::CreateCurlSocketContext( curl_socket_t sockfd )
 
     }
 
+    uv_mutex_init( &ctx->mutex );
+
     return ctx;
 }
 
@@ -345,6 +370,8 @@ void Curl::OnTimeout( uv_timer_t *req, int status ) {
 
     //timeout expired, let libcurl update handlers and timeouts
     curl_multi_socket_action( Curl::curlMulti, CURL_SOCKET_TIMEOUT, 0, &Curl::runningHandles );
+
+    Curl::ProcessMessages();
 }
 
 //Called when libcurl thinks there is something to process
@@ -377,8 +404,15 @@ void Curl::Process( uv_poll_t* handle, int status, int events )
         return;
 	}
 
+    
+    Curl::ProcessMessages();
+}
+
+void Curl::ProcessMessages()
+{
+    CURLMcode code;
     CURLMsg *msg;
-    int pending;
+    int pending = 0;
 
     while( ( msg = curl_multi_info_read( Curl::curlMulti, &pending ) ) ) {
 
@@ -407,17 +441,20 @@ void Curl::Process( uv_poll_t* handle, int status, int events )
             }
 		}
     }
-
 }
 
 //Callend when libcurl thinks the socket can be destroyed
 void Curl::DestroyCurlSocketContext( Curl::CurlSocketContext* ctx )
 {
-    uv_close( (uv_handle_t*) &ctx->pollHandle, Curl::OnCurlSocketClose );
+    uv_handle_t *handle = (uv_handle_t*) &ctx->pollHandle;
+
+    uv_close( handle, Curl::OnCurlSocketClose );
 }
 void Curl::OnCurlSocketClose( uv_handle_t *handle )
 {
     CurlSocketContext *ctx = static_cast<CurlSocketContext*>( handle->data );
+    uv_mutex_unlock( &ctx->mutex );
+    uv_mutex_destroy( &ctx->mutex );
     free( ctx );
 }
 
@@ -433,7 +470,7 @@ size_t Curl::WriteFunction( char *ptr, size_t size, size_t nmemb, void *userdata
 //Called by libcurl when some chunk of data (from headers) is available
 size_t Curl::HeaderFunction( char *ptr, size_t size, size_t nmemb, void *userdata )
 {
-	Curl::transfered += size * nmemb;
+    Curl::transfered += size * nmemb;
 
 	Curl *obj = (Curl*) userdata;
 	return obj->OnHeader( ptr, size * nmemb );

@@ -40,7 +40,8 @@ class Curl {
 
         //Context used with curl_multi_assign to create a relationship between the socket being used and the poll handler.
         struct CurlSocketContext {
-            uv_poll_t pollHandle;;
+            uv_mutex_t mutex;
+            uv_poll_t pollHandle;
             curl_socket_t sockfd;
         };
 
@@ -68,6 +69,7 @@ class Curl {
         static int HandleTimeout( CURLM *multi, long timeoutMs, void *userp );
         static void OnTimeout( uv_timer_t *req, int status );
         static void Process( uv_poll_t* handle, int status, int events );
+        static void ProcessMessages();
         static void DestroyCurlSocketContext( CurlSocketContext *ctx );
         static void OnCurlSocketClose( uv_handle_t *handle );
 
