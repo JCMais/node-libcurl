@@ -262,9 +262,6 @@ int Curl::HandleSocket( CURL *easy, curl_socket_t s, int action, void *userp, vo
     CurlSocketContext *ctx;
     uv_err_s error;
 
-    std::cerr << "Action: " << action << std::endl;
-    std::cerr << "Socket: " << socketp << std::endl;
-
     if ( action == CURL_POLL_IN || action == CURL_POLL_OUT || action == CURL_POLL_INOUT || action == CURL_POLL_NONE ) {
 
         //create ctx if it doesn't exists and assign it to the current socket,
