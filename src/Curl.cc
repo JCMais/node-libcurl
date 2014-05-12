@@ -724,21 +724,16 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
 
                     }
 
+                    //not found
                     if ( httpPostId == -1 ) {
-                        //not found
 
+                        std::string errorMsg = string_format( "Invalid property \"%s\" given.", fieldName );
+
+                        return Curl::Raise( errorMsg.c_str() );
                     }
 
-                    //check if value is array and option is not content, nor
-
                     v8::String::Utf8Value string( postDataValue );
-                    char *str = (char *) malloc( string.length() + 1 );
-                    strcpy( str, *string );
-
-                    httpPost.set( httpPostId, str, string.length() );
-
-                    //should we?
-                    delete str;
+                    httpPost.set( httpPostId, *string, string.length() );
                 }
             }
 
