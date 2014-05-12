@@ -9,40 +9,40 @@
 
 #define X(name) {#name, CURLOPT_##name}
 Curl::CurlOption curlOptionsLinkedList[] = {
-	#if LIBCURL_VERSION_NUM >= 0x070a03
-		X(HTTP200ALIASES),
-	#endif
+#if LIBCURL_VERSION_NUM >= 0x070a03
+    X(HTTP200ALIASES),
+#endif
 
-	#if LIBCURL_VERSION_NUM >= 0x071400
-		X(MAIL_RCPT),
-	#endif
+#if LIBCURL_VERSION_NUM >= 0x071400
+    X(MAIL_RCPT),
+#endif
 
-	#if LIBCURL_VERSION_NUM >= 0x071503
-		X(RESOLVE),
-	#endif
+#if LIBCURL_VERSION_NUM >= 0x071503
+    X(RESOLVE),
+#endif
 
     X(HTTPPOST),
-	X(HTTPHEADER),
-	X(QUOTE),
-	X(POSTQUOTE),
-	X(PREQUOTE),
-	X(TELNETOPTIONS)
+    X(HTTPHEADER),
+    X(QUOTE),
+    X(POSTQUOTE),
+    X(PREQUOTE),
+    X(TELNETOPTIONS)
 };
 #undef X
 
 #define X(name) {#name, CURLINFO_##name}
 Curl::CurlOption curlInfosLinkedList[] = {
-	X(SSL_ENGINES),
-	X(COOKIELIST)
+    X(SSL_ENGINES),
+    X(COOKIELIST)
 };
 #undef X
 
 #define X(name) {#name, CurlHttpPost::name}
 Curl::CurlOption curlHttpPostOptions[] = {
-	X(NAME),
-	X(FILE),
-	X(CONTENTS),
-	X(TYPE)
+    X(NAME),
+    X(FILE),
+    X(CONTENTS),
+    X(TYPE)
 };
 #undef X
 
@@ -109,10 +109,10 @@ curlMapName infosMapName;
 
 //Initialize static properties
 v8::Persistent<v8::Function> Curl::constructor;
-CURLM *Curl::curlMulti = NULL;
-int    Curl::runningHandles = 0;
-int    Curl::count = 0;
-int32_t Curl::transfered = 0;
+CURLM  *Curl::curlMulti      = NULL;
+int     Curl::runningHandles = 0;
+int     Curl::count          = 0;
+int32_t Curl::transfered     = 0;
 std::map< CURL*, Curl* > Curl::curls;
 uv_timer_t Curl::curlTimeout;
 
@@ -124,15 +124,15 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     v8::HandleScope scope;
 
     //*** Initialize cURL ***//
-	CURLcode code = curl_global_init( CURL_GLOBAL_ALL );
+    CURLcode code = curl_global_init( CURL_GLOBAL_ALL );
     if ( code != CURLE_OK ) {
         Curl::Raise( "curl_global_init failed!" );
-	}
+    }
 
-	Curl::curlMulti = curl_multi_init();
+    Curl::curlMulti = curl_multi_init();
     if ( Curl::curlMulti == NULL ) {
         Curl::Raise( "curl_multi_init failed!" );
-	}
+    }
 
     //init uv timer to be used with HandleTimeout
     int timerStatus = uv_timer_init( uv_default_loop(), &Curl::curlTimeout );
@@ -141,7 +141,6 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     //set curl_multi callbacks to use libuv
     curl_multi_setopt( Curl::curlMulti, CURLMOPT_SOCKETFUNCTION, Curl::HandleSocket );
     curl_multi_setopt( Curl::curlMulti, CURLMOPT_TIMERFUNCTION, Curl::HandleTimeout );
-    //curl_multi_setopt( Curl::curlMulti, CURLMOPT_MAXCONNECTS, 20 );
 
     //** Construct Curl js "class"
     v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New( Curl::New );
@@ -153,10 +152,10 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     NODE_SET_PROTOTYPE_METHOD( tpl, "_setOpt", SetOpt );
     NODE_SET_PROTOTYPE_METHOD( tpl, "_getInfo", GetInfo );
     NODE_SET_PROTOTYPE_METHOD( tpl, "_perform", Perform );
-	NODE_SET_PROTOTYPE_METHOD( tpl, "_close", Close );
+    NODE_SET_PROTOTYPE_METHOD( tpl, "_close", Close );
 
     // Static Methods
-	NODE_SET_METHOD( tpl , "getCount" , GetCount );
+    NODE_SET_METHOD( tpl , "getCount" , GetCount );
 
     // Export cURL Constants
     v8::Local<v8::Function> tplFunction = tpl->GetFunction();
@@ -165,12 +164,12 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     v8::Local<v8::Object> infosObj   = v8::Object::New();
 
     Curl::ExportConstants( &optionsObj, curlOptionsString, sizeof( curlOptionsString ), &optionsMapId, &optionsMapName );
-	Curl::ExportConstants( &optionsObj, curlOptionsInteger, sizeof( curlOptionsInteger ), &optionsMapId, &optionsMapName );
+    Curl::ExportConstants( &optionsObj, curlOptionsInteger, sizeof( curlOptionsInteger ), &optionsMapId, &optionsMapName );
     Curl::ExportConstants( &optionsObj, curlOptionsLinkedList, sizeof( curlOptionsLinkedList ), &optionsMapId, &optionsMapName );
 
-	Curl::ExportConstants( &infosObj, curlInfosString, sizeof( curlInfosString ), &infosMapId, &infosMapName );
-	Curl::ExportConstants( &infosObj, curlInfosInteger, sizeof( curlInfosInteger ), &infosMapId, &infosMapName );
-	Curl::ExportConstants( &infosObj, curlInfosDouble, sizeof( curlInfosDouble ), &infosMapId, &infosMapName );
+    Curl::ExportConstants( &infosObj, curlInfosString, sizeof( curlInfosString ), &infosMapId, &infosMapName );
+    Curl::ExportConstants( &infosObj, curlInfosInteger, sizeof( curlInfosInteger ), &infosMapId, &infosMapName );
+    Curl::ExportConstants( &infosObj, curlInfosDouble, sizeof( curlInfosDouble ), &infosMapId, &infosMapName );
     Curl::ExportConstants( &infosObj, curlInfosLinkedList, sizeof( curlInfosLinkedList ), &infosMapId, &infosMapName );
 
     //Add them to option and info objects, respectively (marking them as readonly
@@ -192,9 +191,6 @@ Curl::Curl( v8::Handle<v8::Object> obj ) : isInsideMultiCurl( false )
 
     ++Curl::count;
 
-    //Make the garbage collector think this object is really big (and it can be, depending on the request anyway.)
-    //v8::V8::AdjustAmountOfExternalAllocatedMemory( v8AllocatedMemoryAmount );
-
     obj->SetPointerInInternalField( 0, this );
 
     this->handle = v8::Persistent<v8::Object>::New( obj );
@@ -205,7 +201,6 @@ Curl::Curl( v8::Handle<v8::Object> obj ) : isInsideMultiCurl( false )
     if ( !this->curl ) {
 
         Curl::Raise( "curl_easy_init Failed!" );
-
     }
 
     //set callbacks
@@ -213,7 +208,6 @@ Curl::Curl( v8::Handle<v8::Object> obj ) : isInsideMultiCurl( false )
     curl_easy_setopt( this->curl, CURLOPT_WRITEDATA, this );
     curl_easy_setopt( this->curl, CURLOPT_HEADERFUNCTION, Curl::HeaderFunction );
     curl_easy_setopt( this->curl, CURLOPT_HEADERDATA, this );
-    //curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, my_trace);
 
     Curl::curls[curl] = this;
 }
@@ -232,7 +226,6 @@ Curl::~Curl(void)
         if ( this->isInsideMultiCurl ) {
 
             curl_multi_remove_handle( this->curlMulti, this->curl );
-
         }
 
         Curl::curls.erase( this->curl );
@@ -242,24 +235,24 @@ Curl::~Curl(void)
 
     for ( std::vector<curl_slist*>::iterator it = this->curlLinkedLists.begin(), end = this->curlLinkedLists.end(); it != end; ++it ) {
 
-			curl_slist *linkedList = *it;
+        curl_slist *linkedList = *it;
 
-			if ( linkedList ) {
+        if ( linkedList ) {
 
-				curl_slist_free_all( linkedList );
-			}
+            curl_slist_free_all( linkedList );
+        }
     }
 }
 
 //Dispose persistent handler, and delete itself
 void Curl::Dispose()
 {
-	this->handle->SetPointerInInternalField( 0, NULL );
+    this->handle->SetPointerInInternalField( 0, NULL );
 
-	this->handle.Dispose();
+    this->handle.Dispose();
     this->handle.Clear();
 
-	delete this;
+    delete this;
 }
 
 //The curl_multi_socket_action(3) function informs the application about updates
@@ -280,25 +273,23 @@ int Curl::HandleSocket( CURL *easy, curl_socket_t s, int action, void *userp, vo
 
         //set event based on the current action
         int events = 0;
-        
+
         switch ( action ) {
 
-            case CURL_POLL_IN:
-                events |= UV_READABLE;
-                break;
-            case CURL_POLL_OUT:
-                events |= UV_WRITABLE;
-                break;
-            case CURL_POLL_INOUT:
-                events |= UV_READABLE | UV_WRITABLE;
-                break;
+        case CURL_POLL_IN:
+            events |= UV_READABLE;
+            break;
+        case CURL_POLL_OUT:
+            events |= UV_WRITABLE;
+            break;
+        case CURL_POLL_INOUT:
+            events |= UV_READABLE | UV_WRITABLE;
+            break;
         }
 
         //call process when possible
         return uv_poll_start( &ctx->pollHandle, events, Curl::Process );
-
     }
-    
 
     //action == CURL_POLL_REMOVE
     if ( action == CURL_POLL_REMOVE && socketp ) {
@@ -343,7 +334,6 @@ Curl::CurlSocketContext* Curl::CreateCurlSocketContext( curl_socket_t sockfd )
     } else {
 
         ctx->pollHandle.data = ctx;
-
     }
 
     return ctx;
@@ -394,13 +384,12 @@ void Curl::Process( uv_poll_t* handle, int status, int events )
 
     } while ( code == CURLM_CALL_MULTI_PERFORM ); //@todo is that loop really needed?
 
-	if ( code != CURLM_OK ) {
+    if ( code != CURLM_OK ) {
 
-		Curl::Raise( "curl_multi_remove_handle Failed", curl_multi_strerror( code ) );
+        Curl::Raise( "curl_multi_remove_handle Failed", curl_multi_strerror( code ) );
         return;
-	}
+    }
 
-    
     Curl::ProcessMessages();
 }
 
@@ -414,28 +403,28 @@ void Curl::ProcessMessages()
 
         if ( msg->msg == CURLMSG_DONE ) {
 
-			Curl *curl = Curl::curls[msg->easy_handle];
-			CURLMsg msgCopy = *msg;
+            Curl *curl = Curl::curls[msg->easy_handle];
+            CURLMsg msgCopy = *msg;
 
-			code = curl_multi_remove_handle( Curl::curlMulti, msg->easy_handle );
+            code = curl_multi_remove_handle( Curl::curlMulti, msg->easy_handle );
 
             curl->isInsideMultiCurl = false;
 
-			if ( code != CURLM_OK ) {
+            if ( code != CURLM_OK ) {
 
-				Curl::Raise( "curl_multi_remove_handle Failed", curl_multi_strerror( code ) );
+                Curl::Raise( "curl_multi_remove_handle Failed", curl_multi_strerror( code ) );
                 return;
-			}
+            }
 
-			if ( msgCopy.data.result == CURLE_OK ) {
+            if ( msgCopy.data.result == CURLE_OK ) {
 
-				curl->OnEnd( &msgCopy );
+                curl->OnEnd( &msgCopy );
 
             } else {
 
-				curl->OnError( &msgCopy );
+                curl->OnError( &msgCopy );
             }
-		}
+        }
     }
 }
 
@@ -455,10 +444,10 @@ void Curl::OnCurlSocketClose( uv_handle_t *handle )
 //Called by libcurl when some chunk of data (from body) is available
 size_t Curl::WriteFunction( char *ptr, size_t size, size_t nmemb, void *userdata )
 {
-	Curl::transfered += size * nmemb;
+    Curl::transfered += size * nmemb;
 
-	Curl *obj = (Curl*) userdata;
-	return obj->OnData( ptr, size * nmemb );
+    Curl *obj = (Curl*) userdata;
+    return obj->OnData( ptr, size * nmemb );
 }
 
 //Called by libcurl when some chunk of data (from headers) is available
@@ -466,8 +455,8 @@ size_t Curl::HeaderFunction( char *ptr, size_t size, size_t nmemb, void *userdat
 {
     Curl::transfered += size * nmemb;
 
-	Curl *obj = (Curl*) userdata;
-	return obj->OnHeader( ptr, size * nmemb );
+    Curl *obj = (Curl*) userdata;
+    return obj->OnHeader( ptr, size * nmemb );
 }
 
 size_t Curl::OnData( char *data, size_t n )
@@ -476,24 +465,24 @@ size_t Curl::OnData( char *data, size_t n )
     //@TODO Implement: From 7.18.0, the function can return CURL_WRITEFUNC_PAUSE which then will cause writing to this connection to become paused. See curl_easy_pause(3) for further details.
     v8::HandleScope scope;
 
-	static v8::Persistent<v8::String> SYM_ON_WRITE = v8::Persistent<v8::String>::New(v8::String::NewSymbol( "_onData" ) );
-	v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_WRITE );
+    static v8::Persistent<v8::String> SYM_ON_WRITE = v8::Persistent<v8::String>::New(v8::String::NewSymbol( "_onData" ) );
+    v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_WRITE );
 
     size_t ret = n;
 
-	if ( cb->IsFunction() ) {
+    if ( cb->IsFunction() ) {
 
-		node::Buffer *buffer = node::Buffer::New( data, n );
-		v8::Handle<v8::Value> argv[] = { buffer->handle_ };
-		v8::Handle<v8::Value> retVal = cb->ToObject()->CallAsFunction( handle, 1, argv );
+        node::Buffer *buffer = node::Buffer::New( data, n );
+        v8::Handle<v8::Value> argv[] = { buffer->handle_ };
+        v8::Handle<v8::Value> retVal = cb->ToObject()->CallAsFunction( handle, 1, argv );
 
-		if ( retVal.IsEmpty() )
-			ret = 0;
-		else
-			ret = retVal->Int32Value();
-	}
+        if ( retVal.IsEmpty() )
+            ret = 0;
+        else
+            ret = retVal->Int32Value();
+    }
 
-	return ret;
+    return ret;
 }
 
 
@@ -501,52 +490,52 @@ size_t Curl::OnHeader( char *data, size_t n )
 {
     v8::HandleScope scope;
 
-	static v8::Persistent<v8::String> SYM_ON_HEADER = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onHeader" ) );
-	v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_HEADER );
+    static v8::Persistent<v8::String> SYM_ON_HEADER = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onHeader" ) );
+    v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_HEADER );
 
     size_t ret = n;
 
-	if ( cb->IsFunction() ) {
+    if ( cb->IsFunction() ) {
 
-		node::Buffer * buffer = node::Buffer::New( data, n );
-		v8::Handle<v8::Value> argv[] = { buffer->handle_ };
-		v8::Handle<v8::Value> retVal = cb->ToObject()->CallAsFunction( handle, 1, argv );
+        node::Buffer * buffer = node::Buffer::New( data, n );
+        v8::Handle<v8::Value> argv[] = { buffer->handle_ };
+        v8::Handle<v8::Value> retVal = cb->ToObject()->CallAsFunction( handle, 1, argv );
 
-		if ( retVal.IsEmpty() )
-			ret = 0;
-		else
-			ret = retVal->Int32Value();
-	}
+        if ( retVal.IsEmpty() )
+            ret = 0;
+        else
+            ret = retVal->Int32Value();
+    }
 
-	return ret;
+    return ret;
 }
 
 void Curl::OnEnd( CURLMsg *msg )
 {
     v8::HandleScope scope;
 
-	static v8::Persistent<v8::String> SYM_ON_END = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onEnd" ) );
+    static v8::Persistent<v8::String> SYM_ON_END = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onEnd" ) );
 
-	v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_END );
+    v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_END );
 
-	if ( cb->IsFunction() ) {
+    if ( cb->IsFunction() ) {
 
-		cb->ToObject()->CallAsFunction( this->handle, 0, NULL );
-	}
+        cb->ToObject()->CallAsFunction( this->handle, 0, NULL );
+    }
 }
 
 void Curl::OnError( CURLMsg *msg )
 {
     v8::HandleScope scope;
 
-	static v8::Persistent<v8::String> SYM_ON_ERROR = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onError" ) );
-	v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_ERROR );
+    static v8::Persistent<v8::String> SYM_ON_ERROR = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onError" ) );
+    v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_ERROR );
 
-	if ( cb->IsFunction() ) {
+    if ( cb->IsFunction() ) {
 
-		v8::Handle<v8::Value> argv[] = { v8::Exception::Error( v8::String::New( curl_easy_strerror( msg->data.result ) ) ), v8::Integer::New( msg->data.result )  };
-		cb->ToObject()->CallAsFunction( this->handle, 2, argv );
-	}
+        v8::Handle<v8::Value> argv[] = { v8::Exception::Error( v8::String::New( curl_easy_strerror( msg->data.result ) ) ), v8::Integer::New( msg->data.result )  };
+        cb->ToObject()->CallAsFunction( this->handle, 2, argv );
+    }
 }
 
 //Export Options/Infos to constants in the given Object, and add their mapping to the respective maps.
@@ -560,26 +549,26 @@ void Curl::ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len,
         return; //
     }
 
-	for ( uint32_t i = 0; i < len; ++i ) {
+    for ( uint32_t i = 0; i < len; ++i ) {
 
-		const Curl::CurlOption &option = optionGroup[i];
+        const Curl::CurlOption &option = optionGroup[i];
 
         const int *optionId = &option.value;
 
         //I dont like to mess with memory
         std::string sOptionName( option.name );
 
-		(*obj)->Set(
-			v8::String::New( ( sOptionName ).c_str() ),
-			v8::Integer::New( option.value ),
+        (*obj)->Set(
+            v8::String::New( ( sOptionName ).c_str() ),
+            v8::Integer::New( option.value ),
             static_cast<v8::PropertyAttribute>( v8::ReadOnly | v8::DontDelete )
-		);
+        );
 
         //add to vector, and add pointer to respective map
         //using insert because of http://stackoverflow.com/a/16436560/710693
         mapName->insert( std::make_pair( sOptionName, optionId ) );
         mapId->insert( std::make_pair( optionId, sOptionName ) );
-	}
+    }
 }
 
 template<typename ResultType, typename v8MappingType>
@@ -620,7 +609,7 @@ v8::Handle<v8::Value> Curl::GetInfoTmpl<char*,v8::String>( const Curl &obj, int 
 
 Curl* Curl::Unwrap( v8::Handle<v8::Object> value )
 {
-	return (Curl*) value->GetPointerFromInternalField( 0 );
+    return (Curl*) value->GetPointerFromInternalField( 0 );
 }
 
 //Create a Exception with the given message and reason
@@ -628,15 +617,15 @@ v8::Handle<v8::Value> Curl::Raise( const char *message, const char *reason )
 {
     v8::HandleScope scope;
 
-	const char *what = message;
+    const char *what = message;
     std::string msg;
 
-	if ( reason ) {
+    if ( reason ) {
 
         msg = string_format( "%s: %s", message, reason );
         what = msg.c_str();
 
-	}
+    }
 
     return scope.Close( v8::ThrowException( v8::Exception::Error( v8::String::New( what ) ) ) );
 }
@@ -655,7 +644,7 @@ v8::Handle<v8::Value> Curl::New( const v8::Arguments &args ) {
         v8::Handle<v8::Value> cb = obj->handle->Get( SYM_ON_HEADER );
 
         if ( cb->IsFunction() ) {
-	        cb->ToObject()->CallAsFunction( obj->handle, 0, NULL );
+            cb->ToObject()->CallAsFunction( obj->handle, 0, NULL );
         }
 
         return args.This();
@@ -667,16 +656,16 @@ v8::Handle<v8::Value> Curl::New( const v8::Arguments &args ) {
         v8::Local<v8::Value> argv[argc] = { args[0] };
 
         return scope.Close( constructor->NewInstance( argc, argv ) );
-  }
+    }
 }
 
 //Javascript Constructor
 //This is called by v8 when there are no more references to the Curl instance on js.
 void Curl::Destructor( v8::Persistent<v8::Value> value, void *data )
 {
-	v8::Handle<v8::Object> object = value->ToObject();
-	Curl * curl = (Curl*) object->GetPointerFromInternalField( 0 );
-	curl->Dispose();
+    v8::Handle<v8::Object> object = value->ToObject();
+    Curl * curl = (Curl*) object->GetPointerFromInternalField( 0 );
+    curl->Dispose();
 }
 
 v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
@@ -703,15 +692,15 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
             v8::Handle<v8::Array> rows = v8::Handle<v8::Array>::Cast( value );
 
             //we could append, but lets reset, that is the desired behavior
-		    httpPost.reset();
+            httpPost.reset();
 
             // [{ key : val }]
-		    for ( uint32_t i = 0, len = rows->Length(); i < len; ++i ) {
+            for ( uint32_t i = 0, len = rows->Length(); i < len; ++i ) {
 
                 // single object { }
-			    v8::Handle<v8::Object> postData = v8::Handle<v8::Object>::Cast( rows->Get( i ) );
+                v8::Handle<v8::Object> postData = v8::Handle<v8::Object>::Cast( rows->Get( i ) );
 
-			    httpPost.append();
+                httpPost.append();
 
                 const v8::Local<v8::Array> props = postData->GetPropertyNames();
                 const uint32_t postDataLength = props->Length();
@@ -737,6 +726,7 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
 
                     if ( httpPostId == -1 ) {
                         //not found
+
                     }
 
                     //check if value is array and option is not content, nor
@@ -750,15 +740,15 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
                     //should we?
                     delete str;
                 }
-		    }
+            }
 
-	        optCallResult = v8::Integer::New( curl_easy_setopt( obj->curl, CURLOPT_HTTPPOST, obj->httpPost.first ) );
+            optCallResult = v8::Integer::New( curl_easy_setopt( obj->curl, CURLOPT_HTTPPOST, obj->httpPost.first ) );
 
 
         } else {
 
             if ( value->IsNull() ) {
-		        optCallResult = v8::Integer::New(
+                optCallResult = v8::Integer::New(
                     curl_easy_setopt(
                         obj->curl, (CURLoption) optionId, NULL
                     )
@@ -773,17 +763,17 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
                 }
 
                 //convert value to curl linked list (curl_slist)
-		        curl_slist *slist = NULL;
-		        v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast( value );
+                curl_slist *slist = NULL;
+                v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast( value );
 
-		        for ( uint32_t i = 0, len = array->Length(); i < len; ++i )
-		        {
-			        slist = curl_slist_append( slist, *v8::String::Utf8Value( array->Get( i ) ) );
-		        }
+                for ( uint32_t i = 0, len = array->Length(); i < len; ++i )
+                {
+                    slist = curl_slist_append( slist, *v8::String::Utf8Value( array->Get( i ) ) );
+                }
 
                 obj->curlLinkedLists.push_back( slist );
 
-		        optCallResult = v8::Integer::New(
+                optCallResult = v8::Integer::New(
                     curl_easy_setopt(
                         obj->curl, (CURLoption) optionId, slist
                     )
@@ -807,9 +797,9 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
         if ( !isNull ) {
 
             //Curl don't copies the string before version 7.17
-		    v8::String::Utf8Value value( args[1] );
-		    int length = value.length();
-		    obj->curlStrings[optionId] = std::string( *value, length );
+            v8::String::Utf8Value value( args[1] );
+            int length = value.length();
+            obj->curlStrings[optionId] = std::string( *value, length );
         }
 
         optCallResult = v8::Integer::New(
@@ -819,7 +809,7 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
         );
 
 
-    //check if option is a integer, and the value is correct
+        //check if option is a integer, and the value is correct
     } else if ( ( optionId = isInsideOption( curlOptionsInteger, opt ) )  ) {
 
         int32_t val = value->Int32Value();
@@ -913,21 +903,21 @@ v8::Handle<v8::Value> Curl::Perform( const v8::Arguments &args ) {
     Curl *obj = Curl::Unwrap( args.This() );
 
     if ( !obj )
-		return scope.Close( Curl::Raise( "Curl is closed." ) );
+        return scope.Close( Curl::Raise( "Curl is closed." ) );
 
-	if ( obj->isInsideMultiCurl ) //client should not call this method more than one time by request
-		return scope.Close( Curl::Raise( "Curl session is already running." ) );
+    if ( obj->isInsideMultiCurl ) //client should not call this method more than one time by request
+        return scope.Close( Curl::Raise( "Curl session is already running." ) );
 
     CURLMcode code = curl_multi_add_handle( Curl::curlMulti, obj->curl );
 
-	if ( code != CURLM_OK ) {
+    if ( code != CURLM_OK ) {
 
-		return scope.Close( Curl::Raise( "curl_multi_add_handle Failed", curl_multi_strerror( code ) ) );
-	}
+        return scope.Close( Curl::Raise( "curl_multi_add_handle Failed", curl_multi_strerror( code ) ) );
+    }
 
-	obj->isInsideMultiCurl = true;
+    obj->isInsideMultiCurl = true;
 
-	return scope.Close( args.This() );
+    return scope.Close( args.This() );
 
 }
 
@@ -942,8 +932,8 @@ v8::Handle<v8::Value> Curl::Close( const v8::Arguments &args )
 {
     Curl *obj = Curl::Unwrap( args.This() );
 
-	if ( obj )
-		obj->Dispose();
+    if ( obj )
+        obj->Dispose();
 
-	return args.This();
+    return args.This();
 }
