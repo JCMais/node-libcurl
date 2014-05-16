@@ -6,6 +6,7 @@
 Libcurl bindings for Node.js.
 _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-curl)._
 
+Not recommended for production use yet!
 Work in progress.
 
 ## Quick Start
@@ -62,27 +63,28 @@ For more examples check the [examples folder](examples).
 ### Curl
 
 * events:
-  * end - Request finished without errors
-    * int statusCode
-    * string|[if raw => Buffer] body
-    * Array\<Object>|[if raw => Buffer] headers
-  * data - Received a chunk of data
+  * end - Called when the request is finished without errors
+    * int statusCode HTTP status code.
+    * string|Buffer body If raw is set to true, a Buffer is passed instead of a string.
+    * Array\<Object>|Buffer headers Buffer if raw is true.
+  * data - Called when a chunk of data was received.
     * Buffer chunk
-  * header - Received a chunk of headers
+  * header - Called when a chunk of headers was received.
     * Buffer header
-  * error - Libcurl found an error
+  * error - Called when there was an error with the handler.
     * Error err
-    * int cURLErrorCode
+    * int errorCode libcurl error code.
 
 * methods:
   * getInfo - Get information from the handler
-    * String|Int infoIdOrName      Info id or the info name as string, you can use the constants from Curl.info
+    * String|Int infoId            Info id or the info name as string, you can use the constants from Curl.info
     * returns Array|String|Number  Return value is based on the requested info.
   * setOpt - Set an option to the handler
-    * String|Int optionIdOrName    Option id or the option name as string, constants on Curl.option
+    * String|Int optionId          Option id or the option name as string, constants on Curl.option
     * Mixed optionValue            Value is based on the given option, check libcurl documentation for more info.
   * perform - Process this handler.
-  * close - Close the current curl instance, after calling this method, this handler is not usable anymore. You **MUST** call this on `error` and `end` events, it's **NOT** called by default.
+  * reset - Reset the current curl handler.
+  * close - Close the current curl instance, after calling this method, this handler is not usable anymore. You **MUST** call this on `error` and `end` events if you are not planning to use this handler anymore, it's **NOT** called by default.
 
 * members:
   * raw - bool - Get raw data on `data` and `header` events.
@@ -91,10 +93,13 @@ For more examples check the [examples folder](examples).
 * static methods:
   * getCount - Get amount of Curl instances active
     * returns int
+  * getVersion - Get libcurl version as string
+    * returns string
 
 * static members:
   * option - Object with all options available.
   * info - Object with all infos available.
+  * protocols - Object with the protocols supported by libcurl as bitmasks, should be used when setting PROTOCOLS and REDIR_PROTOCOLS options.
 
 
 ## Installing on Windows
