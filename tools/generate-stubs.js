@@ -50,6 +50,8 @@ generateFiles( curlHeaderContent, 'curlInfosInteger', /CURLINFO_(\w+).*LONG/g, '
 generateFiles( curlHeaderContent, 'curlInfosString', /CURLINFO_(\w+).*STRING/g, 'INFO', 'info' );
 generateFiles( curlHeaderContent, 'curlInfosDouble', /CURLINFO_(\w+).*DOUBLE/g, 'INFO', 'info' );
 
+generateFiles( curlHeaderContent, 'curlProtocols', /CURLPROTO_(\w+)/g, 'PROTO', 'protocol' );
+
 generateSingleJavascriptFileForEachType();
 
 function generateFiles( scope, fileName, pattern, prefix, jsObject ) {

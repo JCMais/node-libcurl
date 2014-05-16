@@ -6,6 +6,7 @@
 #include "generated-stubs/curlInfosString.h"
 #include "generated-stubs/curlInfosInteger.h"
 #include "generated-stubs/curlInfosDouble.h"
+#include "generated-stubs/curlProtocols.h"
 
 #define X(name) {#name, CURLOPT_##name}
 Curl::CurlOption curlOptionsLinkedList[] = {
@@ -152,16 +153,19 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     NODE_SET_PROTOTYPE_METHOD( tpl, "_setOpt", SetOpt );
     NODE_SET_PROTOTYPE_METHOD( tpl, "_getInfo", GetInfo );
     NODE_SET_PROTOTYPE_METHOD( tpl, "_perform", Perform );
+    NODE_SET_PROTOTYPE_METHOD( tpl, "_reset", Reset );
     NODE_SET_PROTOTYPE_METHOD( tpl, "_close", Close );
 
     // Static Methods
     NODE_SET_METHOD( tpl , "getCount" , GetCount );
+    NODE_SET_METHOD( tpl , "getVersion" , GetVersion );
 
     // Export cURL Constants
     v8::Local<v8::Function> tplFunction = tpl->GetFunction();
 
-    v8::Local<v8::Object> optionsObj = v8::Object::New();
-    v8::Local<v8::Object> infosObj   = v8::Object::New();
+    v8::Local<v8::Object> optionsObj   = v8::Object::New();
+    v8::Local<v8::Object> infosObj     = v8::Object::New();
+    v8::Local<v8::Object> protocolsObj = v8::Object::New();
 
     Curl::ExportConstants( &optionsObj, curlOptionsString, sizeof( curlOptionsString ), &optionsMapId, &optionsMapName );
     Curl::ExportConstants( &optionsObj, curlOptionsInteger, sizeof( curlOptionsInteger ), &optionsMapId, &optionsMapName );
@@ -172,9 +176,13 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     Curl::ExportConstants( &infosObj, curlInfosDouble, sizeof( curlInfosDouble ), &infosMapId, &infosMapName );
     Curl::ExportConstants( &infosObj, curlInfosLinkedList, sizeof( curlInfosLinkedList ), &infosMapId, &infosMapName );
 
+    Curl::ExportConstants( &protocolsObj, curlProtocols, sizeof( curlProtocols ), nullptr, nullptr );
+
+
     //Add them to option and info objects, respectively (marking them as readonly
     tplFunction->Set( v8::String::NewSymbol( "option" ), optionsObj, static_cast<v8::PropertyAttribute>( v8::ReadOnly|v8::DontDelete ) );
     tplFunction->Set( v8::String::NewSymbol( "info" ),     infosObj, static_cast<v8::PropertyAttribute>( v8::ReadOnly|v8::DontDelete ) );
+    tplFunction->Set( v8::String::NewSymbol( "protocol" ), protocolsObj, static_cast<v8::PropertyAttribute>( v8::ReadOnly|v8::DontDelete ) );
 
     //Static members
     tplFunction->Set( v8::String::NewSymbol( "_v8m" ), v8::Integer::New( v8AllocatedMemoryAmount ), static_cast<v8::PropertyAttribute>( v8::ReadOnly|v8::DontDelete ) );
@@ -539,7 +547,6 @@ void Curl::OnError( CURLMsg *msg )
 template<typename T>
 void Curl::ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len, curlMapId *mapId, curlMapName *mapName )
 {
-
     len = len / sizeof( Curl::CurlOption );
 
     if ( !obj ) { //Null pointer, just stop
@@ -563,8 +570,10 @@ void Curl::ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len,
 
         //add to vector, and add pointer to respective map
         //using insert because of http://stackoverflow.com/a/16436560/710693
-        mapName->insert( std::make_pair( sOptionName, optionId ) );
-        mapId->insert( std::make_pair( optionId, sOptionName ) );
+        if ( mapId && mapName ) {
+            mapName->insert( std::make_pair( sOptionName, optionId ) );
+            mapId->insert( std::make_pair( optionId, sOptionName ) );
+        }
     }
 }
 
@@ -724,7 +733,7 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
                     //not found
                     if ( httpPostId == -1 ) {
 
-                        std::string errorMsg = string_format( "Invalid property \"%s\" given.", fieldName );
+                        std::string errorMsg = string_format( "Invalid property \"%s\" given.", *fieldName );
 
                         return Curl::Raise( errorMsg.c_str() );
                     }
@@ -913,13 +922,6 @@ v8::Handle<v8::Value> Curl::Perform( const v8::Arguments &args ) {
 
 }
 
-//returns the amount of curl instances
-v8::Handle<v8::Value> Curl::GetCount( const v8::Arguments &args )
-{
-    v8::HandleScope scope;
-    return scope.Close( v8::Integer::New( Curl::count ) );
-}
-
 v8::Handle<v8::Value> Curl::Close( const v8::Arguments &args )
 {
     Curl *obj = Curl::Unwrap( args.This() );
@@ -928,4 +930,42 @@ v8::Handle<v8::Value> Curl::Close( const v8::Arguments &args )
         obj->Dispose();
 
     return args.This();
+}
+
+//Re-initializes all options previously set on a specified CURL handle to the default values.
+v8::Handle<v8::Value> Curl::Reset( const v8::Arguments &args )
+{
+    v8::HandleScope scope;
+
+    Curl *obj = Curl::Unwrap( args.This() );
+
+    if ( !obj ) {
+
+        return scope.Close( Curl::Raise( "Curl handle is already closed." ) );
+
+    }
+
+    curl_easy_reset( obj->curl );
+
+    return scope.Close( args.This() );
+
+}
+
+//returns the amount of curl instances
+v8::Handle<v8::Value> Curl::GetCount( const v8::Arguments &args )
+{
+    v8::HandleScope scope;
+    return scope.Close( v8::Integer::New( Curl::count ) );
+}
+
+//Returns a human readable string with the version number of libcurl and some of its important components (like OpenSSL version). 
+v8::Handle<v8::Value> Curl::GetVersion( const v8::Arguments &args )
+{
+    v8::HandleScope scope;
+
+    const char *version = curl_version();
+
+    v8::Local<v8::Value> versionObj = v8::String::New( version );
+
+    return scope.Close( versionObj );
 }

@@ -74,14 +74,14 @@ private:
     static void OnCurlSocketClose( uv_handle_t *handle );
 
     //cURL callbacks
-    static size_t WriteFunction( char *, size_t, size_t, void * );
-    static size_t HeaderFunction( char *, size_t, size_t, void * );
+    static size_t WriteFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
+    static size_t HeaderFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
 
     //Instance methods
-    size_t OnData( char *, size_t );
-    size_t OnHeader( char *, size_t );
-    void OnEnd( CURLMsg * );
-    void OnError( CURLMsg * );
+    size_t OnData( char *data, size_t n );
+    size_t OnHeader( char *data, size_t n );
+    void OnEnd( CURLMsg *msg );
+    void OnError( CURLMsg *msg );
 
     //Helper static methods
     template<typename T>
@@ -91,16 +91,20 @@ private:
     static v8::Handle<v8::Value> GetInfoTmpl( const Curl &obj, int infoId );
 
     static Curl* Unwrap( v8::Handle<v8::Object> );
-    static v8::Handle<v8::Value> Raise( const char *, const char * = NULL );
+    static v8::Handle<v8::Value> Raise( const char *message, const char *reason = NULL );
 
     //Js exported Methods
-    static v8::Handle<v8::Value> New( const v8::Arguments & );
-    static void Destructor( v8::Persistent<v8::Value>, void * );
+    static v8::Handle<v8::Value> New( const v8::Arguments &args );
+    static void Destructor( v8::Persistent<v8::Value> value, void *data );
 
-    static v8::Handle<v8::Value> SetOpt( const v8::Arguments & );
-    static v8::Handle<v8::Value> GetInfo( const v8::Arguments & );
-    static v8::Handle<v8::Value> Perform( const v8::Arguments & );
-    static v8::Handle<v8::Value> GetCount( const v8::Arguments & );
-    static v8::Handle<v8::Value> Close( const v8::Arguments & );
+    static v8::Handle<v8::Value> SetOpt( const v8::Arguments &args );
+    static v8::Handle<v8::Value> GetInfo( const v8::Arguments &args );
+    static v8::Handle<v8::Value> Perform( const v8::Arguments &args );
+    static v8::Handle<v8::Value> Reset( const v8::Arguments &args );
+    static v8::Handle<v8::Value> Close( const v8::Arguments &args );
+
+    static v8::Handle<v8::Value> GetCount( const v8::Arguments &args );
+    static v8::Handle<v8::Value> GetVersion( const v8::Arguments &args );
+
 };
 #endif
