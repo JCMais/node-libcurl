@@ -99,7 +99,7 @@ For more examples check the [examples folder](examples).
 * static members:
   * option - Object with all options available.
   * info - Object with all infos available.
-  * protocols - Object with the protocols supported by libcurl as bitmasks, should be used when setting PROTOCOLS and REDIR_PROTOCOLS options.
+  * protocol - Object with the protocols supported by libcurl as bitmasks, should be used when setting PROTOCOLS and REDIR_PROTOCOLS options.
 
 
 ## Installing on Windows
