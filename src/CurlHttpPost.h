@@ -7,31 +7,31 @@
 #include <curl/curl.h>
 
 #ifdef _WIN32
-	#include "strndup.h"
+#include "strndup.h"
 #endif
 
 class CurlHttpPost
 {
-    public:
+public:
 
-	    curl_httppost *first;
-	    curl_httppost *last;
+    curl_httppost *first;
+    curl_httppost *last;
 
-	    CurlHttpPost();
+    CurlHttpPost();
 
-	    ~CurlHttpPost();
+    ~CurlHttpPost();
 
-	    enum {
-		    NAME,
-		    FILE,
-		    CONTENTS,
-		    TYPE
-	    };
+    enum {
+        NAME,
+        FILE,
+        CONTENTS,
+        TYPE
+    };
 
-	    void reset();
+    void reset();
 
-	    void append();
+    void append();
 
-	    void set( int field, char *value, long length );
+    void set( int field, char *value, long length );
 };
 #endif

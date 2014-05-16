@@ -9,7 +9,24 @@
                 'src/strndup.cc',
                 'src/string_format.cc'
             ],
-            'cflags' : ['-std=c++11'],
+            'configurations' : {
+                'Release': {
+                    'msvs_settings': {
+                        'VCCLCompilerTool': {
+                            'ExceptionHandling': '1',
+                        }
+                    }
+                }
+            },
+            'msvs_settings': {
+                'VCCLCompilerTool': {
+                    'WarnAsError': 'true',
+                    'DisableSpecificWarnings': ['4506'], #warning about v8 inline function
+                }
+            },
+            'cflags' : ['-std=c++11', '-O3'],
+            'cflags!': [ '-fno-exceptions' ], # enable exceptions
+            'cflags_cc!': [ '-fno-exceptions' ],
             'conditions': [
                 ['OS=="win"', {
                     'dependencies': [

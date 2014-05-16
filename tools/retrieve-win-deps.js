@@ -96,6 +96,16 @@ function initGitSubmodule( depsPath, err, url ) {
                     //Grab gyp config files and replace <(library) with static_library
                     replaceTokensOnGypFiles();
 
+                    //remove git folder
+                    exec( 'rmdir .git /S /Q', function(){
+                        if ( err ) {
+                            console.log( err.toString() );
+                            process.exit( 1 );
+                        }
+
+                        process.exit( 0 );
+                    }, execConfig );
+
                     process.exit( 0 );
 
                 },
