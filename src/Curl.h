@@ -87,7 +87,7 @@ private:
     template<typename T>
     static void ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len, curlMapId *mapId, curlMapName *mapName );
 
-    template<typename ResultType, typename v8MappingType>
+    template<typename TResultType, typename Tv8MappingType>
     static v8::Handle<v8::Value> GetInfoTmpl( const Curl &obj, int infoId );
 
     static Curl* Unwrap( v8::Handle<v8::Object> );

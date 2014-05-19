@@ -80,8 +80,6 @@ int isInsideCurlOption( const Curl::CurlOption *curlOptions, const int lenOfOpti
 
         optionName = std::string( *optionNameV8 );
 
-        //should delete optionNameV8 or v8 take care of that?
-
         stringToUpper( optionName );
 
     } else { //int
@@ -577,12 +575,16 @@ void Curl::ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len,
     }
 }
 
-template<typename ResultType, typename v8MappingType>
+// traits class to determine whether to do the check
+template <typename> struct ResultCanBeNull : std::false_type {};
+template <> struct ResultCanBeNull<char*> : std::true_type {};
+
+template<typename TResultType, typename Tv8MappingType>
 v8::Handle<v8::Value> Curl::GetInfoTmpl( const Curl &obj, int infoId )
 {
     v8::HandleScope scope;
 
-    ResultType result;
+    TResultType result;
 
     CURLINFO info = (CURLINFO) infoId;
     CURLcode code = curl_easy_getinfo( obj.curl, info, &result );
@@ -590,27 +592,10 @@ v8::Handle<v8::Value> Curl::GetInfoTmpl( const Curl &obj, int infoId )
     if ( code != CURLE_OK )
         return Curl::Raise( "curl_easy_getinfo failed!", curl_easy_strerror( code ) );
 
-    return scope.Close( v8MappingType::New( result ) );
-}
-
-template<> //workaround for null pointer, aka, hack
-v8::Handle<v8::Value> Curl::GetInfoTmpl<char*,v8::String>( const Curl &obj, int infoId )
-{
-    v8::HandleScope scope;
-
-    char *result;
-
-    CURLINFO info = (CURLINFO) infoId;
-    CURLcode code = curl_easy_getinfo( obj.curl, info, &result );
-
-    if ( !result ) { //null pointer
+    if ( ResultCanBeNull<TResultType>::value && !result ) //null pointer
         return v8::String::New( "" );
-    }
 
-    if ( code != CURLE_OK )
-        return Curl::Raise( "curl_easy_getinfo failed!", curl_easy_strerror( code ) );
-
-    return scope.Close( v8::String::New( result ) );
+    return scope.Close( Tv8MappingType::New( result ) );
 }
 
 Curl* Curl::Unwrap( v8::Handle<v8::Object> value )
@@ -850,19 +835,22 @@ v8::Handle<v8::Value> Curl::GetInfo( const v8::Arguments &args )
     v8::String::Utf8Value val( infoVal );
     std::string valStr = std::string( *val );
 
-    //String Info
+    //String
     if ( (infoId = isInsideOption( curlInfosString, infoVal ) ) ) {
 
         retVal = Curl::GetInfoTmpl<char*, v8::String>( *(obj), infoId );
 
+    //Integer
     } else if ( (infoId = isInsideOption( curlInfosInteger, infoVal ) ) ) {
 
         retVal = Curl::GetInfoTmpl<int, v8::Integer>(  *(obj), infoId );
 
+    //Double
     } else if ( (infoId = isInsideOption( curlInfosDouble, infoVal ) ) ) {
 
         retVal = Curl::GetInfoTmpl<double, v8::Number>( *(obj), infoId );
 
+    //Linked list
     } else if ( (infoId = isInsideOption( curlInfosLinkedList, infoVal ) ) ) {
 
         curl_slist *linkedList;
