@@ -30,8 +30,11 @@ curl.on( 'end', function( statusCode, body ) {
     console.log( body );
 
     this.close();
-
     fs.unlinkSync( imageFilename );
 });
 
-curl.on( 'error', function(){ fs.unlinkSync( imageFilename ); })
+curl.on( 'error', function(){
+
+    this.close();
+    fs.unlinkSync( imageFilename );
+});

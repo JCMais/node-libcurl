@@ -25,3 +25,5 @@ curl.on( 'end', function( statusCode, body ) {
 
     this.close();
 });
+
+curl.on( 'error', curl.close.bind( curl ) );
