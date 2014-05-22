@@ -311,6 +311,8 @@ int Curl::HandleSocket( CURL *easy, curl_socket_t s, int action, void *userp, vo
     error = uv_last_error( uv_default_loop() );
     std::cerr << uv_err_name( error ) << " " << uv_strerror( error );
     abort();
+
+    return -1;
 }
 
 //Creates a Context to be used to store data between events
