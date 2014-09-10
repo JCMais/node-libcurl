@@ -1,10 +1,15 @@
-(function(){
+var express = require( 'express' ),
+    bodyParser = require( 'body-parser' ),
+    cookiesParser = require( 'cookie-parser' ),
+    http = require( 'http' );
 
-    var express = require( 'express' );
+var app = express(),
+    server = http.createServer( app );
 
-    var app = express();
+app.use( bodyParser() )
+    .use( cookiesParser() );
 
-    app.listen();
-
-    module.exports = app;
-}());
+module.exports = {
+    server : server,
+    app    : app
+};
