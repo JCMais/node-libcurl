@@ -414,7 +414,7 @@ void Curl::Process( uv_poll_t* handle, int status, int events )
     int flags = 0;
 
     CURLMcode code;
-
+    
     if ( events & UV_READABLE ) flags |= CURL_CSELECT_IN;
     if ( events & UV_WRITABLE ) flags |= CURL_CSELECT_OUT;
 
@@ -514,20 +514,16 @@ size_t Curl::OnData( char *data, size_t size, size_t nmemb )
 
     size_t n = size * nmemb;
 
-    static v8::Persistent<v8::String> SYM_ON_WRITE = v8::Persistent<v8::String>::New(v8::String::NewSymbol( "_onData" ) );
-    v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_WRITE );
+    node::Buffer *buffer = node::Buffer::New( data, n );
+    v8::Handle<v8::Value> argv[] = { buffer->handle_ };
+
+    v8::Handle<v8::Value> retVal = node::MakeCallback( this->handle, "_onData", 1, argv );
 
     size_t ret = n;
 
-    if ( cb->IsFunction() ) {
-
-        node::Buffer *buffer = node::Buffer::New( data, n );
-        v8::Handle<v8::Value> argv[] = { buffer->handle_ };
-        v8::Handle<v8::Value> retVal = cb->ToObject()->CallAsFunction( handle, 1, argv );
-
-        if ( retVal.IsEmpty() )
+    if ( retVal.IsEmpty() ) {
             ret = 0;
-        else
+    } else {
             ret = retVal->Int32Value();
     }
 
@@ -541,22 +537,16 @@ size_t Curl::OnHeader( char *data, size_t size, size_t nmemb )
 
     size_t n = size * nmemb;
 
-    static v8::Persistent<v8::String> SYM_ON_HEADER = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onHeader" ) );
-    v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_HEADER );
-
+    node::Buffer * buffer = node::Buffer::New( data, n );
+    v8::Handle<v8::Value> argv[] = { buffer->handle_ };
+    v8::Handle<v8::Value> retVal = node::MakeCallback( this->handle, "_onHeader", 1, argv );
+    
     size_t ret = n;
 
-    if ( cb->IsFunction() ) {
-
-        node::Buffer * buffer = node::Buffer::New( data, n );
-        v8::Handle<v8::Value> argv[] = { buffer->handle_ };
-        v8::Handle<v8::Value> retVal = cb->ToObject()->CallAsFunction( handle, 1, argv );
-
-        if ( retVal.IsEmpty() )
-            ret = 0;
-        else
-            ret = retVal->Int32Value();
-    }
+    if ( retVal.IsEmpty() )
+        ret = 0;
+    else
+        ret = retVal->Int32Value();
 
     return ret;
 }
@@ -565,29 +555,15 @@ void Curl::OnEnd( CURLMsg *msg )
 {
     v8::HandleScope scope;
 
-    static v8::Persistent<v8::String> SYM_ON_END = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onEnd" ) );
-
-    v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_END );
-
-    if ( cb->IsFunction() ) {
-
-        cb->ToObject()->CallAsFunction( this->handle, 0, NULL );
-
-    }
+    node::MakeCallback( this->handle, "_onEnd", 0, NULL );
 }
 
 void Curl::OnError( CURLMsg *msg )
 {
     v8::HandleScope scope;
 
-    static v8::Persistent<v8::String> SYM_ON_ERROR = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onError" ) );
-    v8::Handle<v8::Value> cb = this->handle->Get( SYM_ON_ERROR );
-
-    if ( cb->IsFunction() ) {
-
-        v8::Handle<v8::Value> argv[] = { v8::Exception::Error( v8::String::New( curl_easy_strerror( msg->data.result ) ) ), v8::Integer::New( msg->data.result )  };
-        cb->ToObject()->CallAsFunction( this->handle, 2, argv );
-    }
+    v8::Handle<v8::Value> argv[] = { v8::Exception::Error( v8::String::New( curl_easy_strerror( msg->data.result ) ) ), v8::Integer::New( msg->data.result )  };
+    node::MakeCallback( this->handle, "_onError", 2, argv );
 }
 
 //Export Options/Infos to constants in the given Object, and add their mapping to the respective maps.
@@ -681,7 +657,7 @@ int Curl::CbProgress( void *clientp, double dltotal, double dlnow, double ultota
     v8::HandleScope scope;
 
     int32_t retvalInt32;
-    
+
     v8::Handle<v8::Value> argv[] = {
         v8::Number::New( (double) dltotal ),
         v8::Number::New( (double) dlnow ),
@@ -689,6 +665,7 @@ int Curl::CbProgress( void *clientp, double dltotal, double dlnow, double ultota
         v8::Number::New( (double) ulnow )
     };
     
+    //Should handle possible exceptions here?
     v8::Handle<v8::Value> retval = obj->callbacks.progress->Call( obj->handle, 4, argv );
 
     if ( !retval->IsInt32() ) {

@@ -1,71 +1,139 @@
 var serverObj = require( './server' ),
     should = require( 'should' ),
-    EventEmitter = require( 'events' ).EventEmitter,
-    inherits = require( 'util' ).inherits,
     Curl   = require( '../lib/Curl' );
 
 var server = serverObj.server,
     app    = serverObj.app;
 
-var Test = function() {
-
-};
-
-inherits( Test, EventEmitter );
-
-var tst = new Test();
+app.disable( 'etag' );
 
 describe( 'Curl', function() {
 
     var curl = new Curl();
 
-    afterEach( function() {
-
-        curl.reset();
-    });
-
     describe( 'feature()', function() {
 
-        before(function(){
+        var headerLength = 0,
+            responseData = 'Ok',
+            responseLength = responseData.length;
 
-            app.get( '/', function( req, res ) {
-
-                res.send( 'Ok.' );
-            });
-        });
-
-        after(function() {
-
-            app._router.stack.pop();
-        });
-
-        it( 'should not store data with NO_DATA_STORAGE set', function( done ) {
+        beforeEach( function( done ) {
 
             server.listen( 3000, 'localhost', function() {
 
                 var url = server.address().address + ':' + server.address().port;
 
-                curl.enable( Curl.feature.NO_DATA_STORAGE );
-
                 curl.setOpt( 'URL', url );
+                done();
+            });
+        });
 
-                curl.on( 'error', function( err ) {
+        afterEach( function() {
 
-                    done( err );
-                });
+            curl = new Curl();
 
-                curl.on( 'end', function( status, data, headers ) {
+            server.close();
+        });
 
-                    //I don't know why, but these errors are not being caught automatically.
-                    data.length.should.be.equal( 0 );
-                    headers.should.not.be.empty;
+        before(function() {
+            app.get( '/', function( req, res ) {
 
-                    done();
-                });
+                res.send( responseData );
 
-                curl.perform();
+                headerLength = res._header.length;
+            });
+        });
+
+        after(function() {
+            app._router.stack.pop();
+        });
+
+
+        it( 'should not store data when NO_DATA_STORAGE is set', function( done ) {
+
+            curl.enable( Curl.feature.NO_DATA_STORAGE );
+
+            curl.on( 'error', function( err ) {
+
+                this.close();
+                done( err );
             });
 
+            curl.on( 'end', function( status, data, headers ) {
+
+                this.close();
+
+                data.should.be.instanceOf( Buffer ).and.have.property( 'length', 0 );
+                headers.should.be.an.Array.of.length( 1 );
+                done();
+            });
+
+            curl.perform();
+        });
+
+        it( 'should not store headers when NO_HEADER_STORAGE is set', function( done ) {
+
+            curl.enable( Curl.feature.NO_HEADER_STORAGE );
+
+            curl.on( 'error', function( err ) {
+
+                this.close();
+                done( err );
+            });
+
+            curl.on( 'end', function( status, data, headers ) {
+
+                this.close();
+
+                data.should.be.an.String.and.have.property( 'length', responseLength );
+                headers.should.be.instanceOf( Buffer ).and.have.property( 'length', 0 );
+                done();
+            });
+
+            curl.perform();
+        });
+
+        it( 'should not parse data when NO_DATA_PARSING is set', function( done ) {
+
+            curl.enable( Curl.feature.NO_DATA_PARSING );
+
+            curl.on( 'error', function( err ) {
+
+                this.close();
+                done( err );
+            });
+
+            curl.on( 'end', function( status, data, headers ) {
+
+                this.close();
+
+                data.should.be.instanceOf( Buffer ).and.have.property( 'length', responseLength );
+                headers.should.be.an.Array.and.have.property( 'length', 1 );
+                done();
+            });
+
+            curl.perform();
+        });
+
+        it( 'should not parse headers when NO_HEADER_PARSING is set', function( done ) {
+
+            curl.enable( Curl.feature.NO_HEADER_PARSING );
+
+            curl.on( 'error', function( err ) {
+
+                this.close();
+                done( err );
+            });
+
+            curl.on( 'end', function( status, data, headers ) {
+
+
+                data.should.be.an.String.and.have.property( 'length', responseLength );
+                headers.should.be.instanceOf( Buffer ).and.have.property( 'length', headerLength );
+                done();
+            });
+
+            curl.perform();
         });
 
     });
