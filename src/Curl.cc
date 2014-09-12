@@ -28,7 +28,7 @@ Curl::CurlOption curlOptionsLinkedList[] = {
     X(RESOLVE),
 #endif
 
-    //@TODO ADD SUPPORT FOR CURLOPT_HEADEROPT AND CURLOPT_PROXYHEADER 
+    //@TODO ADD SUPPORT FOR CURLOPT_HEADEROPT AND CURLOPT_PROXYHEADER
 
     X(HTTPPOST),
     X(HTTPHEADER),
@@ -164,7 +164,7 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     // Static Methods
     NODE_SET_METHOD( tpl , "getCount" , GetCount );
     NODE_SET_METHOD( tpl , "getVersion" , GetVersion );
-    
+
     // Export cURL Constants
     v8::Handle<v8::Function> tplFunction = tpl->GetFunction();
 
@@ -194,7 +194,7 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     //Add function properties (marking them as readonly)
     tplFunction->Set( v8::String::NewSymbol( "option" ), optionsObj, static_cast<v8::PropertyAttribute>( v8::ReadOnly|v8::DontDelete ) );
     tplFunction->Set( v8::String::NewSymbol( "info" ),     infosObj, static_cast<v8::PropertyAttribute>( v8::ReadOnly|v8::DontDelete ) );
-    
+
     tplFunction->Set( v8::String::NewSymbol( "auth" ), authObj, static_cast<v8::PropertyAttribute>( v8::ReadOnly|v8::DontDelete ) );
     tplFunction->Set( v8::String::NewSymbol( "http" ), httpObj, static_cast<v8::PropertyAttribute>( v8::ReadOnly|v8::DontDelete ) );
     tplFunction->Set( v8::String::NewSymbol( "pause" ), pauseObj, static_cast<v8::PropertyAttribute>( v8::ReadOnly|v8::DontDelete ) );
@@ -414,7 +414,7 @@ void Curl::Process( uv_poll_t* handle, int status, int events )
     int flags = 0;
 
     CURLMcode code;
-    
+
     if ( events & UV_READABLE ) flags |= CURL_CSELECT_IN;
     if ( events & UV_WRITABLE ) flags |= CURL_CSELECT_OUT;
 
@@ -540,7 +540,7 @@ size_t Curl::OnHeader( char *data, size_t size, size_t nmemb )
     node::Buffer * buffer = node::Buffer::New( data, n );
     v8::Handle<v8::Value> argv[] = { buffer->handle_ };
     v8::Handle<v8::Value> retVal = node::MakeCallback( this->handle, "_onHeader", 1, argv );
-    
+
     size_t ret = n;
 
     if ( retVal.IsEmpty() )
@@ -615,10 +615,10 @@ v8::Handle<v8::Value> Curl::GetInfoTmpl( const Curl &obj, int infoId )
     CURLcode code = curl_easy_getinfo( obj.curl, info, &result );
 
     if ( code != CURLE_OK )
-        return Curl::Raise( "curl_easy_getinfo failed!", curl_easy_strerror( code ) );
+        return scope.Close( Curl::Raise( "curl_easy_getinfo failed!", curl_easy_strerror( code ) ) );
 
     if ( ResultCanBeNull<TResultType>::value && !result ) //null pointer
-        return v8::String::New( "" );
+        return scope.Close( v8::String::New( "" ) );
 
     return scope.Close( Tv8MappingType::New( result ) );
 }
@@ -664,7 +664,7 @@ int Curl::CbProgress( void *clientp, double dltotal, double dlnow, double ultota
         v8::Number::New( (double) ultotal ),
         v8::Number::New( (double) ulnow )
     };
-    
+
     //Should handle possible exceptions here?
     v8::Handle<v8::Value> retval = obj->callbacks.progress->Call( obj->handle, 4, argv );
 
@@ -697,14 +697,14 @@ int Curl::CbXferinfo( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_
     v8::HandleScope scope;
 
     int32_t retvalInt32;
-    
+
     v8::Handle<v8::Value> argv[] = {
         v8::Number::New( (double) dltotal ),
         v8::Number::New( (double) dlnow ),
         v8::Number::New( (double) ultotal ),
         v8::Number::New( (double) ulnow )
     };
-    
+
     v8::Handle<v8::Value> retval = obj->callbacks.xferinfo->Call( obj->handle, 4, argv );
 
     if ( !retval->IsInt32() ) {
@@ -731,12 +731,12 @@ int Curl::CbDebug( CURL *handle, curl_infotype type, char *data, size_t size, vo
     assert( obj );
 
     v8::HandleScope scope;
-    
+
     v8::Handle<v8::Value> argv[] = {
         v8::Number::New( (int32_t) type ),
         v8::String::New( data, size )
     };
-    
+
     v8::Handle<v8::Value> retval = obj->callbacks.debug->Call( obj->handle, 2, argv );
 
     int32_t retvalInt = 0;
@@ -990,13 +990,13 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
 
                 break;
 #endif
-        
+
             case CURLOPT_PROGRESSFUNCTION:
 
                 obj->callbacks.progress = v8::Persistent<v8::Function>::New( callback );
                 curl_easy_setopt( obj->curl, CURLOPT_PROGRESSFUNCTION, obj );
                 optCallResult = v8::Integer::New( curl_easy_setopt( obj->curl, CURLOPT_PROGRESSFUNCTION, Curl::CbProgress ) );
-        
+
                 break;
 
             case CURLOPT_DEBUGFUNCTION:
@@ -1049,7 +1049,7 @@ v8::Handle<v8::Value> Curl::GetInfo( const v8::Arguments &args )
     //Integer
     } else if ( (infoId = isInsideOption( curlInfosInteger, infoVal ) ) ) {
 
-        retVal = Curl::GetInfoTmpl<int, v8::Integer>(  *(obj), infoId );
+        retVal = Curl::GetInfoTmpl<long, v8::Integer>(  *(obj), infoId );
 
     //Double
     } else if ( (infoId = isInsideOption( curlInfosDouble, infoVal ) ) ) {
