@@ -272,20 +272,7 @@ Curl::~Curl(void)
     }
 
     //dispose persistent callbacks
-    if ( !this->callbacks.progress.IsEmpty() ) {
-        this->callbacks.progress.Dispose();
-        this->callbacks.progress.Clear();
-    }
-
-    if ( !this->callbacks.xferinfo.IsEmpty() ) {
-        this->callbacks.xferinfo.Dispose();
-        this->callbacks.xferinfo.Clear();
-    }
-
-    if ( !this->callbacks.debug.IsEmpty() ) {
-        this->callbacks.debug.Dispose();
-        this->callbacks.debug.Clear();
-    }
+    this->DisposeCallbacks();
 }
 
 //Dispose persistent handler, and delete itself
@@ -564,6 +551,24 @@ void Curl::OnError( CURLMsg *msg )
 
     v8::Handle<v8::Value> argv[] = { v8::Exception::Error( v8::String::New( curl_easy_strerror( msg->data.result ) ) ), v8::Integer::New( msg->data.result )  };
     node::MakeCallback( this->handle, "_onError", 2, argv );
+}
+
+void Curl::DisposeCallbacks()
+{
+    if ( !this->callbacks.progress.IsEmpty() ) {
+        this->callbacks.progress.Dispose();
+        this->callbacks.progress.Clear();
+    }
+
+    if ( !this->callbacks.xferinfo.IsEmpty() ) {
+        this->callbacks.xferinfo.Dispose();
+        this->callbacks.xferinfo.Clear();
+    }
+
+    if ( !this->callbacks.debug.IsEmpty() ) {
+        this->callbacks.debug.Dispose();
+        this->callbacks.debug.Clear();
+    }
 }
 
 //Export Options/Infos to constants in the given Object, and add their mapping to the respective maps.
@@ -1166,8 +1171,9 @@ v8::Handle<v8::Value> Curl::Reset( const v8::Arguments &args )
     // reset the URL, https://github.com/bagder/curl/commit/ac6da721a3740500cc0764947385eb1c22116b83
     curl_easy_setopt( obj->curl, CURLOPT_URL, "" );
 
-    return scope.Close( args.This() );
+    obj->DisposeCallbacks();
 
+    return scope.Close( args.This() );
 }
 
 //returns the amount of curl instances

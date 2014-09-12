@@ -93,6 +93,7 @@ private:
     size_t OnHeader( char *data, size_t size, size_t nmemb );
     void OnEnd( CURLMsg *msg );
     void OnError( CURLMsg *msg );
+    void DisposeCallbacks();
 
     //Helper static methods
     template<typename T>
