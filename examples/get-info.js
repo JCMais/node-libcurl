@@ -19,3 +19,4 @@ curl.on( 'end', function() {
     this.close();
 });
 
+curl.on( 'error', curl.close.bind( curl ) );

@@ -19,12 +19,15 @@ curl.on( 'end', function ( statusCode, body, headers ) {
     console.info( 'Status Code: ', statusCode );
     console.info( 'Headers: ', headers );
     console.info( 'Body: ', body );
+    this.close();
 });
 
 curl.on( 'error', function ( err, curlErrCode ) {
 
     console.error( 'Err: ', err );
     console.error( 'Code: ', curlErrCode );
+    this.close();
 });
+
 
 curl.perform();

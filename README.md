@@ -6,9 +6,6 @@
 Libcurl bindings for Node.js.
 _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-curl)._
 
-Not recommended for production use yet!
-Work in progress.
-
 ## Quick Start
 
 ### Install
@@ -82,13 +79,19 @@ For more examples check the [examples folder](examples).
   * setOpt - Set an option to the handler
     * String|Int optionId          Option id or the option name as string, constants on Curl.option
     * Mixed optionValue            Value is based on the given option, check libcurl documentation for more info.
+  * enable - Enable a feature.
+    * Int features                 Bitmask representing the features that should be enabled.
+  * disable - Disable a feature.
+    * Int features                 Bitmask representing the features that should be disabled.
   * perform - Process this handler.
   * reset - Reset the current curl handler.
   * close - Close the current curl instance, after calling this method, this handler is not usable anymore. You **MUST** call this on `error` and `end` events if you are not planning to use this handler anymore, it's **NOT** called by default.
 
 * members:
-  * raw - bool - Get raw data on `data` and `header` events.
-  * debug - bool - Enable debug messages, currently there are none.
+  * onData - Callback, acts the same way than the data event, however here the return value is taken into consideration.
+    * Buffer chunk
+  * onHeader - Callback, acts the same way than the header event, however here the return value is taken into consideration.
+    * Buffer header
 
 * static methods:
   * getCount - Get amount of Curl instances active
@@ -99,7 +102,18 @@ For more examples check the [examples folder](examples).
 * static members:
   * option - Object with all options available.
   * info - Object with all infos available.
-  * protocols - Object with the protocols supported by libcurl as bitmasks, should be used when setting PROTOCOLS and REDIR_PROTOCOLS options.
+  * protocol - Object with the protocols supported by libcurl as bitmasks, should be used when setting PROTOCOLS and REDIR_PROTOCOLS options.
+  * auth - Object with bitmasks that should be used with the HTTPAUTH option.
+  * http - Object with constants to be used with the HTTP_VERSION option.
+  * pause - Object with constants to be used with the pause method.
+  * netrc - Object with constants to be used with NETRC option.
+  * feature - Object with the features currently supported as bitmasks.
+    * NO_DATA_PARSING - Data received is passed as a Buffer to the end event.
+    * NO_HEADER_PARSING - Header received is not parsed, it's passed as a Buffer to the end event.
+    * NO_DATA_STORAGE - Data received is not stored inside this handler, implies NO_DATA_PARSING.
+    * NO_HEADER_STORAGE - Header received is not stored inside this handler, implies NO_HEADER_PARSING.
+    * RAW - Same than NO_DATA_PARSING | NO_HEADER_PARSING
+    * NO_STORAGE - Same than NO_DATA_STORAGE | NO_HEADER_STORAGE, implies RAW.
 
 
 ## Installing on Windows

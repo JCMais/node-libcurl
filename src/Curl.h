@@ -25,7 +25,7 @@ public:
     struct CurlOption
     {
         const char *name;
-        int   value;
+        int32_t value;
     };
 
     //Export curl to js
@@ -44,6 +44,17 @@ private:
         uv_poll_t pollHandle;
         curl_socket_t sockfd;
     };
+
+    //Function handlers
+    struct CurlCallback {
+        //we need this flag because of https://github.com/bagder/curl/commit/907520c4b93616bddea15757bbf0bfb45cde8101
+        bool isProgressCbAlreadyAborted;
+        v8::Persistent<v8::Function> progress;
+        v8::Persistent<v8::Function> xferinfo;
+        v8::Persistent<v8::Function> debug;
+    };
+
+    CurlCallback callbacks;
 
     //Members
     CURL  *curl;
@@ -78,20 +89,26 @@ private:
     static size_t HeaderFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
 
     //Instance methods
-    size_t OnData( char *data, size_t n );
-    size_t OnHeader( char *data, size_t n );
+    size_t OnData( char *data, size_t size, size_t nmemb );
+    size_t OnHeader( char *data, size_t size, size_t nmemb );
     void OnEnd( CURLMsg *msg );
     void OnError( CURLMsg *msg );
+    void DisposeCallbacks();
 
     //Helper static methods
     template<typename T>
     static void ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len, curlMapId *mapId, curlMapName *mapName );
 
-    template<typename ResultType, typename v8MappingType>
+    template<typename TResultType, typename Tv8MappingType>
     static v8::Handle<v8::Value> GetInfoTmpl( const Curl &obj, int infoId );
 
     static Curl* Unwrap( v8::Handle<v8::Object> );
     static v8::Handle<v8::Value> Raise( const char *message, const char *reason = NULL );
+
+    //Callbacks
+    static int CbProgress( void *clientp, double dltotal, double dlnow, double ultotal, double ulnow );
+    static int CbXferinfo( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow );
+    static int CbDebug( CURL *handle, curl_infotype type, char *data, size_t size, void *userptr );
 
     //Js exported Methods
     static v8::Handle<v8::Value> New( const v8::Arguments &args );
@@ -100,6 +117,7 @@ private:
     static v8::Handle<v8::Value> SetOpt( const v8::Arguments &args );
     static v8::Handle<v8::Value> GetInfo( const v8::Arguments &args );
     static v8::Handle<v8::Value> Perform( const v8::Arguments &args );
+    static v8::Handle<v8::Value> Pause( const v8::Arguments &args );
     static v8::Handle<v8::Value> Reset( const v8::Arguments &args );
     static v8::Handle<v8::Value> Close( const v8::Arguments &args );
 

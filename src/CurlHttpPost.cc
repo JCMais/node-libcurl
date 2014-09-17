@@ -31,7 +31,7 @@ void CurlHttpPost::reset()
             free( current->buffer );
 
         if ( current->name )
-            free( current->buffer );
+            free( current->name );
 
         free( current );
 

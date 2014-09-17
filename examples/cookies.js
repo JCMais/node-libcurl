@@ -25,3 +25,5 @@ curl.on( 'end', function() {
     console.info( 'Cookie file contents:' );
     console.info( fs.readFileSync( cookieJarFile ).toString( 'utf8' ) );
 });
+
+curl.on( 'error', curl.close.bind( curl ) );

@@ -9,25 +9,76 @@ var files = [
     '/usr/include/curl/curl.h'
 ];
 
+var optionsToIgnore = [
+    //Options that are too complicated / unnecessary to expose from js.
+    //From js, there is no need for options related to pass data around between function calls.
+    'PROGRESSDATA',
+    'XFERINFODATA',
+    'DEBUGDATA',
+    'PRIVATE',
+    'WRITEFUNCTION', 'FILE', //WRITEDATA
+    'READFUNCTION', 'INFILE', //READDATA
+    'IOCTLFUNCTION', 'IOCTLDATA',
+    'SEEKFUNCTION', 'SEEKDATA',
+    'SOCKOPTFUNCTION', 'SOCKOPTDATA',
+    'OPENSOCKETFUNCTION', 'OPENSOCKETDATA',
+    'CLOSESOCKETFUNCTION', 'CLOSESOCKETDATA',
+    'HEADERFUNCTION', 'WRITEHEADER', //HEADERDATA
+    'SSL_CTX_FUNCTION', 'SSL_CTX_DATA',
+    'CONV_TO_NETWORK_FUNCTION', 'CONV_FROM_NETWORK_FUNCTION', 'CONV_FROM_UTF8_FUNCTION',
+    'INTERLEAVEFUNCTION', 'INTERLEAVEDATA',
+    'CHUNK_DATA',
+    'FNMATCH_DATA',
+    'ERRORBUFFER',
+    'STDERR',
+    'COPYPOSTFIELDS',
+    'SHARE', //Share interface is not implemented, and is probably not going to be.
+    'SSH_KEYFUNCTION', 'SSH_KEYDATA',
+    //Options that are probably going to be implemented, sometime, later.
+    //FTP OPTIONS
+    'FTPSSLAUTH', //@TODO add missing CURLFTPAUTH constants
+    'FTP_SSL_CCC', //@TODO add missing CURLFTPSSL constants
+    'FTP_FILEMETHOD', //@TODO add missing CURLFTPMETHOD constants
+    //RTSP OPTIONS
+    'RTSP_REQUEST', //@TODO add missing CURL_RTSPREQ constants
+    //CONNECTION OPTIONS
+    'IPRESOLVE', //@TODO add missing CURL_IPRESOLVE constants
+    'USE_SSL', //@TODO add missing CURLUSESSL constants
+    //SSL and SECURITY OPTIONS
+    'SSLVERSION', //@TODO add missing CURL_SSLVERSION constants
+    'SSL_OPTIONS', //@TODO add missing CURLSSLOPT constants
+    'GSSAPI_DELEGATION', //@TODO add missing CURLGSSAPI_DELEGATION_FLAG constant
+    //SSH OPTIONS
+    'SSH_AUTH_TYPES', //@TODO add missing CURLSSH_AUTH constants
+    'CHUNK_BGN_FUNCTION', 'CHUNK_END_FUNCTION',
+    'FNMATCH_FUNCTION'
+];
+
 //add path to deps only on Windows
-if ( process.platform == 'win32' )
-    files.push( path.resolve( __dirname, '..', 'deps', 'curl-for-windows', 'curl', 'include', 'curl', 'curl.h'  ) );
+if ( process.platform == 'win32' ) {
+
+    files.push( path.resolve(
+        __dirname, '..', 'deps', 'curl-for-windows', 'curl', 'include', 'curl', 'curl.h'
+    ) );
+}
 
 var curlHeaderFile = '',
     EOL = ( process.platform === 'win32' ? '\r\n' : '\n' );
 
-files.forEach(function ( file ) {
+files.every(function ( file ) {
 
     if ( fs.existsSync( file ) ) {
 
         curlHeaderFile = file;
-        return true;
+        return false;
     }
+
+    return true;
 });
 
 if ( !curlHeaderFile ) {
 
-    console.log( "Cannot find curl's header file." );
+    console.error( "Cannot find curl's header file." );
     process.exit(1);
 }
 
@@ -45,12 +96,16 @@ var curlHeaderContent = fs.readFileSync( curlHeaderFile, 'utf8' ),
 
 generateFiles( curlHeaderContent, 'curlOptionsInteger', /CINIT\((\w+).*LONG/g, 'OPT', 'option' );
 generateFiles( curlHeaderContent, 'curlOptionsString', /CINIT\((\w+).*OBJECT/g, 'OPT', 'option' );
+generateFiles( curlHeaderContent, 'curlOptionsFunction', /CINIT\((\w+).*FUNCTION/g, 'OPT', 'option' );
 
 generateFiles( curlHeaderContent, 'curlInfosInteger', /CURLINFO_(\w+).*LONG/g, 'INFO', 'info' );
 generateFiles( curlHeaderContent, 'curlInfosString', /CURLINFO_(\w+).*STRING/g, 'INFO', 'info' );
 generateFiles( curlHeaderContent, 'curlInfosDouble', /CURLINFO_(\w+).*DOUBLE/g, 'INFO', 'info' );
 
 generateFiles( curlHeaderContent, 'curlProtocols', /CURLPROTO_(\w+)/g, 'PROTO', 'protocol' );
+generateFiles( curlHeaderContent, 'curlPause', /CURLPAUSE_(\w+)/g, 'PAUSE', 'pause' );
+generateFiles( curlHeaderContent, 'curlAuth', /CURLAUTH_(\w+)/g, 'AUTH', 'auth' );
+generateFiles( curlHeaderContent, 'curlHttp', /CURL_HTTP_((?!VERSION_LAST)(\w+)),/g, '_HTTP', 'http' );
 
 generateSingleJavascriptFileForEachType();
 
@@ -61,10 +116,21 @@ function generateFiles( scope, fileName, pattern, prefix, jsObject ) {
 
     while ( match = pattern.exec( scope ) ) {
 
-        matches.push( match[1] );
+        if ( optionsToIgnore.indexOf( match[1] ) === -1 )
+            matches.push( match[1] );
     }
 
     matches.sort();
+
+    //filter duplicate values out
+    matches = matches.reduce(function( prev, curr ) {
+
+        if ( prev.indexOf( curr ) === -1 )
+            prev.push( curr );
+
+        return prev;
+
+    }, [] );
 
     generateHeaderFile( fileName + '.h', prefix, matches );
     prepareDataForJavascriptFile( jsObject, matches );
@@ -106,6 +172,7 @@ function prepareDataForJavascriptFile( jsObject, regexMatches ) {
     });
 }
 
+//js files are generated just for code completion.
 function generateSingleJavascriptFileForEachType() {
 
     for ( var fileName in jsFilesData ) {

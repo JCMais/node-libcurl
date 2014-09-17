@@ -29,4 +29,4 @@ if ( certfile ) {
 curl.perform();
 
 curl.on( 'end', curl.close.bind( curl ) );
-
+curl.on( 'error', curl.close.bind( curl ) );
