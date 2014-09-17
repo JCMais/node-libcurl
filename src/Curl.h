@@ -25,7 +25,7 @@ public:
     struct CurlOption
     {
         const char *name;
-        int   value;
+        int32_t value;
     };
 
     //Export curl to js

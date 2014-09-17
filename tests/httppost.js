@@ -23,6 +23,24 @@ describe( 'Curl', function() {
 
     describe( 'File Upload', function() {
 
+        beforeEach( function( done ) {
+
+            server.listen( serverObj.port, serverObj.host, function() {
+
+                var url = server.address().address + ':' + server.address().port;
+
+                curl.setOpt( 'URL', url );
+                done();
+            });
+        });
+
+        afterEach( function() {
+
+            curl = new Curl();
+
+            server.close();
+        });
+
         before(function( done ){
 
             app.post( '/', function( req, res ) {
@@ -59,35 +77,26 @@ describe( 'Curl', function() {
 
         it ( 'should upload file correctly', function ( done ) {
 
-            server.listen( 3000, 'localhost', function() {
+            curl.setOpt( 'HTTPPOST', postData );
 
-                var url = server.address().address + ':' + server.address().port;
+            curl.on( 'end', function( status, data ) {
 
-                curl.setOpt( 'URL', url );
-                curl.setOpt( 'HTTPPOST', postData );
+                if ( status !== 200 )
+                    throw Error( 'Invalid status code: ' + status );
 
-                curl.on( 'end', function( status, data ) {
+                data = JSON.parse( data );
 
-                    if ( status !== 200 )
-                        throw Error( 'Invalid Status Code' );
+                data.size.should.be.equal( size );
+                data.name.should.be.equal( imageFilename.split( path.sep ).pop() );
+                data.type.should.be.equal( postData[0].type );
 
-                    data = JSON.parse( data );
-
-                    data.size.should.be.equal( size );
-                    data.name.should.be.equal( imageFilename.split( path.sep ).pop() );
-                    data.type.should.be.equal( postData[0].type );
-
-                    done();
-                });
-
-                curl.perform();
+                done();
             });
 
+            curl.perform();
 
         });
 
     });
-
-
 
 });

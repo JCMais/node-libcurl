@@ -129,13 +129,13 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     //*** Initialize cURL ***//
     CURLcode code = curl_global_init( CURL_GLOBAL_ALL );
     if ( code != CURLE_OK ) {
-        scope.Close( Curl::Raise( "curl_global_init failed!" ) );
+        Curl::Raise( "curl_global_init failed!" );
         return;
     }
 
     Curl::curlMulti = curl_multi_init();
     if ( Curl::curlMulti == NULL ) {
-        scope.Close( Curl::Raise( "curl_multi_init failed!" ) );
+        Curl::Raise( "curl_multi_init failed!" );
         return;
     }
 
@@ -212,8 +212,6 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
 
 Curl::Curl( v8::Handle<v8::Object> obj ) : isInsideMultiCurl( false )
 {
-    v8::HandleScope scope;
-
     ++Curl::count;
 
     obj->SetPointerInInternalField( 0, this );
@@ -225,7 +223,7 @@ Curl::Curl( v8::Handle<v8::Object> obj ) : isInsideMultiCurl( false )
 
     if ( !this->curl ) {
 
-        scope.Close( Curl::Raise( "curl_easy_init Failed!" ) );
+        Curl::Raise( "curl_easy_init Failed!" );
         return;
     }
 
@@ -239,7 +237,6 @@ Curl::Curl( v8::Handle<v8::Object> obj ) : isInsideMultiCurl( false )
 
     Curl::curls[curl] = this;
 }
-
 
 Curl::~Curl(void)
 {
@@ -393,8 +390,6 @@ void Curl::OnTimeout( uv_timer_t *req, int status ) {
 //Called when libcurl thinks there is something to process
 void Curl::Process( uv_poll_t* handle, int status, int events )
 {
-    v8::HandleScope scope;
-
     //stop the timer, so curl_multi_socket_action is fired without a socket by the timeout cb
     uv_timer_stop( &Curl::curlTimeout );
 
@@ -418,7 +413,7 @@ void Curl::Process( uv_poll_t* handle, int status, int events )
 
     if ( code != CURLM_OK ) {
 
-        scope.Close( Curl::Raise( "curl_multi_socket_actioon Failed", curl_multi_strerror( code ) ) );
+        Curl::Raise( "curl_multi_socket_actioon Failed", curl_multi_strerror( code ) );
         return;
     }
 
@@ -427,8 +422,6 @@ void Curl::Process( uv_poll_t* handle, int status, int events )
 
 void Curl::ProcessMessages()
 {
-    v8::HandleScope scope;
-
     CURLMcode code;
     CURLMsg *msg;
     int pending = 0;
@@ -446,7 +439,7 @@ void Curl::ProcessMessages()
 
             if ( code != CURLM_OK ) {
 
-                scope.Close( Curl::Raise( "curl_multi_remove_handle Failed", curl_multi_strerror( code ) ) );
+                Curl::Raise( "curl_multi_remove_handle Failed", curl_multi_strerror( code ) );
                 return;
             }
 
@@ -462,7 +455,7 @@ void Curl::ProcessMessages()
     }
 }
 
-//Callend when libcurl thinks the socket can be destroyed
+//Called when libcurl thinks the socket can be destroyed
 void Curl::DestroyCurlSocketContext( Curl::CurlSocketContext* ctx )
 {
     uv_handle_t *handle = (uv_handle_t*) &ctx->pollHandle;
@@ -575,6 +568,8 @@ void Curl::DisposeCallbacks()
 template<typename T>
 void Curl::ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len, curlMapId *mapId, curlMapName *mapName )
 {
+    v8::HandleScope scope;
+
     len = len / sizeof( Curl::CurlOption );
 
     if ( !obj ) { //Null pointer, just stop
@@ -585,11 +580,12 @@ void Curl::ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len,
 
         const Curl::CurlOption &option = optionGroup[i];
 
-        const int *optionId = &option.value;
+        const int32_t *optionId = &option.value;
 
-        //I dont like to mess with memory
+        //I don't like to mess with memory
         std::string sOptionName( option.name );
 
+        
         (*obj)->Set(
             v8::String::New( ( sOptionName ).c_str() ),
             v8::Integer::New( option.value ),
@@ -619,8 +615,10 @@ v8::Handle<v8::Value> Curl::GetInfoTmpl( const Curl &obj, int infoId )
     CURLINFO info = (CURLINFO) infoId;
     CURLcode code = curl_easy_getinfo( obj.curl, info, &result );
 
-    if ( code != CURLE_OK )
-        return scope.Close( Curl::Raise( "curl_easy_getinfo failed!", curl_easy_strerror( code ) ) );
+    if ( code != CURLE_OK ) {
+        Curl::Raise( "curl_easy_getinfo failed!", curl_easy_strerror( code ) );
+        return v8::Undefined();
+    }
 
     if ( ResultCanBeNull<TResultType>::value && !result ) //null pointer
         return scope.Close( v8::String::New( "" ) );
@@ -675,7 +673,7 @@ int Curl::CbProgress( void *clientp, double dltotal, double dlnow, double ultota
 
     if ( !retval->IsInt32() ) {
 
-        scope.Close( Curl::Raise( "Return value from the progress callback must be an integer." ) );
+        Curl::Raise( "Return value from the progress callback must be an integer." ) ;
 
         retvalInt32 = 1;
 
@@ -714,7 +712,7 @@ int Curl::CbXferinfo( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_
 
     if ( !retval->IsInt32() ) {
 
-        scope.Close( Curl::Raise( "Return value from the progress callback must be an integer." ) );
+        Curl::Raise( "Return value from the progress callback must be an integer." );
 
         retvalInt32 = 1;
 
@@ -748,7 +746,7 @@ int Curl::CbDebug( CURL *handle, curl_infotype type, char *data, size_t size, vo
 
     if ( !retval->IsInt32() ) {
 
-        scope.Close( Curl::Raise( "Return value from the debug callback must be an integer." ) );
+        Curl::Raise( "Return value from the debug callback must be an integer." );
 
         retvalInt = 1;
 
@@ -770,8 +768,8 @@ v8::Handle<v8::Value> Curl::New( const v8::Arguments &args ) {
 
         Curl *obj = new Curl( args.This() );
 
-        static v8::Persistent<v8::String> SYM_ON_HEADER = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onCreated" ) );
-        v8::Handle<v8::Value> cb = obj->handle->Get( SYM_ON_HEADER );
+        static v8::Persistent<v8::String> SYM_ON_CREATED = v8::Persistent<v8::String>::New( v8::String::NewSymbol( "_onCreated" ) );
+        v8::Handle<v8::Value> cb = obj->handle->Get( SYM_ON_CREATED );
 
         if ( cb->IsFunction() ) {
             cb->ToObject()->CallAsFunction( obj->handle, 0, NULL );
@@ -820,9 +818,10 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
             std::string invalidArrayMsg = "Option value should be an Array of Objects.";
 
             if ( !value->IsArray() ) {
-                return scope.Close( v8::ThrowException(v8::Exception::TypeError(
+                v8::ThrowException(v8::Exception::TypeError(
                     v8::String::New( invalidArrayMsg.c_str() )
-                )));
+                ));
+                return v8::Undefined();
             }
 
             CurlHttpPost &httpPost = obj->httpPost;
@@ -837,9 +836,10 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
 
                 // not an array of objects
                 if ( !rows->Get( i )->IsObject() ) {
-                    return scope.Close( v8::ThrowException(v8::Exception::TypeError(
+                    v8::ThrowException(v8::Exception::TypeError(
                         v8::String::New( invalidArrayMsg.c_str() )
-                    )));
+                    ));
+                    return v8::Undefined();
                 }
 
                 v8::Handle<v8::Object> postData = v8::Handle<v8::Object>::Cast( rows->Get( i ) );
@@ -872,8 +872,8 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
                     if ( httpPostId == -1 ) {
 
                         std::string errorMsg = string_format( "Invalid property \"%s\" given.", *fieldName );
-
-                        return Curl::Raise( errorMsg.c_str() );
+                        Curl::Raise( errorMsg.c_str() );
+                        return v8::Undefined();
                     }
 
 
@@ -881,7 +881,8 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
                     if ( !postDataValue->IsString() ) {
 
                         std::string errorMsg = string_format( "Value for property \"%s\" should be a string.", *fieldName );
-                        return Curl::Raise( errorMsg.c_str() );
+                        Curl::Raise( errorMsg.c_str() );
+                        return v8::Undefined();
 
                     }
 
@@ -906,9 +907,10 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
             } else {
 
                 if ( !value->IsArray() ) {
-                    return scope.Close( v8::ThrowException(v8::Exception::TypeError(
+                    v8::ThrowException(v8::Exception::TypeError(
                         v8::String::New( "Option value should be an array." )
-                    )));
+                    ));
+                    return v8::Undefined();
                 }
 
                 //convert value to curl linked list (curl_slist)
@@ -934,9 +936,10 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
     } else if ( ( optionId = isInsideOption( curlOptionsString, opt ) ) ) {
 
         if ( !value->IsString() ) {
-            return scope.Close( v8::ThrowException(v8::Exception::TypeError(
+            v8::ThrowException(v8::Exception::TypeError(
                 v8::String::New( "Option value should be a string." )
-            )));
+            ));
+            return v8::Undefined();
         }
 
         // Create a string copy
@@ -977,7 +980,8 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
     } else if ( ( optionId = isInsideOption( curlOptionsFunction, opt ) ) ) {
 
         if ( !value->IsFunction() ) {
-            return scope.Close( Curl::Raise( "Option value must be a function." ) );
+            Curl::Raise( "Option value must be a function." );
+            return v8::Undefined();
         }
 
         v8::Handle<v8::Function> callback = value.As<v8::Function>();
@@ -1019,9 +1023,10 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
 
     if ( code != CURLE_OK ) {
 
-        return scope.Close( Curl::Raise(
+        Curl::Raise(
             code == CURLE_FAILED_INIT ? "Unknown option given. First argument must be the option internal id or the option name. You can use the Curl.option constants." : curl_easy_strerror( code )
-        ));
+        );
+        return v8::Undefined();
     }
 
     return scope.Close( optCallResult );
@@ -1102,23 +1107,28 @@ v8::Handle<v8::Value> Curl::Perform( const v8::Arguments &args ) {
 
     Curl *obj = Curl::Unwrap( args.This() );
 
-    if ( !obj )
-        return scope.Close( Curl::Raise( "Curl is closed." ) );
+    if ( !obj ) {
+        Curl::Raise( "Curl is closed." );
+        return v8::Undefined();
+    }
 
-    if ( obj->isInsideMultiCurl ) //client should not call this method more than one time by request
-        return scope.Close( Curl::Raise( "Curl session is already running." ) );
+    //client should not call this method more than one time by request
+    if ( obj->isInsideMultiCurl ) {
+        Curl::Raise( "Curl session is already running." );
+        return v8::Undefined();
+    }
 
     CURLMcode code = curl_multi_add_handle( Curl::curlMulti, obj->curl );
 
     if ( code != CURLM_OK ) {
 
-        return scope.Close( Curl::Raise( "curl_multi_add_handle Failed", curl_multi_strerror( code ) ) );
+        Curl::Raise( "curl_multi_add_handle Failed", curl_multi_strerror( code ) );
+        return v8::Undefined();
     }
 
     obj->isInsideMultiCurl = true;
 
-    return scope.Close( args.This() );
-
+    return args.This();
 }
 
 v8::Handle<v8::Value> Curl::Pause( const v8::Arguments &args )
@@ -1127,20 +1137,26 @@ v8::Handle<v8::Value> Curl::Pause( const v8::Arguments &args )
 
     Curl *obj = Curl::Unwrap( args.This() );
 
-    if ( !obj )
-        return scope.Close( Curl::Raise( "Curl is closed." ) );
+    if ( !obj ) {
+        Curl::Raise( "Curl is closed." );
+        return v8::Undefined();
+    }
 
-    if ( !args[0]->IsUint32() )
-        return scope.Close( Curl::Raise( "Bitmask value must be an integer." ) );
+    if ( !args[0]->IsUint32() ) {
+        Curl::Raise( "Bitmask value must be an integer." );
+        return v8::Undefined();
+    }
 
     int32_t bitmask = args[0]->Int32Value();
 
     CURLcode code = curl_easy_pause( obj->curl, bitmask );
 
-    if ( code != CURLE_OK )
-        return scope.Close( Curl::Raise( curl_easy_strerror( code ) ) );
+    if ( code != CURLE_OK ) {
+        Curl::Raise( curl_easy_strerror( code ) );
+        return v8::Undefined();
+    }
 
-    return scope.Close( args.This() );
+    return args.This();
 }
 
 v8::Handle<v8::Value> Curl::Close( const v8::Arguments &args )
@@ -1162,7 +1178,8 @@ v8::Handle<v8::Value> Curl::Reset( const v8::Arguments &args )
 
     if ( !obj ) {
 
-        return scope.Close( Curl::Raise( "Curl handle is already closed." ) );
+        Curl::Raise( "Curl handle is already closed." );
+        return v8::Undefined();
 
     }
 
@@ -1173,7 +1190,7 @@ v8::Handle<v8::Value> Curl::Reset( const v8::Arguments &args )
 
     obj->DisposeCallbacks();
 
-    return scope.Close( args.This() );
+    return args.This();
 }
 
 //returns the amount of curl instances

@@ -37,7 +37,7 @@ describe( 'Curl', function() {
                 curl.perform();
             });
 
-            curl.on( 'end', function( status ) {
+            curl.on( 'end', function() {
 
                 if ( !firstRun )
                     done( new Error( 'Reset failed.' ) );

@@ -11,6 +11,24 @@ describe( 'Curl', function() {
 
     describe( 'getInfo()', function() {
 
+        beforeEach( function( done ) {
+
+            server.listen( serverObj.port, serverObj.host, function() {
+
+                var url = server.address().address + ':' + server.address().port;
+
+                curl.setOpt( 'URL', url );
+                done();
+            });
+        });
+
+        afterEach( function() {
+
+            curl = new Curl();
+
+            server.close();
+        });
+
         before(function(){
 
             app.get( '/', function( req, res ) {
@@ -26,32 +44,22 @@ describe( 'Curl', function() {
 
         it ( 'should get all infos', function ( done ) {
 
-            server.listen( 3000, 'localhost', function() {
+            curl.on( 'end', function( status ) {
 
-                var url = server.address().address + ':' + server.address().port;
+                if ( status !== 200 )
+                    throw Error( 'Invalid status code: ' + status );
 
-                curl.setOpt( 'URL', url );
+                for ( var infoId in Curl.info ) {
+                    curl.getInfo( infoId );
+                }
 
-                curl.on( 'end', function( status ) {
-
-                    if ( status !== 200 )
-                        throw Error( 'Invalid Status Code' );
-
-                    for ( var infoId in Curl.info ) {
-                        curl.getInfo( infoId );
-                    }
-
-                    done();
-                });
-
-                curl.perform();
+                done();
             });
 
+            curl.perform();
 
         });
 
     });
-
-
 
 });

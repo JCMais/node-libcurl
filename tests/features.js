@@ -19,7 +19,7 @@ describe( 'Curl', function() {
 
         beforeEach( function( done ) {
 
-            server.listen( 3000, 'localhost', function() {
+            server.listen( serverObj.port, serverObj.host, function() {
 
                 var url = server.address().address + ':' + server.address().port;
 

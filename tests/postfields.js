@@ -18,6 +18,24 @@ describe( 'Curl', function() {
 
     describe( 'Post Data', function() {
 
+        beforeEach( function( done ) {
+
+            server.listen( serverObj.port, serverObj.host, function() {
+
+                var url = server.address().address + ':' + server.address().port;
+
+                curl.setOpt( 'URL', url );
+                done();
+            });
+        });
+
+        afterEach( function() {
+
+            curl = new Curl();
+
+            server.close();
+        });
+
         before(function(){
 
             app.post( '/', function( req, res ) {
@@ -33,36 +51,24 @@ describe( 'Curl', function() {
 
         it ( 'should post the correct data', function ( done ) {
 
-            server.listen( 3000, 'localhost', function() {
+            curl.setOpt( 'POSTFIELDS', querystring.stringify( postData ) );
 
-                var url = server.address().address + ':' + server.address().port;
+            curl.on( 'end', function( status, data ) {
 
-                curl.setOpt( 'URL', url );
-                curl.setOpt( 'POSTFIELDS', querystring.stringify( postData ) );
+                if ( status !== 200 )
+                    throw Error( 'Invalid status code: ' + status );
 
-                curl.on( 'end', function( status, data ) {
+                data = JSON.parse( data );
 
-                    if ( status !== 200 )
-                        throw Error( 'Invalid Status Code' );
+                for ( var field in data ) {
 
-                    data = JSON.parse( data );
+                    data[field].should.be.equal( postData[field] );
+                }
 
-                    for ( var field in data ) {
-
-                        data[field].should.be.equal( postData[field] );
-
-                    }
-
-                    done();
-                });
-
-                curl.perform();
+                done();
             });
 
+            curl.perform();
         });
-
     });
-
-
-
 });

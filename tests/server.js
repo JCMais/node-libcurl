@@ -11,5 +11,7 @@ app.use( bodyParser() )
 
 module.exports = {
     server : server,
-    app    : app
+    app    : app,
+    port   : 3000,
+    host   : 'localhost'
 };
