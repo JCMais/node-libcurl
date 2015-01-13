@@ -1,5 +1,11 @@
 #include "Curl.h"
 
+#include <node_buffer.h>
+#include <curl/curl.h>
+#include <iostream>
+#include <stdlib.h>
+#include <string.h> //cstring?
+
 // Set curl constants
 #include "generated-stubs/curlOptionsString.h"
 #include "generated-stubs/curlOptionsInteger.h"
@@ -29,7 +35,6 @@ Curl::CurlOption curlOptionsLinkedList[] = {
 #endif
 
     //@TODO ADD SUPPORT FOR CURLOPT_HEADEROPT AND CURLOPT_PROXYHEADER
-
     X(HTTPPOST),
     X(HTTPHEADER),
     X(QUOTE),
@@ -115,7 +120,6 @@ v8::Persistent<v8::Function> Curl::constructor;
 CURLM  *Curl::curlMulti      = NULL;
 int     Curl::runningHandles = 0;
 int     Curl::count          = 0;
-int32_t Curl::transfered     = 0;
 std::map< CURL*, Curl* > Curl::curls;
 uv_timer_t Curl::curlTimeout;
 
@@ -333,8 +337,6 @@ int Curl::HandleSocket( CURL *easy, curl_socket_t s, int action, void *userp, vo
     error = uv_last_error( uv_default_loop() );
     std::cerr << uv_err_name( error ) << " " << uv_strerror( error );
     abort();
-
-    return -1;
 }
 
 //Creates a Context to be used to store data between events
@@ -342,7 +344,7 @@ Curl::CurlSocketContext* Curl::CreateCurlSocketContext( curl_socket_t sockfd )
 {
     int r;
     uv_err_s error;
-    Curl::CurlSocketContext *ctx;
+    Curl::CurlSocketContext *ctx = NULL;
 
     ctx = static_cast<Curl::CurlSocketContext*>( malloc( sizeof( *ctx ) ) );
 
@@ -379,8 +381,8 @@ int Curl::HandleTimeout( CURLM *multi /* multi handle */ , long timeoutMs /* tim
 }
 
 //Function called when the previous timeout set reaches 0
-void Curl::OnTimeout( uv_timer_t *req, int status ) {
-
+void Curl::OnTimeout( uv_timer_t *req, int status )
+{
     //timeout expired, let libcurl update handlers and timeouts
     curl_multi_socket_action( Curl::curlMulti, CURL_SOCKET_TIMEOUT, 0, &Curl::runningHandles );
 
@@ -403,7 +405,7 @@ void Curl::Process( uv_poll_t* handle, int status, int events )
     CurlSocketContext *ctx;
 
     //reinterpret?
-    ctx = (CurlSocketContext*) handle->data;
+    ctx = static_cast<CurlSocketContext*>( handle->data );
 
     do {
 
@@ -423,7 +425,7 @@ void Curl::Process( uv_poll_t* handle, int status, int events )
 void Curl::ProcessMessages()
 {
     CURLMcode code;
-    CURLMsg *msg;
+    CURLMsg *msg = NULL;
     int pending = 0;
 
     while( ( msg = curl_multi_info_read( Curl::curlMulti, &pending ) ) ) {
@@ -431,25 +433,25 @@ void Curl::ProcessMessages()
         if ( msg->msg == CURLMSG_DONE ) {
 
             Curl *curl = Curl::curls[msg->easy_handle];
-            CURLMsg msgCopy = *msg;
+
+            CURLcode statusCode = msg->data.result;
 
             code = curl_multi_remove_handle( Curl::curlMulti, msg->easy_handle );
 
             curl->isInsideMultiCurl = false;
 
             if ( code != CURLM_OK ) {
-
                 Curl::Raise( "curl_multi_remove_handle Failed", curl_multi_strerror( code ) );
                 return;
             }
 
-            if ( msgCopy.data.result == CURLE_OK ) {
+            if ( statusCode == CURLE_OK ) {
 
-                curl->OnEnd( &msgCopy );
+                curl->OnEnd();
 
             } else {
 
-                curl->OnError( &msgCopy );
+                curl->OnError( statusCode );
             }
         }
     }
@@ -471,18 +473,14 @@ void Curl::OnCurlSocketClose( uv_handle_t *handle )
 //Called by libcurl when some chunk of data (from body) is available
 size_t Curl::WriteFunction( char *ptr, size_t size, size_t nmemb, void *userdata )
 {
-    Curl::transfered += size * nmemb;
-
-    Curl *obj = (Curl*) userdata;
+    Curl *obj = static_cast<Curl*>( userdata );
     return obj->OnData( ptr, size, nmemb );
 }
 
 //Called by libcurl when some chunk of data (from headers) is available
 size_t Curl::HeaderFunction( char *ptr, size_t size, size_t nmemb, void *userdata )
 {
-    Curl::transfered += size * nmemb;
-
-    Curl *obj = (Curl*) userdata;
+    Curl *obj = static_cast<Curl*>( userdata );
     return obj->OnHeader( ptr, size, nmemb );
 }
 
@@ -531,18 +529,18 @@ size_t Curl::OnHeader( char *data, size_t size, size_t nmemb )
     return ret;
 }
 
-void Curl::OnEnd( CURLMsg *msg )
+void Curl::OnEnd()
 {
     v8::HandleScope scope;
 
     node::MakeCallback( this->handle, "_onEnd", 0, NULL );
 }
 
-void Curl::OnError( CURLMsg *msg )
+void Curl::OnError( CURLcode errorCode )
 {
     v8::HandleScope scope;
 
-    v8::Handle<v8::Value> argv[] = { v8::Exception::Error( v8::String::New( curl_easy_strerror( msg->data.result ) ) ), v8::Integer::New( msg->data.result )  };
+    v8::Handle<v8::Value> argv[] = { v8::Exception::Error( v8::String::New( curl_easy_strerror( errorCode ) ) ), v8::Integer::New( errorCode )  };
     node::MakeCallback( this->handle, "_onError", 2, argv );
 }
 
@@ -585,7 +583,7 @@ void Curl::ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len,
         //I don't like to mess with memory
         std::string sOptionName( option.name );
 
-        
+
         (*obj)->Set(
             v8::String::New( ( sOptionName ).c_str() ),
             v8::Integer::New( option.value ),
@@ -628,7 +626,7 @@ v8::Handle<v8::Value> Curl::GetInfoTmpl( const Curl &obj, int infoId )
 
 Curl* Curl::Unwrap( v8::Handle<v8::Object> value )
 {
-    return (Curl*) value->GetPointerFromInternalField( 0 );
+    return static_cast<Curl*>( value->GetPointerFromInternalField( 0 ) );
 }
 
 //Create a Exception with the given message and reason
@@ -736,8 +734,8 @@ int Curl::CbDebug( CURL *handle, curl_infotype type, char *data, size_t size, vo
     v8::HandleScope scope;
 
     v8::Handle<v8::Value> argv[] = {
-        v8::Number::New( (int32_t) type ),
-        v8::String::New( data, size )
+        v8::Integer::New( type ),
+        v8::String::New( data, static_cast<int>(size) )
     };
 
     v8::Handle<v8::Value> retval = obj->callbacks.debug->Call( obj->handle, 2, argv );
@@ -792,7 +790,7 @@ v8::Handle<v8::Value> Curl::New( const v8::Arguments &args ) {
 void Curl::Destructor( v8::Persistent<v8::Value> value, void *data )
 {
     v8::Handle<v8::Object> object = value->ToObject();
-    Curl * curl = (Curl*) object->GetPointerFromInternalField( 0 );
+    Curl * curl = static_cast<Curl*>( object->GetPointerFromInternalField( 0 ) );
     curl->Dispose();
 }
 
@@ -944,7 +942,6 @@ v8::Handle<v8::Value> Curl::SetOpt( const v8::Arguments &args ) {
 
         // Create a string copy
         bool isNull = value->IsNull();
-        std::string valueAsString;
 
         if ( !isNull ) {
 
@@ -1047,9 +1044,6 @@ v8::Handle<v8::Value> Curl::GetInfo( const v8::Arguments &args )
 
     CURLINFO info;
     CURLcode code;
-
-    v8::String::Utf8Value val( infoVal );
-    std::string valStr = std::string( *val );
 
     //String
     if ( (infoId = isInsideOption( curlInfosString, infoVal ) ) ) {

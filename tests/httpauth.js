@@ -14,10 +14,11 @@ describe( 'Curl', function() {
     var curl = new Curl(),
         username = 'user',
         password = 'pass',
-        realm = 'libcurl testing',
+        realmBasic = 'basic',
+        realmDigest= 'digest',
         basic = auth.basic(
             {
-                realm: realm
+                realm: realmBasic
             },
             function ( usr, pass, callback ) {
 
@@ -26,14 +27,14 @@ describe( 'Curl', function() {
         ),
         digest = auth.digest(
             {
-                realm: realm
+                realm: realmDigest
             }, function ( usr, callback ) {
 
                 var hash = crypto.createHash( 'md5' );
 
                 if ( usr === username ) {
 
-                    hash.update( [username, realm, password].join( ':' ) );
+                    hash.update( [username, realmDigest, password].join( ':' ) );
                     callback( hash.digest( 'hex' ) );
 
                 } else {
@@ -134,8 +135,7 @@ describe( 'Curl', function() {
 
             curl.on( 'end', function( status ) {
 
-                if ( status === 200 )
-                    throw Error( 'Invalid connection established.' );
+                status.should.be.equal( 401 );
 
                 done();
             });
