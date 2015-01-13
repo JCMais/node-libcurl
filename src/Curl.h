@@ -3,14 +3,9 @@
 
 #include <v8.h>
 #include <node.h>
-#include <node_buffer.h>
-#include <curl/curl.h>
 #include <map>
 #include <vector>
 #include <string>
-#include <iostream>
-#include <stdlib.h>
-#include <string.h>
 
 #include "CurlHttpPost.h"
 #include "string_format.h"
@@ -26,6 +21,8 @@ public:
     {
         const char *name;
         int32_t value;
+        //There is an warning about overflow here. The biggest value this is going be is 1 << 31, from CURLAUTH_ONLY.
+        // Since atm this is the only place with such big value, we are veryfing for that in the setOpt method, and so using the correct value there.
     };
 
     //Export curl to js
@@ -69,7 +66,6 @@ private:
     static CURLM *curlMulti;
     static int runningHandles;
     static int count;
-    static int transfered;
     static std::map< CURL*, Curl* > curls;
     static uv_timer_t curlTimeout;
     static v8::Persistent<v8::Function> constructor;
@@ -91,8 +87,8 @@ private:
     //Instance methods
     size_t OnData( char *data, size_t size, size_t nmemb );
     size_t OnHeader( char *data, size_t size, size_t nmemb );
-    void OnEnd( CURLMsg *msg );
-    void OnError( CURLMsg *msg );
+    void OnEnd();
+    void OnError( CURLcode errorCode );
     void DisposeCallbacks();
 
     //Helper static methods

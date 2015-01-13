@@ -14,19 +14,32 @@
                     'msvs_settings': {
                         'VCCLCompilerTool': {
                             'ExceptionHandling': '1',
+                            'Optimization': 2,                  # /O2 safe optimization
+                            'FavorSizeOrSpeed': 1,              # /Ot, favour speed over size 
+                            'InlineFunctionExpansion': 2,       # /Ob2, inline anything eligible
+                            'WholeProgramOptimization': 'true', # /GL, whole program optimization, needed for LTCG
+                            'OmitFramePointers': 'true',
+                            'EnableFunctionLevelLinking': 'true',
+                            'EnableIntrinsicFunctions': 'true',
+                            'WarnAsError': 'true'
+                        }
+                    }
+                },
+                'Debug': {
+                    'msvs_settings': {
+                        'VCCLCompilerTool': {
+                            'WarnAsError': 'false'
                         }
                     }
                 }
             },
             'msvs_settings': {
                 'VCCLCompilerTool': {
-                    'WarnAsError': 'true',
-                    'DisableSpecificWarnings': ['4506'], #warning about v8 inline function
+                    'DisableSpecificWarnings': ['4506'] #warning about v8 inline function
                 }
             },
-            'cflags' : ['-std=c++11', '-O3'],
+            'cflags' : ['-std=c++11', '-O2'],
             'cflags!': [ '-fno-exceptions' ], # enable exceptions
-            'cflags_cc!': [ '-fno-exceptions' ],
             'conditions': [
                 ['OS=="win"', {
                     'dependencies': [
@@ -40,6 +53,13 @@
                     'sources!': [
                         'src/strndup.cc' #remove strndup function declaration on non-windows systems.
                     ]
+                }],
+                [ 'OS=="mac"', {
+                    "xcode_settings": {
+                        'OTHER_CPLUSPLUSFLAGS' : ['-std=c++11','-stdlib=libc++'],
+                        'OTHER_LDFLAGS': ['-stdlib=libc++'],
+                        'MACOSX_DEPLOYMENT_TARGET': '10.7'
+                    }
                 }]
             ]
         }
