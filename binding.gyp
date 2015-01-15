@@ -40,6 +40,15 @@
             },
             'cflags' : ['-std=c++11', '-O2'],
             'cflags!': [ '-fno-exceptions' ], # enable exceptions
+            "xcode_settings": {
+                'OTHER_CPLUSPLUSFLAGS' : ['-std=c++11','-stdlib=libc++'],
+                'OTHER_LDFLAGS': ['-stdlib=libc++'],
+                'MACOSX_DEPLOYMENT_TARGET': '10.7',
+                'WARNING_CFLAGS':[
+                    '-Wno-c++11-narrowing',
+                    '-Wno-constant-conversion'
+                ]
+            },
             'conditions': [
                 ['OS=="win"', {
                     'dependencies': [
@@ -53,13 +62,6 @@
                     'sources!': [
                         'src/strndup.cc' #remove strndup function declaration on non-windows systems.
                     ]
-                }],
-                [ 'OS=="mac"', {
-                    "xcode_settings": {
-                        'OTHER_CPLUSPLUSFLAGS' : ['-std=c++11','-stdlib=libc++'],
-                        'OTHER_LDFLAGS': ['-stdlib=libc++'],
-                        'MACOSX_DEPLOYMENT_TARGET': '10.7'
-                    }
                 }]
             ]
         }
