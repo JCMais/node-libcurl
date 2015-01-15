@@ -404,7 +404,6 @@ void Curl::Process( uv_poll_t* handle, int status, int events )
 
     CurlSocketContext *ctx;
 
-    //reinterpret?
     ctx = static_cast<CurlSocketContext*>( handle->data );
 
     do {
