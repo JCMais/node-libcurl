@@ -40,6 +40,8 @@
             },
             'cflags' : ['-std=c++11', '-O2'],
             'cflags!': [ '-fno-exceptions' ], # enable exceptions
+            'CLANG_CXX_LIBRARY': 'libc++',
+            'CLANG_CXX_LANGUAGE_STANDARD':'c++11',
             "xcode_settings": {
                 'OTHER_CPLUSPLUSFLAGS' : ['-std=c++11','-stdlib=libc++'],
                 'OTHER_LDFLAGS': ['-stdlib=libc++'],
