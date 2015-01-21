@@ -15,7 +15,7 @@
                         'VCCLCompilerTool': {
                             'ExceptionHandling': '1',
                             'Optimization': 2,                  # /O2 safe optimization
-                            'FavorSizeOrSpeed': 1,              # /Ot, favour speed over size 
+                            'FavorSizeOrSpeed': 1,              # /Ot, favour speed over size
                             'InlineFunctionExpansion': 2,       # /Ob2, inline anything eligible
                             'WholeProgramOptimization': 'true', # /GL, whole program optimization, needed for LTCG
                             'OmitFramePointers': 'true',
@@ -40,8 +40,6 @@
             },
             'cflags' : ['-std=c++11', '-O2'],
             'cflags!': [ '-fno-exceptions' ], # enable exceptions
-            'CLANG_CXX_LIBRARY': 'libc++',
-            'CLANG_CXX_LANGUAGE_STANDARD':'c++11',
             "xcode_settings": {
                 'OTHER_CPLUSPLUSFLAGS' : ['-std=c++11','-stdlib=libc++'],
                 'OTHER_LDFLAGS': ['-stdlib=libc++'],
@@ -60,7 +58,9 @@
                         'CURL_STATICLIB'
                     ]
                 }, { # OS != "win"
-                    'libraries': ['-lcurl'],
+                    'libraries': [
+                        '<!@(node <(module_root_dir)/tools/curl-config.js)'
+                    ],
                     'sources!': [
                         'src/strndup.cc' #remove strndup function declaration on non-windows systems.
                     ]
