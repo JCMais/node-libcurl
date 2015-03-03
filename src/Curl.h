@@ -105,7 +105,7 @@ public:
     static void ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len, curlMapId *mapId, curlMapName *mapName );
 
     template<typename TResultType, typename Tv8MappingType>
-    static v8::Local<v8::Value> GetInfoTmpl( const Curl &obj, int infoId );
+    static v8::Local<v8::Value> GetInfoTmpl( const Curl *obj, int infoId );
     static void ThrowError( const char *message, const char *reason = nullptr );
 
     //Callbacks

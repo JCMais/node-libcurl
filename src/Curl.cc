@@ -355,8 +355,6 @@ int Curl::HandleTimeout( CURLM *multi /* multi handle */ , long timeoutMs /* tim
     if ( timeoutMs <= 0 )
         timeoutMs = 1;
 
-    std::cout << "Timeout: " << timeoutMs << std::endl;
-
     return uv_timer_start( &Curl::curlTimeout, Curl::OnTimeout, timeoutMs, 0 );
 }
 
@@ -720,12 +718,6 @@ NAN_METHOD( Curl::New )
 
     obj->Wrap( args.This() );
 
-    //v8::Local<v8::Object> fn = v8::Handle<v8::Object>::Cast( args.This()->Get( NanNew( "_onCreated" ) ) );
-
-    //std::cout << fn->IsFunction() << std::endl;
-
-    //NanMakeCallback( args.This(), "_onCreated", 0, NULL );
-
     NanReturnThis();
 }
 
@@ -1068,25 +1060,36 @@ template <typename> struct ResultCanBeNull : std::false_type {};
 template <> struct ResultCanBeNull<char*> : std::true_type {};
 
 template<typename TResultType, typename Tv8MappingType>
-v8::Local<v8::Value> Curl::GetInfoTmpl( const Curl &obj, int infoId )
+v8::Local<v8::Value> Curl::GetInfoTmpl( const Curl *obj, int infoId )
 {
     NanEscapableScope();
 
     TResultType result;
 
     CURLINFO info = (CURLINFO) infoId;
-    CURLcode code = curl_easy_getinfo( obj.curl, info, &result );
+    CURLcode code = curl_easy_getinfo( obj->curl, info, &result );
+
+    v8::Local<v8::Value> retVal = NanUndefined();
 
     if ( code != CURLE_OK ) {
         
         Curl::ThrowError( "curl_easy_getinfo failed!", curl_easy_strerror( code ) );
-        return NanEscapeScope( NanUndefined() );
+
+    } else {
+
+        //null pointer
+        if ( ResultCanBeNull<TResultType>::value && !result ) {
+
+            retVal = NanNew<v8::String>( "" );
+
+        } else {
+
+            retVal = NanNew<Tv8MappingType>( result );
+        }
+
     }
 
-    if ( ResultCanBeNull<TResultType>::value && !result ) //null pointer
-        return NanEscapeScope( NanNew<v8::String>( "" ) );
-
-    return NanEscapeScope( NanNew<Tv8MappingType>( result ) );
+    return NanEscapeScope( retVal );
 }
 
 NAN_METHOD( Curl::GetInfo )
@@ -1113,17 +1116,17 @@ NAN_METHOD( Curl::GetInfo )
     //String
     if ( (infoId = isInsideOption( curlInfosString, infoVal ) ) ) {
 
-        retVal = Curl::GetInfoTmpl<char*, v8::String>( *(obj), infoId );
+        retVal = Curl::GetInfoTmpl<char*, v8::String>( obj, infoId );
 
     //Integer
     } else if ( (infoId = isInsideOption( curlInfosInteger, infoVal ) ) ) {
 
-        retVal = Curl::GetInfoTmpl<int32_t, v8::Integer>(  *(obj), infoId );
+        retVal = Curl::GetInfoTmpl<long, v8::Number>( obj, infoId );
 
     //Double
     } else if ( (infoId = isInsideOption( curlInfosDouble, infoVal ) ) ) {
 
-        retVal = Curl::GetInfoTmpl<double, v8::Number>( *(obj), infoId );
+        retVal = Curl::GetInfoTmpl<double, v8::Number>( obj, infoId );
 
     //Linked list
     } else if ( (infoId = isInsideOption( curlInfosLinkedList, infoVal ) ) ) {
