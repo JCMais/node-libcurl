@@ -7,42 +7,41 @@ var fs        = require( 'fs' ),
     Curl      = require( '../lib/Curl' );
 
 var server = serverObj.server,
-    app    = serverObj.app;
+    app    = serverObj.app,
+    curl = new Curl(),
+    username = 'user',
+    password = 'pass',
+    realmBasic = 'basic',
+    realmDigest= 'digest',
+    basic = auth.basic(
+        {
+            realm: realmBasic
+        },
+        function ( usr, pass, callback ) {
+
+            callback( usr === username && pass === password );
+        }
+    ),
+    digest = auth.digest(
+        {
+            realm: realmDigest
+        }, function ( usr, callback ) {
+
+            var hash = crypto.createHash( 'md5' );
+
+            if ( usr === username ) {
+
+                hash.update( [username, realmDigest, password].join( ':' ) );
+                callback( hash.digest( 'hex' ) );
+
+            } else {
+
+                callback();
+            }
+        }
+    );
 
 describe( 'Curl', function() {
-
-    var curl = new Curl(),
-        username = 'user',
-        password = 'pass',
-        realmBasic = 'basic',
-        realmDigest= 'digest',
-        basic = auth.basic(
-            {
-                realm: realmBasic
-            },
-            function ( usr, pass, callback ) {
-
-                callback( usr === username && pass === password );
-            }
-        ),
-        digest = auth.digest(
-            {
-                realm: realmDigest
-            }, function ( usr, callback ) {
-
-                var hash = crypto.createHash( 'md5' );
-
-                if ( usr === username ) {
-
-                    hash.update( [username, realmDigest, password].join( ':' ) );
-                    callback( hash.digest( 'hex' ) );
-
-                } else {
-
-                    callback();
-                }
-            }
-        );
 
     describe( 'HTTP Auth', function() {
 
@@ -90,13 +89,22 @@ describe( 'Curl', function() {
 
         it ( 'should authenticate using digest', function ( done ) {
 
+            //Currently, there is a bug with libcurl > 7.40 when using digest auth
+            // on Windows, the realm is not populated from the Auth header.
+            //  So we need to use the workaround below to make it work.
+            var user = username;
+
+            if ( process.platform == 'win32' && Curl.VERSION_NUM >=  0x072800 ) {
+                user = realmDigest + '/' + username;
+            }
+
             app.use( auth.connect( digest ) );
             app.get( '/', function( req, res ) {
                 res.send( req.user );
             });
 
             curl.setOpt( 'HTTPAUTH', Curl.auth.DIGEST );
-            curl.setOpt( Curl.option.USERNAME, username );
+            curl.setOpt( Curl.option.USERNAME, user );
             curl.setOpt( Curl.option.PASSWORD, password );
 
             curl.on( 'end', function( status, data ) {

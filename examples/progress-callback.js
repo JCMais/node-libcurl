@@ -10,7 +10,7 @@ var Curl = require( '../lib/Curl' ),
     ProgressBar = require( 'progress' );
 
 var curl = new Curl(),
-    url = process.argv[2] || 'http://ipv4.download.thinkbroadband.com/10MB.zip',
+    url = process.argv[2] || 'http://ipv4.download.thinkbroadband.com/5MB.zip',
     outputFile = path.resolve( __dirname, 'result.out' ),
     lastdlnow = 0,
     bar;
@@ -63,16 +63,8 @@ curl.onData = function( chunk ) {
     return chunk.length;
 };
 
-curl.on( 'end', function( status ) {
+curl.on( 'end', curl.close.bind( curl ) );
 
-    this.close();
-
-});
-
-curl.on( 'error', function( error ) {
-
-    this.close();
-
-});
+curl.on( 'error', curl.close.bind( curl ) );
 
 curl.perform();

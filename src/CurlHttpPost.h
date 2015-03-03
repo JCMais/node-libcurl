@@ -6,10 +6,6 @@
 
 #include <curl/curl.h>
 
-#ifdef _WIN32
-#include "strndup.h"
-#endif
-
 class CurlHttpPost
 {
 public:
@@ -28,10 +24,10 @@ public:
         TYPE
     };
 
-    void reset();
+    void Reset();
 
-    void append();
-
-    void set( int field, char *value, long length );
+    CURLFORMcode AddFile( char *fieldName, long fieldNameLength, char *fileName );
+    CURLFORMcode AddFile( char *fieldName, long fieldNameLength, char *fileName, char *contentType );
+    CURLFORMcode AddField( char *fieldName, long fieldNameLength, char *fieldValue, long fieldValueLength );
 };
 #endif

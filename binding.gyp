@@ -9,6 +9,9 @@
                 'src/strndup.cc',
                 'src/string_format.cc'
             ],
+            "include_dirs" : [
+                "<!(node -e \"require('nan')\")"
+            ],
             'configurations' : {
                 'Release': {
                     'msvs_settings': {

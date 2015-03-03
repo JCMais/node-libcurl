@@ -1,0 +1,26 @@
+{
+    "tags": {
+        "allowUnknownTags": true,
+        "dictionaries": ["jsdoc","closure"]
+    },
+    "source": {
+        "include": ["lib"]
+    },
+    "plugins": ["plugins/markdown"],
+    "templates": {
+        "cleverLinks":    false,
+        "monospaceLinks": false,
+        "baseline" : "./jsdoc-tmpl.config.json"
+    },
+    "opts": {
+        "template"   : "./node_modules/jsdoc-baseline",
+        "encoding"   : "utf8",
+        "destination": "./docs/",
+        "recurse": true,
+        "readme" : "./README.md"
+    },
+    "markdown": {
+        "parser": "gfm",
+        "hardwrap": true
+    }
+}
