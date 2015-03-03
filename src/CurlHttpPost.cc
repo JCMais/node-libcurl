@@ -1,87 +1,44 @@
 #include "CurlHttpPost.h"
 
-CurlHttpPost::CurlHttpPost () : first( NULL ), last( NULL )
-{
-
-    this->reset();
-
-}
+CurlHttpPost::CurlHttpPost () : first( nullptr ), last( nullptr )
+{}
 
 CurlHttpPost::~CurlHttpPost ()
 {
-    this->reset();
+    this->Reset();
 }
 
-void CurlHttpPost::reset()
+void CurlHttpPost::Reset()
 {
-    curl_httppost *current  = this->first;
+    if ( this->first ) {
 
-    while ( current ) {
-
-        curl_httppost *next = current->next;
-
-        if ( current->contenttype )
-
-            free( current->contenttype );
-
-        if ( current->contents )
-            free( current->contents );
-
-        if ( current->buffer )
-            free( current->buffer );
-
-        if ( current->name )
-            free( current->name );
-
-        free( current );
-
-        current = next;
-    }
-
-    this->first = NULL;
-    this->last  = NULL;
-}
-
-void CurlHttpPost::append()
-{
-    if ( !this->first ) {
-
-        this->first = ( curl_httppost* ) calloc( 1, sizeof( curl_httppost ) );
-        this->last  = this->first;
-
-    } else {
-
-        this->last->next = ( curl_httppost* ) calloc( 1, sizeof( curl_httppost ) );
-        this->last = this->last->next;
+        curl_formfree( this->first );
+        this->first = nullptr;
+        this->last  = nullptr;
     }
 }
 
-void CurlHttpPost::set( int field, char *value, long length )
+CURLFORMcode CurlHttpPost::AddFile( char *fieldName, long fieldNameLength, char *fileName )
 {
-    value = strndup( value, length );
+    return curl_formadd( &this->first, &this->last,
+        CURLFORM_COPYNAME, fieldName, CURLFORM_NAMELENGTH, fieldNameLength,
+        CURLFORM_FILE, fileName,
+        CURLFORM_END );
+}
 
-    switch ( field ) {
+CURLFORMcode CurlHttpPost::AddFile( char *fieldName, long fieldNameLength, char *fileName, char *contentType )
+{
+    return curl_formadd( &this->first, &this->last,
+        CURLFORM_COPYNAME, fieldName, CURLFORM_NAMELENGTH, fieldNameLength,
+        CURLFORM_FILE, fileName,
+        CURLFORM_CONTENTTYPE, contentType,
+        CURLFORM_END );
+}
 
-    case NAME:
-        last->name = value;
-        last->namelength = length;
-        break;
-
-    case TYPE:
-        last->contenttype = value;
-        break;
-
-    case FILE:
-        last->flags |= HTTPPOST_FILENAME;
-
-    case CONTENTS:
-        last->contents = value;
-        last->contentslength = length;
-        break;
-
-    default:
-        // `default` should never be reached.
-        free(value);
-        break;
-    }
+CURLFORMcode CurlHttpPost::AddField( char *fieldName, long fieldNameLength, char *fieldValue, long fieldValueLength )
+{
+    return curl_formadd( &this->first, &this->last,
+        CURLFORM_COPYNAME, fieldName, CURLFORM_NAMELENGTH, fieldNameLength,
+        CURLFORM_COPYCONTENTS, fieldValue, CURLFORM_CONTENTSLENGTH, fieldValueLength,
+        CURLFORM_END );
 }

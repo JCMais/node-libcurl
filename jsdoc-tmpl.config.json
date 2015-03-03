@@ -1,0 +1,16 @@
+{
+    "beautify": true,
+    "components": {
+        "summary": true
+    },
+    "encoding": "utf-8",
+    "locale": "en",
+    "markdown": true,
+    "sourceFiles": {
+        "generate": true,
+        "singleLink": true
+    },
+    "tables": {
+        "nestedPropertyTables": true
+    }
+}

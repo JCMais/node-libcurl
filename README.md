@@ -61,7 +61,7 @@ For more examples check the [examples folder](examples).
 
 * events:
   * end - Called when the request is finished without errors
-    * int statusCode HTTP status code.
+    * int statusCode Last received response code.
     * string|Buffer body If raw is set to true, a Buffer is passed instead of a string.
     * Array\<Object>|Buffer headers Buffer if raw is true.
   * data - Called when a chunk of data was received.

@@ -1,5 +1,4 @@
-#include <v8.h>
-#include <node.h>
+#include <nan.h>
 #include "Curl.h"
 
 void Initialize( v8::Handle<v8::Object> exports ) {

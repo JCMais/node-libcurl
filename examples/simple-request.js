@@ -18,7 +18,7 @@ curl.on( 'end', function ( statusCode, body, headers ) {
 
     console.info( 'Status Code: ', statusCode );
     console.info( 'Headers: ', headers );
-    console.info( 'Body: ', body );
+    console.info( 'Body length: ', body.length );
     this.close();
 });
 

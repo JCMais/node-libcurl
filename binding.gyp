@@ -9,13 +9,16 @@
                 'src/strndup.cc',
                 'src/string_format.cc'
             ],
+            "include_dirs" : [
+                "<!(node -e \"require('nan')\")"
+            ],
             'configurations' : {
                 'Release': {
                     'msvs_settings': {
                         'VCCLCompilerTool': {
                             'ExceptionHandling': '1',
                             'Optimization': 2,                  # /O2 safe optimization
-                            'FavorSizeOrSpeed': 1,              # /Ot, favour speed over size 
+                            'FavorSizeOrSpeed': 1,              # /Ot, favour speed over size
                             'InlineFunctionExpansion': 2,       # /Ob2, inline anything eligible
                             'WholeProgramOptimization': 'true', # /GL, whole program optimization, needed for LTCG
                             'OmitFramePointers': 'true',
@@ -58,7 +61,9 @@
                         'CURL_STATICLIB'
                     ]
                 }, { # OS != "win"
-                    'libraries': ['-lcurl'],
+                    'libraries': [
+                        '<!@(node <(module_root_dir)/tools/curl-config.js)'
+                    ],
                     'sources!': [
                         'src/strndup.cc' #remove strndup function declaration on non-windows systems.
                     ]
