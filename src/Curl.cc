@@ -20,6 +20,9 @@
 #include "generated-stubs/curlPause.h"
 #include "generated-stubs/curlHttp.h"
 
+#if LIBCURL_VERSION_NUM >= 0x072500
+#include "generated-stubs/curlHeader.h"
+#endif
 
 #define X(name) {#name, CURLOPT_##name}
 Curl::CurlOption curlOptionsLinkedList[] = {
@@ -35,9 +38,11 @@ Curl::CurlOption curlOptionsLinkedList[] = {
     X(RESOLVE),
 #endif
 
-    //@TODO ADD SUPPORT FOR CURLOPT_HEADEROPT AND CURLOPT_PROXYHEADER
     X(HTTPPOST),
     X(HTTPHEADER),
+#if LIBCURL_VERSION_NUM >= 0x072500
+    X(PROXYHEADER),
+#endif
     X(QUOTE),
     X(POSTQUOTE),
     X(PREQUOTE),
@@ -139,6 +144,11 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     Curl::ExportConstants( &pauseObj, curlPause, sizeof( curlPause ), nullptr, nullptr );
     Curl::ExportConstants( &protocolsObj, curlProtocols, sizeof( curlProtocols ), nullptr, nullptr );
 
+#if LIBCURL_VERSION_NUM >= 0x072500
+    v8::Local<v8::Object> headerObj      = NanNew<v8::Object>();
+    Curl::ExportConstants( &headerObj, curlHeader, sizeof( curlHeader ), nullptr, nullptr );
+#endif
+
     v8::PropertyAttribute attributes = static_cast<v8::PropertyAttribute>( v8::ReadOnly|v8::DontDelete );
 
     // Prototype Methods
@@ -166,6 +176,10 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     NanSetTemplate( ctor, NanNew<v8::String>( "http" ),  httpObj, attributes );
     NanSetTemplate( ctor, NanNew<v8::String>( "pause" ), pauseObj, attributes );
     NanSetTemplate( ctor, NanNew<v8::String>( "protocol" ), protocolsObj, attributes );
+
+#if LIBCURL_VERSION_NUM >= 0x072500
+    NanSetTemplate( ctor, NanNew<v8::String>( "header" ), headerObj, attributes );
+#endif
 
     NanSetTemplate( ctor, NanNew<v8::String>( "VERSION_NUM" ), NanNew<v8::Integer>( LIBCURL_VERSION_NUM ), attributes );
 
