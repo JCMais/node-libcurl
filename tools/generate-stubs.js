@@ -105,6 +105,7 @@ generateFiles( curlHeaderContent, 'curlInfosDouble', /CURLINFO_(\w+).*DOUBLE/g, 
 generateFiles( curlHeaderContent, 'curlProtocols', /CURLPROTO_(\w+)/g, 'PROTO', 'protocol' );
 generateFiles( curlHeaderContent, 'curlPause', /CURLPAUSE_(\w+)/g, 'PAUSE', 'pause' );
 generateFiles( curlHeaderContent, 'curlAuth', /CURLAUTH_(\w+)/g, 'AUTH', 'auth' );
+generateFiles( curlHeaderContent, 'curlHeader', /CURLHEADER_(\w+)/g, 'HEADER', 'header' );
 generateFiles( curlHeaderContent, 'curlHttp', /CURL_HTTP_((?!VERSION_LAST)(\w+)),/g, '_HTTP', 'http' );
 
 generateSingleJavascriptFileForEachType();
