@@ -9,6 +9,8 @@ var app = express(),
 app.use( bodyParser() )
     .use( cookiesParser() );
 
+app.disable( 'etag' );
+
 module.exports = {
     server : server,
     app    : app,

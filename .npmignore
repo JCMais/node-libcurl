@@ -3,6 +3,7 @@ raw/
 build/
 build/.*
 deps/
+docs/
 src/generated-stubs/*.h
 lib/generated-stubs/*.js
 .idea

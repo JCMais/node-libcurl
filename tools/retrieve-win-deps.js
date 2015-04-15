@@ -5,8 +5,8 @@ if ( process.platform !== 'win32' ) {
 
 /*
  * Notes about this script:
- * It's a really mess because of the callback hell, I could have used a promise library here,
- * but adding a dependency that is going to be used only on a single script, that is executed
+ * It's a mess because of the callback hell, I could have used a promise library here,
+ * but adding a dependency that is going to be used only in a single script, that is executed
  * only on Windows machines during install is not worth it.
  */
 

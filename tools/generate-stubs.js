@@ -134,7 +134,6 @@ function generateFiles( scope, fileName, pattern, prefix, jsObject ) {
 
     generateHeaderFile( fileName + '.h', prefix, matches );
     prepareDataForJavascriptFile( jsObject, matches );
-
 }
 
 function generateHeaderFile( fileName, prefix, regexMatches ) {
