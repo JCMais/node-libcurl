@@ -5,14 +5,15 @@ if ( process.platform !== 'win32' ) {
 
 /*
  * Notes about this script:
- * It's a really mess because of the callback hell, I could have used a promise library here,
- * but adding a dependency that is going to be used only on a single script, that is executed
+ * It's a mess because of the callback hell, I could have used a promise library here,
+ * but adding a dependency that is going to be used only in a single script, that is executed
  * only on Windows machines during install is not worth it.
  */
 
 var exec = require( 'child_process' ).exec,
     path = require( 'path' ),
-    fs   = require( 'fs' );
+    fs   = require( 'fs' ),
+    debug  = require( 'debug' )( 'node-libcurl' );
 
 var child, i, len,
     moduleKey, modulePath,
@@ -23,11 +24,12 @@ var child, i, len,
         cwd : path.resolve( __dirname, '..' )
     };
 
+
 exec( 'git rev-parse', function( err ) {
 
     if ( !err ) {
 
-        //already a git repo, dev machine? Go directly to the replacement.
+        debug( 'Already a git repo. Going directly to the tokens replacement.' );
         replaceTokensOnGypFiles();
         process.exit( 0 );
     }
@@ -44,6 +46,8 @@ function parseSubmodulesConfig() {
             console.log( err.toString() );
             process.exit( 1 );
         }
+
+        debug( "Parsing git submodules configuration file." );
 
         var submodules = stdout.split( /\r?\n|\r/g );
 
@@ -73,6 +77,8 @@ function initGitSubmodule( depsPath, err, url ) {
         process.exit( 1 );
     }
 
+    debug( "Adding git submodules: " + depsPath );
+
     exec( 'git init -q && git submodule add ' + url.trim() + ' ' + depsPath, function ( depsPath, err ) {
 
         if ( err ) {
@@ -83,6 +89,8 @@ function initGitSubmodule( depsPath, err, url ) {
         paths.splice( paths.indexOf( depsPath ), 1 );
 
         if ( paths.length === 0 ) {
+
+            debug( "Running deps/curl-for-windows/configure.py" );
 
             //everything processed, configure
             exec( 'git submodule update --init --recursive && python deps/curl-for-windows/configure.py',
@@ -120,6 +128,8 @@ function initGitSubmodule( depsPath, err, url ) {
 
 function replaceTokensOnGypFiles() {
 
+    debug( "Replacing tokens on configuration files." );
+
     var filesToCheck = [ 'libssh2.gyp', 'openssl.gyp', 'zlib.gyp', 'curl.gyp' ],
         search = /<\(library\)/g,
         replacement = 'static_library',
@@ -143,6 +153,8 @@ function replaceOnFile( file, search, replacement ) {
         console.error( 'File: ', file, ' not found.' );
         process.exit( 1 );
     }
+
+    debug( "Replacing tokens on file: " + file );
 
     fileContent = fs.readFileSync( file ).toString();
 

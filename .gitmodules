@@ -2,3 +2,4 @@
 	path = deps/curl-for-windows
 	url = https://github.com/JCMais/curl-for-windows.git
 	ignore = dirty
+	branch = master

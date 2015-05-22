@@ -20,6 +20,9 @@
 #include "generated-stubs/curlPause.h"
 #include "generated-stubs/curlHttp.h"
 
+#if LIBCURL_VERSION_NUM >= 0x072500
+#include "generated-stubs/curlHeader.h"
+#endif
 
 #define X(name) {#name, CURLOPT_##name}
 Curl::CurlOption curlOptionsLinkedList[] = {
@@ -35,9 +38,11 @@ Curl::CurlOption curlOptionsLinkedList[] = {
     X(RESOLVE),
 #endif
 
-    //@TODO ADD SUPPORT FOR CURLOPT_HEADEROPT AND CURLOPT_PROXYHEADER
     X(HTTPPOST),
     X(HTTPHEADER),
+#if LIBCURL_VERSION_NUM >= 0x072500
+    X(PROXYHEADER),
+#endif
     X(QUOTE),
     X(POSTQUOTE),
     X(PREQUOTE),
@@ -139,6 +144,11 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     Curl::ExportConstants( &pauseObj, curlPause, sizeof( curlPause ), nullptr, nullptr );
     Curl::ExportConstants( &protocolsObj, curlProtocols, sizeof( curlProtocols ), nullptr, nullptr );
 
+#if LIBCURL_VERSION_NUM >= 0x072500
+    v8::Local<v8::Object> headerObj      = NanNew<v8::Object>();
+    Curl::ExportConstants( &headerObj, curlHeader, sizeof( curlHeader ), nullptr, nullptr );
+#endif
+
     v8::PropertyAttribute attributes = static_cast<v8::PropertyAttribute>( v8::ReadOnly|v8::DontDelete );
 
     // Prototype Methods
@@ -166,6 +176,10 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     NanSetTemplate( ctor, NanNew<v8::String>( "http" ),  httpObj, attributes );
     NanSetTemplate( ctor, NanNew<v8::String>( "pause" ), pauseObj, attributes );
     NanSetTemplate( ctor, NanNew<v8::String>( "protocol" ), protocolsObj, attributes );
+
+#if LIBCURL_VERSION_NUM >= 0x072500
+    NanSetTemplate( ctor, NanNew<v8::String>( "header" ), headerObj, attributes );
+#endif
 
     NanSetTemplate( ctor, NanNew<v8::String>( "VERSION_NUM" ), NanNew<v8::Integer>( LIBCURL_VERSION_NUM ), attributes );
 
@@ -340,7 +354,7 @@ Curl::CurlSocketContext* Curl::CreateCurlSocketContext( curl_socket_t sockfd )
     r = uv_poll_init_socket( uv_default_loop(), &ctx->pollHandle, sockfd );
 
     assert( r == 0 );
-    
+
     ctx->pollHandle.data = ctx;
 
     return ctx;
@@ -351,29 +365,37 @@ Curl::CurlSocketContext* Curl::CreateCurlSocketContext( curl_socket_t sockfd )
 //the "performing" functions of the multi interface (curl_multi_socket_action(3) and curl_multi_perform(3)) - to allow libcurl to keep timeouts and retries etc to work.
 int Curl::HandleTimeout( CURLM *multi /* multi handle */ , long timeoutMs /* timeout in milliseconds */ , void *userp /* TIMERDATA */ )
 {
-    //A timeout value of -1 means that there is no timeout at all, and 0 means that the timeout is already reached.
-    if ( timeoutMs <= 0 )
-        timeoutMs = 1;
 
-    return uv_timer_start( &Curl::curlTimeout, Curl::OnTimeout, timeoutMs, 0 );
+    //stops running timer.
+    uv_timer_stop( &Curl::curlTimeout );
+
+    if ( timeoutMs == 0 ) {
+
+        int runningHandles = 0;
+        curl_multi_socket_action( Curl::curlMulti, CURL_SOCKET_TIMEOUT, 0, &runningHandles );
+        Curl::ProcessMessages();
+
+    } else if ( timeoutMs > 0 ) {
+
+        uv_timer_start( &Curl::curlTimeout, Curl::OnTimeout, timeoutMs, 0 );
+
+    }
+
+    return 0;
 }
 
 //Function called when the previous timeout set reaches 0
 UV_TIMER_CB( Curl::OnTimeout )
 {
     int runningHandles = 0;
-
-    //timeout expired, let libcurl update handlers and timeouts
     curl_multi_socket_action( Curl::curlMulti, CURL_SOCKET_TIMEOUT, 0, &runningHandles );
-
     Curl::ProcessMessages();
 }
 
 //Called when libcurl thinks there is something to process
 void Curl::Process( uv_poll_t* handle, int status, int events )
 {
-    //stop the timer, so curl_multi_socket_action is fired without a socket by the timeout cb
-    uv_timer_stop( &Curl::curlTimeout );
+    //uv_timer_stop( &Curl::curlTimeout );
 
     int flags = 0;
 
@@ -390,7 +412,7 @@ void Curl::Process( uv_poll_t* handle, int status, int events )
     //Before version 7.20.0: If you receive CURLM_CALL_MULTI_PERFORM, this basically means that you should call curl_multi_socket_action again
     // before you wait for more actions on libcurl's sockets.
     // You don't have to do it immediately, but the return code means that libcurl
-    //  may have more data available to return or that there may be more data to send off before it is "satisfied". 
+    //  may have more data available to return or that there may be more data to send off before it is "satisfied".
     do {
         code = curl_multi_socket_action( Curl::curlMulti, ctx->sockfd, flags, &runningHandles );
     } while ( code == CURLM_CALL_MULTI_PERFORM );
@@ -563,9 +585,7 @@ void Curl::ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len,
 
         const int32_t *optionId = &option.value;
 
-        //I don't like to mess with memory
         std::string sOptionName( option.name );
-
 
         (*obj)->ForceSet(
             NanNew<v8::String>( ( sOptionName ).c_str() ),
@@ -917,7 +937,7 @@ NAN_METHOD( Curl::SetOpt )
             }
 
             optCallResult = NanNew<v8::Integer>( curl_easy_setopt( obj->curl, CURLOPT_HTTPPOST, obj->httpPost->first ) );
-            
+
         } else {
 
             if ( value->IsNull() ) {
@@ -1010,7 +1030,7 @@ NAN_METHOD( Curl::SetOpt )
         v8::Local<v8::Function> callback = value.As<v8::Function>();
 
         switch ( optionId ) {
-            
+
 #if LIBCURL_VERSION_NUM >= 0x072000
             /* xferinfo was introduced in 7.32.0, no earlier libcurl versions will compile as they won't have the symbols around.
                 New libcurls will prefer the new callback and instead use that one even if both callbacks are set. */
@@ -1072,7 +1092,7 @@ v8::Local<v8::Value> Curl::GetInfoTmpl( const Curl *obj, int infoId )
     v8::Local<v8::Value> retVal = NanUndefined();
 
     if ( code != CURLE_OK ) {
-        
+
         Curl::ThrowError( "curl_easy_getinfo failed!", curl_easy_strerror( code ) );
 
     } else {
