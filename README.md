@@ -3,7 +3,7 @@
 [![NPM version](https://badge.fury.io/js/node-libcurl.svg)](http://badge.fury.io/js/node-libcurl)
 [![Dependencies](https://gemnasium.com/JCMais/node-libcurl.png)](https://gemnasium.com/JCMais/node-libcurl)
 
-Libcurl bindings for Node.js.
+[Libcurl](https://github.com/bagder/curl) bindings for Node.js.
 _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-curl)._
 
 ## Quick Start
