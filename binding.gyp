@@ -62,7 +62,7 @@
                     ]
                 }, { # OS != "win"
                     'libraries': [
-                        '<!@(node <(module_root_dir)/tools/curl-config.js)'
+                        '<!@(node "<(module_root_dir)/tools/curl-config.js")'
                     ],
                     'sources!': [
                         'src/strndup.cc' #remove strndup function declaration on non-windows systems.
