@@ -41,8 +41,8 @@
                     'DisableSpecificWarnings': ['4506'] #warning about v8 inline function
                 }
             },
-            'cflags' : ['-std=c++11', '-O2'],
-            'cflags!': [ '-fno-exceptions' ], # enable exceptions
+            'cflags' : ['-std=c++11', '-O2', '-Wno-narrowing'],
+            'cflags!': [ '-fno-exceptions', '-O3' ], # enable exceptions, remove level 3 optimization
             "xcode_settings": {
                 'OTHER_CPLUSPLUSFLAGS' : ['-std=c++11','-stdlib=libc++'],
                 'OTHER_LDFLAGS': ['-stdlib=libc++'],

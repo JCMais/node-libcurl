@@ -39,4 +39,5 @@ describe( 'Curl', function () {
     importTest( 'Post Fields', './curl/postfields' );
     importTest( 'HTTP Auth', './curl/httpauth' );
     importTest( 'HTTP Post', './curl/httppost' );
+    importTest( 'Binary Data', './curl/binary-data' );
 });

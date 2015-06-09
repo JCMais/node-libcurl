@@ -54,11 +54,13 @@ afterEach(function() {
     app._router.stack.pop();
 });
 
-before(function(){
+before(function( done ){
 
     server.listen( serverObj.port, serverObj.host, function() {
 
         url = server.address().address + ':' + server.address().port;
+
+        done();
     });
 });
 
