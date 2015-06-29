@@ -9,7 +9,7 @@ var debugCallback = function( infoType, content ) {
 
     var text = '';
 
-    switch ( infoType ) {
+    switch ( infoTypes ) {
 
         case infoTypes.TEXT:
             text = content;
