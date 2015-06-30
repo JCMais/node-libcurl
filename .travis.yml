@@ -18,7 +18,7 @@ before_install:
 #  - sudo apt-get install -qq libcurl4-openssl-dev
   - sudo apt-get update -qq
   - sudo apt-get autoremove -qq && sudo apt-get autoclean -qq
-  - apt-get install -qq openssl
+  - sudo apt-get install -qq openssl
   - git clone https://github.com/bagder/curl.git
   - cd curl
   - if [[ ${LIBCURL_VERSION_TAG} == 'LATEST' ]]; then
