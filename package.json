@@ -16,12 +16,13 @@
   },
   "main": "./index.js",
   "scripts": {
-    "install": "node tools/retrieve-win-deps && node tools/generate-stubs && node-gyp rebuild"
+    "install": "node tools/retrieve-win-deps && node tools/generate-stubs && pangyp rebuild"
   },
   "dependencies": {
     "bindings": "~1.2",
     "debug": "^2.2",
-    "nan": "~1.8"
+    "nan": "~1.8",
+    "pangyp": "~2.2"
   },
   "devDependencies": {
     "body-parser": "^1.12",
@@ -37,6 +38,6 @@
     "jsdoc-baseline": "hegemonic/baseline"
   },
   "engines": {
-    "node": ">= 0.8.0"
+    "node": ">= 0.10.0"
   }
 }
