@@ -1,16 +1,16 @@
 language: node_js
 node_js:
   - 0.10
-  #- node
-  #- iojs
+  - node
+  - iojs
 matrix:
   allow_failures:
     - node_js: "iojs"
 env:
   matrix:
-    #LIBCURL_VERSION_TAG: LATEST
+    LIBCURL_VERSION_TAG: LATEST
     LIBCURL_VERSION_TAG: "curl-7_35_0"
-    #LIBCURL_VERSION_TAG: "curl-7_18_2"
+    LIBCURL_VERSION_TAG: "curl-7_18_2"
 git:
   submodules: false
 before_install:
