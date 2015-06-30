@@ -27,3 +27,4 @@ before_install:
       TAG=${LIBCURL_VERSION_TAG};
     fi;
   - git checkout $TAG && ./buildconf && ./configure && make && sudo make install
+  - cd ..
