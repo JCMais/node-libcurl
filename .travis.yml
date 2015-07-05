@@ -30,3 +30,5 @@ before_install:
   - git checkout $TAG && ./buildconf && ./configure && make && sudo make install
   - cd ..
   - curl-config --version
+  - curl-config --features
+  - curl-config --protocols
