@@ -29,3 +29,4 @@ before_install:
     fi;
   - git checkout $TAG && ./buildconf && ./configure && make && sudo make install
   - cd ..
+  - curl-config --version
