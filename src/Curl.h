@@ -1,10 +1,12 @@
 #ifndef CURL_H
 #define CURL_H
 
-#include <nan.h>
 #include <map>
 #include <vector>
 #include <string>
+
+#include <node.h>
+#include <nan.h>
 
 #include "CurlHttpPost.h"
 #include "macros.h"
@@ -12,7 +14,10 @@
 typedef std::map<const int*, std::string> curlMapId;
 typedef std::map<std::string, const int*> curlMapName;
 
-class Curl : public node::ObjectWrap {
+using Nan::ObjectWrap;
+//using Nan::NAN_METHOD_ARGS_TYPE;
+
+class Curl : public ObjectWrap {
 
 public:
     //store mapping from the options/infos names that can be used in js to their respective CURLOption id
@@ -34,7 +39,7 @@ public:
     Curl();
 
     //Export curl to js
-    static void Initialize( v8::Handle<v8::Object> exports );
+    static NAN_MODULE_INIT( Initialize );
 
     //Js exported Methods
     static NAN_METHOD( New );
@@ -51,9 +56,9 @@ public:
     //Callbacks
     //we need this flag because of https://github.com/bagder/curl/commit/907520c4b93616bddea15757bbf0bfb45cde8101
     bool isCbProgressAlreadyAborted;
-    NanCallback *cbProgress;
-    NanCallback *cbXferinfo;
-    NanCallback *cbDebug;
+    Nan::Callback *cbProgress;
+    Nan::Callback *cbXferinfo;
+    Nan::Callback *cbDebug;
 
     //Members
     CURL  *curl;
@@ -71,12 +76,11 @@ public:
     static std::map< CURL*, Curl* > curls;
     static uv_timer_t curlTimeout;
 
-    static v8::Persistent<v8::Function> constructor;
-    static v8::Persistent<v8::String> onDataCbSymbol;
-    static v8::Persistent<v8::String> onHeaderCbSymbol;
-    static v8::Persistent<v8::String> onErrorCbSymbol;
-    static v8::Persistent<v8::String> onEndCbSymbol;
-
+    static Nan::Persistent<v8::Function> constructor;
+    static Nan::Persistent<v8::String> onDataCbSymbol;
+    static Nan::Persistent<v8::String> onHeaderCbSymbol;
+    static Nan::Persistent<v8::String> onErrorCbSymbol;
+    static Nan::Persistent<v8::String> onEndCbSymbol;
 
     //LibUV Socket polling
     static CurlSocketContext *CreateCurlSocketContext( curl_socket_t sockfd );

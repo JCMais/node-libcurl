@@ -1,7 +1,7 @@
 #include <nan.h>
 #include "Curl.h"
 
-void Initialize( v8::Handle<v8::Object> exports ) {
+void Initialize( v8::Local<v8::Object> exports ) {
 
     Curl::Initialize( exports );
 }

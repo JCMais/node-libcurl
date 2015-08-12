@@ -158,6 +158,17 @@ function generateHeaderFile( fileName, prefix, regexMatches ) {
         '#endif'
     ];
 
+    if ( fileName == "curlAuth.h" ) {
+      //disable warning about narrowing conversion
+      toWrite.unshift(
+        '#pragma warning( push )',
+        '#pragma warning( disable: 4838 )'
+      );
+      toWrite.push(
+        '#pragma warning( pop )'
+      );
+    }
+
     fs.writeFileSync( file, toWrite.join( EOL ) );
 
 }
