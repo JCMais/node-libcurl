@@ -37,7 +37,7 @@ before_install:
   - mkdir -p $HOME/curl-source
   - cd $HOME/curl-source
   - if [[ ! -d "$TAG" ]]; then
-      git clone --branch "$TAG" --depth 1 https://github.com/bagder/curl.git "$TAG"
+      git clone --branch "$TAG" --depth 1 https://github.com/bagder/curl.git "$TAG";
     fi;
   - cd "$TAG"
   - ./buildconf && ./configure --prefix=$HOME/curl && make && make install
