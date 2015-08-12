@@ -39,7 +39,3 @@ before_install:
   - curl-config --version
   - curl-config --features
   - curl-config --protocols
-install:
-  - echo "nothing."
-script:
-  - echo "nothing."
