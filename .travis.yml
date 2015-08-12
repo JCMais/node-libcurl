@@ -5,8 +5,6 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - autoremove
-      - autoclean
       - gcc-4.8
       - g++-4.8
       - openssl
@@ -26,7 +24,7 @@ git:
   submodules: false
 before_install:
   - export CC=/usr/bin/gcc-${GCC_VERSION} CXX=/usr/bin/g++-${GCC_VERSION} #https://github.com/travis-ci/travis-ci/issues/3668
-  - export PATH=$PATH:$HOME/bin
+  - export PATH=$HOME/bin:$PATH
   - gcc --version && g++ --version
   - git clone https://github.com/bagder/curl.git
   - cd curl
@@ -36,7 +34,7 @@ before_install:
       TAG=${LIBCURL_VERSION_TAG};
     fi;
   - mkdir -p $HOME/bin
-  - git checkout $TAG && ./buildconf && ./configure --prefix=$HOME/bin && make && make install
+  - git checkout $TAG && ./buildconf && ./configure --prefix=$HOME && make && make install
   - cd ..
   - curl-config --version
   - curl-config --features
