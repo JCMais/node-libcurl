@@ -14,6 +14,9 @@ node_js:
   #- "iojs-v1.8.4"
   #- "iojs-v2.5.0"
   - iojs
+cache:
+  directories:
+    - $HOME/curl-source
 env:
   global:
     - GCC_VERSION=4.8
@@ -24,18 +27,20 @@ git:
   submodules: false
 before_install:
   - export CC=/usr/bin/gcc-${GCC_VERSION} CXX=/usr/bin/g++-${GCC_VERSION} #https://github.com/travis-ci/travis-ci/issues/3668
-  - export PATH=$HOME/bin:$PATH
+  - export PATH=$HOME/curl/bin:$PATH
   - gcc --version && g++ --version
-  - git clone https://github.com/bagder/curl.git
-  - cd curl
   - if [[ ${LIBCURL_VERSION_TAG} == 'LATEST' ]]; then
-      TAG=$(git describe --abbrev=0 --tags);
+      TAG=$(git ls-remote --tags https://github.com/bagder/curl.git | awk '{print $2}' | grep "curl-" | grep -v "[0-9][_-][abp]" | grep -v "{" | sort -t_ -k 1.16,1n -k 2,2n -k 3,3n -k 4,4n | sed -n "s@.*\(curl-[0-9_]\)@\1@p" | tail -n1);
     else
       TAG=${LIBCURL_VERSION_TAG};
     fi;
-  - mkdir -p $HOME/bin
-  - git checkout $TAG && ./buildconf && ./configure --prefix=$HOME && make && make install
-  - cd ..
+  - mkdir -p $HOME/curl-source
+  - cd $HOME/curl-source
+  - if [[ ! -d "$TAG" ]]; then
+      git clone --branch "$TAG" --depth 1 https://github.com/bagder/curl.git "$TAG"
+    fi;
+  - cd "$TAG"
+  - ./buildconf && ./configure --prefix=$HOME/curl && make && make install
   - curl-config --version
   - curl-config --features
   - curl-config --protocols
