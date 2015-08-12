@@ -16,11 +16,15 @@ node_js:
   - "iojs-v2.5.0"
   - iojs
 env:
-  LIBCURL_VERSION_TAG: "LATEST"
-  LIBCURL_VERSION_TAG: "curl-7_35_0"
+  global:
+    - GCC_VERSION=4.8
+  matrix:
+    - LIBCURL_VERSION_TAG=LATEST
+    - LIBCURL_VERSION_TAG="curl-7_35_0"
 git:
   submodules: false
 before_install:
+   - export CC=/usr/bin/gcc-${GCC_VERSION} CXX=/usr/bin/g++-${GCC_VERSION}
    - gcc --version && g++ --version
 #  - git clone https://github.com/bagder/curl.git
 #  - cd curl
@@ -34,5 +38,7 @@ before_install:
 #  - curl-config --version
 #  - curl-config --features
 #  - curl-config --protocols
+install:
+  - echo "nothing."
 script:
   - echo "nothing."
