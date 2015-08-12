@@ -1,34 +1,38 @@
 language: node_js
+sudo: false
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - autoremove
+      - autoclean
+      - gcc-4.8
+      - g++-4.8
 node_js:
   - 0.10
   - node
+  - "iojs-v1.8.4"
+  - "iojs-v2.5.0"
   - iojs
-matrix:
-  allow_failures:
-    - node_js: "iojs"
 env:
-  LIBCURL_VERSION_TAG: LATEST
+  LIBCURL_VERSION_TAG: "LATEST"
   LIBCURL_VERSION_TAG: "curl-7_35_0"
 git:
   submodules: false
 before_install:
-#  - sudo apt-get update -qq
-#  - sudo apt-get install -qq libcurl4-openssl-dev
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test #g++4.8
-  - sudo apt-get update -qq
-  - sudo apt-get autoremove -qq && sudo apt-get autoclean -qq
-  - sudo apt-get install -qq openssl
-  - sudo apt-get install -qq gcc-4.8 g++-4.8
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90 # travis-ci/travis-ci#1379 travis-ci/travis-ci#979
-  - git clone https://github.com/bagder/curl.git
-  - cd curl
-  - if [[ ${LIBCURL_VERSION_TAG} == 'LATEST' ]]; then
-      TAG=$(git describe --abbrev=0 --tags);
-    else
-      TAG=${LIBCURL_VERSION_TAG};
-    fi;
-  - git checkout $TAG && ./buildconf && ./configure && make && sudo make install
-  - cd ..
-  - curl-config --version
-  - curl-config --features
-  - curl-config --protocols
+   - gcc --version && g++ --version
+#  - git clone https://github.com/bagder/curl.git
+#  - cd curl
+#  - if [[ ${LIBCURL_VERSION_TAG} == 'LATEST' ]]; then
+#      TAG=$(git describe --abbrev=0 --tags);
+#    else
+#      TAG=${LIBCURL_VERSION_TAG};
+#    fi;
+#  - git checkout $TAG && ./buildconf && ./configure && make && sudo make install
+#  - cd ..
+#  - curl-config --version
+#  - curl-config --features
+#  - curl-config --protocols
+script:
+  - echo "nothing."
