@@ -9,35 +9,38 @@ addons:
       - autoclean
       - gcc-4.8
       - g++-4.8
+      - openssl
 node_js:
-  - 0.10
-  - node
-  - "iojs-v1.8.4"
-  - "iojs-v2.5.0"
+  #- 0.10
+  #- node
+  #- "iojs-v1.8.4"
+  #- "iojs-v2.5.0"
   - iojs
 env:
   global:
     - GCC_VERSION=4.8
   matrix:
     - LIBCURL_VERSION_TAG=LATEST
-    - LIBCURL_VERSION_TAG="curl-7_35_0"
+    #- LIBCURL_VERSION_TAG="curl-7_35_0"
 git:
   submodules: false
 before_install:
-   - export CC=/usr/bin/gcc-${GCC_VERSION} CXX=/usr/bin/g++-${GCC_VERSION}
-   - gcc --version && g++ --version
-#  - git clone https://github.com/bagder/curl.git
-#  - cd curl
-#  - if [[ ${LIBCURL_VERSION_TAG} == 'LATEST' ]]; then
-#      TAG=$(git describe --abbrev=0 --tags);
-#    else
-#      TAG=${LIBCURL_VERSION_TAG};
-#    fi;
-#  - git checkout $TAG && ./buildconf && ./configure && make && sudo make install
-#  - cd ..
-#  - curl-config --version
-#  - curl-config --features
-#  - curl-config --protocols
+  - export CC=/usr/bin/gcc-${GCC_VERSION} CXX=/usr/bin/g++-${GCC_VERSION} #https://github.com/travis-ci/travis-ci/issues/3668
+  - export PATH=$PATH:$HOME/bin
+  - gcc --version && g++ --version
+  - git clone https://github.com/bagder/curl.git
+  - cd curl
+  - if [[ ${LIBCURL_VERSION_TAG} == 'LATEST' ]]; then
+      TAG=$(git describe --abbrev=0 --tags);
+    else
+      TAG=${LIBCURL_VERSION_TAG};
+    fi;
+  - mkdir -p $HOME/bin
+  - git checkout $TAG && ./buildconf && ./configure --prefix=$HOME/bin && make && make install
+  - cd ..
+  - curl-config --version
+  - curl-config --features
+  - curl-config --protocols
 install:
   - echo "nothing."
 script:
