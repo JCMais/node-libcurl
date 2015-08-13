@@ -27,7 +27,7 @@ env:
 git:
   submodules: false
 before_install:
-  - npm install -g npm@'>=1.4.3' # support for ^ 
+  - npm install -g npm@'>=1.4.3' # support for ^
   - export CC=/usr/bin/gcc-${GCC_VERSION} CXX=/usr/bin/g++-${GCC_VERSION} #https://github.com/travis-ci/travis-ci/issues/3668
   - export PATH=$HOME/curl/bin:$PATH
   - gcc --version && g++ --version

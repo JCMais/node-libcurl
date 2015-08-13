@@ -1,9 +1,9 @@
 #include <nan.h>
 #include "Curl.h"
 
-void Initialize( v8::Local<v8::Object> exports ) {
+NAN_MODULE_INIT( Initialize ) {
 
-    Curl::Initialize( exports );
+    Curl::Initialize( target );
 }
 
 NODE_MODULE( node_libcurl, Initialize );

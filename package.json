@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "bindings": "~1.2",
-    "debug": "~2.2",
+    "debug": "^2.2",
     "nan": "~2.0",
     "pangyp": "~2.3"
   },
