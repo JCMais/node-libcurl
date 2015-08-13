@@ -9,6 +9,7 @@ addons:
       - g++-4.8
       - openssl
 node_js:
+  - 0.8
   - 0.10
   - node
   - "iojs-v1.8.4"
