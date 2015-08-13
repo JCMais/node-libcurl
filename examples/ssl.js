@@ -11,11 +11,11 @@ curl.setOpt( 'VERBOSE', 1 );
 
 //cURL is not bundled with CA cert anymore
 //you need to specify the CA cert to be used, if not, you are
-// going to receive the error "Peer certificate cannot be authenticated with given CA certificates"
+// going to receive the error 'Peer certificate cannot be authenticated with given CA certificates'
 // more info http://curl.haxx.se/docs/sslcerts.html and http://curl.haxx.se/docs/caextract.html
 if ( certfile ) {
 
-    curl.setOpt( Curl.option.CAINFO , certfile );
+    curl.setOpt( Curl.option.CAINFO, certfile );
     //This is not a boolean field! 0 -> Disabled, 2 -> Enabled
     curl.setOpt( 'SSL_VERIFYHOST', 2 );
     curl.setOpt( 'SSL_VERIFYPEER', 1 );

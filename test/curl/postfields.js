@@ -1,7 +1,4 @@
-var fs     = require( 'fs' ),
-    path   = require( 'path' ),
-    should = require( 'should' ),
-    querystring = require( 'querystring' ),
+var querystring = require( 'querystring' ),
     serverObj = require( './../helper/server' ),
     Curl   = require( '../../lib/Curl' ),
     server = serverObj.server,
@@ -31,7 +28,7 @@ afterEach( function() {
     server.close();
 });
 
-before(function(){
+before( function() {
 
     app.post( '/', function( req, res ) {
 
@@ -39,7 +36,7 @@ before(function(){
     });
 });
 
-after(function() {
+after( function() {
 
     app._router.stack.pop();
 });

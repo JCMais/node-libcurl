@@ -1,5 +1,4 @@
 var serverObj = require( './../helper/server' ),
-    should = require( 'should' ),
     Curl   = require( '../../lib/Curl' );
 
 var server = serverObj.server,
@@ -20,7 +19,7 @@ afterEach( function() {
     curl.close();
 });
 
-before(function( done ){
+before( function( done ) {
 
     app.all( '/', function( req, res ) {
 
@@ -35,7 +34,7 @@ before(function( done ){
         }
 
         timeout = setTimeout( function () {
-            throw Error( "No action taken." );
+            throw Error( 'No action taken.' );
         }, 1000 );
     });
 
@@ -47,12 +46,12 @@ before(function( done ){
     });
 });
 
-after(function() {
+after( function() {
 
     app._router.stack.pop();
 });
 
-it ( 'should emit "end" event when the connection ends without errors.', function ( done ) {
+it( 'should emit "end" event when the connection ends without errors.', function ( done ) {
 
     curl.on( 'end', function() {
 
@@ -84,7 +83,7 @@ it( 'should emit "error" event when the connection fails', function( done ) {
         done( Error( 'end event was called, but the connection failed.' ) );
     });
 
-    curl.on( 'error', function( err ) {
+    curl.on( 'error', function() {
 
         clearTimeout( timeout );
 
@@ -112,7 +111,7 @@ it( 'should emit "error" when the connection is aborted in the progress cb', fun
     curl.on( 'error', function( err, errCode ) {
 
         //CURLE_ABORTED_BY_CALLBACK (42)
-        errCode.should.be.of.type( "number" ).and.equal( 42 );
+        errCode.should.be.of.type( 'number' ).and.equal( 42 );
 
         clearTimeout( timeout );
 
@@ -139,7 +138,7 @@ it( 'should emit "error" when the connection is aborted in the header cb', funct
     curl.on( 'error', function( err, errCode ) {
 
         //CURLE_WRITE_ERROR (23)
-        errCode.should.be.of.type( "number" ).and.equal( 23 );
+        errCode.should.be.of.type( 'number' ).and.equal( 23 );
 
         clearTimeout( timeout );
 
@@ -166,7 +165,7 @@ it( 'should emit "error" when the connection is aborted in the data cb', functio
     curl.on( 'error', function( err, errCode ) {
 
         //CURLE_WRITE_ERROR (23)
-        errCode.should.be.of.type( "number" ).and.equal( 23 );
+        errCode.should.be.of.type( 'number' ).and.equal( 23 );
 
         clearTimeout( timeout );
 

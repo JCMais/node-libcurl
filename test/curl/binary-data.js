@@ -1,7 +1,4 @@
-var fs     = require( 'fs' ),
-    path   = require( 'path' ),
-    should = require( 'should' ),
-    serverObj = require( './../helper/server' ),
+var serverObj = require( './../helper/server' ),
     Curl   = require( '../../lib/Curl' );
 
 var server = serverObj.server,
@@ -23,7 +20,7 @@ afterEach( function() {
     curl.close();
 });
 
-before(function( done ){
+before( function( done ) {
 
     server.listen( serverObj.port, serverObj.host, function() {
 
@@ -37,7 +34,7 @@ before(function( done ){
     });
 });
 
-after(function() {
+after( function() {
 
     server.close();
 

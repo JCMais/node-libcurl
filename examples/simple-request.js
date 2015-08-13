@@ -1,7 +1,6 @@
-var Curl = require( '../lib/Curl' );
-
-var curl = new Curl(),
-	url = process.argv[2] || 'http://www.google.com';
+var Curl = require( '../lib/Curl' ),
+    curl = new Curl(),
+    url = process.argv[2] || 'http://www.google.com';
 
 //you can use a string as option
 curl.setOpt( 'URL', url );

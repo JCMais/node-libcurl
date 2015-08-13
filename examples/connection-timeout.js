@@ -4,7 +4,7 @@ var Curl   = require( '../lib/Curl' ),
 var curl = new Curl();
 
 //http://stackoverflow.com/a/904609/710693
-curl.setOpt( Curl.option.URL, "10.255.255.1" );
+curl.setOpt( Curl.option.URL, '10.255.255.1' );
 curl.setOpt( Curl.option.CONNECTTIMEOUT, 1 );
 curl.setOpt( Curl.option.VERBOSE, 1 );
 

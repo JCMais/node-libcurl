@@ -1,5 +1,4 @@
-var should    = require( 'should' ),
-    auth      = require( 'http-auth' ),
+var auth      = require( 'http-auth' ),
     crypto    = require( 'crypto' ),
     serverObj = require( './../helper/server' ),
     Curl      = require( '../../lib/Curl' );
@@ -40,13 +39,13 @@ var server = serverObj.server,
     curl = {},
     url;
 
-beforeEach(function() {
+beforeEach( function() {
 
     curl = new Curl();
     curl.setOpt( 'URL', url );
 });
 
-afterEach(function() {
+afterEach( function() {
 
     curl.close();
 
@@ -54,7 +53,7 @@ afterEach(function() {
     app._router.stack.pop();
 });
 
-before(function( done ){
+before( function( done ) {
 
     server.listen( serverObj.port, serverObj.host, function() {
 
@@ -64,7 +63,7 @@ before(function( done ){
     });
 });
 
-it ( 'should authenticate using basic auth', function ( done ) {
+it( 'should authenticate using basic auth', function ( done ) {
 
     app.use( auth.connect( basic ) );
     app.get( '/', function( req, res ) {
@@ -91,7 +90,7 @@ it ( 'should authenticate using basic auth', function ( done ) {
 
 });
 
-it ( 'should authenticate using digest', function ( done ) {
+it( 'should authenticate using digest', function ( done ) {
 
     //Currently, there is a bug with libcurl > 7.40 when using digest auth
     // on Windows, the realm is not populated from the Auth header.
@@ -127,7 +126,7 @@ it ( 'should authenticate using digest', function ( done ) {
 
 });
 
-it ( 'should not authenticate using basic', function ( done ) {
+it( 'should not authenticate using basic', function ( done ) {
 
     app.use( auth.connect( basic ) );
     app.get( '/', function( req, res ) {
