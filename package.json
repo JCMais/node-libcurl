@@ -16,12 +16,14 @@
   },
   "main": "./index.js",
   "scripts": {
-    "install": "node tools/retrieve-win-deps && node tools/generate-stubs && node-gyp rebuild"
+    "install": "node tools/retrieve-win-deps && node tools/generate-stubs && pangyp rebuild",
+    "test": "mocha test --reporter spec"
   },
   "dependencies": {
     "bindings": "~1.2",
     "debug": "^2.2",
-    "nan": "~1.8"
+    "nan": "~2.0",
+    "pangyp": "~2.3"
   },
   "devDependencies": {
     "body-parser": "^1.12",
@@ -37,6 +39,6 @@
     "jsdoc-baseline": "hegemonic/baseline"
   },
   "engines": {
-    "node": ">= 0.8.0"
+    "node": ">= 0.10.0"
   }
 }

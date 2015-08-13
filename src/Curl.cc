@@ -84,16 +84,17 @@ int     Curl::count          = 0;
 std::map< CURL*, Curl* > Curl::curls;
 uv_timer_t Curl::curlTimeout;
 
-v8::Persistent<v8::Function> Curl::constructor;
-v8::Persistent<v8::String> Curl::onDataCbSymbol;
-v8::Persistent<v8::String> Curl::onHeaderCbSymbol;
-v8::Persistent<v8::String> Curl::onEndCbSymbol;
-v8::Persistent<v8::String> Curl::onErrorCbSymbol;
+//those need to be reset if we ever move outside of the global scope
+Nan::Persistent<v8::Function> Curl::constructor;
+Nan::Persistent<v8::String> Curl::onDataCbSymbol;
+Nan::Persistent<v8::String> Curl::onHeaderCbSymbol;
+Nan::Persistent<v8::String> Curl::onEndCbSymbol;
+Nan::Persistent<v8::String> Curl::onErrorCbSymbol;
 
 // Add Curl constructor to the module exports
-void Curl::Initialize( v8::Handle<v8::Object> exports ) {
-
-    NanScope();
+NAN_MODULE_INIT( Curl::Initialize )
+{
+    Nan::HandleScope scope;
 
     //*** Initialize cURL ***//
     CURLcode code = curl_global_init( CURL_GLOBAL_ALL );
@@ -117,17 +118,17 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     curl_multi_setopt( Curl::curlMulti, CURLMOPT_TIMERFUNCTION, Curl::HandleTimeout );
 
     //** Construct Curl js "class"
-    v8::Local<v8::FunctionTemplate> ctor = NanNew<v8::FunctionTemplate>( Curl::New );
-    ctor->InstanceTemplate()->SetInternalFieldCount( 1 );
-    ctor->SetClassName( NanNew( "Curl" ) );
+    v8::Local<v8::FunctionTemplate> tmpl = Nan::New<v8::FunctionTemplate>( Curl::New );
+    tmpl->SetClassName( Nan::New( "Curl" ).ToLocalChecked() );
+    tmpl->InstanceTemplate()->SetInternalFieldCount( 1 );
 
     // Export cURL Constants
-    v8::Local<v8::Object> optionsObj   = NanNew<v8::Object>();
-    v8::Local<v8::Object> infosObj     = NanNew<v8::Object>();
-    v8::Local<v8::Object> protocolsObj = NanNew<v8::Object>();
-    v8::Local<v8::Object> pauseObj     = NanNew<v8::Object>();
-    v8::Local<v8::Object> authObj      = NanNew<v8::Object>();
-    v8::Local<v8::Object> httpObj      = NanNew<v8::Object>();
+    v8::Local<v8::Object> optionsObj   = Nan::New<v8::Object>();
+    v8::Local<v8::Object> infosObj     = Nan::New<v8::Object>();
+    v8::Local<v8::Object> protocolsObj = Nan::New<v8::Object>();
+    v8::Local<v8::Object> pauseObj     = Nan::New<v8::Object>();
+    v8::Local<v8::Object> authObj      = Nan::New<v8::Object>();
+    v8::Local<v8::Object> httpObj      = Nan::New<v8::Object>();
 
     Curl::ExportConstants( &optionsObj, curlOptionsString, sizeof( curlOptionsString ), &optionsMapId, &optionsMapName );
     Curl::ExportConstants( &optionsObj, curlOptionsInteger, sizeof( curlOptionsInteger ), &optionsMapId, &optionsMapName );
@@ -145,52 +146,52 @@ void Curl::Initialize( v8::Handle<v8::Object> exports ) {
     Curl::ExportConstants( &protocolsObj, curlProtocols, sizeof( curlProtocols ), nullptr, nullptr );
 
 #if LIBCURL_VERSION_NUM >= 0x072500
-    v8::Local<v8::Object> headerObj      = NanNew<v8::Object>();
+    v8::Local<v8::Object> headerObj      = Nan::New<v8::Object>();
     Curl::ExportConstants( &headerObj, curlHeader, sizeof( curlHeader ), nullptr, nullptr );
 #endif
 
     v8::PropertyAttribute attributes = static_cast<v8::PropertyAttribute>( v8::ReadOnly|v8::DontDelete );
 
     // Prototype Methods
-    NODE_SET_PROTOTYPE_METHOD( ctor, "setOpt", Curl::SetOpt );
-    NODE_SET_PROTOTYPE_METHOD( ctor, "getInfo", Curl::GetInfo );
-    NODE_SET_PROTOTYPE_METHOD( ctor, "perform", Curl::Perform );
-    NODE_SET_PROTOTYPE_METHOD( ctor, "pause", Curl::Pause );
-    NODE_SET_PROTOTYPE_METHOD( ctor, "reset", Curl::Reset );
-    NODE_SET_PROTOTYPE_METHOD( ctor, "close", Curl::Close );
+    Nan::SetPrototypeMethod( tmpl, "setOpt", Curl::SetOpt );
+    Nan::SetPrototypeMethod( tmpl, "getInfo", Curl::GetInfo );
+    Nan::SetPrototypeMethod( tmpl, "perform", Curl::Perform );
+    Nan::SetPrototypeMethod( tmpl, "pause", Curl::Pause );
+    Nan::SetPrototypeMethod( tmpl, "reset", Curl::Reset );
+    Nan::SetPrototypeMethod( tmpl, "close", Curl::Close );
 
     // Static Methods
-    NODE_SET_METHOD( ctor, "getCount" , GetCount );
-    NODE_SET_METHOD( ctor, "getVersion" , GetVersion );
+    Nan::SetMethod( tmpl, "getCount" , GetCount );
+    Nan::SetMethod( tmpl, "getVersion" , GetVersion );
 
     // Static members
-    NanSetTemplate( ctor, NanNew<v8::String>( "option" ), optionsObj, attributes );
-    NanSetTemplate( ctor, NanNew<v8::String>( "info" ),   infosObj, attributes );
+    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "option" ).ToLocalChecked(), optionsObj, attributes );
+    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "info" ).ToLocalChecked() , infosObj, attributes );
 
 #if LIBCURL_VERSION_NUM >= 0x071200
     //CURL_WRITEFUNC_PAUSE was added in libcurl 7.18
-    pauseObj->ForceSet( NanNew<v8::String>("WRITEFUNC"), NanNew<v8::Uint32>(CURL_WRITEFUNC_PAUSE), attributes );
+    Nan::ForceSet( pauseObj, Nan::New<v8::String>("WRITEFUNC").ToLocalChecked(), Nan::New<v8::Uint32>(CURL_WRITEFUNC_PAUSE), attributes );
 #endif
 
-    NanSetTemplate( ctor, NanNew<v8::String>( "auth" ), authObj, attributes );
-    NanSetTemplate( ctor, NanNew<v8::String>( "http" ),  httpObj, attributes );
-    NanSetTemplate( ctor, NanNew<v8::String>( "pause" ), pauseObj, attributes );
-    NanSetTemplate( ctor, NanNew<v8::String>( "protocol" ), protocolsObj, attributes );
+    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "auth" ).ToLocalChecked(), authObj, attributes );
+    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "http" ).ToLocalChecked(),  httpObj, attributes );
+    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "pause" ).ToLocalChecked(), pauseObj, attributes );
+    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "protocol" ).ToLocalChecked(), protocolsObj, attributes );
 
 #if LIBCURL_VERSION_NUM >= 0x072500
-    NanSetTemplate( ctor, NanNew<v8::String>( "header" ), headerObj, attributes );
+    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "header" ).ToLocalChecked(), headerObj, attributes );
 #endif
 
-    NanSetTemplate( ctor, NanNew<v8::String>( "VERSION_NUM" ), NanNew<v8::Integer>( LIBCURL_VERSION_NUM ), attributes );
+    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "VERSION_NUM" ).ToLocalChecked(), Nan::New<v8::Integer>( LIBCURL_VERSION_NUM ), attributes );
 
-    NanAssignPersistent( Curl::constructor, ctor->GetFunction() );
+    Curl::constructor.Reset( tmpl->GetFunction() );
 
-    NanAssignPersistent( Curl::onDataCbSymbol,   NanNew( "onData" ) );
-    NanAssignPersistent( Curl::onHeaderCbSymbol, NanNew( "onHeader" ) );
-    NanAssignPersistent( Curl::onEndCbSymbol,    NanNew( "onEnd" ) );
-    NanAssignPersistent( Curl::onErrorCbSymbol,  NanNew( "onError" ) );
+    Curl::onDataCbSymbol.Reset( Nan::New( "onData" ).ToLocalChecked() );
+    Curl::onHeaderCbSymbol.Reset( Nan::New( "onHeader" ).ToLocalChecked() );
+    Curl::onEndCbSymbol.Reset( Nan::New( "onEnd" ).ToLocalChecked() );
+    Curl::onErrorCbSymbol.Reset( Nan::New( "onError" ).ToLocalChecked() );
 
-    exports->Set( NanNew( "Curl" ), ctor->GetFunction() );
+    Nan::Set( target, Nan::New( "Curl" ).ToLocalChecked(), tmpl->GetFunction() );
 }
 
 Curl::Curl() : cbProgress( nullptr ), cbXferinfo( nullptr ), cbDebug( nullptr ), isInsideMultiCurl( false ), isOpen( true )
@@ -271,6 +272,7 @@ void Curl::Dispose()
 
 void Curl::DisposeCallbacks()
 {
+    //this->cbProgress->
     if ( !this->cbProgress ) {
         delete this->cbProgress;
     }
@@ -365,7 +367,6 @@ Curl::CurlSocketContext* Curl::CreateCurlSocketContext( curl_socket_t sockfd )
 //the "performing" functions of the multi interface (curl_multi_socket_action(3) and curl_multi_perform(3)) - to allow libcurl to keep timeouts and retries etc to work.
 int Curl::HandleTimeout( CURLM *multi /* multi handle */ , long timeoutMs /* timeout in milliseconds */ , void *userp /* TIMERDATA */ )
 {
-
     //stops running timer.
     uv_timer_stop( &Curl::curlTimeout );
 
@@ -492,17 +493,19 @@ size_t Curl::OnData( char *data, size_t size, size_t nmemb )
 {
     //@TODO If the callback close the connection, an error will be throw!
     //@TODO Implement: From 7.18.0, the function can return CURL_WRITEFUNC_PAUSE which then will cause writing to this connection to become paused. See curl_easy_pause(3) for further details.
-    NanScope();;
+    Nan::HandleScope scope;
 
     size_t n = size * nmemb;
 
-    v8::Local<v8::Value> cb = NanObjectWrapHandle( this )->Get( NanNew( Curl::onDataCbSymbol ) );
+    v8::Local<v8::Value> cb = this->handle()->Get( Nan::New( Curl::onDataCbSymbol ) );
 
     assert( cb->IsFunction() );
 
-    v8::Local<v8::Value> argv[] = { NanNewBufferHandle( data, (uint32_t) n ) };
+    v8::Local<v8::Object> buf = Nan::CopyBuffer( data, (uint32_t) n ).ToLocalChecked();
 
-    v8::Local<v8::Value> retVal = NanMakeCallback( NanObjectWrapHandle( this ), cb.As<v8::Function>(), 1, argv );
+    v8::Local<v8::Value> argv[] = { buf };
+
+    v8::Local<v8::Value> retVal = Nan::MakeCallback( this->handle(), cb.As<v8::Function>(), 1, argv );
 
     size_t ret = n;
 
@@ -520,17 +523,19 @@ size_t Curl::OnData( char *data, size_t size, size_t nmemb )
 
 size_t Curl::OnHeader( char *data, size_t size, size_t nmemb )
 {
-    NanScope();
+    Nan::HandleScope scope;
 
     size_t n = size * nmemb;
 
-    v8::Local<v8::Value> cb = NanObjectWrapHandle( this )->Get( NanNew( Curl::onHeaderCbSymbol ) );
+    v8::Local<v8::Value> cb = this->handle()->Get( Nan::New( Curl::onHeaderCbSymbol ) );
 
     assert( cb->IsFunction() );
 
-    v8::Local<v8::Value> argv[] = { NanNewBufferHandle( data, (uint32_t) n ) };
+    v8::Local<v8::Object> buf = Nan::CopyBuffer( data, (uint32_t) n ).ToLocalChecked();
 
-    v8::Local<v8::Value> retVal = NanMakeCallback( NanObjectWrapHandle( this ), cb.As<v8::Function>(), 1, argv );
+    v8::Local<v8::Value> argv[] = { buf };
+
+    v8::Local<v8::Value> retVal = Nan::MakeCallback( this->handle(), cb.As<v8::Function>(), 1, argv );
 
     size_t ret = n;
 
@@ -547,29 +552,29 @@ size_t Curl::OnHeader( char *data, size_t size, size_t nmemb )
 
 void Curl::OnEnd()
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    v8::Local<v8::Value> cb = NanObjectWrapHandle( this )->Get( NanNew( Curl::onEndCbSymbol ) );
+    v8::Local<v8::Value> cb = this->handle()->Get( Nan::New( Curl::onEndCbSymbol ) );
 
-    NanMakeCallback( NanObjectWrapHandle( this ), cb.As<v8::Function>(), 0, NULL );
+    Nan::MakeCallback( this->handle(), cb.As<v8::Function>(), 0, NULL );
 }
 
 void Curl::OnError( CURLcode errorCode )
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    v8::Local<v8::Value> cb = NanObjectWrapHandle( this )->Get( NanNew( Curl::onErrorCbSymbol ) );
+    v8::Local<v8::Value> cb = this->handle()->Get( Nan::New( Curl::onErrorCbSymbol ) );
 
-    v8::Local<v8::Value> argv[] = { NanError( curl_easy_strerror( errorCode ) ), NanNew<v8::Integer>( errorCode )  };
+    v8::Local<v8::Value> argv[] = { Nan::Error( curl_easy_strerror( errorCode ) ), Nan::New<v8::Integer>( errorCode )  };
 
-    NanMakeCallback( NanObjectWrapHandle( this ), cb.As<v8::Function>(), 2, argv );
+    Nan::MakeCallback( this->handle(), cb.As<v8::Function>(), 2, argv );
 }
 
 //Export Options/Infos to constants in the given Object, and add their mapping to the respective maps.
 template<typename T>
 void Curl::ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len, curlMapId *mapId, curlMapName *mapName )
 {
-    NanScope();
+    Nan::HandleScope scope;
 
     len = len / sizeof( Curl::CurlOption );
 
@@ -588,8 +593,8 @@ void Curl::ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len,
         std::string sOptionName( option.name );
 
         (*obj)->ForceSet(
-            NanNew<v8::String>( ( sOptionName ).c_str() ),
-            NanNew<v8::Integer>( option.value ),
+            Nan::New<v8::String>( ( sOptionName ).c_str() ).ToLocalChecked(),
+            Nan::New<v8::Integer>( option.value ),
             attributes
         );
 
@@ -614,13 +619,13 @@ void Curl::ThrowError( const char *message, const char *reason )
         what = msg.c_str();
     }
 
-    NanThrowError( what );
+    Nan::ThrowError( what );
 }
 
 //Callbacks
 int Curl::CbProgress( void *clientp, double dltotal, double dlnow, double ultotal, double ulnow )
 {
-    NanScope();
+    Nan::HandleScope scope;
 
     Curl *obj = static_cast<Curl *>( clientp );
 
@@ -632,18 +637,18 @@ int Curl::CbProgress( void *clientp, double dltotal, double dlnow, double ultota
     int32_t retvalInt32;
 
     v8::Local<v8::Value> argv[] = {
-        NanNew<v8::Number>( (double) dltotal ),
-        NanNew<v8::Number>( (double) dlnow ),
-        NanNew<v8::Number>( (double) ultotal ),
-        NanNew<v8::Number>( (double) ulnow )
+        Nan::New<v8::Number>( (double) dltotal ),
+        Nan::New<v8::Number>( (double) dlnow ),
+        Nan::New<v8::Number>( (double) ultotal ),
+        Nan::New<v8::Number>( (double) ulnow )
     };
 
     //Should handle possible exceptions here?
-    v8::Handle<v8::Value> retval = obj->cbProgress->Call( NanObjectWrapHandle( obj ), 4, argv );
+    v8::Local<v8::Value> retval = obj->cbProgress->Call( obj->handle(), 4, argv );
 
     if ( !retval->IsInt32() ) {
 
-        NanThrowTypeError( "Return value from the progress callback must be an integer." ) ;
+        Nan::ThrowTypeError( "Return value from the progress callback must be an integer." ) ;
 
         retvalInt32 = 1;
 
@@ -660,7 +665,7 @@ int Curl::CbProgress( void *clientp, double dltotal, double dlnow, double ultota
 
 int Curl::CbXferinfo( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow )
 {
-    NanScope();
+    Nan::HandleScope scope;
 
     Curl *obj = static_cast<Curl *>( clientp );
 
@@ -672,17 +677,17 @@ int Curl::CbXferinfo( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_
     int32_t retvalInt32;
 
     v8::Local<v8::Value> argv[] = {
-        NanNew<v8::Number>( (double) dltotal ),
-        NanNew<v8::Number>( (double) dlnow ),
-        NanNew<v8::Number>( (double) ultotal ),
-        NanNew<v8::Number>( (double) ulnow )
+        Nan::New<v8::Number>( (double) dltotal ),
+        Nan::New<v8::Number>( (double) dlnow ),
+        Nan::New<v8::Number>( (double) ultotal ),
+        Nan::New<v8::Number>( (double) ulnow )
     };
 
-    v8::Handle<v8::Value> retval = obj->cbXferinfo->Call( NanObjectWrapHandle( obj ), 4, argv );
+    v8::Local<v8::Value> retval = obj->cbXferinfo->Call( obj->handle(), 4, argv );
 
     if ( !retval->IsInt32() ) {
 
-        NanThrowTypeError( "Return value from the progress callback must be an integer." );
+        Nan::ThrowTypeError( "Return value from the progress callback must be an integer." );
 
         retvalInt32 = 1;
 
@@ -699,24 +704,24 @@ int Curl::CbXferinfo( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_
 
 int Curl::CbDebug( CURL *handle, curl_infotype type, char *data, size_t size, void *userptr )
 {
-    NanScope();
+    Nan::HandleScope scope;
 
     Curl *obj = Curl::curls[handle];
 
     assert( obj );
 
     v8::Local<v8::Value> argv[] = {
-        NanNew<v8::Integer>( type ),
-        NanNew<v8::String>( data, static_cast<int>(size) )
+        Nan::New<v8::Integer>( type ),
+        Nan::New<v8::String>( data, static_cast<int>( size ) ).ToLocalChecked()
     };
 
-    v8::Handle<v8::Value> retval = obj->cbDebug->Call( NanObjectWrapHandle( obj ), 2, argv );
+    v8::Local<v8::Value> retval = obj->cbDebug->Call( obj->handle(), 2, argv );
 
     int32_t retvalInt = 0;
 
     if ( !retval->IsInt32() ) {
 
-        NanThrowTypeError( "Return value from the debug callback must be an integer." );
+        Nan::ThrowTypeError( "Return value from the debug callback must be an integer." );
 
         retvalInt = 1;
 
@@ -730,22 +735,20 @@ int Curl::CbDebug( CURL *handle, curl_infotype type, char *data, size_t size, vo
 
 NAN_METHOD( Curl::New )
 {
-    NanScope();
-
-    assert( args.IsConstructCall() );
+    assert( info.IsConstructCall() );
 
     Curl *obj = new Curl();
 
-    obj->Wrap( args.This() );
+    obj->Wrap( info.This() );
 
-    NanReturnThis();
+    info.GetReturnValue().Set( info.This() );
 }
 
 //Function that checks if given option is inside the given Curl::CurlOption struct, if it is, returns the optionId
 #define isInsideOption( options, option ) isInsideCurlOption( options, sizeof( options ), option )
-int isInsideCurlOption( const Curl::CurlOption *curlOptions, const int lenOfOption, const v8::Handle<v8::Value> &option ) {
+int isInsideCurlOption( const Curl::CurlOption *curlOptions, const int lenOfOption, const v8::Local<v8::Value> &option ) {
 
-    NanScope();
+    Nan::HandleScope scope;
 
     bool isString = option->IsString();
     bool isInt    = option->IsInt32();
@@ -759,7 +762,7 @@ int isInsideCurlOption( const Curl::CurlOption *curlOptions, const int lenOfOpti
 
     if ( isString ) {
 
-        NanUtf8String optionNameV8( option );
+        Nan::Utf8String optionNameV8( option );
 
         optionName = std::string( *optionNameV8 );
 
@@ -784,20 +787,20 @@ int isInsideCurlOption( const Curl::CurlOption *curlOptions, const int lenOfOpti
 
 NAN_METHOD( Curl::SetOpt )
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    Curl *obj = node::ObjectWrap::Unwrap<Curl>( args.This() );
+    Curl *obj = Nan::ObjectWrap::Unwrap<Curl>( info.This() );
 
     if ( !obj->isOpen ) {
 
-        NanThrowError( "Curl handler is closed." );
-        NanReturnUndefined();
+        Nan::ThrowError( "Curl handler is closed." );
+        return;
     }
 
-    v8::Local<v8::Value> opt   = args[0];
-    v8::Local<v8::Value> value = args[1];
+    v8::Local<v8::Value> opt   = info[0];
+    v8::Local<v8::Value> value = info[1];
 
-    v8::Local<v8::Integer> optCallResult = NanNew<v8::Integer>( CURLE_FAILED_INIT );
+    v8::Local<v8::Integer> optCallResult = Nan::New<v8::Integer>( CURLE_FAILED_INIT );
 
     int optionId;
 
@@ -811,8 +814,8 @@ NAN_METHOD( Curl::SetOpt )
 
             if ( !value->IsArray() ) {
 
-                NanThrowTypeError( invalidArrayMsg.c_str() );
-                NanReturnUndefined();
+                Nan::ThrowTypeError( invalidArrayMsg.c_str() );
+                return;
             }
 
             v8::Local<v8::Array> rows = v8::Local<v8::Array>::Cast( value );
@@ -826,8 +829,8 @@ NAN_METHOD( Curl::SetOpt )
                 // not an array of objects
                 if ( !rows->Get( i )->IsObject() ) {
 
-                    NanThrowTypeError( invalidArrayMsg.c_str() );
-                    NanReturnUndefined();
+                    Nan::ThrowTypeError( invalidArrayMsg.c_str() );
+                    return;
                 }
 
                 v8::Local<v8::Object> postData = v8::Local<v8::Object>::Cast( rows->Get( i ) );
@@ -849,7 +852,7 @@ NAN_METHOD( Curl::SetOpt )
                     const v8::Local<v8::Value> postDataValue = postData->Get( postDataKey );
 
                     //convert postDataKey to field id
-                    NanUtf8String fieldName( postDataKey );
+                    Nan::Utf8String fieldName( postDataKey );
                     std::string optionName = std::string( *fieldName );
                     stringToUpper( optionName );
 
@@ -876,36 +879,36 @@ NAN_METHOD( Curl::SetOpt )
                         break;
                     case -1: //Property not found
                         std::string errorMsg = string_format( "Invalid property \"%s\" given.", *fieldName );
-                        NanThrowError( errorMsg.c_str() );
-                        NanReturnUndefined();
+                        Nan::ThrowError( errorMsg.c_str() );
+                        return;
                     }
 
                     //Check if value is a string.
                     if ( !postDataValue->IsString() ) {
 
                         std::string errorMsg = string_format( "Value for property \"%s\" must be a string.", *fieldName );
-                        NanThrowTypeError( errorMsg.c_str() );
-                        NanReturnUndefined();
+                        Nan::ThrowTypeError( errorMsg.c_str() );
+                        return;
                     }
                 }
 
                 if ( !hasName ) {
 
                     std::string errorMsg = string_format( "Missing field \"%s\".", "name" );
-                    NanThrowError( errorMsg.c_str()  );
-                    NanReturnUndefined();
+                    Nan::ThrowError( errorMsg.c_str()  );
+                    return;
                 }
 
-                NanUtf8String fieldName( postData->Get( NanNew<v8::String>( "name" ) ) );
+                Nan::Utf8String fieldName( postData->Get( Nan::New<v8::String>( "name" ).ToLocalChecked() ) );
                 CURLFORMcode curlFormCode;
 
                 if ( hasFile ) {
 
-                    NanUtf8String file( postData->Get( NanNew<v8::String>( "file" ) ) );
+                    Nan::Utf8String file( postData->Get( Nan::New<v8::String>( "file" ).ToLocalChecked() ) );
 
                     if ( hasContentType ) {
 
-                        NanUtf8String contentType( postData->Get( NanNew<v8::String>( "type" ) ) );
+                        Nan::Utf8String contentType( postData->Get( Nan::New<v8::String>( "type" ).ToLocalChecked() ) );
 
                         curlFormCode = obj->httpPost->AddFile( *fieldName, fieldName.length(), *file, *contentType );
 
@@ -917,32 +920,32 @@ NAN_METHOD( Curl::SetOpt )
 
                 } else if ( hasContent ) { //if not a file, it's a normal field.
 
-                    NanUtf8String fieldValue( postData->Get( NanNew<v8::String>( "contents" ) ) );
+                    Nan::Utf8String fieldValue( postData->Get( Nan::New<v8::String>( "contents" ).ToLocalChecked() ) );
 
                     curlFormCode = obj->httpPost->AddField( *fieldName, fieldName.length(), *fieldValue, fieldValue.length() );
 
                 } else {
 
                     std::string errorMsg = string_format( "Missing field \"%s\".", "contents" );
-                    NanThrowError( errorMsg.c_str()  );
-                    NanReturnUndefined();
+                    Nan::ThrowError( errorMsg.c_str()  );
+                    return;
                 }
 
                 if ( curlFormCode != CURL_FORMADD_OK ) {
 
                     std::string errorMsg = string_format( "Error while adding field \"%s\" to post data. CURL_FORMADD error code: %d", *fieldName, (int) curlFormCode );
-                    NanThrowError( errorMsg.c_str()  );
-                    NanReturnUndefined();
+                    Nan::ThrowError( errorMsg.c_str()  );
+                    return;
                 }
             }
 
-            optCallResult = NanNew<v8::Integer>( curl_easy_setopt( obj->curl, CURLOPT_HTTPPOST, obj->httpPost->first ) );
+            optCallResult = Nan::New<v8::Integer>( curl_easy_setopt( obj->curl, CURLOPT_HTTPPOST, obj->httpPost->first ) );
 
         } else {
 
             if ( value->IsNull() ) {
 
-                optCallResult = NanNew<v8::Integer>(
+                optCallResult = Nan::New<v8::Integer>(
                     curl_easy_setopt(
                         obj->curl, (CURLoption) optionId, NULL
                     )
@@ -952,8 +955,8 @@ NAN_METHOD( Curl::SetOpt )
 
                 if ( !value->IsArray() ) {
 
-                    NanThrowTypeError( "Option value should be an array." );
-                    NanReturnUndefined();
+                    Nan::ThrowTypeError( "Option value should be an array." );
+                    return;
                 }
 
                 //convert value to curl linked list (curl_slist)
@@ -962,12 +965,12 @@ NAN_METHOD( Curl::SetOpt )
 
                 for ( uint32_t i = 0, len = array->Length(); i < len; ++i )
                 {
-                    slist = curl_slist_append( slist, *NanUtf8String( array->Get( i ) ) );
+                    slist = curl_slist_append( slist, *Nan::Utf8String( array->Get( i ) ) );
                 }
 
                 obj->curlLinkedLists.push_back( slist );
 
-                optCallResult = NanNew<v8::Integer>(
+                optCallResult = Nan::New<v8::Integer>(
                     curl_easy_setopt(
                         obj->curl, (CURLoption) optionId, slist
                     )
@@ -980,8 +983,8 @@ NAN_METHOD( Curl::SetOpt )
 
         if ( !value->IsString() ) {
 
-            NanThrowTypeError( "Option value should be a string." );
-            NanReturnUndefined();
+            Nan::ThrowTypeError( "Option value should be a string." );
+            return;
         }
 
         // Create a string copy
@@ -990,12 +993,12 @@ NAN_METHOD( Curl::SetOpt )
         if ( !isNull ) {
 
             //libcurl don't copy the string content before version 7.17
-            NanUtf8String value( args[1] );
+            Nan::Utf8String value( info[1] );
             size_t length = (size_t) value.length();
             obj->curlStrings[optionId] = std::string( *value, length );
         }
 
-        optCallResult = NanNew<v8::Integer>(
+        optCallResult = Nan::New<v8::Integer>(
             curl_easy_setopt(
                 obj->curl, (CURLoption) optionId, ( !isNull ) ? obj->curlStrings[optionId].c_str() : NULL
             )
@@ -1013,7 +1016,7 @@ NAN_METHOD( Curl::SetOpt )
             val = value->BooleanValue();
         }
 
-        optCallResult = NanNew<v8::Integer>(
+        optCallResult = Nan::New<v8::Integer>(
             curl_easy_setopt(
                 obj->curl, (CURLoption) optionId, val
             )
@@ -1023,8 +1026,8 @@ NAN_METHOD( Curl::SetOpt )
 
         if ( !value->IsFunction() ) {
 
-            NanThrowTypeError( "Option value must be a function." );
-            NanReturnUndefined();
+            Nan::ThrowTypeError( "Option value must be a function." );
+            return;
         }
 
         v8::Local<v8::Function> callback = value.As<v8::Function>();
@@ -1036,26 +1039,26 @@ NAN_METHOD( Curl::SetOpt )
                 New libcurls will prefer the new callback and instead use that one even if both callbacks are set. */
             case CURLOPT_XFERINFOFUNCTION:
 
-                obj->cbXferinfo = new NanCallback( callback );
+                obj->cbXferinfo = new Nan::Callback( callback );
                 curl_easy_setopt( obj->curl, CURLOPT_XFERINFODATA, obj );
-                optCallResult = NanNew<v8::Integer>( curl_easy_setopt( obj->curl, CURLOPT_XFERINFOFUNCTION, Curl::CbXferinfo ) );
+                optCallResult = Nan::New<v8::Integer>( curl_easy_setopt( obj->curl, CURLOPT_XFERINFOFUNCTION, Curl::CbXferinfo ) );
 
                 break;
 #endif
 
             case CURLOPT_PROGRESSFUNCTION:
 
-                obj->cbProgress = new NanCallback( callback );
+                obj->cbProgress = new Nan::Callback( callback );
                 curl_easy_setopt( obj->curl, CURLOPT_PROGRESSDATA, obj );
-                optCallResult = NanNew<v8::Integer>( curl_easy_setopt( obj->curl, CURLOPT_PROGRESSFUNCTION, Curl::CbProgress ) );
+                optCallResult = Nan::New<v8::Integer>( curl_easy_setopt( obj->curl, CURLOPT_PROGRESSFUNCTION, Curl::CbProgress ) );
 
                 break;
 
             case CURLOPT_DEBUGFUNCTION:
 
-                obj->cbDebug = new NanCallback( callback );
+                obj->cbDebug = new Nan::Callback( callback );
                 curl_easy_setopt( obj->curl, CURLOPT_DEBUGDATA, obj );
-                optCallResult = NanNew<v8::Integer>( curl_easy_setopt( obj->curl, CURLOPT_DEBUGFUNCTION, Curl::CbDebug ) );
+                optCallResult = Nan::New<v8::Integer>( curl_easy_setopt( obj->curl, CURLOPT_DEBUGFUNCTION, Curl::CbDebug ) );
 
                 break;
         }
@@ -1066,30 +1069,40 @@ NAN_METHOD( Curl::SetOpt )
 
     if ( code != CURLE_OK ) {
 
-        NanThrowError(
+        Nan::ThrowError(
             code == CURLE_FAILED_INIT ? "Unknown option given. First argument must be the option internal id or the option name. You can use the Curl.option constants." : curl_easy_strerror( code )
         );
-        NanReturnUndefined();
+        return;
     }
 
-    NanReturnValue( optCallResult );
+    info.GetReturnValue().Set( optCallResult );
 }
 
 // traits class to determine whether to do the check
-template <typename> struct ResultCanBeNull : std::false_type {};
-template <> struct ResultCanBeNull<char*> : std::true_type {};
+template <typename> struct ResultTypeIsChar : std::false_type {};
+template <> struct ResultTypeIsChar<char*> : std::true_type {};
+
+template<typename T>
+static Nan::MaybeLocal<T> wrapHandle( v8::Local<T> h ) {
+    return Nan::MaybeLocal<T>( h );
+}
+
+template<typename T>
+static Nan::MaybeLocal<T> wrapHandle( Nan::MaybeLocal<T> h ) {
+    return h;
+}
 
 template<typename TResultType, typename Tv8MappingType>
 v8::Local<v8::Value> Curl::GetInfoTmpl( const Curl *obj, int infoId )
 {
-    NanEscapableScope();
+    Nan::EscapableHandleScope scope;
 
     TResultType result;
 
     CURLINFO info = (CURLINFO) infoId;
     CURLcode code = curl_easy_getinfo( obj->curl, info, &result );
 
-    v8::Local<v8::Value> retVal = NanUndefined();
+    v8::Local<v8::Value> retVal = Nan::Undefined();
 
     if ( code != CURLE_OK ) {
 
@@ -1097,40 +1110,40 @@ v8::Local<v8::Value> Curl::GetInfoTmpl( const Curl *obj, int infoId )
 
     } else {
 
-        //null pointer
-        if ( ResultCanBeNull<TResultType>::value && !result ) {
+        //is string
+        if ( ResultTypeIsChar<TResultType>::value && !result ) {
 
-            retVal = NanNew<v8::String>( "" );
+            retVal = wrapHandle<v8::String>( Nan::EmptyString() ).ToLocalChecked();
 
         } else {
 
-            retVal = NanNew<Tv8MappingType>( result );
+            retVal = wrapHandle<Tv8MappingType>( Nan::New<Tv8MappingType>( result ) ).ToLocalChecked();
         }
 
     }
 
-    return NanEscapeScope( retVal );
+    return scope.Escape( retVal );
 }
 
 NAN_METHOD( Curl::GetInfo )
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    Curl *obj = node::ObjectWrap::Unwrap<Curl>( args.This() );
+    Curl *obj = Nan::ObjectWrap::Unwrap<Curl>( info.This() );
 
     if ( !obj->isOpen ) {
 
-        NanThrowError( "Curl handler is closed." );
-        NanReturnUndefined();
+        Nan::ThrowError( "Curl handler is closed." );
+        return;
     }
 
-    v8::Local<v8::Value> infoVal = args[0];
+    v8::Local<v8::Value> infoVal = info[0];
 
-    v8::Local<v8::Value> retVal = NanUndefined();
+    v8::Local<v8::Value> retVal = Nan::Undefined();
 
     int infoId;
 
-    CURLINFO info;
+    CURLINFO curlInfo;
     CURLcode code;
 
     //String
@@ -1154,16 +1167,16 @@ NAN_METHOD( Curl::GetInfo )
         curl_slist *linkedList;
         curl_slist *curr;
 
-        info = (CURLINFO) infoId;
-        code = curl_easy_getinfo( obj->curl, info, &linkedList );
+        curlInfo = (CURLINFO) infoId;
+        code = curl_easy_getinfo( obj->curl, curlInfo, &linkedList );
 
         if ( code != CURLE_OK ) {
 
             Curl::ThrowError( "curl_easy_getinfo failed!", curl_easy_strerror( code ) );
-            NanReturnUndefined();
+            return;
         }
 
-        v8::Local<v8::Array> arr = NanNew<v8::Array>();
+        v8::Local<v8::Array> arr = Nan::New<v8::Array>();
 
         if ( linkedList ) {
 
@@ -1171,7 +1184,7 @@ NAN_METHOD( Curl::GetInfo )
 
             while ( curr ) {
 
-                arr->Set( arr->Length(), NanNew<v8::String>( curr->data ) );
+                arr->Set( arr->Length(), Nan::New<v8::String>( curr->data ).ToLocalChecked() );
                 curr = curr->next;
             }
 
@@ -1181,28 +1194,27 @@ NAN_METHOD( Curl::GetInfo )
         retVal = arr;
     }
 
-    NanReturnValue( retVal );
-
+    info.GetReturnValue().Set( retVal );
 }
 
 //Add this handle for processing on the curl_multi handler.
 NAN_METHOD( Curl::Perform )
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    Curl *obj = node::ObjectWrap::Unwrap<Curl>( args.This() );
+    Curl *obj = Nan::ObjectWrap::Unwrap<Curl>( info.This() );
 
     if ( !obj->isOpen ) {
 
-        NanThrowError( "Curl handler is closed." );
-        NanReturnUndefined();
+        Nan::ThrowError( "Curl handler is closed." );
+        return;
     }
 
     //The client should not call this method more than one time by request
     if ( obj->isInsideMultiCurl ) {
 
-        NanThrowError( "Curl session is already running." );
-        NanReturnUndefined();
+        Nan::ThrowError( "Curl session is already running." );
+        return;
     }
 
     CURLMcode code = curl_multi_add_handle( Curl::curlMulti, obj->curl );
@@ -1210,73 +1222,73 @@ NAN_METHOD( Curl::Perform )
     if ( code != CURLM_OK ) {
 
         Curl::ThrowError( "curl_multi_add_handle Failed", curl_multi_strerror( code ) );
-        NanReturnUndefined();
+        return;
     }
 
     obj->isInsideMultiCurl = true;
 
-    NanReturnThis();
+    info.GetReturnValue().Set( info.This() );
 }
 
 NAN_METHOD( Curl::Pause )
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    Curl *obj = node::ObjectWrap::Unwrap<Curl>( args.This() );
+    Curl *obj = Nan::ObjectWrap::Unwrap<Curl>( info.This() );
 
     if ( !obj->isOpen ) {
 
-        NanThrowError( "Curl handler is closed." );
-        NanReturnUndefined();
+        Nan::ThrowError( "Curl handler is closed." );
+        return;
     }
 
-    if ( !args[0]->IsUint32() ) {
+    if ( !info[0]->IsUint32() ) {
 
-        NanThrowTypeError( "Bitmask value must be an integer." );
-        NanReturnUndefined();
+        Nan::ThrowTypeError( "Bitmask value must be an integer." );
+        return;
     }
 
-    uint32_t bitmask = (int) args[0]->Uint32Value();
+    uint32_t bitmask = (int) info[0]->Uint32Value();
 
     CURLcode code = curl_easy_pause( obj->curl, (int) bitmask );
 
     if ( code != CURLE_OK ) {
 
-        NanThrowError( curl_easy_strerror( code ) );
-        NanReturnUndefined();
+        Nan::ThrowError( curl_easy_strerror( code ) );
+        return;
     }
 
-    NanReturnThis();
+    info.GetReturnValue().Set( info.This() );
 }
 
 NAN_METHOD( Curl::Close )
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    Curl *obj = node::ObjectWrap::Unwrap<Curl>( args.This() );
+    Curl *obj = Nan::ObjectWrap::Unwrap<Curl>( info.This() );
 
     if ( !obj->isOpen ) {
 
-        NanThrowError( "Curl handler already closed." );
-        NanReturnUndefined();
+        Nan::ThrowError( "Curl handler already closed." );
+        return;
     }
 
     obj->Dispose();
 
-    NanReturnUndefined();
+    return;
 }
 
 //Re-initializes all options previously set on a specified CURL handle to the default values.
 NAN_METHOD( Curl::Reset )
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    Curl *obj = node::ObjectWrap::Unwrap<Curl>( args.This() );
+    Curl *obj = Nan::ObjectWrap::Unwrap<Curl>( info.This() );
 
     if ( !obj->isOpen ) {
 
-        NanThrowError( "Curl handler already closed." );
-        NanReturnUndefined();
+        Nan::ThrowError( "Curl handler already closed." );
+        return;
     }
 
     curl_easy_reset( obj->curl );
@@ -1292,25 +1304,25 @@ NAN_METHOD( Curl::Reset )
     curl_easy_setopt( obj->curl, CURLOPT_HEADERFUNCTION, Curl::HeaderFunction );
     curl_easy_setopt( obj->curl, CURLOPT_HEADERDATA, obj );
 
-    NanReturnThis();
+    info.GetReturnValue().Set( info.This() );
 }
 
 //returns the amount of curl instances
 NAN_METHOD( Curl::GetCount )
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    NanReturnValue( NanNew<v8::Integer>( Curl::count ) );
+    info.GetReturnValue().Set( Nan::New<v8::Integer>( Curl::count ) );
 }
 
 //Returns a human readable string with the version number of libcurl and some of its important components (like OpenSSL version).
 NAN_METHOD( Curl::GetVersion )
 {
-    NanScope();
+    Nan::HandleScope scope;
 
     const char *version = curl_version();
 
-    v8::Local<v8::Value> versionObj = NanNew<v8::String>( version );
+    v8::Local<v8::Value> versionObj = Nan::New<v8::String>( version ).ToLocalChecked();
 
-    NanReturnValue( versionObj );
+    info.GetReturnValue().Set( versionObj );
 }
