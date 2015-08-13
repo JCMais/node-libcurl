@@ -44,4 +44,4 @@ before_install:
   - curl-config --version
   - curl-config --features
   - curl-config --protocols
-  - cd $HOME
+  - cd $TRAVIS_BUILD_DIR
