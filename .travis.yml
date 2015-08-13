@@ -9,10 +9,10 @@ addons:
       - g++-4.8
       - openssl
 node_js:
-  #- 0.10
-  #- node
-  #- "iojs-v1.8.4"
-  #- "iojs-v2.5.0"
+  - 0.10
+  - node
+  - "iojs-v1.8.4"
+  - "iojs-v2.5.0"
   - iojs
 cache:
   directories:
@@ -22,7 +22,7 @@ env:
     - GCC_VERSION=4.8
   matrix:
     - LIBCURL_VERSION_TAG=LATEST
-    #- LIBCURL_VERSION_TAG="curl-7_35_0"
+    - LIBCURL_VERSION_TAG="curl-7_35_0"
 git:
   submodules: false
 before_install:
