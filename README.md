@@ -14,7 +14,7 @@
 [travis-url]:https://travis-ci.org/JCMais/node-libcurl
 [codeclimate-image]:https://img.shields.io/codeclimate/github/JCMais/node-libcurl.svg?style=flat-square
 [codeclimate-url]:https://codeclimate.com/github/JCMais/node-libcurl
-[node-image]:https://img.shields.io/badge/node.js-%3E=_0.8-green.svg?style=flat-square
+[node-image]:https://img.shields.io/badge/node.js-%3E=_0.10-green.svg?style=flat-square
 [node-url]:https://nodejs.org/download/
 [iojs-image]:https://img.shields.io/badge/io.js-%3E=_1.0-brightgreen.svg?style=flat-square
 [iojs-url]:https://iojs.org/en/index.html
