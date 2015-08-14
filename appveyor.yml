@@ -1,6 +1,5 @@
 # http://www.appveyor.com/docs/appveyor-yml
 # mostly copied from nan appveyor.yml
-shallow_clone: true
 environment:
   DEBUG: "node-libcurl"
   matrix:
