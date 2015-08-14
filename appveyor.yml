@@ -1,5 +1,6 @@
 # http://www.appveyor.com/docs/appveyor-yml
 # mostly copied from nan appveyor.yml
+shallow_clone: true
 environment:
   DEBUG: "node-libcurl"
   matrix:
@@ -21,6 +22,7 @@ install:
   - node --version
   - npm --version
   - git submodule update --init --recursive
+  - python deps\curl-for-windows\configure
   - npm install --verbose
 
 # Post-install test scripts.
