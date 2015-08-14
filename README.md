@@ -1,17 +1,21 @@
 # node-libcurl
 
 [![NPM version][npm-image]][npm-url]
-[![Travis CI Status][travis-image]][travis-url]
-[![Code Quality][codeclimate-image]][codeclimate-url]
-[![Dependencies][deps-image]][deps-url]
 [![node][node-image]][node-url]
 [![io.js][iojs-image]][iojs-url]
 [![license][license-image]][license-url]
+
+[![Travis CI Status][travis-image]][travis-url]
+[![AppVeyor CI Status][appveyor-image]][appveyor-url]
+[![Code Quality][codeclimate-image]][codeclimate-url]
+[![Dependencies][deps-image]][deps-url]
 
 [npm-image]:https://img.shields.io/npm/v/node-libcurl.svg?style=flat-square
 [npm-url]:https://www.npmjs.org/package/node-libcurl
 [travis-image]:https://img.shields.io/travis/JCMais/node-libcurl/master.svg?style=flat-square
 [travis-url]:https://travis-ci.org/JCMais/node-libcurl
+[appveyor-image]:https://ci.appveyor.com/api/projects/status/u7ox641jyb6hxrkt/branch/master?svg=true
+[appveyor-url]:https://ci.appveyor.com/project/JCMais/node-libcurl
 [codeclimate-image]:https://img.shields.io/codeclimate/github/JCMais/node-libcurl.svg?style=flat-square
 [codeclimate-url]:https://codeclimate.com/github/JCMais/node-libcurl
 [node-image]:https://img.shields.io/badge/node.js-%3E=_0.10-green.svg?style=flat-square

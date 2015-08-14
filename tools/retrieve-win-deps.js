@@ -24,8 +24,6 @@ var child, i, len,
         cwd : path.resolve( __dirname, '..' )
     };
 
-console.log( execConfig.cwd );
-
 exec( 'git rev-parse', function( err ) {
 
     if ( !err ) {
