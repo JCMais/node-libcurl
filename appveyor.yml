@@ -17,14 +17,13 @@ install:
   - IF %nodejs_version% LSS 1 npm -g install npm
   - IF %nodejs_version% LSS 1 set PATH=%APPDATA%\npm;%PATH%
   # Typical npm stuff.
-  - set DEBUG=node-libcurl
+  # Output useful info for debugging.
+  - node --version
+  - npm --version
   - npm install --verbose
 
 # Post-install test scripts.
 test_script:
-  # Output useful info for debugging.
-  - node --version
-  - npm --version
   # run tests
   - npm test
 
