@@ -21,7 +21,7 @@ install:
   - node --version
   - npm --version
   - git submodule update --init --recursive
-  - python deps\curl-for-windows\configure
+  - python deps\curl-for-windows\configure.py
   - npm install --verbose
 
 # Post-install test scripts.
