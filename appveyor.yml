@@ -20,11 +20,11 @@ install:
   # Output useful info for debugging.
   - node --version
   - npm --version
-  - npm update node-gyp -g
-  - npm rebuild
+  - node-gyp --version
+  - echo where node
   - git submodule update --init --recursive
   - python deps\curl-for-windows\configure.py
-  - npm install --verbose
+  - npm install --verbose --msvs_version=2013
 
 # Post-install test scripts.
 test_script:
