@@ -4,11 +4,11 @@ environment:
   DEBUG: "node-libcurl"
   matrix:
   # node.js
-    - nodejs_version: "0.10"
-    - nodejs_version: "0.12"
+    #- nodejs_version: "0.10"
+    #- nodejs_version: "0.12"
   # io.js
-    - nodejs_version: "1"
-    - nodejs_version: "2"
+    #- nodejs_version: "1"
+    #- nodejs_version: "2"
     - nodejs_version: "3"
 
 # Install scripts. (runs after repo cloning)
@@ -20,6 +20,7 @@ install:
   # Output useful info for debugging.
   - node --version
   - npm --version
+  - git submodule update --init --recursive
   - npm install --verbose
 
 # Post-install test scripts.
