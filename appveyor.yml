@@ -20,15 +20,14 @@ install:
   # Output useful info for debugging.
   - node --version
   - npm --version
-  - where node
   - git submodule update --init --recursive
   - python deps\curl-for-windows\configure.py
-  - npm install --verbose --msvs_version=2013 --win_delay_load_hook=true
+  - npm install --msvs_version=2013
 
 # Post-install test scripts.
 test_script:
   # run tests
-  - npm test
+  - IF %nodejs_version% LSS 1 (npm test) ELSE (iojs node_modules\mocha\bin\mocha test --reporter spec)
 
 # Don't actually build.
 build: off
