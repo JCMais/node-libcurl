@@ -20,10 +20,10 @@ install:
   # Output useful info for debugging.
   - node --version
   - npm --version
-  - echo where node
+  - where node
   - git submodule update --init --recursive
   - python deps\curl-for-windows\configure.py
-  - npm install --verbose --msvs_version=2013
+  - npm install --verbose --msvs_version=2013 --win_delay_load_hook=true
 
 # Post-install test scripts.
 test_script:
