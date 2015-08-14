@@ -20,6 +20,7 @@ install:
   # Output useful info for debugging.
   - node --version
   - npm --version
+  - npm update node-gyp -g
   - npm rebuild
   - git submodule update --init --recursive
   - python deps\curl-for-windows\configure.py
