@@ -24,6 +24,7 @@ var child, i, len,
         cwd : path.resolve( __dirname, '..' )
     };
 
+console.log( execConfig.cwd );
 
 exec( 'git rev-parse', function( err ) {
 
@@ -34,6 +35,8 @@ exec( 'git rev-parse', function( err ) {
         process.exit( 0 );
     }
 
+    console.log ( "LOL"  );
+
     parseSubmodulesConfig();
 
 }, execConfig );
@@ -43,6 +46,8 @@ function parseSubmodulesConfig() {
     exec( 'git config -f .gitmodules --get-regexp ^submodule\..*\.path$', function ( err, stdout ) {
 
         if ( err ) {
+
+            debug( "git config failed, output: " + err.toString() );
             console.log( err.toString() );
             process.exit( 1 );
         }
