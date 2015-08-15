@@ -1,6 +1,6 @@
 {
   "name": "node-libcurl",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "author": "Jonathan Cardoso <me@jonathancardoso.com>",
   "description": "Node bindings for libcurl. Based on the work from node-curl.",
   "keywords": [
@@ -9,7 +9,7 @@
     "libcurl",
     "node-libcurl"
   ],
-  "license" : "MIT",
+  "license": "MIT",
   "homepage": "https://github.com/JCMais/node-libcurl",
   "repository": {
     "type": "git",
