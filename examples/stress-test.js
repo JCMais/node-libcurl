@@ -1,8 +1,6 @@
 
 var Curl = require( '../lib/Curl' ),
-    assert = require( 'assert' ),
-    path = require( 'path' ),
-    util = require( 'util' );
+    path = require( 'path' );
 
 /*
  * This script does a stress test on the given domain.
@@ -67,9 +65,9 @@ function cb( code ) {
 
     if ( finishedRequests % 100 === 0 || maxRequests - finishedRequests <= instances )
         console.info(
-            "Curl instances: ", Curl.getCount(),
-            " -> Requests finished: ", finishedRequests,
-            " -> Time: ", process.hrtime( data.startTime )[0], 's'
+            'Curl instances: ', Curl.getCount(),
+            ' -> Requests finished: ', finishedRequests,
+            ' -> Time: ', process.hrtime( data.startTime )[0], 's'
         );
 
     if ( runningRequests === 0 ) {
@@ -78,7 +76,7 @@ function cb( code ) {
         data.endTime = process.hrtime( data.startTime );
 
         console.error( 'Request time: ',
-            data.endTime[0] + "s, " + ( data.endTime[1] / 1e9 ).toFixed( precision ) + "ms"
+            data.endTime[0] + 's, ' + ( data.endTime[1] / 1e9 ).toFixed( precision ) + 'ms'
         );
 
         process.nextTick( startRequests );

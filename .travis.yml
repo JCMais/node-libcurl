@@ -1,4 +1,48 @@
 language: node_js
+sudo: false
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-4.8
+      - g++-4.8
+      - openssl
 node_js:
-  - 0.8
   - 0.10
+  - node
+  - "iojs-v1.8.4"
+  - "iojs-v2.5.0"
+  - iojs
+cache:
+  directories:
+    - $HOME/curl-source
+env:
+  global:
+    - GCC_VERSION=4.8
+  matrix:
+    - LIBCURL_VERSION_TAG=LATEST
+    - LIBCURL_VERSION_TAG="curl-7_35_0"
+git:
+  submodules: false
+before_install:
+  - npm install -g npm@'>=1.4.3' # support for ^
+  - export CC=/usr/bin/gcc-${GCC_VERSION} CXX=/usr/bin/g++-${GCC_VERSION} #https://github.com/travis-ci/travis-ci/issues/3668
+  - export PATH=$HOME/curl/bin:$PATH
+  - gcc --version && g++ --version
+  - if [[ ${LIBCURL_VERSION_TAG} == 'LATEST' ]]; then
+      TAG=$(git ls-remote --tags https://github.com/bagder/curl.git | awk '{print $2}' | grep "curl-" | grep -v "[0-9][_-][abp]" | grep -v "{" | sort -t_ -k 1.16,1n -k 2,2n -k 3,3n -k 4,4n | sed -n "s@.*\(curl-[0-9_]\)@\1@p" | tail -n1);
+    else
+      TAG=${LIBCURL_VERSION_TAG};
+    fi;
+  - mkdir -p $HOME/curl-source
+  - cd $HOME/curl-source
+  - if [[ ! -d "$TAG" ]]; then
+      git clone --branch "$TAG" --depth 1 https://github.com/bagder/curl.git "$TAG";
+    fi;
+  - cd "$TAG"
+  - ./buildconf && ./configure --prefix=$HOME/curl && make && make install
+  - curl-config --version
+  - curl-config --features
+  - curl-config --protocols
+  - cd $TRAVIS_BUILD_DIR

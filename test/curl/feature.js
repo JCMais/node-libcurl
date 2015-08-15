@@ -1,5 +1,4 @@
 var serverObj = require( './../helper/server' ),
-    should = require( 'should' ),
     Curl   = require( '../../lib/Curl' );
 
 var server = serverObj.server,
@@ -28,7 +27,7 @@ afterEach( function() {
     server.close();
 });
 
-before(function() {
+before( function() {
 
     app.get( '/', function( req, res ) {
 
@@ -38,7 +37,7 @@ before(function() {
     });
 });
 
-after(function() {
+after( function() {
 
     app._router.stack.pop();
 });

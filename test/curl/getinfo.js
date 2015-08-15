@@ -1,5 +1,4 @@
 var serverObj = require( './../helper/server' ),
-    should = require( 'should' ),
     Curl   = require( '../../lib/Curl' );
 
 var server = serverObj.server,
@@ -18,7 +17,7 @@ afterEach( function() {
     curl.close();
 });
 
-before(function( done ){
+before( function( done ) {
 
     server.listen( serverObj.port, serverObj.host, function() {
 
@@ -33,13 +32,13 @@ before(function( done ){
     });
 });
 
-after(function() {
+after( function() {
 
     app._router.stack.pop();
     server.close();
 });
 
-it ( 'should get all infos', function ( done ) {
+it( 'should get all infos', function ( done ) {
 
     curl.on( 'end', function( status ) {
 

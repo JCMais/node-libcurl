@@ -30,14 +30,14 @@ curl.enable( Curl.feature.NO_STORAGE );
 // versions older than that should use PROGRESSFUNCTION.
 // if you don't want to mess with version numbers,
 // there is the following helper method to set the progress cb.
-curl.setProgressCallback(function( dltotal, dlnow, ultotal, ulnow ) {
+curl.setProgressCallback( function( dltotal, dlnow/*, ultotal, ulnow*/ ) {
 
-    if ( dltotal == 0 )
+    if ( dltotal === 0 )
         return 0;
 
     if ( !bar ) {
 
-        bar = new ProgressBar('Downloading [:bar] :percent :etas', {
+        bar = new ProgressBar( 'Downloading [:bar] :percent :etas', {
             complete  : '=',
             incomplete: ' ',
             width : 20,

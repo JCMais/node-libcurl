@@ -1,5 +1,5 @@
 var Curl = require( '../lib/Curl' ),
-	path = require( 'path' ),
+    path = require( 'path' ),
     fs   = require( 'fs' );
 
 var curl = new Curl(),
@@ -9,12 +9,12 @@ var curl = new Curl(),
     imageFilename = path.resolve( __dirname, 'upload.png' ),
     buff = new Buffer( image, 'base64' ),
     data = [{
-    	name     : "filename",
-    	contents : "Node.js Logo"
+        name     : 'filename',
+        contents : 'Node.js Logo'
     }, {
-        name     : "file",
+        name     : 'file',
         file     : imageFilename,
-        type     : "image/png"
+        type     : 'image/png'
     }];
 
 //create the image file
@@ -34,7 +34,7 @@ curl.on( 'end', function( statusCode, body ) {
     fs.unlinkSync( imageFilename );
 });
 
-curl.on( 'error', function(){
+curl.on( 'error', function() {
 
     this.close();
     fs.unlinkSync( imageFilename );

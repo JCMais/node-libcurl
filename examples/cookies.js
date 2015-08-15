@@ -1,5 +1,5 @@
 var Curl = require( '../lib/Curl' ),
-    path = require( 'path' )
+    path = require( 'path' ),
     fs   = require( 'fs' );
 
 var curl = new Curl(),

@@ -1,6 +1,5 @@
 var fs     = require( 'fs' ),
     path   = require( 'path' ),
-    should = require( 'should' ),
     multiparty= require( 'multiparty' ),
     serverObj = require( './../helper/server' ),
     Curl   = require( '../../lib/Curl' );
@@ -12,9 +11,9 @@ var server = serverObj.server,
     imageFilename = path.resolve( __dirname, 'upload.png' ),
     buff = new Buffer( image, 'base64' ),
     postData = [{
-        name     : "file",
+        name     : 'file',
         file     : imageFilename,
-        type     : "image/png"
+        type     : 'image/png'
     }],
     size = buff.length,
     url;
@@ -30,7 +29,7 @@ afterEach( function() {
     curl.close();
 });
 
-before(function( done ){
+before( function( done ) {
 
     server.listen( serverObj.port, serverObj.host, function() {
 
@@ -62,7 +61,7 @@ before(function( done ){
     });
 });
 
-after(function( done ) {
+after( function( done ) {
 
     server.close();
 
@@ -71,7 +70,7 @@ after(function( done ) {
     fs.unlink( imageFilename, done );
 });
 
-it ( 'should upload file correctly', function ( done ) {
+it( 'should upload file correctly', function ( done ) {
 
     curl.setOpt( 'HTTPPOST', postData );
 

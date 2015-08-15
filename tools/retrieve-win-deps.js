@@ -24,7 +24,6 @@ var child, i, len,
         cwd : path.resolve( __dirname, '..' )
     };
 
-
 exec( 'git rev-parse', function( err ) {
 
     if ( !err ) {
@@ -33,6 +32,8 @@ exec( 'git rev-parse', function( err ) {
         replaceTokensOnGypFiles();
         process.exit( 0 );
     }
+
+    console.log ( "LOL"  );
 
     parseSubmodulesConfig();
 
@@ -43,6 +44,8 @@ function parseSubmodulesConfig() {
     exec( 'git config -f .gitmodules --get-regexp ^submodule\..*\.path$', function ( err, stdout ) {
 
         if ( err ) {
+
+            debug( "git config failed, output: " + err.toString() );
             console.log( err.toString() );
             process.exit( 1 );
         }

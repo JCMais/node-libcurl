@@ -9,7 +9,7 @@ var maxNumberOfConnections = 200,
 
 var running = 0,
     timeStart = process.hrtime(), timeEnd,
-    finished = false, i, j;
+    finished = false, i;
 
 
 //start the timing
@@ -31,14 +31,12 @@ function doRequest() {
 
     var curl = new Curl();
 
-    curl.setOpt( Curl.option.HTTPHEADER, [
-        'Expect:'
-    ]);
+    curl.setOpt( Curl.option.HTTPHEADER, ['Expect:'] );
     curl.setOpt( Curl.option.URL, siteUrl );
     curl.setOpt( Curl.option.FOLLOWLOCATION, 1 );
     curl.setOpt( Curl.option.PRIVATE, siteUrl );
     curl.setOpt( Curl.option.TIMEOUT, 30 );
-    curl.setOpt( Curl.option.USERAGENT, "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:28.0) Gecko/20100101 Firefox/28.0 FirePHP/0.7.4" );
+    curl.setOpt( Curl.option.USERAGENT, 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:28.0) Gecko/20100101 Firefox/28.0 FirePHP/0.7.4' );
     curl.setOpt( Curl.option.REFERER, 'http://www.google.com' );
     curl.setOpt( Curl.option.AUTOREFERER, true );
     if ( certfile )
@@ -59,7 +57,7 @@ function cb( statusOrError ) {
     this.close();
     --running;
 
-    if ( typeof statusOrError !== "number" ) { //we have an error
+    if ( typeof statusOrError !== 'number' ) { //we have an error
         console.error(
             siteName,
             ' - Error: ', statusOrError
@@ -82,7 +80,7 @@ function cb( statusOrError ) {
 
 var delay = 1000;
 
-setTimeout(function once(){
+setTimeout( function once() {
 
     console.info( 'To be processed: ', sitesKeys.length, ' - Current Instances: ', Curl.getCount() );
 

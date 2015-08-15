@@ -1,7 +1,31 @@
 # node-libcurl
 
-[![NPM version](https://badge.fury.io/js/node-libcurl.svg)](http://badge.fury.io/js/node-libcurl)
-[![Dependencies](https://gemnasium.com/JCMais/node-libcurl.png)](https://gemnasium.com/JCMais/node-libcurl)
+[![NPM version][npm-image]][npm-url]
+[![node][node-image]][node-url]
+[![io.js][iojs-image]][iojs-url]
+[![license][license-image]][license-url]
+
+[![Travis CI Status][travis-image]][travis-url]
+[![AppVeyor CI Status][appveyor-image]][appveyor-url]
+[![Code Quality][codeclimate-image]][codeclimate-url]
+[![Dependencies][deps-image]][deps-url]
+
+[npm-image]:https://img.shields.io/npm/v/node-libcurl.svg?style=flat-square
+[npm-url]:https://www.npmjs.org/package/node-libcurl
+[travis-image]:https://img.shields.io/travis/JCMais/node-libcurl/master.svg?style=flat-square
+[travis-url]:https://travis-ci.org/JCMais/node-libcurl
+[appveyor-image]:https://ci.appveyor.com/api/projects/status/u7ox641jyb6hxrkt/branch/master?svg=true
+[appveyor-url]:https://ci.appveyor.com/project/JCMais/node-libcurl
+[codeclimate-image]:https://img.shields.io/codeclimate/github/JCMais/node-libcurl.svg?style=flat-square
+[codeclimate-url]:https://codeclimate.com/github/JCMais/node-libcurl
+[node-image]:https://img.shields.io/badge/node.js-%3E=_0.10-green.svg?style=flat-square
+[node-url]:https://nodejs.org/download/
+[iojs-image]:https://img.shields.io/badge/io.js-%3E=_1.0-brightgreen.svg?style=flat-square
+[iojs-url]:https://iojs.org/en/index.html
+[license-image]:https://img.shields.io/github/license/JCMais/node-libcurl.svg?style=flat-square
+[license-url]:https://raw.githubusercontent.com/JCMais/node-libcurl/develop/LICENSE-MIT
+[deps-image]:https://img.shields.io/david/JCMais/node-libcurl.svg?style=flat-square
+[deps-url]:https://david-dm.org/jcmais/node-libcurl
 
 [Libcurl](https://github.com/bagder/curl) bindings for Node.js.
 _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-curl)._

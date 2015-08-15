@@ -1,6 +1,4 @@
-var server = require( './../helper/server' ),
-    should = require( 'should' ),
-    Curl   = require( '../../lib/Curl' ),
+var Curl   = require( '../../lib/Curl' ),
     curl = {};
 
 beforeEach( function() {
@@ -40,11 +38,11 @@ it( 'should not accept invalid argument type', function( done ) {
 
 describe( 'HTTPPOST', function() {
 
-    it ( 'should not accept invalid arrays', function( done ) {
+    it( 'should not accept invalid arrays', function( done ) {
 
         try {
 
-            curl.setOpt( 'HTTPPOST', [1, 2, {}]);
+            curl.setOpt( 'HTTPPOST', [1, 2, {}] );
 
         } catch( err ) {
 
@@ -54,11 +52,11 @@ describe( 'HTTPPOST', function() {
         throw Error( 'Invalid array accepted.' );
     });
 
-    it ( 'should not accept invalid property names', function( done ) {
+    it( 'should not accept invalid property names', function( done ) {
 
         try {
 
-            curl.setOpt( 'HTTPPOST', [{ dummy : 'property' }] )
+            curl.setOpt( 'HTTPPOST', [{ dummy : 'property' }] );
 
         } catch ( err ) {
 
@@ -69,12 +67,12 @@ describe( 'HTTPPOST', function() {
 
     });
 
-    it ( 'should not accept invalid property value', function () {
+    it( 'should not accept invalid property value', function () {
 
         var args = [
                 {}, [], 1, null, false, undefined
             ],
-            argsAccepted = [],
+            invalidArgs = [],
             len = args.length;
 
         while ( --len ) {
@@ -84,13 +82,16 @@ describe( 'HTTPPOST', function() {
             try {
 
                 curl.setOpt( 'HTTPPOST', [{ 'name' : arg }] );
-                argsAccepted.push( arg === null ? "null" : typeof arg );
 
-            } catch ( err ) {}
+            } catch ( err ) {
+
+                invalidArgs.push( arg === null ? 'null' : typeof arg );
+
+            }
         }
 
-        if ( argsAccepted.length ) {
-            throw Error( 'Invalid property value accepted. Args: ' + JSON.stringify( argsAccepted ) );
+        if ( invalidArgs.length == args.length ) {
+            throw Error( 'Invalid property value accepted. Invalid Args: ' + JSON.stringify( invalidArgs ) + ', Args: ' + JSON.stringify( args ) );
         }
 
     });

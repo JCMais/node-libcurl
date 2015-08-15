@@ -1,7 +1,4 @@
-var fs     = require( 'fs' ),
-    path   = require( 'path' ),
-    should = require( 'should' ),
-    serverObj = require( './../helper/server' ),
+var serverObj = require( './../helper/server' ),
     Curl      = require( '../../lib/Curl' );
 
 var server = serverObj.server,
@@ -9,7 +6,7 @@ var server = serverObj.server,
     firstRun = true,
     curl = {};
 
-before(function( done ){
+before( function( done ) {
 
     curl = new Curl();
 
@@ -28,7 +25,7 @@ before(function( done ){
     });
 });
 
-after(function() {
+after( function() {
 
     curl.close();
 
@@ -37,7 +34,7 @@ after(function() {
     server.close();
 });
 
-it ( 'should reset the curl handler', function ( done ) {
+it( 'should reset the curl handler', function ( done ) {
 
     curl.on( 'end', function() {
 

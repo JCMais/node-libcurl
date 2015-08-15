@@ -5,7 +5,7 @@ var curl = new Curl(),
 
 curl.setOpt( Curl.option.URL, url );
 curl.setOpt( Curl.option.FOLLOWLOCATION, true );
-curl.setOpt( Curl.option.COOKIEFILE, "" ); //enable cookies
+curl.setOpt( Curl.option.COOKIEFILE, '' ); //enable cookies
 curl.perform();
 
 curl.on( 'end', function() {
@@ -14,7 +14,6 @@ curl.on( 'end', function() {
 
         console.info( infoName, ': ', this.getInfo( infoName ) );
     }
-
 
     this.close();
 });

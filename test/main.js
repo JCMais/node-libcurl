@@ -1,3 +1,6 @@
+/*eslint no-unused-vars:0*/
+var should = require( 'should' );
+
 function importTest( name, path, only, skip ) {
 
     if ( typeof only == 'undefined' )
