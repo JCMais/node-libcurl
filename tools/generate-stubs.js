@@ -77,7 +77,7 @@ files.every(function ( file ) {
 
 if ( !curlHeaderFile ) {
 
-    console.error( "Cannot find curl's header file." );
+    console.error( 'Cannot find curl\'s header file.' );
     process.exit(1);
 }
 

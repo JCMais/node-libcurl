@@ -22,10 +22,11 @@ function createOrCloseCurlHandles()
     var i = amount,
         shouldClose = iteration++ % 2;
 
-    if ( shouldClose )
-        console.log(  'Closing handles.' );
-    else
-        console.log( "Opening handles." );
+    if ( shouldClose ) {
+        console.log( 'Closing handles.' );
+    } else {
+        console.log( 'Opening handles.' );
+    }
 
     while ( i-- ) {
 

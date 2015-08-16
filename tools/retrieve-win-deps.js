@@ -119,7 +119,7 @@ function initGitSubmodule( depsPath, err, url ) {
 
                 },
                 execConfig
-            )
+            );
         }
 
     }.bind( this, depsPath ), execConfig );
