@@ -33,8 +33,6 @@ exec( 'git rev-parse', function( err ) {
         process.exit( 0 );
     }
 
-    console.log ( "LOL"  );
-
     parseSubmodulesConfig();
 
 }, execConfig );
