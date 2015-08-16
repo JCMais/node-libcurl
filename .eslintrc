@@ -13,6 +13,7 @@
         "requireReturn": false
       }
     ],
+    "no-bitwise": 0,
     //code style
     "brace-style": [2, "1tbs", { "allowSingleLine": true }],
     "camelcase"  : [2, {"properties": "always"}],
