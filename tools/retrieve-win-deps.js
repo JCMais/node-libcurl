@@ -43,12 +43,12 @@ function parseSubmodulesConfig() {
 
         if ( err ) {
 
-            debug( "git config failed, output: " + err.toString() );
+            debug( 'git config failed, output: ' + err.toString() );
             console.log( err.toString() );
             process.exit( 1 );
         }
 
-        debug( "Parsing git submodules configuration file." );
+        debug( 'Parsing git submodules configuration file.' );
 
         var submodules = stdout.split( /\r?\n|\r/g );
 
@@ -78,7 +78,7 @@ function initGitSubmodule( depsPath, err, url ) {
         process.exit( 1 );
     }
 
-    debug( "Adding git submodules: " + depsPath );
+    debug( 'Adding git submodules: ' + depsPath );
 
     exec( 'git init -q && git submodule add ' + url.trim() + ' ' + depsPath, function ( depsPath, err ) {
 
@@ -91,7 +91,7 @@ function initGitSubmodule( depsPath, err, url ) {
 
         if ( paths.length === 0 ) {
 
-            debug( "Running deps/curl-for-windows/configure.py" );
+            debug( 'Running deps/curl-for-windows/configure.py' );
 
             //everything processed, configure
             exec( 'git submodule update --init --recursive && python deps/curl-for-windows/configure.py',
