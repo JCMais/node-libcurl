@@ -129,7 +129,7 @@ function initGitSubmodule( depsPath, err, url ) {
 
 function replaceTokensOnGypFiles() {
 
-    debug( "Replacing tokens on configuration files." );
+    debug( 'Replacing tokens on configuration files.' );
 
     var filesToCheck = [ 'libssh2.gyp', 'openssl.gyp', 'zlib.gyp', 'curl.gyp' ],
         search = /<\(library\)/g,
@@ -155,7 +155,7 @@ function replaceOnFile( file, search, replacement ) {
         process.exit( 1 );
     }
 
-    debug( "Replacing tokens on file: " + file );
+    debug( 'Replacing tokens on file: ' + file );
 
     fileContent = fs.readFileSync( file ).toString();
 

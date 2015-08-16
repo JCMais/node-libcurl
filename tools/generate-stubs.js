@@ -83,11 +83,11 @@ if ( !curlHeaderFile ) {
 
 var currentDate = new Date();
 
-currentDate = currentDate.getDate() + "/"
-    + (currentDate.getMonth()+1)  + "/"
-    + currentDate.getFullYear() + " @ "
-    + currentDate.getHours() + ":"
-    + currentDate.getMinutes() + ":"
+currentDate = currentDate.getDate() + '/'
+    + (currentDate.getMonth()+1)  + '/'
+    + currentDate.getFullYear() + ' @ '
+    + currentDate.getHours() + ':'
+    + currentDate.getMinutes() + ':'
     + currentDate.getSeconds();
 
 var curlHeaderContent = fs.readFileSync( curlHeaderFile, 'utf8' ),
@@ -116,8 +116,9 @@ function generateFiles( scope, fileName, pattern, prefix, jsObject ) {
 
     while ( match = pattern.exec( scope ) ) {
 
-        if ( optionsToIgnore.indexOf( match[1] ) === -1 )
+        if ( optionsToIgnore.indexOf( match[1] ) === -1 ) {
             matches.push( match[1] );
+        }
     }
 
     matches.sort();
@@ -158,7 +159,7 @@ function generateHeaderFile( fileName, prefix, regexMatches ) {
         '#endif'
     ];
 
-    if ( fileName == "curlAuth.h" ) {
+    if ( fileName === 'curlAuth.h' ) {
       //disable warning about narrowing conversion
       toWrite.unshift(
         '#pragma warning( push )',
@@ -175,8 +176,7 @@ function generateHeaderFile( fileName, prefix, regexMatches ) {
 
 function prepareDataForJavascriptFile( jsObject, regexMatches ) {
 
-    if ( !jsFilesData[jsObject] )
-        jsFilesData[jsObject] = {};
+    jsFilesData[jsObject] = !!(jsFilesData[jsObject]) ? jsFilesData[jsObject] : {};
 
     regexMatches.forEach( function ( item ) {
         jsFilesData[jsObject][item] = 0;
@@ -187,6 +187,10 @@ function prepareDataForJavascriptFile( jsObject, regexMatches ) {
 function generateSingleJavascriptFileForEachType() {
 
     for ( var fileName in jsFilesData ) {
+
+        if ( !jsFilesData.hasOwnProperty( fileName ) ) {
+            continue;
+        }
 
         var file = path.resolve( __dirname, '..', 'lib', 'generated-stubs', fileName + '.js' ),
             toWrite;

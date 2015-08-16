@@ -12,7 +12,10 @@ curl.on( 'end', function() {
 
     for ( var infoName in Curl.info ) {
 
-        console.info( infoName, ': ', this.getInfo( infoName ) );
+        if ( Curl.info.hasOwnProperty( infoName ) ) {
+
+            console.info( infoName, ': ', this.getInfo( infoName ) );
+        }
     }
 
     this.close();

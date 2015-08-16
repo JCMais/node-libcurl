@@ -76,8 +76,9 @@ it( 'should authenticate using basic auth', function ( done ) {
 
     curl.on( 'end', function( status, data ) {
 
-        if ( status !== 200 )
+        if ( status !== 200 ) {
             throw Error( 'Invalid status code: ' + status );
+        }
 
         data.should.be.equal( username );
 
@@ -112,8 +113,9 @@ it( 'should authenticate using digest', function ( done ) {
 
     curl.on( 'end', function( status, data ) {
 
-        if ( status !== 200 )
+        if ( status !== 200 ) {
             throw Error( 'Invalid status code: ' + status );
+        }
 
         data.should.be.equal( username );
 

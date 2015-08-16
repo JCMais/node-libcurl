@@ -51,8 +51,9 @@ function cb( code ) {
 
     var data = this.data;
 
-    if ( code !== 200 )
+    if ( code !== 200 ) {
         ++data.errors;
+    }
 
     --runningRequests;
     ++finishedRequests;
@@ -63,12 +64,13 @@ function cb( code ) {
 
     }
 
-    if ( finishedRequests % 100 === 0 || maxRequests - finishedRequests <= instances )
+    if ( finishedRequests % 100 === 0 || maxRequests - finishedRequests <= instances ) {
         console.info(
             'Curl instances: ', Curl.getCount(),
             ' -> Requests finished: ', finishedRequests,
             ' -> Time: ', process.hrtime( data.startTime )[0], 's'
         );
+    }
 
     if ( runningRequests === 0 ) {
 
@@ -96,15 +98,16 @@ function startRequests() {
 
     console.log( 'Iteration -> ', id+1 );
 
-    finishedRequests = 0,
+    finishedRequests = 0;
     runningRequests = 0;
 
-    if ( requestData[id] === undefined )
+    if ( requestData[id] === undefined ) {
         requestData[id] = {
-            errors : 0,
-            startTime : process.hrtime(),
-            endTime : 0
+            errors: 0,
+            startTime: process.hrtime(),
+            endTime: 0
         };
+    }
 
     for ( i = 0; i < instances; i++ ) {
 

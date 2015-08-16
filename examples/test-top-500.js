@@ -24,8 +24,9 @@ function doRequest() {
 
     siteKey = sitesKeys.pop();
 
-    if ( !siteKey )
+    if ( !siteKey ) {
         return;
+    }
 
     siteUrl = sites[siteKey];
 
@@ -39,8 +40,9 @@ function doRequest() {
     curl.setOpt( Curl.option.USERAGENT, 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:28.0) Gecko/20100101 Firefox/28.0 FirePHP/0.7.4' );
     curl.setOpt( Curl.option.REFERER, 'http://www.google.com' );
     curl.setOpt( Curl.option.AUTOREFERER, true );
-    if ( certfile )
+    if ( certfile ) {
         curl.setOpt( Curl.option.CAINFO, certfile );
+    }
 
     curl.on( 'end', cb );
     curl.on( 'error', cb );

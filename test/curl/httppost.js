@@ -45,8 +45,9 @@ before( function( done ) {
 
         form.parse( req, function( err, fields, files ) {
 
-            if ( err )
+            if ( err ) {
                 throw err;
+            }
 
             var file = files.file;
 

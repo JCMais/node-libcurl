@@ -42,8 +42,9 @@ it( 'should get all infos', function ( done ) {
 
     curl.on( 'end', function( status ) {
 
-        if ( status !== 200 )
+        if ( status !== 200 ) {
             throw Error( 'Invalid status code: ' + status );
+        }
 
         for ( var infoId in Curl.info ) {
 

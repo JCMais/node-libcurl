@@ -90,7 +90,7 @@ describe( 'HTTPPOST', function() {
             }
         }
 
-        if ( invalidArgs.length == args.length ) {
+        if ( invalidArgs.length === args.length ) {
             throw Error( 'Invalid property value accepted. Invalid Args: ' + JSON.stringify( invalidArgs ) + ', Args: ' + JSON.stringify( args ) );
         }
 

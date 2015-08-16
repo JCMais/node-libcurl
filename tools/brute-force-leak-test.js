@@ -12,9 +12,9 @@ var instances = [],
     curl;
 
 var postData = [{
-    name     : "file",
-    file     : "test.img",
-    type     : "image/png"
+    name     : 'file',
+    file     : 'test.img',
+    type     : 'image/png'
 }];
 
 function createOrCloseCurlHandles()
@@ -23,7 +23,7 @@ function createOrCloseCurlHandles()
         shouldClose = iteration++ % 2;
 
     if ( shouldClose )
-        console.log(  "Closing handles." );
+        console.log(  'Closing handles.' );
     else
         console.log( "Opening handles." );
 
@@ -42,7 +42,7 @@ function createOrCloseCurlHandles()
     }
 
     if ( global.gc && shouldClose ) {
-        console.log( "Calling garbage collector." );
+        console.log( 'Calling garbage collector.' );
         global.gc();
     }
 
@@ -51,7 +51,7 @@ function createOrCloseCurlHandles()
 
 function loop()
 {
-    rl.question( "Type anything to go to the next iteration: ", function() {
+    rl.question( 'Type anything to go to the next iteration: ', function() {
 
         createOrCloseCurlHandles();
 

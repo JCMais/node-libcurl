@@ -33,8 +33,9 @@ curl.enable( Curl.feature.NO_STORAGE );
 // there is the following helper method to set the progress cb.
 curl.setProgressCallback( function( dltotal, dlnow/*, ultotal, ulnow*/ ) {
 
-    if ( dltotal === 0 )
+    if ( dltotal === 0 ) {
         return 0;
+    }
 
     if ( !bar ) {
 
