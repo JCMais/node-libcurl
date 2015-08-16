@@ -97,7 +97,7 @@ it( 'should authenticate using digest', function ( done ) {
     //  So we need to use the workaround below to make it work.
     var user = username;
 
-    if ( process.platform == 'win32' && Curl.VERSION_NUM >=  0x072800 ) {
+    if ( process.platform === 'win32' && Curl.VERSION_NUM >=  0x072800 ) {
         user = realmDigest + '/' + username;
     }
 

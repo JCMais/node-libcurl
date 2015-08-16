@@ -51,7 +51,7 @@ function createOrCloseCurlHandles()
 
 function loop()
 {
-    rl.question( "Type anything to go to the next iteration: ", function(input) {
+    rl.question( "Type anything to go to the next iteration: ", function() {
 
         createOrCloseCurlHandles();
 

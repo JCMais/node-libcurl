@@ -50,8 +50,9 @@ it( 'should upload binary data correctly', function ( done ) {
 
     curl.on( 'end', function( status, data ) {
 
-        if ( status !== 200 )
+        if ( status !== 200 ) {
             throw Error( 'Invalid status code: ' + status );
+        }
 
         data = data|0;
 

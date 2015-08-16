@@ -1,6 +1,5 @@
 var fs = require( 'fs' ),
-    path = require( 'path' ),
-    util = require( 'util' );
+    path = require( 'path' );
 
 var files = [
     process.env.NODE_CURL_INCLUDE_PATH ? path.join( process.env.NODE_CURL_INCLUDE_PATH, 'curl', 'curl.h' ) : '',
@@ -55,7 +54,7 @@ var optionsToIgnore = [
 ];
 
 //add path to deps only on Windows
-if ( process.platform == 'win32' ) {
+if ( process.platform === 'win32' ) {
 
     files.push( path.resolve(
         __dirname, '..', 'deps', 'curl-for-windows', 'curl', 'include', 'curl', 'curl.h'
@@ -126,8 +125,9 @@ function generateFiles( scope, fileName, pattern, prefix, jsObject ) {
     //filter duplicate values out
     matches = matches.reduce(function( prev, curr ) {
 
-        if ( prev.indexOf( curr ) === -1 )
+        if ( prev.indexOf( curr ) === -1 ) {
             prev.push( curr );
+        }
 
         return prev;
 

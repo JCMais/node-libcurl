@@ -3,11 +3,13 @@ var should = require( 'should' );
 
 function importTest( name, path, only, skip ) {
 
-    if ( typeof only == 'undefined' )
+    if ( typeof only == 'undefined' ) {
         only = false;
+    }
 
-    if ( typeof skip == 'undefined' )
+    if ( typeof skip == 'undefined' ) {
         skip = false;
+    }
 
     only = !!only;
     skip = !!skip;

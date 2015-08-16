@@ -15,8 +15,9 @@ var curl = new Curl(),
     lastdlnow = 0,
     bar;
 
-if ( fs.existsSync( outputFile ) )
+if ( fs.existsSync( outputFile ) ) {
     fs.unlinkSync( outputFile );
+}
 
 curl.setOpt( 'URL', url );
 curl.setOpt( Curl.option.NOPROGRESS, false );

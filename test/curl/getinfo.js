@@ -46,7 +46,11 @@ it( 'should get all infos', function ( done ) {
             throw Error( 'Invalid status code: ' + status );
 
         for ( var infoId in Curl.info ) {
-            curl.getInfo( infoId );
+
+            if ( Curl.info.hasOwnProperty( infoId ) ) {
+
+                curl.getInfo( infoId );
+            }
         }
 
         done();
