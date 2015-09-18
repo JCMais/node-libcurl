@@ -70,7 +70,9 @@ public:
     bool isInsideMultiCurl;
     bool isOpen;
 
-    //static members
+    int32_t readDataFileDescriptor; //READDATA sets that.
+
+    //Static members
     static CURLM *curlMulti;
     static int count;
     static std::map< CURL*, Curl* > curls;
@@ -82,7 +84,7 @@ public:
     static Nan::Persistent<v8::String> onErrorCbSymbol;
     static Nan::Persistent<v8::String> onEndCbSymbol;
 
-    //LibUV Socket polling
+    //Libuv socket polling
     static CurlSocketContext *CreateCurlSocketContext( curl_socket_t sockfd );
     static int HandleSocket( CURL *easy, curl_socket_t s, int action, void *userp, void *socketp );
     static int HandleTimeout( CURLM *multi, long timeoutMs, void *userp );
@@ -95,6 +97,7 @@ public:
     //cURL callbacks
     static size_t WriteFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
     static size_t HeaderFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
+    static size_t ReadFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
 
     //Instance methods
     size_t OnData( char *data, size_t size, size_t nmemb );

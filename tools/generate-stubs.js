@@ -93,8 +93,9 @@ currentDate = currentDate.getDate() + '/'
 var curlHeaderContent = fs.readFileSync( curlHeaderFile, 'utf8' ),
     jsFilesData = {};
 
-generateFiles( curlHeaderContent, 'curlOptionsInteger', /CINIT\((\w+).*LONG/g, 'OPT', 'option' );
-generateFiles( curlHeaderContent, 'curlOptionsString', /CINIT\((\w+).*OBJECT/g, 'OPT', 'option' );
+//this is getting complex. READDATA should be added as integer, not a string, since it's the fd returned by calling fs.open.
+generateFiles( curlHeaderContent, 'curlOptionsInteger', /CINIT\((\w+).*LONG|CINIT\((READDATA).*OBJECTPOINT/g, 'OPT', 'option' );
+generateFiles( curlHeaderContent, 'curlOptionsString', /CINIT\((?:(?!READDATA)(\w+)).*OBJECT/g, 'OPT', 'option' );
 generateFiles( curlHeaderContent, 'curlOptionsFunction', /CINIT\((\w+).*FUNCTION/g, 'OPT', 'option' );
 
 generateFiles( curlHeaderContent, 'curlInfosInteger', /CURLINFO_(\w+).*LONG/g, 'INFO', 'info' );
@@ -116,8 +117,14 @@ function generateFiles( scope, fileName, pattern, prefix, jsObject ) {
 
     while ( match = pattern.exec( scope ) ) {
 
-        if ( optionsToIgnore.indexOf( match[1] ) === -1 ) {
-            matches.push( match[1] );
+        var matchedContent = match[1];
+
+        if ( typeof matchedContent == 'undefined' && match[2] ) {
+            matchedContent = match[2];
+        }
+
+        if ( optionsToIgnore.indexOf( matchedContent ) === -1 ) {
+            matches.push( matchedContent );
         }
     }
 
