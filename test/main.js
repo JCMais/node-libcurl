@@ -45,4 +45,5 @@ describe( 'Curl', function () {
     importTest( 'HTTP Auth', './curl/httpauth' );
     importTest( 'HTTP Post', './curl/httppost' );
     importTest( 'Binary Data', './curl/binary-data' );
+    importTest( 'Put Upload', './curl/put-upload' );
 });

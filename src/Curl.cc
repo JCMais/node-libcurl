@@ -194,7 +194,8 @@ NAN_MODULE_INIT( Curl::Initialize )
     Nan::Set( target, Nan::New( "Curl" ).ToLocalChecked(), tmpl->GetFunction() );
 }
 
-Curl::Curl() : cbProgress( nullptr ), cbXferinfo( nullptr ), cbDebug( nullptr ), isInsideMultiCurl( false ), isOpen( true )
+Curl::Curl() : cbProgress( nullptr ), cbXferinfo( nullptr ), cbDebug( nullptr ),
+ isInsideMultiCurl( false ), isOpen( true ), readDataFileDescriptor( -1 )
 {
     ++Curl::count;
 
@@ -211,6 +212,8 @@ Curl::Curl() : cbProgress( nullptr ), cbXferinfo( nullptr ), cbDebug( nullptr ),
     curl_easy_setopt( this->curl, CURLOPT_WRITEDATA, this );
     curl_easy_setopt( this->curl, CURLOPT_HEADERFUNCTION, Curl::HeaderFunction );
     curl_easy_setopt( this->curl, CURLOPT_HEADERDATA, this );
+    curl_easy_setopt( this->curl, CURLOPT_READFUNCTION, Curl::ReadFunction );
+    curl_easy_setopt( this->curl, CURLOPT_READDATA, this );
 
     Curl::curls[curl] = this;
 }
@@ -487,6 +490,29 @@ size_t Curl::HeaderFunction( char *ptr, size_t size, size_t nmemb, void *userdat
 {
     Curl *obj = static_cast<Curl*>( userdata );
     return obj->OnHeader( ptr, size, nmemb );
+}
+
+//Called by libcurl as soon as it needs to read data in order to send it to the peer
+size_t Curl::ReadFunction( char *ptr, size_t size, size_t nmemb, void *userdata )
+{
+    uv_fs_t readReq;
+
+    int ret = 0;
+
+    Curl *obj = static_cast<Curl*>( userdata );
+    uint32_t fd = obj->readDataFileDescriptor;
+    unsigned int len = (unsigned int) ( size * nmemb );
+
+    uv_buf_t uvbuf = uv_buf_init( ptr, len );
+
+    ret = uv_fs_read( uv_default_loop(), &readReq, fd, &uvbuf, 1, -1, NULL );
+
+    if ( ret < 0 ) {
+
+        return CURL_READFUNC_ABORT;
+    }
+
+    return ret;
 }
 
 size_t Curl::OnData( char *data, size_t size, size_t nmemb )
@@ -1016,11 +1042,20 @@ NAN_METHOD( Curl::SetOpt )
             val = value->BooleanValue();
         }
 
-        optCallResult = Nan::New<v8::Integer>(
-            curl_easy_setopt(
-                obj->curl, (CURLoption) optionId, val
-            )
-        );
+        if ( optionId == CURLOPT_READDATA ) {
+
+            obj->readDataFileDescriptor = val;
+            optCallResult = Nan::New<v8::Integer>( CURLE_OK );
+
+        } else {
+
+            optCallResult = Nan::New<v8::Integer>(
+                curl_easy_setopt(
+                    obj->curl, (CURLoption) optionId, val
+                )
+            );
+
+        }
 
     } else if ( ( optionId = isInsideOption( curlOptionsFunction, opt ) ) ) {
 
@@ -1303,6 +1338,10 @@ NAN_METHOD( Curl::Reset )
     curl_easy_setopt( obj->curl, CURLOPT_WRITEDATA, obj );
     curl_easy_setopt( obj->curl, CURLOPT_HEADERFUNCTION, Curl::HeaderFunction );
     curl_easy_setopt( obj->curl, CURLOPT_HEADERDATA, obj );
+    curl_easy_setopt( obj->curl, CURLOPT_READFUNCTION, Curl::ReadFunction );
+    curl_easy_setopt( obj->curl, CURLOPT_READDATA, obj );
+
+    obj->readDataFileDescriptor = -1;
 
     info.GetReturnValue().Set( info.This() );
 }

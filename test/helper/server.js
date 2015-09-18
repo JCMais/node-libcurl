@@ -7,7 +7,7 @@ var app = express(),
     server = http.createServer( app );
 
 app.use( bodyParser.urlencoded({ extended: true }) )
-    .use( bodyParser.raw({ type: 'application/node-libcurl.raw' }) )
+    .use( bodyParser.raw({ limit: "100MB", type: 'application/node-libcurl.raw' }) )
     .use( cookiesParser() );
 
 app.disable( 'etag' );
