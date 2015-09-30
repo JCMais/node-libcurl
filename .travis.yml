@@ -74,8 +74,8 @@ install:
   - curl-config --version
   - curl-config --features
   - curl-config --protocols
-  - node tools/curl-config.js
   - cd $TRAVIS_BUILD_DIR
+  - node tools/curl-config.js
   - npm/.bin/npm install
 
 script:
