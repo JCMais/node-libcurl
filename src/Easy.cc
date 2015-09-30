@@ -296,7 +296,7 @@ namespace NodeLibcurl {
         int ret = 0;
 
         Easy *obj = static_cast<Easy*>( userdata );
-        uint32_t fd = obj->readDataFileDescriptor;
+        int32_t fd = obj->readDataFileDescriptor;
 
         //abort early if we don't have a file descriptor
         if ( fd == -1 ) {
