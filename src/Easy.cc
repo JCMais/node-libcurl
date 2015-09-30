@@ -297,11 +297,21 @@ namespace NodeLibcurl {
 
         Easy *obj = static_cast<Easy*>( userdata );
         uint32_t fd = obj->readDataFileDescriptor;
+
+        //abort early if we don't have a file descriptor
+        if ( fd == -1 ) {
+            return CURL_READFUNC_ABORT;
+        }
+
         unsigned int len = (unsigned int) ( size * nmemb );
 
+#if UV_VERSION_MAJOR < 1
+        ret = uv_fs_read( uv_default_loop(), &readReq, fd, ptr, 1, -1, NULL );
+#else
         uv_buf_t uvbuf = uv_buf_init( ptr, len );
 
         ret = uv_fs_read( uv_default_loop(), &readReq, fd, &uvbuf, 1, -1, NULL );
+#endif
 
         if ( ret < 0 ) {
 
