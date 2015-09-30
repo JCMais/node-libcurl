@@ -53,7 +53,7 @@ install:
   - npm install npm
   - mv node_modules npm
   # https://github.com/travis-ci/travis-ci/issues/3668
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export CC=/usr/bin/gcc-${GCC_VERSION} CXX=/usr/bin/g++-${GCC_VERSION} fi;
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export CC=/usr/bin/gcc-${GCC_VERSION} CXX=/usr/bin/g++-${GCC_VERSION}; fi;
   - export PATH=$HOME/curl/bin:$PATH
   # output helpful info
   - node --version
