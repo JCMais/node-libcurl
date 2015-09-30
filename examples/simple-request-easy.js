@@ -20,36 +20,37 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-var Curl   = require( '../../lib/Curl' ),
-    curl   = {};
 
-beforeEach( function() {
+/**
+ * Example showing how one could do a simple request using the Easy handle.
+ */
+var Easy = require( '../lib/Easy' ),
+    Curl = require( '../lib/Curl' ),
+    url = process.argv[2] || 'http://www.google.com',
+    ret,
+    ch;
 
-    curl = new Curl();
-});
+ch = new Easy();
 
-afterEach( function() {
+ch.setOpt( Curl.option.URL, url );
+ch.setOpt( Curl.option.VERBOSE, true );
 
-    curl.close();
-});
+ch.onHeader = function( buf, size, nmemb ) {
 
-it( 'should not crash on timeout', function( done ) {
+    console.log( buf );
 
-    //http://stackoverflow.com/a/904609/710693
-    curl.setOpt( Curl.option.URL, '10.255.255.1' );
-    curl.setOpt( Curl.option.CONNECTTIMEOUT, 1 );
+    return size * nmemb;
+};
 
-    curl.on( 'end', function() {
+ch.onData = function( buf, size, nmemb ) {
 
-        done( Error( 'Unexpected callback called.' ) );
+    console.log( buf );
 
-    });
+    return size * nmemb;
+};
 
-    curl.on( 'error', function () {
+ret = ch.perform();
 
-        done();
-    });
+ch.close();
 
-    curl.perform();
-
-});
+console.log( ret, ret == Curl.code.CURLE_OK, Easy.strError( ret ) );

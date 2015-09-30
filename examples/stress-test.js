@@ -1,17 +1,39 @@
-
-var Curl = require( '../lib/Curl' ),
-    path = require( 'path' );
+/**
+ * @author Jonathan Cardoso Machado
+ * @license MIT
+ * @copyright 2015, Jonathan Cardoso Machado
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 /*
  * This script does a stress test on the given domain.
  * Don't put a real domain here if you don't want to be blocked by some firewall.
  */
 
+var Curl = require( '../lib/Curl' ),
+    path = require( 'path' );
+
 var url = 'http://local.vm/', //local.vm in this case was the default nginx page.
     file= 'file:///' + path.join( __dirname, 'test.txt' ),
     instances   = 100,
     maxRequests = 1e5, //100K requests in total
-    iterations = 3, //repeat n times to collect data
+    iterations  = 3, //repeat n times to collect data
     shouldTestFile = false,
     shouldUseHeaderRequest = true,
     precision = 3;

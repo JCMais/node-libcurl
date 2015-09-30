@@ -1,16 +1,17 @@
 {
-    "beautify": true,
-    "components": {
-        "summary": true
-    },
-    "encoding": "utf-8",
-    "locale": "en",
-    "markdown": true,
-    "sourceFiles": {
-        "generate": true,
-        "singleLink": true
-    },
-    "tables": {
-        "nestedPropertyTables": true
-    }
+  "beautify": false,
+  "components": {
+    "summary": true
+  },
+  "encoding": "utf-8",
+  "locale": "en",
+  "markdown": true,
+  "resourcePath": "./lang",
+  "sourceFiles": {
+    "generate": true,
+    "singleLink": true
+  },
+  "tables": {
+    "nestedPropertyTables": true
+  }
 }

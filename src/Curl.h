@@ -1,127 +1,90 @@
-#ifndef CURL_H
-#define CURL_H
+#ifndef NODELIBCURL_H
+#define NODELIBCURL_H
+/**
+ * @author Jonathan Cardoso Machado
+ * @license MIT
+ * @copyright 2015, Jonathan Cardoso Machado
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 #include <map>
 #include <vector>
 #include <string>
+#include <memory>
+#include <functional>
 
 #include <node.h>
 #include <nan.h>
 
+#include <curl/curl.h>
+
 #include "CurlHttpPost.h"
 #include "macros.h"
 
-typedef std::map<const int*, std::string> curlMapId;
-typedef std::map<std::string, const int*> curlMapName;
-
 using Nan::ObjectWrap;
-//using Nan::NAN_METHOD_ARGS_TYPE;
 
-class Curl : public ObjectWrap {
+namespace NodeLibcurl {
 
-public:
-    //store mapping from the options/infos names that can be used in js to their respective CURLOption id
-    struct CurlOption
+    // store mapping from the CURL[*] constants that can be used in js
+    struct CurlConstant
     {
         const char *name;
-        int32_t value;
-        //There is an warning about overflow here. The biggest value this is going be is 1 << 31, from CURLAUTH_ONLY.
-        // Since atm this is the only place with such big value, we are veryfing for that in the setOpt method, and so using the correct value there.
+        int32_t value; ////There is an warning about overflow here. The biggest value this is going be is 1 << 31, from CURLAUTH_ONLY.
     };
 
-    //Context used with curl_multi_assign to create a relationship between the socket being used and the poll handler.
-    struct CurlSocketContext {
-        uv_mutex_t mutex;
-        uv_poll_t pollHandle;
-        curl_socket_t sockfd;
-    };
-
-    Curl();
-
-    //Export curl to js
-    static NAN_MODULE_INIT( Initialize );
-
-    //Js exported Methods
-    static NAN_METHOD( New );
-    static NAN_METHOD( SetOpt );
-    static NAN_METHOD( GetInfo );
-    static NAN_METHOD( Perform );
-    static NAN_METHOD( Pause );
-    static NAN_METHOD( Reset );
-    static NAN_METHOD( Close );
-
-    static NAN_METHOD( GetCount );
-    static NAN_METHOD( GetVersion );
-
-    //Callbacks
-    //we need this flag because of https://github.com/bagder/curl/commit/907520c4b93616bddea15757bbf0bfb45cde8101
-    bool isCbProgressAlreadyAborted;
-    Nan::Callback *cbProgress;
-    Nan::Callback *cbXferinfo;
-    Nan::Callback *cbDebug;
-
-    //Members
-    CURL  *curl;
-    CurlHttpPost *httpPost;
-
-    std::vector<curl_slist*> curlLinkedLists; //a unique_ptr can been used here.
-    std::map<int, std::string> curlStrings;
-
-    bool isInsideMultiCurl;
-    bool isOpen;
-
-    int32_t readDataFileDescriptor; //READDATA sets that.
-
-    //Static members
-    static CURLM *curlMulti;
-    static int count;
-    static std::map< CURL*, Curl* > curls;
-    static uv_timer_t curlTimeout;
-
-    static Nan::Persistent<v8::Function> constructor;
-    static Nan::Persistent<v8::String> onDataCbSymbol;
-    static Nan::Persistent<v8::String> onHeaderCbSymbol;
-    static Nan::Persistent<v8::String> onErrorCbSymbol;
-    static Nan::Persistent<v8::String> onEndCbSymbol;
-
-    //Libuv socket polling
-    static CurlSocketContext *CreateCurlSocketContext( curl_socket_t sockfd );
-    static int HandleSocket( CURL *easy, curl_socket_t s, int action, void *userp, void *socketp );
-    static int HandleTimeout( CURLM *multi, long timeoutMs, void *userp );
-    static UV_TIMER_CB( OnTimeout );
-    static void Process( uv_poll_t* handle, int status, int events );
-    static void ProcessMessages();
-    static void DestroyCurlSocketContext( CurlSocketContext *ctx );
-    static void OnCurlSocketClose( uv_handle_t *handle );
-
-    //cURL callbacks
-    static size_t WriteFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
-    static size_t HeaderFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
-    static size_t ReadFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
-
-    //Instance methods
-    size_t OnData( char *data, size_t size, size_t nmemb );
-    size_t OnHeader( char *data, size_t size, size_t nmemb );
-    void OnEnd();
-    void OnError( CURLcode errorCode );
-    void Dispose();
-    void DisposeCallbacks();
-
-    //Helper static methods
     template<typename T>
-    static void ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len, curlMapId *mapId, curlMapName *mapName );
+    using deleted_unique_ptr = std::unique_ptr<T, std::function<void( T* )>>;
 
-    template<typename TResultType, typename Tv8MappingType>
-    static v8::Local<v8::Value> GetInfoTmpl( const Curl *obj, int infoId );
-    static void ThrowError( const char *message, const char *reason = nullptr );
+    const extern std::vector<CurlConstant> curlConstAuth;
+    const extern std::vector<CurlConstant> curlConstProtocol;
+    const extern std::vector<CurlConstant> curlConstPause;
+    const extern std::vector<CurlConstant> curlConstHttp;
+    const extern std::vector<CurlConstant> curlConstHeader;
 
-    //Callbacks
-    static int CbProgress( void *clientp, double dltotal, double dlnow, double ultotal, double ulnow );
-    static int CbXferinfo( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow );
-    static int CbDebug( CURL *handle, curl_infotype type, char *data, size_t size, void *userptr );
+    const extern std::vector<CurlConstant> curlOptionInteger;
+    const extern std::vector<CurlConstant> curlOptionString;
+    const extern std::vector<CurlConstant> curlOptionFunction;
+    const extern std::vector<CurlConstant> curlOptionLinkedList;
+    const extern std::vector<CurlConstant> curlOptionHttpPost;
+    const extern std::vector<CurlConstant> curlOptionSpecific;
 
-private:
-    ~Curl();
+    const extern std::vector<CurlConstant> curlInfoString;
+    const extern std::vector<CurlConstant> curlInfoDouble;
+    const extern std::vector<CurlConstant> curlInfoInteger;
+    const extern std::vector<CurlConstant> curlInfoLinkedList;
 
-};
+    const extern std::vector<CurlConstant> curlMultiOptionInteger;
+    const extern std::vector<CurlConstant> curlMultiOptionStringArray;
+
+    const extern std::vector<CurlConstant> curlCode;
+
+    // export Curl to js
+    NAN_MODULE_INIT( Initialize );
+
+    // js exported Methods
+    NAN_METHOD( GetVersion );
+    NAN_METHOD( GetCount );
+    NAN_GETTER( GetterVersionNum );
+
+    // helper methods
+    int32_t IsInsideCurlConstantStruct( const std::vector<CurlConstant> &curlConstants, const v8::Local<v8::Value> &searchFor );
+    void ThrowError( const char *message, const char *reason = nullptr );
+
+}
 #endif

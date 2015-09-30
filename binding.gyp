@@ -3,11 +3,14 @@
         {
             'target_name': 'node-libcurl',
             'sources': [
-                'src/node-libcurl.cc',
+                'src/node_libcurl.cc',
+                'src/Easy.cc',
+                'src/Share.cc',
+                'src/Multi.cc',
                 'src/Curl.cc',
                 'src/CurlHttpPost.cc',
-                'src/strndup.cc',
-                'src/string_format.cc'
+                'src/string_format.cc',
+                'src/strndup.cc'
             ],
             "include_dirs" : [
                 "<!(node -e \"require('nan')\")"
@@ -38,7 +41,7 @@
             },
             'msvs_settings': {
                 'VCCLCompilerTool': {
-                    'DisableSpecificWarnings': ['4506'] #warning about v8 inline function
+                    'DisableSpecificWarnings': ['4506', '4838'] #warning about v8 inline function and narrowing
                 }
             },
             'cflags' : ['-std=c++11', '-O2', '-Wno-narrowing'],
@@ -65,7 +68,7 @@
                         '<!@(node "<(module_root_dir)/tools/curl-config.js")'
                     ],
                     'sources!': [
-                        'src/strndup.cc' #remove strndup function declaration on non-windows systems.
+                        'src/strndup.c' #remove strndup function declaration on non-windows systems.
                     ]
                 }]
             ]
