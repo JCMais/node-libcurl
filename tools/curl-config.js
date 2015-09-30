@@ -1,5 +1,4 @@
 var exec = require('child_process').exec,
-    debug  = require( 'debug' )( 'node-libcurl' ),
     child;
 
 
