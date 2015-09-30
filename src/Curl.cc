@@ -222,7 +222,6 @@ namespace NodeLibcurl {
         { "NOBODY", CURLOPT_NOBODY },
         { "NOPROGRESS", CURLOPT_NOPROGRESS },
         { "NOSIGNAL", CURLOPT_NOSIGNAL },
-        { "OBSOLETE72", CURLOPT_OBSOLETE72 },
 
     #if NODE_LIBCURL_VER_GE( 7, 43, 0 )
         { "PIPEWAIT", CURLOPT_PIPEWAIT },
@@ -773,24 +772,28 @@ namespace NodeLibcurl {
     };
 
 #define INIT_CURL_CONSTANT_VECTOR_FROM_ARR( arr ) std::vector<CurlConstant>( arr, (arr + sizeof( arr ) / sizeof( arr[0] )) )
-    const std::vector<CurlConstant> curlConstAuth = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstAuthArr );
-    const std::vector<CurlConstant> curlConstProtocol = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstProtocolArr );
-    const std::vector<CurlConstant> curlConstPause = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstPauseArr );
-    const std::vector<CurlConstant> curlConstHttp = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstHttpArr );
-    const std::vector<CurlConstant> curlConstHeader = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstHeaderArr );
-    const std::vector<CurlConstant> curlOptionInteger = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionIntegerArr );
-    const std::vector<CurlConstant> curlOptionString = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionStringArr );
-    const std::vector<CurlConstant> curlOptionFunction = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionFunctionArr );
-    const std::vector<CurlConstant> curlOptionLinkedList = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionLinkedListArr );
-    const std::vector<CurlConstant> curlOptionSpecific = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionSpecificArr );
-    const std::vector<CurlConstant> curlOptionHttpPost = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionHttpPostArr );
-    const std::vector<CurlConstant> curlInfoString = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlInfoStringArr );
-    const std::vector<CurlConstant> curlInfoDouble = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlInfoDoubleArr );
-    const std::vector<CurlConstant> curlInfoInteger = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlInfoIntegerArr );
-    const std::vector<CurlConstant> curlInfoLinkedList = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlInfoLinkedListArr );
-    const std::vector<CurlConstant> curlMultiOptionInteger = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlMultiOptionIntegerArr );
-    const std::vector<CurlConstant> curlMultiOptionStringArray = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlMultiOptionStringArrayArr );
-    const std::vector<CurlConstant> curlCode = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlCodeArr );
+const std::vector<CurlConstant> curlConstAuth        = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstAuthArr );
+const std::vector<CurlConstant> curlConstProtocol    = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstProtocolArr );
+const std::vector<CurlConstant> curlConstPause       = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstPauseArr );
+const std::vector<CurlConstant> curlConstHttp        = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstHttpArr );
+
+#if NODE_LIBCURL_VER_GE( 7, 37, 0 )
+const std::vector<CurlConstant> curlConstHeader      = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstHeaderArr );
+#endif
+
+const std::vector<CurlConstant> curlOptionInteger    = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionIntegerArr );
+const std::vector<CurlConstant> curlOptionString     = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionStringArr );
+const std::vector<CurlConstant> curlOptionFunction   = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionFunctionArr );
+const std::vector<CurlConstant> curlOptionLinkedList = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionLinkedListArr );
+const std::vector<CurlConstant> curlOptionSpecific   = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionSpecificArr );
+const std::vector<CurlConstant> curlOptionHttpPost   = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionHttpPostArr );
+const std::vector<CurlConstant> curlInfoString       = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlInfoStringArr );
+const std::vector<CurlConstant> curlInfoDouble       = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlInfoDoubleArr );
+const std::vector<CurlConstant> curlInfoInteger      = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlInfoIntegerArr );
+const std::vector<CurlConstant> curlInfoLinkedList   = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlInfoLinkedListArr );
+const std::vector<CurlConstant> curlMultiOptionInteger     = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlMultiOptionIntegerArr );
+const std::vector<CurlConstant> curlMultiOptionStringArray = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlMultiOptionStringArrayArr );
+    const std::vector<CurlConstant> curlCode         = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlCodeArr );
 #undef INIT_CURL_CONSTANT_VECTOR_FROM_ARR
 
     static void ExportConstants( v8::Local<v8::Object> obj, const std::vector<NodeLibcurl::CurlConstant> &optionGroup )
@@ -904,7 +907,6 @@ namespace NodeLibcurl {
 
         std::string optionName = "";
         int32_t optionId = -1;
-        uint32_t i = 0;
 
         if ( !isString && !isInt ) {
             return 0;

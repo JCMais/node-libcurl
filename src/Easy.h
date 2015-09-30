@@ -74,12 +74,12 @@ namespace NodeLibcurl {
         Nan::Callback *cbOnSocketEvent;
 
         // members
+        uv_poll_t *pollHandle;
+
         std::shared_ptr<ToFree> toFree;
 
         bool isCbProgressAlreadyAborted; // we need this flag because of https://github.com/bagder/curl/commit/907520c4b93616bddea15757bbf0bfb45cde8101
         bool isMonitoringSockets;
-
-        uv_poll_t *pollHandle;
 
         int32_t readDataFileDescriptor; //READDATA sets that
         uint32_t id;

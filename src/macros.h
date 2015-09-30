@@ -19,6 +19,18 @@
 
 #endif
 
+#if UV_VERSION_MAJOR < 1
+
+#define UV_ERROR_STRING(err) \
+        uv_strerror( uv_last_error( uv_default_loop() ) )
+
+#else
+
+#define UV_ERROR_STRING(err) \
+        uv_strerror( err )
+
+#endif
+
 // inspired from the LUA bindings.
 #define NODE_LIBCURL_MAKE_VERSION(MAJ, MIN, PAT) ((MAJ<<16) + (MIN<<8) + PAT)
 #define NODE_LIBCURL_VER_GE(MAJ, MIN, PAT) (LIBCURL_VERSION_NUM >= NODE_LIBCURL_MAKE_VERSION(MAJ, MIN, PAT))

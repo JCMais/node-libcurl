@@ -65,8 +65,6 @@ namespace NodeLibcurl {
         v8::Local<v8::FunctionTemplate> tmpl = Nan::New<v8::FunctionTemplate>( Share::New );
         tmpl->SetClassName( Nan::New( "Share" ).ToLocalChecked() );
         tmpl->InstanceTemplate()->SetInternalFieldCount( 1 );
-        v8::Local<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
-        v8::Local<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
 
         // prototype methods
         Nan::SetPrototypeMethod( tmpl, "setOpt", Share::SetOpt );

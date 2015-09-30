@@ -28,6 +28,7 @@
 #include "Share.h"
 #include "Curl.h"
 
+#include "make_unique.h"
 #include "string_format.h"
 
 namespace NodeLibcurl {
@@ -56,8 +57,8 @@ namespace NodeLibcurl {
 
     Easy::Easy() :
         cbProgress( nullptr ), cbXferinfo( nullptr ), cbDebug( nullptr ), cbOnSocketEvent( nullptr ), pollHandle( nullptr ),
-        isCbProgressAlreadyAborted( false ), isInsideMultiCurl( false ), isOpen( true ), isMonitoringSockets( false ),
-        readDataFileDescriptor( -1 ), id( Easy::counter++ )
+        isCbProgressAlreadyAborted( false ), isMonitoringSockets( false ),
+        readDataFileDescriptor( -1 ), id( Easy::counter++ ), isInsideMultiCurl( false ), isOpen( true )
     {
         this->ch = curl_easy_init();
         assert( this->ch );
@@ -71,8 +72,8 @@ namespace NodeLibcurl {
 
     Easy::Easy( Easy *orig ) :
         cbProgress( nullptr ), cbXferinfo( nullptr ), cbDebug( nullptr ), cbOnSocketEvent( nullptr ), pollHandle( nullptr ),
-        isCbProgressAlreadyAborted( false ), isInsideMultiCurl( false ), isOpen( true ), isMonitoringSockets( false ),
-        readDataFileDescriptor( orig->readDataFileDescriptor ), id( Easy::counter++ )
+        isCbProgressAlreadyAborted( false ), isMonitoringSockets( false ),
+        readDataFileDescriptor( -1 ), id( Easy::counter++ ), isInsideMultiCurl( false ), isOpen( true )
     {
         assert( orig );
         assert( orig != this ); //should not duplicate itself
@@ -184,7 +185,7 @@ namespace NodeLibcurl {
             return;
         }
 
-#if NODE_LIBCURL_VER_GE( 7, 40, 0 )
+#if NODE_LIBCURL_VER_GE( 7, 45, 0 )
         curl_socket_t socket;
         retCurl = curl_easy_getinfo( this->ch, CURLINFO_ACTIVESOCKET, &socket );
 
@@ -210,7 +211,7 @@ namespace NodeLibcurl {
 
         if ( retUv < 0 ) {
 
-            ThrowError( "Failed to poll on connection socket.", uv_strerror( retUv ) );
+            ThrowError( "Failed to poll on connection socket.", UV_ERROR_STRING( retUv ) );
             return;
         }
 
@@ -227,7 +228,7 @@ namespace NodeLibcurl {
 
         if ( uvRet < 0 ) {
 
-            ThrowError( "Failed to stop polling on socket.", uv_strerror( uvRet ) );
+            ThrowError( "Failed to stop polling on socket.", UV_ERROR_STRING( uvRet ) );
             return;
         }
 
@@ -262,7 +263,7 @@ namespace NodeLibcurl {
 
         if ( status < 0 ) {
 
-            err = Nan::Error( uv_strerror( status ) );
+            err = Nan::Error( UV_ERROR_STRING( status ) );
         }
 
         v8::Local<v8::Value> argv[] = {
@@ -510,7 +511,6 @@ namespace NodeLibcurl {
         v8::Local<v8::FunctionTemplate> tmpl = Nan::New<v8::FunctionTemplate>( Easy::New );
         tmpl->SetClassName( Nan::New( "Easy" ).ToLocalChecked() );
         tmpl->InstanceTemplate()->SetInternalFieldCount( 1 );
-        v8::Local<v8::ObjectTemplate> inst = tmpl->InstanceTemplate();
         v8::Local<v8::ObjectTemplate> proto = tmpl->PrototypeTemplate();
 
         // prototype methods
@@ -1204,8 +1204,6 @@ namespace NodeLibcurl {
     NAN_METHOD( Easy::DupHandle )
     {
         Nan::HandleScope scope;
-
-        Easy *orig = Nan::ObjectWrap::Unwrap<Easy>( info.This() );
 
         // create a new js object.
         const int argc = 1;
