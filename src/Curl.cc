@@ -1,1367 +1,982 @@
+/**
+ * @author Jonathan Cardoso Machado
+ * @license MIT
+ * @copyright 2015, Jonathan Cardoso Machado
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #include "Curl.h"
 
-#include <curl/curl.h>
 #include <iostream>
 #include <stdlib.h>
 #include <string.h>
 
+#include "Easy.h"
 #include "string_format.h"
 
-// Set curl constants
-#include "generated-stubs/curlOptionsString.h"
-#include "generated-stubs/curlOptionsInteger.h"
-#include "generated-stubs/curlOptionsFunction.h"
-#include "generated-stubs/curlInfosString.h"
-#include "generated-stubs/curlInfosInteger.h"
-#include "generated-stubs/curlInfosDouble.h"
 
-#include "generated-stubs/curlAuth.h"
-#include "generated-stubs/curlProtocols.h"
-#include "generated-stubs/curlPause.h"
-#include "generated-stubs/curlHttp.h"
+//@TODO CHANGE LIBCURL_VERSION_NUM TO NODE_LIBCURL_VER_GE
+namespace NodeLibcurl {
 
-#if LIBCURL_VERSION_NUM >= 0x072500
-#include "generated-stubs/curlHeader.h"
+    static const CurlConstant curlConstAuthArr[] = {
+        { "ANY", CURLAUTH_ANY },
+        { "ANYSAFE", CURLAUTH_ANYSAFE },
+        { "BASIC", CURLAUTH_BASIC },
+        { "DIGEST", CURLAUTH_DIGEST },
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 3 )
+        { "DIGEST_IE", CURLAUTH_DIGEST_IE },
+    #endif
+
+        { "GSSNEGOTIATE", CURLAUTH_GSSNEGOTIATE },
+
+    #if NODE_LIBCURL_VER_GE( 7, 38, 0 )
+        { "NEGOTIATE", CURLAUTH_NEGOTIATE },
+    #endif
+
+        { "NONE", CURLAUTH_NONE },
+        { "NTLM", CURLAUTH_NTLM },
+
+    #if NODE_LIBCURL_VER_GE( 7, 22, 0 )
+        { "NTLM_WB", CURLAUTH_NTLM_WB },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 21, 3 )
+        { "ONLY", CURLAUTH_ONLY },
+    #endif
+    };
+
+#if NODE_LIBCURL_VER_GE( 7, 19, 4 )
+    static const CurlConstant curlConstProtocolArr[] = {
+        { "ALL", CURLPROTO_ALL },
+        { "DICT", CURLPROTO_DICT },
+        { "FTP", CURLPROTO_FTP },
+        { "FTPS", CURLPROTO_FTPS },
+
+    #if NODE_LIBCURL_VER_GE( 7, 21, 2 )
+        { "GOPHER", CURLPROTO_GOPHER },
+    #endif
+
+        { "HTTP", CURLPROTO_HTTP },
+        { "HTTPS", CURLPROTO_HTTPS },
+
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "IMAP", CURLPROTO_IMAP },
+        { "IMAPS", CURLPROTO_IMAPS },
+    #endif
+
+        { "LDAP", CURLPROTO_LDAP },
+        { "LDAPS", CURLPROTO_LDAPS },
+
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "POP3", CURLPROTO_POP3 },
+        { "POP3S", CURLPROTO_POP3S },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
+        { "RTMP", CURLPROTO_RTMP },
+        { "RTMPE", CURLPROTO_RTMPE },
+        { "RTMPS", CURLPROTO_RTMPS },
+        { "RTMPT", CURLPROTO_RTMPT },
+        { "RTMPTE", CURLPROTO_RTMPTE },
+        { "RTMPTS", CURLPROTO_RTMPTS },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "RTSP", CURLPROTO_RTSP },
+    #endif
+
+        { "SCP", CURLPROTO_SCP },
+        { "SFTP", CURLPROTO_SFTP },
+
+    #if NODE_LIBCURL_VER_GE( 7, 40, 0 )
+        { "SMB", CURLPROTO_SMB },
+        { "SMBS", CURLPROTO_SMBS },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "SMTP", CURLPROTO_SMTP },
+        { "SMTPS", CURLPROTO_SMTPS },
+    #endif
+
+        { "TELNET", CURLPROTO_TELNET },
+        { "TFTP", CURLPROTO_TFTP },
+    };
 #endif
 
-#define X(name) {#name, CURLOPT_##name}
-Curl::CurlOption curlOptionsLinkedList[] = {
-#if LIBCURL_VERSION_NUM >= 0x070a03
-    X(HTTP200ALIASES),
+    static const CurlConstant curlConstPauseArr[] = {
+        { "ALL", CURLPAUSE_ALL },
+        { "CONT", CURLPAUSE_CONT },
+        { "RECV", CURLPAUSE_RECV },
+        { "RECV_CONT", CURLPAUSE_RECV_CONT },
+        { "SEND", CURLPAUSE_SEND },
+        { "SEND_CONT", CURLPAUSE_SEND_CONT },
+    };
+
+    static const CurlConstant curlConstHttpArr[] = {
+        { "VERSION_1_0", CURL_HTTP_VERSION_1_0 },
+        { "VERSION_1_1", CURL_HTTP_VERSION_1_1 },
+
+    #if NODE_LIBCURL_VER_GE( 7, 33, 0 )
+        { "VERSION_2_0", CURL_HTTP_VERSION_2_0 },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 43, 0 )
+        { "VERSION_2", CURL_HTTP_VERSION_2 },
+    #endif
+
+        { "VERSION_NONE", CURL_HTTP_VERSION_NONE },
+    };
+
+#if NODE_LIBCURL_VER_GE( 7, 37, 0 )
+    static const CurlConstant curlConstHeaderArr[] = {
+        { "UNIFIED", CURLHEADER_UNIFIED },
+        { "SEPARATE", CURLHEADER_SEPARATE },
+    };
 #endif
 
-#if LIBCURL_VERSION_NUM >= 0x071400
-    X(MAIL_RCPT),
-#endif
+    static const CurlConstant curlOptionIntegerArr[] = {
+    #if NODE_LIBCURL_VER_GE( 7, 24, 0 )
+        { "ACCEPTTIMEOUT_MS", CURLOPT_ACCEPTTIMEOUT_MS },
+    #endif
 
-#if LIBCURL_VERSION_NUM >= 0x071503
-    X(RESOLVE),
-#endif
+    #if NODE_LIBCURL_VER_GE( 7, 19, 0 )
+        { "ADDRESS_SCOPE", CURLOPT_ADDRESS_SCOPE },
+    #endif
 
-    X(HTTPPOST),
-    X(HTTPHEADER),
-#if LIBCURL_VERSION_NUM >= 0x072500
-    X(PROXYHEADER),
-#endif
-    X(QUOTE),
-    X(POSTQUOTE),
-    X(PREQUOTE),
-    X(TELNETOPTIONS)
-};
-#undef X
+        { "APPEND", CURLOPT_APPEND },
+        { "AUTOREFERER", CURLOPT_AUTOREFERER },
+        { "BUFFERSIZE", CURLOPT_BUFFERSIZE },
 
-#define X(name) {#name, CURLINFO_##name}
-Curl::CurlOption curlInfosLinkedList[] = {
-    X(SSL_ENGINES),
-    X(COOKIELIST)
-};
-#undef X
+    #if NODE_LIBCURL_VER_GE( 7, 19, 1 )
+        { "CERTINFO", CURLOPT_CERTINFO },
+    #endif
 
-#define X(name) {#name, CurlHttpPost::name}
-Curl::CurlOption curlHttpPostOptions[] = {
-    X(NAME),
-    X(FILE),
-    X(CONTENTS),
-    X(TYPE)
-};
-#undef X
+        { "CONNECTTIMEOUT", CURLOPT_CONNECTTIMEOUT },
+        { "CONNECTTIMEOUT_MS", CURLOPT_CONNECTTIMEOUT_MS },
+        { "CONNECT_ONLY", CURLOPT_CONNECT_ONLY },
+        { "COOKIESESSION", CURLOPT_COOKIESESSION },
+        { "CRLF", CURLOPT_CRLF },
+        { "DIRLISTONLY", CURLOPT_DIRLISTONLY },
+        { "DNS_CACHE_TIMEOUT", CURLOPT_DNS_CACHE_TIMEOUT },
+        { "DNS_USE_GLOBAL_CACHE", CURLOPT_DNS_USE_GLOBAL_CACHE },
 
-//Make string all uppercase
-void stringToUpper( std::string &s )
-{
-    for( unsigned int i = 0; i < s.length(); i++ )
-        s[i] = toupper( s[i] );
-}
+    #if NODE_LIBCURL_VER_GE( 7, 36, 0 )
+        { "EXPECT_100_TIMEOUT_MS", CURLOPT_EXPECT_100_TIMEOUT_MS },
+    #endif
 
-curlMapId optionsMapId;
-curlMapName optionsMapName;
-curlMapId infosMapId;
-curlMapName infosMapName;
+        { "FAILONERROR", CURLOPT_FAILONERROR },
+        { "FILETIME", CURLOPT_FILETIME },
+        { "FOLLOWLOCATION", CURLOPT_FOLLOWLOCATION },
+        { "FORBID_REUSE", CURLOPT_FORBID_REUSE },
+        { "FRESH_CONNECT", CURLOPT_FRESH_CONNECT },
+        { "FTP_CREATE_MISSING_DIRS", CURLOPT_FTP_CREATE_MISSING_DIRS },
+        { "FTP_RESPONSE_TIMEOUT", CURLOPT_FTP_RESPONSE_TIMEOUT },
+        { "FTP_SKIP_PASV_IP", CURLOPT_FTP_SKIP_PASV_IP },
+        { "FTP_USE_EPRT", CURLOPT_FTP_USE_EPRT },
+        { "FTP_USE_EPSV", CURLOPT_FTP_USE_EPSV },
 
-CURLM  *Curl::curlMulti      = NULL;
-int     Curl::count          = 0;
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "FTP_USE_PRET", CURLOPT_FTP_USE_PRET },
+    #endif
 
-std::map< CURL*, Curl* > Curl::curls;
-uv_timer_t Curl::curlTimeout;
+        { "HEADER", CURLOPT_HEADER },
 
-//those need to be reset if we ever move outside of the global scope
-Nan::Persistent<v8::Function> Curl::constructor;
-Nan::Persistent<v8::String> Curl::onDataCbSymbol;
-Nan::Persistent<v8::String> Curl::onHeaderCbSymbol;
-Nan::Persistent<v8::String> Curl::onEndCbSymbol;
-Nan::Persistent<v8::String> Curl::onErrorCbSymbol;
+    #if NODE_LIBCURL_VER_GE( 7, 37, 0 )
+        { "HEADEROPT", CURLOPT_HEADEROPT },
+    #endif
 
-// Add Curl constructor to the module exports
-NAN_MODULE_INIT( Curl::Initialize )
-{
-    Nan::HandleScope scope;
+        { "HTTPAUTH", CURLOPT_HTTPAUTH },
+        { "HTTPGET", CURLOPT_HTTPGET },
+        { "HTTPPROXYTUNNEL", CURLOPT_HTTPPROXYTUNNEL },
+        { "HTTP_CONTENT_DECODING", CURLOPT_HTTP_CONTENT_DECODING },
+        { "HTTP_TRANSFER_DECODING", CURLOPT_HTTP_TRANSFER_DECODING },
+        { "HTTP_VERSION", CURLOPT_HTTP_VERSION },
+        { "IGNORE_CONTENT_LENGTH", CURLOPT_IGNORE_CONTENT_LENGTH },
+        { "INFILESIZE", CURLOPT_INFILESIZE },
+        { "LOCALPORT", CURLOPT_LOCALPORT },
+        { "LOCALPORTRANGE", CURLOPT_LOCALPORTRANGE },
+        { "LOW_SPEED_LIMIT", CURLOPT_LOW_SPEED_LIMIT },
+        { "LOW_SPEED_TIME", CURLOPT_LOW_SPEED_TIME },
+        { "MAXCONNECTS", CURLOPT_MAXCONNECTS },
+        { "MAXFILESIZE", CURLOPT_MAXFILESIZE },
+        { "MAXREDIRS", CURLOPT_MAXREDIRS },
+        { "NETRC", CURLOPT_NETRC },
+        { "NEW_DIRECTORY_PERMS", CURLOPT_NEW_DIRECTORY_PERMS },
+        { "NEW_FILE_PERMS", CURLOPT_NEW_FILE_PERMS },
+        { "NOBODY", CURLOPT_NOBODY },
+        { "NOPROGRESS", CURLOPT_NOPROGRESS },
+        { "NOSIGNAL", CURLOPT_NOSIGNAL },
+        { "OBSOLETE72", CURLOPT_OBSOLETE72 },
 
-    //*** Initialize cURL ***//
-    CURLcode code = curl_global_init( CURL_GLOBAL_ALL );
-    if ( code != CURLE_OK ) {
-        Curl::ThrowError( "curl_global_init failed!" );
-        return;
+    #if NODE_LIBCURL_VER_GE( 7, 43, 0 )
+        { "PIPEWAIT", CURLOPT_PIPEWAIT },
+    #endif
+
+        { "PORT", CURLOPT_PORT },
+        { "POST", CURLOPT_POST },
+        { "POSTFIELDSIZE", CURLOPT_POSTFIELDSIZE }, //@TODO ADD POSTFIELDSIZE_LARGE
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 1 )
+        { "POSTREDIR", CURLOPT_POSTREDIR },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 4 )
+        { "PROTOCOLS", CURLOPT_PROTOCOLS },
+    #endif
+
+        { "PROXYAUTH", CURLOPT_PROXYAUTH },
+        { "PROXYPORT", CURLOPT_PROXYPORT },
+        { "PROXYTYPE", CURLOPT_PROXYTYPE },
+        { "PROXY_TRANSFER_MODE", CURLOPT_PROXY_TRANSFER_MODE },
+        { "PUT", CURLOPT_PUT },
+        { "READDATA", CURLOPT_READDATA },
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 4 )
+        { "REDIR_PROTOCOLS", CURLOPT_REDIR_PROTOCOLS },
+    #endif
+
+        { "RESUME_FROM", CURLOPT_RESUME_FROM }, //@TODO ADD RESUME_FROM_LARGE
+
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "RTSP_CLIENT_CSEQ", CURLOPT_RTSP_CLIENT_CSEQ },
+        { "RTSP_SERVER_CSEQ", CURLOPT_RTSP_SERVER_CSEQ },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 31, 0 )
+        { "SASL_IR", CURLOPT_SASL_IR },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 4 )
+        { "SOCKS5_GSSAPI_NEC", CURLOPT_SOCKS5_GSSAPI_NEC },
+    #endif
+
+        { "SSLENGINE_DEFAULT", CURLOPT_SSLENGINE_DEFAULT },
+
+    #if NODE_LIBCURL_VER_GE( 7, 36, 0 )
+        { "SSL_ENABLE_ALPN", CURLOPT_SSL_ENABLE_ALPN },
+        { "SSL_ENABLE_NPN", CURLOPT_SSL_ENABLE_NPN },
+    #endif
+
+        { "SSL_SESSIONID_CACHE", CURLOPT_SSL_SESSIONID_CACHE },
+        { "SSL_VERIFYHOST", CURLOPT_SSL_VERIFYHOST },
+        { "SSL_VERIFYPEER", CURLOPT_SSL_VERIFYPEER },
+
+    #if NODE_LIBCURL_VER_GE( 7, 41, 0 )
+        { "SSL_VERIFYSTATUS", CURLOPT_SSL_VERIFYSTATUS },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 25, 0 )
+        { "TCP_KEEPALIVE", CURLOPT_TCP_KEEPALIVE },
+        { "TCP_KEEPIDLE", CURLOPT_TCP_KEEPIDLE },
+        { "TCP_KEEPINTVL", CURLOPT_TCP_KEEPINTVL },
+    #endif
+
+        { "TCP_NODELAY", CURLOPT_TCP_NODELAY },
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 4 )
+        { "TFTP_BLKSIZE", CURLOPT_TFTP_BLKSIZE },
+    #endif
+
+        { "TIMECONDITION", CURLOPT_TIMECONDITION },
+        { "TIMEOUT", CURLOPT_TIMEOUT },
+        { "TIMEOUT_MS", CURLOPT_TIMEOUT_MS },
+        { "TIMEVALUE", CURLOPT_TIMEVALUE },
+        { "TRANSFERTEXT", CURLOPT_TRANSFERTEXT },
+
+    #if NODE_LIBCURL_VER_GE( 7, 21, 6 )
+        { "TRANSFER_ENCODING", CURLOPT_TRANSFER_ENCODING },
+    #endif
+
+        { "UNRESTRICTED_AUTH", CURLOPT_UNRESTRICTED_AUTH },
+        { "UPLOAD", CURLOPT_UPLOAD },
+        { "VERBOSE", CURLOPT_VERBOSE },
+
+    #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
+        { "WILDCARDMATCH", CURLOPT_WILDCARDMATCH },
+    #endif
+    };
+
+    static const CurlConstant curlOptionStringArr[] = {
+    #if NODE_LIBCURL_VER_GE( 7, 21, 6 )
+        { "ACCEPT_ENCODING", CURLOPT_ACCEPT_ENCODING },
+    #endif
+
+        { "CAINFO", CURLOPT_CAINFO },
+        { "CAPATH", CURLOPT_CAPATH },
+        { "COOKIE", CURLOPT_COOKIE },
+        { "COOKIEFILE", CURLOPT_COOKIEFILE },
+        { "COOKIEJAR", CURLOPT_COOKIEJAR },
+        { "COOKIELIST", CURLOPT_COOKIELIST },
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 0 )
+        { "CRLFILE", CURLOPT_CRLFILE },
+    #endif
+
+        { "CUSTOMREQUEST", CURLOPT_CUSTOMREQUEST },
+
+    #if NODE_LIBCURL_VER_GE( 7, 45, 0 )
+        { "DEFAULT_PROTOCOL", CURLOPT_DEFAULT_PROTOCOL },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 33, 0 )
+        { "DNS_INTERFACE", CURLOPT_DNS_INTERFACE },
+        { "DNS_LOCAL_IP4", CURLOPT_DNS_LOCAL_IP4 },
+        { "DNS_LOCAL_IP6", CURLOPT_DNS_LOCAL_IP6 },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 24, 0 )
+        { "DNS_SERVERS", CURLOPT_DNS_SERVERS },
+    #endif
+
+        { "EGDSOCKET", CURLOPT_EGDSOCKET },
+        { "ENCODING", CURLOPT_ENCODING }, //should use ACCEPT_ENCODING
+        { "FTPPORT", CURLOPT_FTPPORT },
+        { "FTP_ACCOUNT", CURLOPT_FTP_ACCOUNT },
+        { "FTP_ALTERNATIVE_TO_USER", CURLOPT_FTP_ALTERNATIVE_TO_USER },
+        { "HTTP200ALIASES", CURLOPT_HTTP200ALIASES },
+        { "INTERFACE", CURLOPT_INTERFACE },
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 0 )
+        { "ISSUERCERT", CURLOPT_ISSUERCERT },
+    #endif
+
+        { "KEYPASSWD", CURLOPT_KEYPASSWD },
+        { "KRBLEVEL", CURLOPT_KRBLEVEL },
+
+    #if NODE_LIBCURL_VER_GE( 7, 34, 0 )
+        { "LOGIN_OPTIONS", CURLOPT_LOGIN_OPTIONS },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 25, 0 )
+        { "MAIL_AUTH", CURLOPT_MAIL_AUTH },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "MAIL_FROM", CURLOPT_MAIL_FROM },
+        { "MAIL_RCPT", CURLOPT_MAIL_RCPT },
+    #endif
+
+        { "NETRC_FILE", CURLOPT_NETRC_FILE },
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 4 )
+        { "NOPROXY", CURLOPT_NOPROXY },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 1 )
+        { "PASSWORD", CURLOPT_PASSWORD },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 39, 0 )
+        { "PINNEDPUBLICKEY", CURLOPT_PINNEDPUBLICKEY },
+    #endif
+
+        { "POSTFIELDS", CURLOPT_POSTFIELDS },
+        { "POSTQUOTE", CURLOPT_POSTQUOTE },
+        { "PREQUOTE", CURLOPT_PREQUOTE },
+        { "PROXY", CURLOPT_PROXY },
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 1 )
+        { "PROXYPASSWORD", CURLOPT_PROXYPASSWORD },
+        { "PROXYUSERNAME", CURLOPT_PROXYUSERNAME },
+    #endif
+
+        { "PROXYUSERPWD", CURLOPT_PROXYUSERPWD },
+
+    #if NODE_LIBCURL_VER_GE( 7, 43, 0 )
+        { "PROXY_SERVICE_NAME", CURLOPT_PROXY_SERVICE_NAME },
+    #endif
+
+        { "QUOTE", CURLOPT_QUOTE },
+        { "RANDOM_FILE", CURLOPT_RANDOM_FILE },
+        { "RANGE", CURLOPT_RANGE },
+        { "REFERER", CURLOPT_REFERER },
+
+    #if NODE_LIBCURL_VER_GE( 7, 21, 3 )
+        { "RESOLVE", CURLOPT_RESOLVE },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "RTSP_SESSION_ID", CURLOPT_RTSP_SESSION_ID },
+        { "RTSP_STREAM_URI", CURLOPT_RTSP_STREAM_URI },
+        { "RTSP_TRANSPORT", CURLOPT_RTSP_TRANSPORT },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 43, 0 )
+        { "SERVICE_NAME", CURLOPT_SERVICE_NAME },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 4 )
+        { "SOCKS5_GSSAPI_SERVICE", CURLOPT_SOCKS5_GSSAPI_SERVICE },
+    #endif
+
+        { "SSH_HOST_PUBLIC_KEY_MD5", CURLOPT_SSH_HOST_PUBLIC_KEY_MD5 },
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 6 )
+        { "SSH_KNOWNHOSTS", CURLOPT_SSH_KNOWNHOSTS },
+    #endif
+
+        { "SSH_PRIVATE_KEYFILE", CURLOPT_SSH_PRIVATE_KEYFILE },
+        { "SSH_PUBLIC_KEYFILE", CURLOPT_SSH_PUBLIC_KEYFILE },
+        { "SSLCERT", CURLOPT_SSLCERT },
+        { "SSLCERTTYPE", CURLOPT_SSLCERTTYPE },
+        { "SSLENGINE", CURLOPT_SSLENGINE },
+        { "SSLKEY", CURLOPT_SSLKEY },
+        { "SSLKEYTYPE", CURLOPT_SSLKEYTYPE },
+        { "SSL_CIPHER_LIST", CURLOPT_SSL_CIPHER_LIST },
+        { "TELNETOPTIONS", CURLOPT_TELNETOPTIONS },
+
+    #if NODE_LIBCURL_VER_GE( 7, 21, 4 )
+        { "TLSAUTH_PASSWORD", CURLOPT_TLSAUTH_PASSWORD },
+        { "TLSAUTH_TYPE", CURLOPT_TLSAUTH_TYPE },
+        { "TLSAUTH_USERNAME", CURLOPT_TLSAUTH_USERNAME },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 40, 0 )
+        { "UNIX_SOCKET_PATH", CURLOPT_UNIX_SOCKET_PATH },
+    #endif
+
+        { "URL", CURLOPT_URL },
+        { "USERAGENT", CURLOPT_USERAGENT },
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 1 )
+        { "USERNAME", CURLOPT_USERNAME },
+    #endif
+
+        { "USERPWD", CURLOPT_USERPWD },
+
+    #if NODE_LIBCURL_VER_GE( 7, 21, 4 )
+        { "XOAUTH2_BEARER", CURLOPT_XOAUTH2_BEARER },
+    #endif
+    };
+
+    static const CurlConstant curlOptionFunctionArr[] = {
+        { "DEBUGFUNCTION", CURLOPT_DEBUGFUNCTION },
+        { "PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION },
+
+    #if NODE_LIBCURL_VER_GE( 7, 32, 0 )
+        { "XFERINFOFUNCTION", CURLOPT_XFERINFOFUNCTION },
+    #endif
+    };
+
+    static const CurlConstant curlOptionLinkedListArr[] = {
+        { "HTTP200ALIASES", CURLOPT_HTTP200ALIASES },
+        { "HTTPHEADER", CURLOPT_HTTPHEADER },
+        { "HTTPPOST", CURLOPT_HTTPPOST },
+
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "MAIL_RCPT", CURLOPT_MAIL_RCPT },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 37, 0 )
+        { "PROXYHEADER", CURLOPT_PROXYHEADER },
+    #endif
+
+        { "POSTQUOTE", CURLOPT_POSTQUOTE },
+        { "PREQUOTE", CURLOPT_PREQUOTE },
+        { "QUOTE", CURLOPT_QUOTE },
+
+    #if NODE_LIBCURL_VER_GE( 7, 21, 3 )
+        { "RESOLVE", CURLOPT_RESOLVE },
+    #endif
+
+        { "TELNETOPTIONS", CURLOPT_TELNETOPTIONS },
+    };
+
+    static const CurlConstant curlOptionHttpPostArr[] = {
+        { "NAME", CurlHttpPost::NAME },
+        { "FILE", CurlHttpPost::FILE },
+        { "CONTENTS", CurlHttpPost::CONTENTS },
+        { "TYPE", CurlHttpPost::TYPE },
+    };
+
+    static const CurlConstant curlOptionSpecificArr[] = {
+        { "SHARE", CURLOPT_SHARE }
+    };
+
+    static const CurlConstant curlMultiOptionIntegerArr[] = {
+    #if NODE_LIBCURL_VER_GE( 7, 30, 0 )
+        { "CHUNK_LENGTH_PENALTY_SIZE", CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE },
+        { "CONTENT_LENGTH_PENALTY_SIZE", CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE },
+        { "MAX_HOST_CONNECTIONS", CURLMOPT_MAX_HOST_CONNECTIONS },
+        { "MAX_PIPELINE_LENGTH", CURLMOPT_MAX_PIPELINE_LENGTH },
+        { "MAX_TOTAL_CONNECTIONS", CURLMOPT_MAX_TOTAL_CONNECTIONS },
+    #endif
+        { "MAXCONNECTS", CURLMOPT_MAXCONNECTS },
+        { "PIPELINING", CURLMOPT_PIPELINING },
+    };
+
+    static const CurlConstant curlMultiOptionStringArrayArr[] = {
+    #if NODE_LIBCURL_VER_GE( 7, 30, 0 )
+        { "PIPELINING_SERVER_BL", CURLMOPT_PIPELINING_SERVER_BL },
+        { "PIPELINING_SITE_BL", CURLMOPT_PIPELINING_SITE_BL },
+    #endif
+    };
+
+    static const CurlConstant curlInfoStringArr[] = {
+        { "CONTENT_TYPE", CURLINFO_CONTENT_TYPE },
+        { "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL },
+        { "FTP_ENTRY_PATH", CURLINFO_FTP_ENTRY_PATH },
+
+    #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
+        { "LOCAL_IP", CURLINFO_LOCAL_IP },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 19, 0 )
+        { "PRIMARY_IP", CURLINFO_PRIMARY_IP },
+    #endif
+
+        { "REDIRECT_URL", CURLINFO_REDIRECT_URL },
+
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "RTSP_SESSION_ID", CURLINFO_RTSP_SESSION_ID },
+    #endif
+    };
+    static const CurlConstant curlInfoDoubleArr[] = {
+    #if NODE_LIBCURL_VER_GE( 7, 19, 0 )
+        { "APPCONNECT_TIME", CURLINFO_APPCONNECT_TIME },
+    #endif
+        { "CONNECT_TIME", CURLINFO_CONNECT_TIME },
+        { "CONTENT_LENGTH_DOWNLOAD", CURLINFO_CONTENT_LENGTH_DOWNLOAD },
+        { "CONTENT_LENGTH_UPLOAD", CURLINFO_CONTENT_LENGTH_UPLOAD },
+        { "NAMELOOKUP_TIME", CURLINFO_NAMELOOKUP_TIME },
+        { "PRETRANSFER_TIME", CURLINFO_PRETRANSFER_TIME },
+        { "REDIRECT_TIME", CURLINFO_REDIRECT_TIME },
+        { "SIZE_DOWNLOAD", CURLINFO_SIZE_DOWNLOAD },
+        { "SIZE_UPLOAD", CURLINFO_SIZE_UPLOAD },
+        { "SPEED_DOWNLOAD", CURLINFO_SPEED_DOWNLOAD },
+        { "SPEED_UPLOAD", CURLINFO_SPEED_UPLOAD },
+        { "STARTTRANSFER_TIME", CURLINFO_STARTTRANSFER_TIME },
+        { "TOTAL_TIME", CURLINFO_TOTAL_TIME },
+    };
+
+    static const CurlConstant curlInfoIntegerArr[] = {
+    #if NODE_LIBCURL_VER_GE( 7, 19, 4 )
+        { "CONDITION_UNMET", CURLINFO_CONDITION_UNMET },
+    #endif
+
+        { "FILETIME", CURLINFO_FILETIME },
+        { "HEADER_SIZE", CURLINFO_HEADER_SIZE },
+        { "HTTPAUTH_AVAIL", CURLINFO_HTTPAUTH_AVAIL },
+        { "HTTP_CONNECTCODE", CURLINFO_HTTP_CONNECTCODE },
+        { "LASTSOCKET", CURLINFO_LASTSOCKET }, //deprecated since 7.45.0
+
+    #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
+        { "LOCAL_PORT", CURLINFO_LOCAL_PORT },
+    #endif
+
+        { "NUM_CONNECTS", CURLINFO_NUM_CONNECTS },
+        { "OS_ERRNO", CURLINFO_OS_ERRNO },
+
+    #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
+        { "PRIMARY_PORT", CURLINFO_PRIMARY_PORT },
+    #endif
+
+        { "PROXYAUTH_AVAIL", CURLINFO_PROXYAUTH_AVAIL },
+        { "REDIRECT_COUNT", CURLINFO_REDIRECT_COUNT },
+        { "REQUEST_SIZE", CURLINFO_REQUEST_SIZE },
+        { "RESPONSE_CODE", CURLINFO_RESPONSE_CODE },
+
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "RTSP_CLIENT_CSEQ", CURLINFO_RTSP_CLIENT_CSEQ },
+        { "RTSP_CSEQ_RECV", CURLINFO_RTSP_CSEQ_RECV },
+        { "RTSP_SERVER_CSEQ", CURLINFO_RTSP_SERVER_CSEQ },
+    #endif
+
+        { "SSL_VERIFYRESULT", CURLINFO_SSL_VERIFYRESULT },
+    };
+
+    static const CurlConstant curlInfoLinkedListArr[] = {
+        { "SSL_ENGINES", CURLINFO_SSL_ENGINES },
+        { "COOKIELIST", CURLINFO_COOKIELIST },
+    };
+
+    static const CurlConstant curlCodeArr[] = {
+    #if NODE_LIBCURL_VER_GE( 7, 32, 1 )
+        { "CURLM_ADDED_ALREADY", CURLM_ADDED_ALREADY },
+    #endif
+        { "CURLM_BAD_EASY_HANDLE", CURLM_BAD_EASY_HANDLE },
+        { "CURLM_BAD_HANDLE", CURLM_BAD_HANDLE },
+        { "CURLM_BAD_SOCKET", CURLM_BAD_SOCKET },
+        { "CURLM_CALL_MULTI_PERFORM", CURLM_CALL_MULTI_PERFORM },
+        { "CURLM_CALL_MULTI_SOCKET", CURLM_CALL_MULTI_SOCKET },
+        { "CURLM_INTERNAL_ERROR", CURLM_INTERNAL_ERROR },
+        { "CURLM_OK", CURLM_OK },
+        { "CURLM_OUT_OF_MEMORY", CURLM_OUT_OF_MEMORY },
+        { "CURLM_UNKNOWN_OPTION", CURLM_UNKNOWN_OPTION },
+        { "CURLE_ABORTED_BY_CALLBACK", CURLE_ABORTED_BY_CALLBACK },
+    #if NODE_LIBCURL_VER_GE( 7, 18, 2 )
+        { "CURLE_AGAIN", CURLE_AGAIN },
+    #endif
+        { "CURLE_ALREADY_COMPLETE", CURLE_ALREADY_COMPLETE },
+        { "CURLE_BAD_CALLING_ORDER", CURLE_BAD_CALLING_ORDER },
+        { "CURLE_BAD_CONTENT_ENCODING", CURLE_BAD_CONTENT_ENCODING },
+        { "CURLE_BAD_DOWNLOAD_RESUME", CURLE_BAD_DOWNLOAD_RESUME },
+        { "CURLE_BAD_FUNCTION_ARGUMENT", CURLE_BAD_FUNCTION_ARGUMENT },
+        { "CURLE_BAD_PASSWORD_ENTERED", CURLE_BAD_PASSWORD_ENTERED },
+    #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
+        { "CURLE_CHUNK_FAILED", CURLE_CHUNK_FAILED },
+    #endif
+        { "CURLE_CONV_FAILED", CURLE_CONV_FAILED },
+        { "CURLE_CONV_REQD", CURLE_CONV_REQD },
+        { "CURLE_COULDNT_CONNECT", CURLE_COULDNT_CONNECT },
+        { "CURLE_COULDNT_RESOLVE_HOST", CURLE_COULDNT_RESOLVE_HOST },
+        { "CURLE_COULDNT_RESOLVE_PROXY", CURLE_COULDNT_RESOLVE_PROXY },
+        { "CURLE_FAILED_INIT", CURLE_FAILED_INIT },
+        { "CURLE_FILESIZE_EXCEEDED", CURLE_FILESIZE_EXCEEDED },
+        { "CURLE_FILE_COULDNT_READ_FILE", CURLE_FILE_COULDNT_READ_FILE },
+    #if NODE_LIBCURL_VER_GE( 7, 24, 0 )
+        { "CURLE_FTP_ACCEPT_FAILED", CURLE_FTP_ACCEPT_FAILED },
+        { "CURLE_FTP_ACCEPT_TIMEOUT", CURLE_FTP_ACCEPT_TIMEOUT },
+    #endif
+        { "CURLE_FTP_ACCESS_DENIED", CURLE_FTP_ACCESS_DENIED },
+        { "CURLE_FTP_BAD_DOWNLOAD_RESUME", CURLE_FTP_BAD_DOWNLOAD_RESUME },
+    #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
+        { "CURLE_FTP_BAD_FILE_LIST", CURLE_FTP_BAD_FILE_LIST },
+    #endif
+        { "CURLE_FTP_CANT_GET_HOST", CURLE_FTP_CANT_GET_HOST },
+        { "CURLE_FTP_CANT_RECONNECT", CURLE_FTP_CANT_RECONNECT },
+        { "CURLE_FTP_COULDNT_GET_SIZE", CURLE_FTP_COULDNT_GET_SIZE },
+        { "CURLE_FTP_COULDNT_RETR_FILE", CURLE_FTP_COULDNT_RETR_FILE },
+        { "CURLE_FTP_COULDNT_SET_ASCII", CURLE_FTP_COULDNT_SET_ASCII },
+        { "CURLE_FTP_COULDNT_SET_BINARY", CURLE_FTP_COULDNT_SET_BINARY },
+        { "CURLE_FTP_COULDNT_SET_TYPE", CURLE_FTP_COULDNT_SET_TYPE },
+        { "CURLE_FTP_COULDNT_STOR_FILE", CURLE_FTP_COULDNT_STOR_FILE },
+        { "CURLE_FTP_COULDNT_USE_REST", CURLE_FTP_COULDNT_USE_REST },
+        { "CURLE_FTP_PARTIAL_FILE", CURLE_FTP_PARTIAL_FILE },
+        { "CURLE_FTP_PORT_FAILED", CURLE_FTP_PORT_FAILED },
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "CURLE_FTP_PRET_FAILED", CURLE_FTP_PRET_FAILED },
+    #endif
+        { "CURLE_FTP_QUOTE_ERROR", CURLE_FTP_QUOTE_ERROR },
+        { "CURLE_FTP_SSL_FAILED", CURLE_FTP_SSL_FAILED },
+        { "CURLE_FTP_USER_PASSWORD_INCORRECT", CURLE_FTP_USER_PASSWORD_INCORRECT },
+        { "CURLE_FTP_WEIRD_227_FORMAT", CURLE_FTP_WEIRD_227_FORMAT },
+        { "CURLE_FTP_WEIRD_PASS_REPLY", CURLE_FTP_WEIRD_PASS_REPLY },
+        { "CURLE_FTP_WEIRD_PASV_REPLY", CURLE_FTP_WEIRD_PASV_REPLY },
+        { "CURLE_FTP_WEIRD_SERVER_REPLY", CURLE_FTP_WEIRD_SERVER_REPLY },
+        { "CURLE_FTP_WEIRD_USER_REPLY", CURLE_FTP_WEIRD_USER_REPLY },
+        { "CURLE_FTP_WRITE_ERROR", CURLE_FTP_WRITE_ERROR },
+        { "CURLE_FUNCTION_NOT_FOUND", CURLE_FUNCTION_NOT_FOUND },
+        { "CURLE_GOT_NOTHING", CURLE_GOT_NOTHING },
+    #if NODE_LIBCURL_VER_GE( 7, 38, 0 )
+        { "CURLE_HTTP2", CURLE_HTTP2 },
+    #endif
+        { "CURLE_HTTP_NOT_FOUND", CURLE_HTTP_NOT_FOUND },
+        { "CURLE_HTTP_PORT_FAILED", CURLE_HTTP_PORT_FAILED },
+        { "CURLE_HTTP_POST_ERROR", CURLE_HTTP_POST_ERROR },
+        { "CURLE_HTTP_RANGE_ERROR", CURLE_HTTP_RANGE_ERROR },
+        { "CURLE_HTTP_RETURNED_ERROR", CURLE_HTTP_RETURNED_ERROR },
+        { "CURLE_INTERFACE_FAILED", CURLE_INTERFACE_FAILED },
+        { "CURLE_LDAP_CANNOT_BIND", CURLE_LDAP_CANNOT_BIND },
+        { "CURLE_LDAP_INVALID_URL", CURLE_LDAP_INVALID_URL },
+        { "CURLE_LDAP_SEARCH_FAILED", CURLE_LDAP_SEARCH_FAILED },
+        { "CURLE_LIBRARY_NOT_FOUND", CURLE_LIBRARY_NOT_FOUND },
+        { "CURLE_LOGIN_DENIED", CURLE_LOGIN_DENIED },
+        { "CURLE_MALFORMAT_USER", CURLE_MALFORMAT_USER },
+    #if NODE_LIBCURL_VER_GE( 7, 21, 5 )
+        { "CURLE_NOT_BUILT_IN", CURLE_NOT_BUILT_IN },
+    #endif
+    #if NODE_LIBCURL_VER_GE( 7, 30, 0 )
+        { "CURLE_NO_CONNECTION_AVAILABLE", CURLE_NO_CONNECTION_AVAILABLE },
+    #endif
+        { "CURLE_OK", CURLE_OK },
+        { "CURLE_OPERATION_TIMEDOUT", CURLE_OPERATION_TIMEDOUT },
+        { "CURLE_OPERATION_TIMEOUTED", CURLE_OPERATION_TIMEOUTED },
+        { "CURLE_OUT_OF_MEMORY", CURLE_OUT_OF_MEMORY },
+        { "CURLE_PARTIAL_FILE", CURLE_PARTIAL_FILE },
+        { "CURLE_PEER_FAILED_VERIFICATION", CURLE_PEER_FAILED_VERIFICATION },
+        { "CURLE_QUOTE_ERROR", CURLE_QUOTE_ERROR },
+        { "CURLE_RANGE_ERROR", CURLE_RANGE_ERROR },
+        { "CURLE_READ_ERROR", CURLE_READ_ERROR },
+        { "CURLE_RECV_ERROR", CURLE_RECV_ERROR },
+        { "CURLE_REMOTE_ACCESS_DENIED", CURLE_REMOTE_ACCESS_DENIED },
+        { "CURLE_REMOTE_DISK_FULL", CURLE_REMOTE_DISK_FULL },
+        { "CURLE_REMOTE_FILE_EXISTS", CURLE_REMOTE_FILE_EXISTS },
+        { "CURLE_REMOTE_FILE_NOT_FOUND", CURLE_REMOTE_FILE_NOT_FOUND },
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "CURLE_RTSP_CSEQ_ERROR", CURLE_RTSP_CSEQ_ERROR },
+        { "CURLE_RTSP_SESSION_ERROR", CURLE_RTSP_SESSION_ERROR },
+    #endif
+        { "CURLE_SEND_ERROR", CURLE_SEND_ERROR },
+        { "CURLE_SEND_FAIL_REWIND", CURLE_SEND_FAIL_REWIND },
+        { "CURLE_SHARE_IN_USE", CURLE_SHARE_IN_USE },
+        { "CURLE_SSH", CURLE_SSH },
+        { "CURLE_SSL_CACERT", CURLE_SSL_CACERT },
+        { "CURLE_SSL_CACERT_BADFILE", CURLE_SSL_CACERT_BADFILE },
+        { "CURLE_SSL_CERTPROBLEM", CURLE_SSL_CERTPROBLEM },
+        { "CURLE_SSL_CIPHER", CURLE_SSL_CIPHER },
+        { "CURLE_SSL_CONNECT_ERROR", CURLE_SSL_CONNECT_ERROR },
+    #if NODE_LIBCURL_VER_GE( 7, 19, 0 )
+        { "CURLE_SSL_CRL_BADFILE", CURLE_SSL_CRL_BADFILE },
+    #endif
+        { "CURLE_SSL_ENGINE_INITFAILED", CURLE_SSL_ENGINE_INITFAILED },
+        { "CURLE_SSL_ENGINE_NOTFOUND", CURLE_SSL_ENGINE_NOTFOUND },
+        { "CURLE_SSL_ENGINE_SETFAILED", CURLE_SSL_ENGINE_SETFAILED },
+    #if NODE_LIBCURL_VER_GE( 7, 41, 0 )
+        { "CURLE_SSL_INVALIDCERTSTATUS", CURLE_SSL_INVALIDCERTSTATUS },
+    #endif
+    #if NODE_LIBCURL_VER_GE( 7, 19, 0 )
+        { "CURLE_SSL_ISSUER_ERROR", CURLE_SSL_ISSUER_ERROR },
+    #endif
+        { "CURLE_SSL_PEER_CERTIFICATE", CURLE_SSL_PEER_CERTIFICATE },
+
+    #if NODE_LIBCURL_VER_GE( 7, 39, 0 )
+        { "CURLE_SSL_PINNEDPUBKEYNOTMATCH", CURLE_SSL_PINNEDPUBKEYNOTMATCH },
+    #endif
+
+        { "CURLE_SSL_SHUTDOWN_FAILED", CURLE_SSL_SHUTDOWN_FAILED },
+        { "CURLE_TELNET_OPTION_SYNTAX", CURLE_TELNET_OPTION_SYNTAX },
+        { "CURLE_TFTP_DISKFULL", CURLE_TFTP_DISKFULL },
+        { "CURLE_TFTP_EXISTS", CURLE_TFTP_EXISTS },
+        { "CURLE_TFTP_ILLEGAL", CURLE_TFTP_ILLEGAL },
+        { "CURLE_TFTP_NOSUCHUSER", CURLE_TFTP_NOSUCHUSER },
+        { "CURLE_TFTP_NOTFOUND", CURLE_TFTP_NOTFOUND },
+        { "CURLE_TFTP_PERM", CURLE_TFTP_PERM },
+        { "CURLE_TFTP_UNKNOWNID", CURLE_TFTP_UNKNOWNID },
+        { "CURLE_TOO_MANY_REDIRECTS", CURLE_TOO_MANY_REDIRECTS },
+
+    #if NODE_LIBCURL_VER_GE( 7, 21, 5 )
+        { "CURLE_UNKNOWN_OPTION", CURLE_UNKNOWN_OPTION },
+    #endif
+
+        { "CURLE_UNKNOWN_TELNET_OPTION", CURLE_UNKNOWN_TELNET_OPTION },
+        { "CURLE_UNSUPPORTED_PROTOCOL", CURLE_UNSUPPORTED_PROTOCOL },
+        { "CURLE_UPLOAD_FAILED", CURLE_UPLOAD_FAILED },
+        { "CURLE_URL_MALFORMAT", CURLE_URL_MALFORMAT },
+        { "CURLE_URL_MALFORMAT_USER", CURLE_URL_MALFORMAT_USER },
+        { "CURLE_USE_SSL_FAILED", CURLE_USE_SSL_FAILED },
+        { "CURLE_WRITE_ERROR", CURLE_WRITE_ERROR },
+        { "CURLSHE_BAD_OPTION", CURLSHE_BAD_OPTION },
+        { "CURLSHE_INVALID", CURLSHE_INVALID },
+        { "CURLSHE_IN_USE", CURLSHE_IN_USE },
+        { "CURLSHE_NOMEM", CURLSHE_NOMEM },
+    #if NODE_LIBCURL_VER_GE( 7, 23, 0 )
+        { "CURLSHE_NOT_BUILT_IN", CURLSHE_NOT_BUILT_IN },
+    #endif
+        { "CURLSHE_OK", CURLSHE_OK },
+    };
+
+#define INIT_CURL_CONSTANT_VECTOR_FROM_ARR( arr ) std::vector<CurlConstant>( arr, (arr + sizeof( arr ) / sizeof( arr[0] )) )
+    const std::vector<CurlConstant> curlConstAuth = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstAuthArr );
+    const std::vector<CurlConstant> curlConstProtocol = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstProtocolArr );
+    const std::vector<CurlConstant> curlConstPause = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstPauseArr );
+    const std::vector<CurlConstant> curlConstHttp = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstHttpArr );
+    const std::vector<CurlConstant> curlConstHeader = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlConstHeaderArr );
+    const std::vector<CurlConstant> curlOptionInteger = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionIntegerArr );
+    const std::vector<CurlConstant> curlOptionString = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionStringArr );
+    const std::vector<CurlConstant> curlOptionFunction = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionFunctionArr );
+    const std::vector<CurlConstant> curlOptionLinkedList = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionLinkedListArr );
+    const std::vector<CurlConstant> curlOptionSpecific = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionSpecificArr );
+    const std::vector<CurlConstant> curlOptionHttpPost = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlOptionHttpPostArr );
+    const std::vector<CurlConstant> curlInfoString = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlInfoStringArr );
+    const std::vector<CurlConstant> curlInfoDouble = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlInfoDoubleArr );
+    const std::vector<CurlConstant> curlInfoInteger = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlInfoIntegerArr );
+    const std::vector<CurlConstant> curlInfoLinkedList = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlInfoLinkedListArr );
+    const std::vector<CurlConstant> curlMultiOptionInteger = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlMultiOptionIntegerArr );
+    const std::vector<CurlConstant> curlMultiOptionStringArray = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlMultiOptionStringArrayArr );
+    const std::vector<CurlConstant> curlCode = INIT_CURL_CONSTANT_VECTOR_FROM_ARR( curlCodeArr );
+#undef INIT_CURL_CONSTANT_VECTOR_FROM_ARR
+
+    static void ExportConstants( v8::Local<v8::Object> obj, const std::vector<NodeLibcurl::CurlConstant> &optionGroup )
+    {
+        Nan::HandleScope scope;
+
+        v8::PropertyAttribute attributes = static_cast<v8::PropertyAttribute>( v8::ReadOnly | v8::DontDelete );
+
+        for ( std::vector<NodeLibcurl::CurlConstant>::const_iterator it = optionGroup.begin(), end = optionGroup.end(); it != end; ++it ) {
+
+            obj->ForceSet(
+                Nan::New<v8::String>( it->name ).ToLocalChecked(),
+                Nan::New<v8::Integer>( it->value ),
+                attributes
+                );
+        }
     }
 
-    Curl::curlMulti = curl_multi_init();
-    if ( Curl::curlMulti == NULL ) {
-        Curl::ThrowError( "curl_multi_init failed!" );
-        return;
-    }
+    // Add Curl constructor to the module exports
+    NAN_MODULE_INIT( Initialize )
+    {
+        Nan::HandleScope scope;
 
-    //init uv timer to be used with HandleTimeout
-    int timerStatus = uv_timer_init( uv_default_loop(), &Curl::curlTimeout );
-    assert( timerStatus == 0 );
+        v8::Local<v8::Object> obj = Nan::New<v8::Object>();
 
-    //set curl_multi callbacks to use libuv
-    curl_multi_setopt( Curl::curlMulti, CURLMOPT_SOCKETFUNCTION, Curl::HandleSocket );
-    curl_multi_setopt( Curl::curlMulti, CURLMOPT_TIMERFUNCTION, Curl::HandleTimeout );
+        v8::PropertyAttribute attributes = static_cast<v8::PropertyAttribute>( v8::ReadOnly | v8::DontDelete );
 
-    //** Construct Curl js "class"
-    v8::Local<v8::FunctionTemplate> tmpl = Nan::New<v8::FunctionTemplate>( Curl::New );
-    tmpl->SetClassName( Nan::New( "Curl" ).ToLocalChecked() );
-    tmpl->InstanceTemplate()->SetInternalFieldCount( 1 );
+        // export options
+        v8::Local<v8::Object> optionsObj = Nan::New<v8::Object>();
+        ExportConstants( optionsObj, curlOptionString );
+        ExportConstants( optionsObj, curlOptionInteger );
+        ExportConstants( optionsObj, curlOptionFunction );
+        ExportConstants( optionsObj, curlOptionLinkedList );
+        ExportConstants( optionsObj, curlOptionSpecific );
 
-    // Export cURL Constants
-    v8::Local<v8::Object> optionsObj   = Nan::New<v8::Object>();
-    v8::Local<v8::Object> infosObj     = Nan::New<v8::Object>();
-    v8::Local<v8::Object> protocolsObj = Nan::New<v8::Object>();
-    v8::Local<v8::Object> pauseObj     = Nan::New<v8::Object>();
-    v8::Local<v8::Object> authObj      = Nan::New<v8::Object>();
-    v8::Local<v8::Object> httpObj      = Nan::New<v8::Object>();
+        // export infos
+        v8::Local<v8::Object> infosObj = Nan::New<v8::Object>();
+        ExportConstants( infosObj, curlInfoString );
+        ExportConstants( infosObj, curlInfoInteger );
+        ExportConstants( infosObj, curlInfoDouble );
+        ExportConstants( infosObj, curlInfoLinkedList );
 
-    Curl::ExportConstants( &optionsObj, curlOptionsString, sizeof( curlOptionsString ), &optionsMapId, &optionsMapName );
-    Curl::ExportConstants( &optionsObj, curlOptionsInteger, sizeof( curlOptionsInteger ), &optionsMapId, &optionsMapName );
-    Curl::ExportConstants( &optionsObj, curlOptionsFunction, sizeof( curlOptionsFunction ), &optionsMapId, &optionsMapName );
-    Curl::ExportConstants( &optionsObj, curlOptionsLinkedList, sizeof( curlOptionsLinkedList ), &optionsMapId, &optionsMapName );
+        // export pause consts
+        v8::Local<v8::Object> pauseObj = Nan::New<v8::Object>();
+        ExportConstants( pauseObj, curlConstPause );
 
-    Curl::ExportConstants( &infosObj, curlInfosString, sizeof( curlInfosString ), &infosMapId, &infosMapName );
-    Curl::ExportConstants( &infosObj, curlInfosInteger, sizeof( curlInfosInteger ), &infosMapId, &infosMapName );
-    Curl::ExportConstants( &infosObj, curlInfosDouble, sizeof( curlInfosDouble ), &infosMapId, &infosMapName );
-    Curl::ExportConstants( &infosObj, curlInfosLinkedList, sizeof( curlInfosLinkedList ), &infosMapId, &infosMapName );
+        // export auth consts
+        v8::Local<v8::Object> authObj = Nan::New<v8::Object>();
+        ExportConstants( authObj, curlConstAuth );
 
-    Curl::ExportConstants( &authObj, curlAuth, sizeof( curlAuth ), nullptr, nullptr );
-    Curl::ExportConstants( &httpObj, curlHttp, sizeof( curlHttp ), nullptr, nullptr );
-    Curl::ExportConstants( &pauseObj, curlPause, sizeof( curlPause ), nullptr, nullptr );
-    Curl::ExportConstants( &protocolsObj, curlProtocols, sizeof( curlProtocols ), nullptr, nullptr );
+        // export HTTP consts
+        v8::Local<v8::Object> httpObj = Nan::New<v8::Object>();
+        ExportConstants( httpObj, curlConstHttp );
 
-#if LIBCURL_VERSION_NUM >= 0x072500
-    v8::Local<v8::Object> headerObj      = Nan::New<v8::Object>();
-    Curl::ExportConstants( &headerObj, curlHeader, sizeof( curlHeader ), nullptr, nullptr );
+#if NODE_LIBCURL_VER_GE( 7, 19, 4 )
+        // export proto consts
+        v8::Local<v8::Object> protocolsObj = Nan::New<v8::Object>();
+        ExportConstants( protocolsObj, curlConstProtocol );
 #endif
 
-    v8::PropertyAttribute attributes = static_cast<v8::PropertyAttribute>( v8::ReadOnly|v8::DontDelete );
+#if NODE_LIBCURL_VER_GE( 7, 37, 0 )
+        //export header consts
+        v8::Local<v8::Object> headerObj = Nan::New<v8::Object>();
+        ExportConstants( headerObj, curlConstHeader );
+#endif
+        // export Curl codes
+        v8::Local<v8::Object> multiObj = Nan::New<v8::Object>();
+        ExportConstants( multiObj, curlMultiOptionInteger );
+        ExportConstants( multiObj, curlMultiOptionStringArray );
 
-    // Prototype Methods
-    Nan::SetPrototypeMethod( tmpl, "setOpt", Curl::SetOpt );
-    Nan::SetPrototypeMethod( tmpl, "getInfo", Curl::GetInfo );
-    Nan::SetPrototypeMethod( tmpl, "perform", Curl::Perform );
-    Nan::SetPrototypeMethod( tmpl, "pause", Curl::Pause );
-    Nan::SetPrototypeMethod( tmpl, "reset", Curl::Reset );
-    Nan::SetPrototypeMethod( tmpl, "close", Curl::Close );
+        // export Curl codes
+        v8::Local<v8::Object> codesObj = Nan::New<v8::Object>();
+        ExportConstants( codesObj, curlCode );
 
-    // Static Methods
-    Nan::SetMethod( tmpl, "getCount" , GetCount );
-    Nan::SetMethod( tmpl, "getVersion" , GetVersion );
+        // static members
+        Nan::ForceSet( obj, Nan::New<v8::String>( "option" ).ToLocalChecked(), optionsObj, attributes );
+        Nan::ForceSet( obj, Nan::New<v8::String>( "info" ).ToLocalChecked(), infosObj, attributes );
 
-    // Static members
-    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "option" ).ToLocalChecked(), optionsObj, attributes );
-    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "info" ).ToLocalChecked() , infosObj, attributes );
+        // add WRITEFUNC to the pause obj
+        Nan::ForceSet( pauseObj, Nan::New<v8::String>( "WRITEFUNC" ).ToLocalChecked(), Nan::New<v8::Uint32>( CURL_WRITEFUNC_PAUSE ), attributes );
+        Nan::ForceSet( obj, Nan::New<v8::String>( "pause" ).ToLocalChecked(), pauseObj, attributes );
 
-#if LIBCURL_VERSION_NUM >= 0x071200
-    //CURL_WRITEFUNC_PAUSE was added in libcurl 7.18
-    Nan::ForceSet( pauseObj, Nan::New<v8::String>("WRITEFUNC").ToLocalChecked(), Nan::New<v8::Uint32>(CURL_WRITEFUNC_PAUSE), attributes );
+        Nan::ForceSet( obj, Nan::New<v8::String>( "auth" ).ToLocalChecked(), authObj, attributes );
+        Nan::ForceSet( obj, Nan::New<v8::String>( "http" ).ToLocalChecked(), httpObj, attributes );
+
+#if NODE_LIBCURL_VER_GE( 7, 19, 4 )
+        Nan::ForceSet( obj, Nan::New<v8::String>( "protocol" ).ToLocalChecked(), protocolsObj, attributes );
 #endif
 
-    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "auth" ).ToLocalChecked(), authObj, attributes );
-    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "http" ).ToLocalChecked(),  httpObj, attributes );
-    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "pause" ).ToLocalChecked(), pauseObj, attributes );
-    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "protocol" ).ToLocalChecked(), protocolsObj, attributes );
-
-#if LIBCURL_VERSION_NUM >= 0x072500
-    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "header" ).ToLocalChecked(), headerObj, attributes );
+#if NODE_LIBCURL_VER_GE( 7, 37, 0 )
+        Nan::ForceSet( obj, Nan::New<v8::String>( "header" ).ToLocalChecked(), headerObj, attributes );
 #endif
 
-    Nan::SetTemplate( tmpl, Nan::New<v8::String>( "VERSION_NUM" ).ToLocalChecked(), Nan::New<v8::Integer>( LIBCURL_VERSION_NUM ), attributes );
+        Nan::ForceSet( obj, Nan::New<v8::String>( "multi" ).ToLocalChecked(), multiObj, attributes );
 
-    Curl::constructor.Reset( tmpl->GetFunction() );
+        Nan::ForceSet( obj, Nan::New<v8::String>( "code" ).ToLocalChecked(), codesObj, attributes );
 
-    Curl::onDataCbSymbol.Reset( Nan::New( "onData" ).ToLocalChecked() );
-    Curl::onHeaderCbSymbol.Reset( Nan::New( "onHeader" ).ToLocalChecked() );
-    Curl::onEndCbSymbol.Reset( Nan::New( "onEnd" ).ToLocalChecked() );
-    Curl::onErrorCbSymbol.Reset( Nan::New( "onError" ).ToLocalChecked() );
+        Nan::SetMethod( obj, "getVersion", GetVersion );
+        Nan::SetMethod( obj, "getCount",   GetCount );
+        Nan::SetAccessor( obj, Nan::New( "VERSION_NUM" ).ToLocalChecked(), GetterVersionNum, 0, v8::Local<v8::Value>(), v8::DEFAULT, attributes );
 
-    Nan::Set( target, Nan::New( "Curl" ).ToLocalChecked(), tmpl->GetFunction() );
-}
-
-Curl::Curl() : cbProgress( nullptr ), cbXferinfo( nullptr ), cbDebug( nullptr ),
- isInsideMultiCurl( false ), isOpen( true ), readDataFileDescriptor( -1 )
-{
-    ++Curl::count;
-
-    this->curl = curl_easy_init();
-
-    assert( this->curl );
-
-    this->httpPost = new CurlHttpPost();
-
-    this->isCbProgressAlreadyAborted = false;
-
-    //set callbacks
-    curl_easy_setopt( this->curl, CURLOPT_WRITEFUNCTION, Curl::WriteFunction );
-    curl_easy_setopt( this->curl, CURLOPT_WRITEDATA, this );
-    curl_easy_setopt( this->curl, CURLOPT_HEADERFUNCTION, Curl::HeaderFunction );
-    curl_easy_setopt( this->curl, CURLOPT_HEADERDATA, this );
-    curl_easy_setopt( this->curl, CURLOPT_READFUNCTION, Curl::ReadFunction );
-    curl_easy_setopt( this->curl, CURLOPT_READDATA, this );
-
-    Curl::curls[curl] = this;
-}
-
-Curl::~Curl(void)
-{
-    --Curl::count;
-
-    //cleanup curl related stuff
-    if ( this->isOpen ) {
-
-        this->Dispose();
+        Nan::Set( target, Nan::New( "Curl" ).ToLocalChecked(), obj );
     }
 
-    if ( this->httpPost ) {
+    int32_t IsInsideCurlConstantStruct( const std::vector<CurlConstant> &curlConstants, const v8::Local<v8::Value> &searchFor )
+    {
+        Nan::HandleScope scope;
 
-        delete this->httpPost;
-        this->httpPost = nullptr;
-    }
-}
+        bool isString = searchFor->IsString();
+        bool isInt = searchFor->IsInt32();
 
-//Dispose persistent handler, and delete itself
-void Curl::Dispose()
-{
-    //Make sure the handle is still open.
-    assert( this->isOpen );
+        std::string optionName = "";
+        int32_t optionId = -1;
+        uint32_t i = 0;
 
-    if ( this->curl ) {
-
-        if ( this->isInsideMultiCurl ) {
-
-            curl_multi_remove_handle( this->curlMulti, this->curl );
+        if ( !isString && !isInt ) {
+            return 0;
         }
 
-        Curl::curls.erase( this->curl );
-        curl_easy_cleanup( this->curl );
-    }
+        if ( isString ) {
 
-    for ( std::vector<curl_slist*>::iterator it = this->curlLinkedLists.begin(), end = this->curlLinkedLists.end(); it != end; ++it ) {
+            Nan::Utf8String optionNameV8( searchFor );
 
-        curl_slist *linkedList = *it;
+            optionName = std::string( *optionNameV8 );
 
-        if ( linkedList ) {
+            stringToUpper( optionName );
 
-            curl_slist_free_all( linkedList );
         }
-    }
+        else { //int
 
-    if ( this->httpPost ) {
-
-        this->httpPost->Reset();
-    }
-
-    //dispose persistent callbacks
-    this->DisposeCallbacks();
-
-    this->isOpen = false;
-}
-
-void Curl::DisposeCallbacks()
-{
-    //this->cbProgress->
-    if ( !this->cbProgress ) {
-        delete this->cbProgress;
-    }
-
-    if ( !this->cbXferinfo ) {
-        delete this->cbXferinfo;
-    }
-
-    if ( this->cbDebug ) {
-        delete this->cbDebug;
-    }
-}
-
-//The curl_multi_socket_action(3) function informs the application about updates
-//  in the socket (file descriptor) status by doing none, one, or multiple calls to this function
-int Curl::HandleSocket( CURL *easy, curl_socket_t s, int action, void *userp, void *socketp )
-{
-    CurlSocketContext *ctx = nullptr;
-
-    if ( action == CURL_POLL_IN || action == CURL_POLL_OUT || action == CURL_POLL_INOUT || action == CURL_POLL_NONE ) {
-
-        //create ctx if it doesn't exists and assign it to the current socket,
-        if ( socketp ) {
-
-            ctx = static_cast<Curl::CurlSocketContext*>(socketp);
-
-        } else {
-
-            ctx = Curl::CreateCurlSocketContext( s );
-            curl_multi_assign( Curl::curlMulti, s, static_cast<void*>( ctx ) );
+            optionId = searchFor->ToInteger()->Int32Value();
 
         }
 
-        //set event based on the current action
-        int events = 0;
+        for ( std::vector<CurlConstant>::const_iterator it = curlConstants.begin(), end = curlConstants.end(); it != end; ++it ) {
 
-        switch ( action ) {
-
-            case CURL_POLL_IN:
-                events |= UV_READABLE;
-                break;
-            case CURL_POLL_OUT:
-                events |= UV_WRITABLE;
-                break;
-            case CURL_POLL_INOUT:
-                events |= UV_READABLE | UV_WRITABLE;
-                break;
+            if ( ( isString && it->name == optionName ) || ( isInt && it->value == optionId ) ) {
+                return it->value;
+            }
         }
-
-        //call process when possible
-        return uv_poll_start( &ctx->pollHandle, events, Curl::Process );
-    }
-
-    //action == CURL_POLL_REMOVE
-    if ( action == CURL_POLL_REMOVE && socketp ) {
-
-        ctx = static_cast<CurlSocketContext*>( socketp );
-
-        uv_poll_stop( &ctx->pollHandle );
-        Curl::DestroyCurlSocketContext( ctx );
-        curl_multi_assign( Curl::curlMulti, s, NULL );
 
         return 0;
     }
 
-    return -1;
-}
-
-//Creates a Context to be used to store data between events
-Curl::CurlSocketContext* Curl::CreateCurlSocketContext( curl_socket_t sockfd )
-{
-    int r;
-    Curl::CurlSocketContext *ctx = NULL;
-
-    ctx = static_cast<Curl::CurlSocketContext*>( malloc( sizeof( *ctx ) ) );
-
-    ctx->sockfd = sockfd;
-
-    //uv_poll simply watches file descriptors using the operating system notification mechanism
-    //Whenever the OS notices a change of state in file descriptors being polled, libuv will invoke the associated callback.
-    r = uv_poll_init_socket( uv_default_loop(), &ctx->pollHandle, sockfd );
-
-    assert( r == 0 );
-
-    ctx->pollHandle.data = ctx;
-
-    return ctx;
-}
-
-//This function will be called when the timeout value changes from LibCurl.
-//The timeout value is at what latest time the application should call one of
-//the "performing" functions of the multi interface (curl_multi_socket_action(3) and curl_multi_perform(3)) - to allow libcurl to keep timeouts and retries etc to work.
-int Curl::HandleTimeout( CURLM *multi /* multi handle */ , long timeoutMs /* timeout in milliseconds */ , void *userp /* TIMERDATA */ )
-{
-    //stops running timer.
-    uv_timer_stop( &Curl::curlTimeout );
-
-    if ( timeoutMs == 0 ) {
-
-        int runningHandles = 0;
-        curl_multi_socket_action( Curl::curlMulti, CURL_SOCKET_TIMEOUT, 0, &runningHandles );
-        Curl::ProcessMessages();
-
-    } else if ( timeoutMs > 0 ) {
-
-        uv_timer_start( &Curl::curlTimeout, Curl::OnTimeout, timeoutMs, 0 );
-
-    }
-
-    return 0;
-}
-
-//Function called when the previous timeout set reaches 0
-UV_TIMER_CB( Curl::OnTimeout )
-{
-    int runningHandles = 0;
-    curl_multi_socket_action( Curl::curlMulti, CURL_SOCKET_TIMEOUT, 0, &runningHandles );
-    Curl::ProcessMessages();
-}
-
-//Called when libcurl thinks there is something to process
-void Curl::Process( uv_poll_t* handle, int status, int events )
-{
-    //uv_timer_stop( &Curl::curlTimeout );
-
-    int flags = 0;
-
-    int runningHandles = 0;
-
-    CURLMcode code;
-
-    if ( status < 0 ) flags = CURL_CSELECT_ERR;
-    if ( events & UV_READABLE ) flags |= CURL_CSELECT_IN;
-    if ( events & UV_WRITABLE ) flags |= CURL_CSELECT_OUT;
-
-    CurlSocketContext *ctx = static_cast<CurlSocketContext*>( handle->data );
-
-    //Before version 7.20.0: If you receive CURLM_CALL_MULTI_PERFORM, this basically means that you should call curl_multi_socket_action again
-    // before you wait for more actions on libcurl's sockets.
-    // You don't have to do it immediately, but the return code means that libcurl
-    //  may have more data available to return or that there may be more data to send off before it is "satisfied".
-    do {
-        code = curl_multi_socket_action( Curl::curlMulti, ctx->sockfd, flags, &runningHandles );
-    } while ( code == CURLM_CALL_MULTI_PERFORM );
-
-    if ( code != CURLM_OK ) {
-
-        Curl::ThrowError( "curl_multi_socket_actioon Failed", curl_multi_strerror( code ) );
-        return;
-    }
-
-    Curl::ProcessMessages();
-}
-
-void Curl::ProcessMessages()
-{
-    CURLMcode code;
-    CURLMsg *msg = NULL;
-    int pending = 0;
-
-    while( ( msg = curl_multi_info_read( Curl::curlMulti, &pending ) ) ) {
-
-        if ( msg->msg == CURLMSG_DONE ) {
-
-            Curl *curl = Curl::curls[msg->easy_handle];
-
-            CURLcode statusCode = msg->data.result;
-
-            code = curl_multi_remove_handle( Curl::curlMulti, msg->easy_handle );
-
-            curl->isInsideMultiCurl = false;
-
-            if ( code != CURLM_OK ) {
-                Curl::ThrowError( "curl_multi_remove_handle Failed", curl_multi_strerror( code ) );
-                return;
-            }
-
-            if ( statusCode == CURLE_OK ) {
-
-                curl->OnEnd();
-
-            } else {
-
-                curl->OnError( statusCode );
-            }
-        }
-    }
-}
-
-//Called when libcurl thinks the socket can be destroyed
-void Curl::DestroyCurlSocketContext( Curl::CurlSocketContext* ctx )
-{
-    uv_handle_t *handle = (uv_handle_t*) &ctx->pollHandle;
-
-    uv_close( handle, Curl::OnCurlSocketClose );
-}
-void Curl::OnCurlSocketClose( uv_handle_t *handle )
-{
-    CurlSocketContext *ctx = static_cast<CurlSocketContext*>( handle->data );
-    free( ctx );
-}
-
-//Called by libcurl when some chunk of data (from body) is available
-size_t Curl::WriteFunction( char *ptr, size_t size, size_t nmemb, void *userdata )
-{
-    Curl *obj = static_cast<Curl*>( userdata );
-    return obj->OnData( ptr, size, nmemb );
-}
-
-//Called by libcurl when some chunk of data (from headers) is available
-size_t Curl::HeaderFunction( char *ptr, size_t size, size_t nmemb, void *userdata )
-{
-    Curl *obj = static_cast<Curl*>( userdata );
-    return obj->OnHeader( ptr, size, nmemb );
-}
-
-//Called by libcurl as soon as it needs to read data in order to send it to the peer
-size_t Curl::ReadFunction( char *ptr, size_t size, size_t nmemb, void *userdata )
-{
-    uv_fs_t readReq;
-
-    int ret = 0;
-
-    Curl *obj = static_cast<Curl*>( userdata );
-    uint32_t fd = obj->readDataFileDescriptor;
-    unsigned int len = (unsigned int) ( size * nmemb );
-
-    uv_buf_t uvbuf = uv_buf_init( ptr, len );
-
-    ret = uv_fs_read( uv_default_loop(), &readReq, fd, &uvbuf, 1, -1, NULL );
-
-    if ( ret < 0 ) {
-
-        return CURL_READFUNC_ABORT;
-    }
-
-    return ret;
-}
-
-size_t Curl::OnData( char *data, size_t size, size_t nmemb )
-{
-    //@TODO If the callback close the connection, an error will be throw!
-    //@TODO Implement: From 7.18.0, the function can return CURL_WRITEFUNC_PAUSE which then will cause writing to this connection to become paused. See curl_easy_pause(3) for further details.
-    Nan::HandleScope scope;
-
-    size_t n = size * nmemb;
-
-    v8::Local<v8::Value> cb = this->handle()->Get( Nan::New( Curl::onDataCbSymbol ) );
-
-    assert( cb->IsFunction() );
-
-    v8::Local<v8::Object> buf = Nan::CopyBuffer( data, (uint32_t) n ).ToLocalChecked();
-
-    v8::Local<v8::Value> argv[] = { buf };
-
-    v8::Local<v8::Value> retVal = Nan::MakeCallback( this->handle(), cb.As<v8::Function>(), 1, argv );
-
-    size_t ret = n;
-
-    if ( retVal.IsEmpty() ) {
-
-        ret = 0;
-    } else {
-
-        ret = retVal->Uint32Value();
-    }
-
-    return ret;
-}
-
-
-size_t Curl::OnHeader( char *data, size_t size, size_t nmemb )
-{
-    Nan::HandleScope scope;
-
-    size_t n = size * nmemb;
-
-    v8::Local<v8::Value> cb = this->handle()->Get( Nan::New( Curl::onHeaderCbSymbol ) );
-
-    assert( cb->IsFunction() );
-
-    v8::Local<v8::Object> buf = Nan::CopyBuffer( data, (uint32_t) n ).ToLocalChecked();
-
-    v8::Local<v8::Value> argv[] = { buf };
-
-    v8::Local<v8::Value> retVal = Nan::MakeCallback( this->handle(), cb.As<v8::Function>(), 1, argv );
-
-    size_t ret = n;
-
-    if ( retVal.IsEmpty() ) {
-
-        ret = 0;
-    } else {
-
-        ret = retVal->Int32Value();
-    }
-
-    return ret;
-}
-
-void Curl::OnEnd()
-{
-    Nan::HandleScope scope;
-
-    v8::Local<v8::Value> cb = this->handle()->Get( Nan::New( Curl::onEndCbSymbol ) );
-
-    Nan::MakeCallback( this->handle(), cb.As<v8::Function>(), 0, NULL );
-}
-
-void Curl::OnError( CURLcode errorCode )
-{
-    Nan::HandleScope scope;
-
-    v8::Local<v8::Value> cb = this->handle()->Get( Nan::New( Curl::onErrorCbSymbol ) );
-
-    v8::Local<v8::Value> argv[] = { Nan::Error( curl_easy_strerror( errorCode ) ), Nan::New<v8::Integer>( errorCode )  };
-
-    Nan::MakeCallback( this->handle(), cb.As<v8::Function>(), 2, argv );
-}
-
-//Export Options/Infos to constants in the given Object, and add their mapping to the respective maps.
-template<typename T>
-void Curl::ExportConstants( T *obj, Curl::CurlOption *optionGroup, uint32_t len, curlMapId *mapId, curlMapName *mapName )
-{
-    Nan::HandleScope scope;
-
-    len = len / sizeof( Curl::CurlOption );
-
-    if ( !obj ) { //Null pointer, just stop
-        return;
-    }
-
-    v8::PropertyAttribute attributes = static_cast<v8::PropertyAttribute>( v8::ReadOnly | v8::DontDelete );
-
-    for ( uint32_t i = 0; i < len; ++i ) {
-
-        const Curl::CurlOption &option = optionGroup[i];
-
-        const int32_t *optionId = &option.value;
-
-        std::string sOptionName( option.name );
-
-        (*obj)->ForceSet(
-            Nan::New<v8::String>( ( sOptionName ).c_str() ).ToLocalChecked(),
-            Nan::New<v8::Integer>( option.value ),
-            attributes
-        );
-
-        //add to vector, and add pointer to respective map
-        //using insert because of http://stackoverflow.com/a/16436560/710693
-        if ( mapId && mapName ) {
-            mapName->insert( std::make_pair( sOptionName, optionId ) );
-            mapId->insert( std::make_pair( optionId, sOptionName ) );
-        }
-    }
-}
-
-//Create a Exception with the given message and reason
-void Curl::ThrowError( const char *message, const char *reason )
-{
-    const char *what = message;
-    std::string msg;
-
-    if ( reason ) {
-
-        msg = string_format( "%s: %s", message, reason );
-        what = msg.c_str();
-    }
-
-    Nan::ThrowError( what );
-}
-
-//Callbacks
-int Curl::CbProgress( void *clientp, double dltotal, double dlnow, double ultotal, double ulnow )
-{
-    Nan::HandleScope scope;
-
-    Curl *obj = static_cast<Curl *>( clientp );
-
-    assert( obj );
-
-    if ( obj->isCbProgressAlreadyAborted )
-        return 1;
-
-    int32_t retvalInt32;
-
-    v8::Local<v8::Value> argv[] = {
-        Nan::New<v8::Number>( (double) dltotal ),
-        Nan::New<v8::Number>( (double) dlnow ),
-        Nan::New<v8::Number>( (double) ultotal ),
-        Nan::New<v8::Number>( (double) ulnow )
-    };
-
-    //Should handle possible exceptions here?
-    v8::Local<v8::Value> retval = obj->cbProgress->Call( obj->handle(), 4, argv );
-
-    if ( !retval->IsInt32() ) {
-
-        Nan::ThrowTypeError( "Return value from the progress callback must be an integer." ) ;
-
-        retvalInt32 = 1;
-
-    } else {
-
-        retvalInt32 = retval->Int32Value();
-    }
-
-    if ( retvalInt32 )
-        obj->isCbProgressAlreadyAborted = true;
-
-    return retvalInt32;
-}
-
-int Curl::CbXferinfo( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow )
-{
-    Nan::HandleScope scope;
-
-    Curl *obj = static_cast<Curl *>( clientp );
-
-    assert( obj );
-
-    if ( obj->isCbProgressAlreadyAborted )
-        return 1;
-
-    int32_t retvalInt32;
-
-    v8::Local<v8::Value> argv[] = {
-        Nan::New<v8::Number>( (double) dltotal ),
-        Nan::New<v8::Number>( (double) dlnow ),
-        Nan::New<v8::Number>( (double) ultotal ),
-        Nan::New<v8::Number>( (double) ulnow )
-    };
-
-    v8::Local<v8::Value> retval = obj->cbXferinfo->Call( obj->handle(), 4, argv );
-
-    if ( !retval->IsInt32() ) {
-
-        Nan::ThrowTypeError( "Return value from the progress callback must be an integer." );
-
-        retvalInt32 = 1;
-
-    } else {
-
-        retvalInt32 = retval->Int32Value();
-    }
-
-    if ( retvalInt32 )
-        obj->isCbProgressAlreadyAborted = true;
-
-    return retvalInt32;
-}
-
-int Curl::CbDebug( CURL *handle, curl_infotype type, char *data, size_t size, void *userptr )
-{
-    Nan::HandleScope scope;
-
-    Curl *obj = Curl::curls[handle];
-
-    assert( obj );
-
-    v8::Local<v8::Value> argv[] = {
-        Nan::New<v8::Integer>( type ),
-        Nan::New<v8::String>( data, static_cast<int>( size ) ).ToLocalChecked()
-    };
-
-    v8::Local<v8::Value> retval = obj->cbDebug->Call( obj->handle(), 2, argv );
-
-    int32_t retvalInt = 0;
-
-    if ( !retval->IsInt32() ) {
-
-        Nan::ThrowTypeError( "Return value from the debug callback must be an integer." );
-
-        retvalInt = 1;
-
-    } else {
-
-        retvalInt = retval->Int32Value();
-    }
-
-    return retvalInt;
-}
-
-NAN_METHOD( Curl::New )
-{
-    assert( info.IsConstructCall() );
-
-    Curl *obj = new Curl();
-
-    obj->Wrap( info.This() );
-
-    info.GetReturnValue().Set( info.This() );
-}
-
-//Function that checks if given option is inside the given Curl::CurlOption struct, if it is, returns the optionId
-#define isInsideOption( options, option ) isInsideCurlOption( options, sizeof( options ), option )
-int isInsideCurlOption( const Curl::CurlOption *curlOptions, const int lenOfOption, const v8::Local<v8::Value> &option ) {
-
-    Nan::HandleScope scope;
-
-    bool isString = option->IsString();
-    bool isInt    = option->IsInt32();
-
-    std::string optionName = "";
-    int32_t optionId = -1;
-
-    if ( !isString && !isInt ) {
-        return 0;
-    }
-
-    if ( isString ) {
-
-        Nan::Utf8String optionNameV8( option );
-
-        optionName = std::string( *optionNameV8 );
-
-        stringToUpper( optionName );
-
-    } else { //int
-
-        optionId = option->ToInteger()->Int32Value();
-
-    }
-
-    for ( uint32_t len = lenOfOption / sizeof( Curl::CurlOption ), i = 0; i < len; ++i ) {
-
-        const Curl::CurlOption &curr = curlOptions[i];
-
-        if ( (isString && curr.name == optionName) || (isInt && curr.value == optionId)  )
-            return curlOptions[i].value;
-    }
-
-    return 0;
-}
-
-NAN_METHOD( Curl::SetOpt )
-{
-    Nan::HandleScope scope;
-
-    Curl *obj = Nan::ObjectWrap::Unwrap<Curl>( info.This() );
-
-    if ( !obj->isOpen ) {
-
-        Nan::ThrowError( "Curl handler is closed." );
-        return;
-    }
-
-    v8::Local<v8::Value> opt   = info[0];
-    v8::Local<v8::Value> value = info[1];
-
-    v8::Local<v8::Integer> optCallResult = Nan::New<v8::Integer>( CURLE_FAILED_INIT );
-
-    int optionId;
-
-    //check if option is linked list, and the value is correct
-    if ( ( optionId = isInsideOption( curlOptionsLinkedList, opt ) ) ) {
-
-        //special case, array of objects
-        if ( optionId == CURLOPT_HTTPPOST ) {
-
-            std::string invalidArrayMsg = "Option value should be an Array of Objects.";
-
-            if ( !value->IsArray() ) {
-
-                Nan::ThrowTypeError( invalidArrayMsg.c_str() );
-                return;
-            }
-
-            v8::Local<v8::Array> rows = v8::Local<v8::Array>::Cast( value );
-
-            //reset the old data, if any.
-            obj->httpPost->Reset();
-
-            // [{ key : val }]
-            for ( uint32_t i = 0, len = rows->Length(); i < len; ++i ) {
-
-                // not an array of objects
-                if ( !rows->Get( i )->IsObject() ) {
-
-                    Nan::ThrowTypeError( invalidArrayMsg.c_str() );
-                    return;
-                }
-
-                v8::Local<v8::Object> postData = v8::Local<v8::Object>::Cast( rows->Get( i ) );
-
-                const v8::Local<v8::Array> props = postData->GetPropertyNames();
-                const uint32_t postDataLength = props->Length();
-
-                bool hasFile = false;
-                bool hasContentType = false;
-                bool hasName = false;
-                bool hasContent = false;
-
-                // Loop through the properties names, making sure they are valid.
-                for ( uint32_t j = 0 ; j < postDataLength ; ++j ) {
-
-                    int httpPostId = -1;
-
-                    const v8::Local<v8::Value> postDataKey = props->Get( j );
-                    const v8::Local<v8::Value> postDataValue = postData->Get( postDataKey );
-
-                    //convert postDataKey to field id
-                    Nan::Utf8String fieldName( postDataKey );
-                    std::string optionName = std::string( *fieldName );
-                    stringToUpper( optionName );
-
-                    for ( uint32_t k = 0, kLen = sizeof( curlHttpPostOptions ) / sizeof( Curl::CurlOption ); k < kLen; ++k ) {
-
-                        if ( curlHttpPostOptions[k].name == optionName )
-                            httpPostId = curlHttpPostOptions[k].value;
-
-                    }
-
-                    switch( httpPostId ) {
-
-                    case CurlHttpPost::FILE:
-                        hasFile = true;
-                        break;
-                    case CurlHttpPost::TYPE:
-                        hasContentType = true;
-                        break;
-                    case CurlHttpPost::CONTENTS:
-                        hasContent = true;
-                        break;
-                    case CurlHttpPost::NAME:
-                        hasName = true;
-                        break;
-                    case -1: //Property not found
-                        std::string errorMsg = string_format( "Invalid property \"%s\" given.", *fieldName );
-                        Nan::ThrowError( errorMsg.c_str() );
-                        return;
-                    }
-
-                    //Check if value is a string.
-                    if ( !postDataValue->IsString() ) {
-
-                        std::string errorMsg = string_format( "Value for property \"%s\" must be a string.", *fieldName );
-                        Nan::ThrowTypeError( errorMsg.c_str() );
-                        return;
-                    }
-                }
-
-                if ( !hasName ) {
-
-                    std::string errorMsg = string_format( "Missing field \"%s\".", "name" );
-                    Nan::ThrowError( errorMsg.c_str()  );
-                    return;
-                }
-
-                Nan::Utf8String fieldName( postData->Get( Nan::New<v8::String>( "name" ).ToLocalChecked() ) );
-                CURLFORMcode curlFormCode;
-
-                if ( hasFile ) {
-
-                    Nan::Utf8String file( postData->Get( Nan::New<v8::String>( "file" ).ToLocalChecked() ) );
-
-                    if ( hasContentType ) {
-
-                        Nan::Utf8String contentType( postData->Get( Nan::New<v8::String>( "type" ).ToLocalChecked() ) );
-
-                        curlFormCode = obj->httpPost->AddFile( *fieldName, fieldName.length(), *file, *contentType );
-
-                    } else {
-
-                        curlFormCode = obj->httpPost->AddFile( *fieldName, fieldName.length(), *file );
-
-                    }
-
-                } else if ( hasContent ) { //if not a file, it's a normal field.
-
-                    Nan::Utf8String fieldValue( postData->Get( Nan::New<v8::String>( "contents" ).ToLocalChecked() ) );
-
-                    curlFormCode = obj->httpPost->AddField( *fieldName, fieldName.length(), *fieldValue, fieldValue.length() );
-
-                } else {
-
-                    std::string errorMsg = string_format( "Missing field \"%s\".", "contents" );
-                    Nan::ThrowError( errorMsg.c_str()  );
-                    return;
-                }
-
-                if ( curlFormCode != CURL_FORMADD_OK ) {
-
-                    std::string errorMsg = string_format( "Error while adding field \"%s\" to post data. CURL_FORMADD error code: %d", *fieldName, (int) curlFormCode );
-                    Nan::ThrowError( errorMsg.c_str()  );
-                    return;
-                }
-            }
-
-            optCallResult = Nan::New<v8::Integer>( curl_easy_setopt( obj->curl, CURLOPT_HTTPPOST, obj->httpPost->first ) );
-
-        } else {
-
-            if ( value->IsNull() ) {
-
-                optCallResult = Nan::New<v8::Integer>(
-                    curl_easy_setopt(
-                        obj->curl, (CURLoption) optionId, NULL
-                    )
-                );
-
-            } else {
-
-                if ( !value->IsArray() ) {
-
-                    Nan::ThrowTypeError( "Option value should be an array." );
-                    return;
-                }
-
-                //convert value to curl linked list (curl_slist)
-                curl_slist *slist = NULL;
-                v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast( value );
-
-                for ( uint32_t i = 0, len = array->Length(); i < len; ++i )
-                {
-                    slist = curl_slist_append( slist, *Nan::Utf8String( array->Get( i ) ) );
-                }
-
-                obj->curlLinkedLists.push_back( slist );
-
-                optCallResult = Nan::New<v8::Integer>(
-                    curl_easy_setopt(
-                        obj->curl, (CURLoption) optionId, slist
-                    )
-                );
-            }
+    // Create an Exception with the given message and reason
+    void ThrowError( const char *message, const char *reason )
+    {
+        const char *what = message;
+        std::string msg;
+
+        if ( reason ) {
+
+            msg = string_format( "%s: %s", message, reason );
+            what = msg.c_str();
         }
 
-        //check if option is string, and the value is correct
-    } else if ( ( optionId = isInsideOption( curlOptionsString, opt ) ) ) {
-
-        if ( !value->IsString() ) {
-
-            Nan::ThrowTypeError( "Option value should be a string." );
-            return;
-        }
-
-        // Create a string copy
-        bool isNull = value->IsNull();
-
-        if ( !isNull ) {
-
-            //libcurl don't copy the string content before version 7.17
-            Nan::Utf8String value( info[1] );
-            size_t length = (size_t) value.length();
-            obj->curlStrings[optionId] = std::string( *value, length );
-        }
-
-        optCallResult = Nan::New<v8::Integer>(
-            curl_easy_setopt(
-                obj->curl, (CURLoption) optionId, ( !isNull ) ? obj->curlStrings[optionId].c_str() : NULL
-            )
-        );
-
-
-    //check if option is a integer, and the value is correct
-    } else if ( ( optionId = isInsideOption( curlOptionsInteger, opt ) )  ) {
-
-        int32_t val = value->Int32Value();
-
-        //If not an integer, but not falsy value, val = 1
-        if ( !value->IsInt32() ) {
-
-            val = value->BooleanValue();
-        }
-
-        if ( optionId == CURLOPT_READDATA ) {
-
-            obj->readDataFileDescriptor = val;
-            optCallResult = Nan::New<v8::Integer>( CURLE_OK );
-
-        } else {
-
-            optCallResult = Nan::New<v8::Integer>(
-                curl_easy_setopt(
-                    obj->curl, (CURLoption) optionId, val
-                )
-            );
-
-        }
-
-    } else if ( ( optionId = isInsideOption( curlOptionsFunction, opt ) ) ) {
-
-        if ( !value->IsFunction() ) {
-
-            Nan::ThrowTypeError( "Option value must be a function." );
-            return;
-        }
-
-        v8::Local<v8::Function> callback = value.As<v8::Function>();
-
-        switch ( optionId ) {
-
-#if LIBCURL_VERSION_NUM >= 0x072000
-            /* xferinfo was introduced in 7.32.0, no earlier libcurl versions will compile as they won't have the symbols around.
-                New libcurls will prefer the new callback and instead use that one even if both callbacks are set. */
-            case CURLOPT_XFERINFOFUNCTION:
-
-                obj->cbXferinfo = new Nan::Callback( callback );
-                curl_easy_setopt( obj->curl, CURLOPT_XFERINFODATA, obj );
-                optCallResult = Nan::New<v8::Integer>( curl_easy_setopt( obj->curl, CURLOPT_XFERINFOFUNCTION, Curl::CbXferinfo ) );
-
-                break;
-#endif
-
-            case CURLOPT_PROGRESSFUNCTION:
-
-                obj->cbProgress = new Nan::Callback( callback );
-                curl_easy_setopt( obj->curl, CURLOPT_PROGRESSDATA, obj );
-                optCallResult = Nan::New<v8::Integer>( curl_easy_setopt( obj->curl, CURLOPT_PROGRESSFUNCTION, Curl::CbProgress ) );
-
-                break;
-
-            case CURLOPT_DEBUGFUNCTION:
-
-                obj->cbDebug = new Nan::Callback( callback );
-                curl_easy_setopt( obj->curl, CURLOPT_DEBUGDATA, obj );
-                optCallResult = Nan::New<v8::Integer>( curl_easy_setopt( obj->curl, CURLOPT_DEBUGFUNCTION, Curl::CbDebug ) );
-
-                break;
-        }
-
+        Nan::ThrowError( what );
     }
 
-    CURLcode code = (CURLcode) optCallResult->Int32Value();
+    // Return human readable string with the version number of libcurl and some of its important components (like OpenSSL version).
+    NAN_METHOD( GetVersion )
+    {
+        Nan::HandleScope scope;
 
-    if ( code != CURLE_OK ) {
+        const char *version = curl_version();
 
-        Nan::ThrowError(
-            code == CURLE_FAILED_INIT ? "Unknown option given. First argument must be the option internal id or the option name. You can use the Curl.option constants." : curl_easy_strerror( code )
-        );
-        return;
+        v8::Local<v8::Value> versionObj = Nan::New<v8::String>( version ).ToLocalChecked();
+
+        info.GetReturnValue().Set( versionObj );
     }
 
-    info.GetReturnValue().Set( optCallResult );
-}
+    NAN_METHOD( GetCount )
+    {
+        Nan::HandleScope scope;
 
-// traits class to determine whether to do the check
-template <typename> struct ResultTypeIsChar : std::false_type {};
-template <> struct ResultTypeIsChar<char*> : std::true_type {};
-
-template<typename T>
-static Nan::MaybeLocal<T> wrapHandle( v8::Local<T> h ) {
-    return Nan::MaybeLocal<T>( h );
-}
-
-template<typename T>
-static Nan::MaybeLocal<T> wrapHandle( Nan::MaybeLocal<T> h ) {
-    return h;
-}
-
-template<typename TResultType, typename Tv8MappingType>
-v8::Local<v8::Value> Curl::GetInfoTmpl( const Curl *obj, int infoId )
-{
-    Nan::EscapableHandleScope scope;
-
-    TResultType result;
-
-    CURLINFO info = (CURLINFO) infoId;
-    CURLcode code = curl_easy_getinfo( obj->curl, info, &result );
-
-    v8::Local<v8::Value> retVal = Nan::Undefined();
-
-    if ( code != CURLE_OK ) {
-
-        Curl::ThrowError( "curl_easy_getinfo failed!", curl_easy_strerror( code ) );
-
-    } else {
-
-        //is string
-        if ( ResultTypeIsChar<TResultType>::value && !result ) {
-
-            retVal = wrapHandle<v8::String>( Nan::EmptyString() ).ToLocalChecked();
-
-        } else {
-
-            retVal = wrapHandle<Tv8MappingType>( Nan::New<Tv8MappingType>( result ) ).ToLocalChecked();
-        }
-
+        info.GetReturnValue().Set( Easy::openHandles );
     }
 
-    return scope.Escape( retVal );
-}
+    // Return hexdecimal representation of the libcurl version.
+    NAN_GETTER( GetterVersionNum )
+    {
+        Nan::HandleScope scope;
 
-NAN_METHOD( Curl::GetInfo )
-{
-    Nan::HandleScope scope;
+        v8::Local<v8::Int32> version = Nan::New( LIBCURL_VERSION_NUM );
 
-    Curl *obj = Nan::ObjectWrap::Unwrap<Curl>( info.This() );
-
-    if ( !obj->isOpen ) {
-
-        Nan::ThrowError( "Curl handler is closed." );
-        return;
+        info.GetReturnValue().Set( version );
     }
 
-    v8::Local<v8::Value> infoVal = info[0];
-
-    v8::Local<v8::Value> retVal = Nan::Undefined();
-
-    int infoId;
-
-    CURLINFO curlInfo;
-    CURLcode code;
-
-    //String
-    if ( (infoId = isInsideOption( curlInfosString, infoVal ) ) ) {
-
-        retVal = Curl::GetInfoTmpl<char*, v8::String>( obj, infoId );
-
-    //Integer
-    } else if ( (infoId = isInsideOption( curlInfosInteger, infoVal ) ) ) {
-
-        retVal = Curl::GetInfoTmpl<long, v8::Number>( obj, infoId );
-
-    //Double
-    } else if ( (infoId = isInsideOption( curlInfosDouble, infoVal ) ) ) {
-
-        retVal = Curl::GetInfoTmpl<double, v8::Number>( obj, infoId );
-
-    //Linked list
-    } else if ( (infoId = isInsideOption( curlInfosLinkedList, infoVal ) ) ) {
-
-        curl_slist *linkedList;
-        curl_slist *curr;
-
-        curlInfo = (CURLINFO) infoId;
-        code = curl_easy_getinfo( obj->curl, curlInfo, &linkedList );
-
-        if ( code != CURLE_OK ) {
-
-            Curl::ThrowError( "curl_easy_getinfo failed!", curl_easy_strerror( code ) );
-            return;
-        }
-
-        v8::Local<v8::Array> arr = Nan::New<v8::Array>();
-
-        if ( linkedList ) {
-
-            curr = linkedList;
-
-            while ( curr ) {
-
-                arr->Set( arr->Length(), Nan::New<v8::String>( curr->data ).ToLocalChecked() );
-                curr = curr->next;
-            }
-
-            curl_slist_free_all( linkedList );
-        }
-
-        retVal = arr;
-    }
-
-    info.GetReturnValue().Set( retVal );
-}
-
-//Add this handle for processing on the curl_multi handler.
-NAN_METHOD( Curl::Perform )
-{
-    Nan::HandleScope scope;
-
-    Curl *obj = Nan::ObjectWrap::Unwrap<Curl>( info.This() );
-
-    if ( !obj->isOpen ) {
-
-        Nan::ThrowError( "Curl handler is closed." );
-        return;
-    }
-
-    //The client should not call this method more than one time by request
-    if ( obj->isInsideMultiCurl ) {
-
-        Nan::ThrowError( "Curl session is already running." );
-        return;
-    }
-
-    CURLMcode code = curl_multi_add_handle( Curl::curlMulti, obj->curl );
-
-    if ( code != CURLM_OK ) {
-
-        Curl::ThrowError( "curl_multi_add_handle Failed", curl_multi_strerror( code ) );
-        return;
-    }
-
-    obj->isInsideMultiCurl = true;
-
-    info.GetReturnValue().Set( info.This() );
-}
-
-NAN_METHOD( Curl::Pause )
-{
-    Nan::HandleScope scope;
-
-    Curl *obj = Nan::ObjectWrap::Unwrap<Curl>( info.This() );
-
-    if ( !obj->isOpen ) {
-
-        Nan::ThrowError( "Curl handler is closed." );
-        return;
-    }
-
-    if ( !info[0]->IsUint32() ) {
-
-        Nan::ThrowTypeError( "Bitmask value must be an integer." );
-        return;
-    }
-
-    uint32_t bitmask = (int) info[0]->Uint32Value();
-
-    CURLcode code = curl_easy_pause( obj->curl, (int) bitmask );
-
-    if ( code != CURLE_OK ) {
-
-        Nan::ThrowError( curl_easy_strerror( code ) );
-        return;
-    }
-
-    info.GetReturnValue().Set( info.This() );
-}
-
-NAN_METHOD( Curl::Close )
-{
-    Nan::HandleScope scope;
-
-    Curl *obj = Nan::ObjectWrap::Unwrap<Curl>( info.This() );
-
-    if ( !obj->isOpen ) {
-
-        Nan::ThrowError( "Curl handler already closed." );
-        return;
-    }
-
-    obj->Dispose();
-
-    return;
-}
-
-//Re-initializes all options previously set on a specified CURL handle to the default values.
-NAN_METHOD( Curl::Reset )
-{
-    Nan::HandleScope scope;
-
-    Curl *obj = Nan::ObjectWrap::Unwrap<Curl>( info.This() );
-
-    if ( !obj->isOpen ) {
-
-        Nan::ThrowError( "Curl handler already closed." );
-        return;
-    }
-
-    curl_easy_reset( obj->curl );
-
-    // reset the URL, https://github.com/bagder/curl/commit/ac6da721a3740500cc0764947385eb1c22116b83
-    curl_easy_setopt( obj->curl, CURLOPT_URL, "" );
-
-    obj->DisposeCallbacks();
-
-    //Set the callbacks again.
-    curl_easy_setopt( obj->curl, CURLOPT_WRITEFUNCTION, Curl::WriteFunction );
-    curl_easy_setopt( obj->curl, CURLOPT_WRITEDATA, obj );
-    curl_easy_setopt( obj->curl, CURLOPT_HEADERFUNCTION, Curl::HeaderFunction );
-    curl_easy_setopt( obj->curl, CURLOPT_HEADERDATA, obj );
-    curl_easy_setopt( obj->curl, CURLOPT_READFUNCTION, Curl::ReadFunction );
-    curl_easy_setopt( obj->curl, CURLOPT_READDATA, obj );
-
-    obj->readDataFileDescriptor = -1;
-
-    info.GetReturnValue().Set( info.This() );
-}
-
-//returns the amount of curl instances
-NAN_METHOD( Curl::GetCount )
-{
-    Nan::HandleScope scope;
-
-    info.GetReturnValue().Set( Nan::New<v8::Integer>( Curl::count ) );
-}
-
-//Returns a human readable string with the version number of libcurl and some of its important components (like OpenSSL version).
-NAN_METHOD( Curl::GetVersion )
-{
-    Nan::HandleScope scope;
-
-    const char *version = curl_version();
-
-    v8::Local<v8::Value> versionObj = Nan::New<v8::String>( version ).ToLocalChecked();
-
-    info.GetReturnValue().Set( versionObj );
 }

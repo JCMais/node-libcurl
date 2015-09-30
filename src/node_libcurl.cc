@@ -20,36 +20,34 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-var Curl   = require( '../../lib/Curl' ),
-    curl   = {};
 
-beforeEach( function() {
+#include <node.h>
+#include <nan.h>
+#include "Curl.h"
+#include "Easy.h"
+#include "Multi.h"
+#include "Share.h"
 
-    curl = new Curl();
-});
+namespace NodeLibcurl {
 
-afterEach( function() {
+    static void AtExitCallback( void* arg ) {
 
-    curl.close();
-});
+        (void)arg;
 
-it( 'should not crash on timeout', function( done ) {
+        curl_global_cleanup();
+    }
 
-    //http://stackoverflow.com/a/904609/710693
-    curl.setOpt( Curl.option.URL, '10.255.255.1' );
-    curl.setOpt( Curl.option.CONNECTTIMEOUT, 1 );
+    NAN_MODULE_INIT( Init ) {
 
-    curl.on( 'end', function() {
+        curl_global_init( CURL_GLOBAL_ALL );
 
-        done( Error( 'Unexpected callback called.' ) );
+        Initialize( target );
+        Easy::Initialize( target );
+        Multi::Initialize( target );
+        Share::Initialize( target );
 
-    });
+        node::AtExit( AtExitCallback, NULL );
+    }
 
-    curl.on( 'error', function () {
-
-        done();
-    });
-
-    curl.perform();
-
-});
+    NODE_MODULE( node_libcurl, Init );
+}

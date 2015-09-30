@@ -1,5 +1,12 @@
-language: node_js
+# language: node_js removed due to https://github.com/travis-ci/travis-ci/issues/2311
+os:
+  - linux
+  - osx
+
+language: cpp
+
 sudo: false
+
 addons:
   apt:
     sources:
@@ -8,28 +15,51 @@ addons:
       - gcc-4.8
       - g++-4.8
       - openssl
-node_js:
-  - 0.10
-  - node
-  - "iojs-v1.8.4"
-  - "iojs-v2.5.0"
-  - iojs
-cache:
-  directories:
-    - $HOME/curl-source
 env:
   global:
     - GCC_VERSION=4.8
   matrix:
-    - LIBCURL_VERSION_TAG=LATEST
-    - LIBCURL_VERSION_TAG="curl-7_35_0"
+  - TRAVIS_NODE_VERSION="0.8" LIBCURL_VERSION_TAG=LATEST
+  - TRAVIS_NODE_VERSION="0.10" LIBCURL_VERSION_TAG=LATEST
+  - TRAVIS_NODE_VERSION="0.12" LIBCURL_VERSION_TAG=LATEST
+  - TRAVIS_NODE_VERSION="iojs-3" LIBCURL_VERSION_TAG=LATEST
+  - TRAVIS_NODE_VERSION="4" LIBCURL_VERSION_TAG=LATEST
+  # repeat again but for curl-7_35_0
+  - TRAVIS_NODE_VERSION="0.8" LIBCURL_VERSION_TAG="curl-7_35_0"
+  - TRAVIS_NODE_VERSION="0.10" LIBCURL_VERSION_TAG="curl-7_35_0"
+  - TRAVIS_NODE_VERSION="0.12" LIBCURL_VERSION_TAG="curl-7_35_0"
+  - TRAVIS_NODE_VERSION="iojs-3" LIBCURL_VERSION_TAG="curl-7_35_0"
+  - TRAVIS_NODE_VERSION="4" LIBCURL_VERSION_TAG="curl-7_35_0"
+
+matrix:
+  allow_failures:
+    - os: osx
+
+cache:
+  directories:
+    - $HOME/curl-source
+
 git:
   submodules: false
+
 before_install:
-  - npm install -g npm@'>=1.4.3' # support for ^
-  - export CC=/usr/bin/gcc-${GCC_VERSION} CXX=/usr/bin/g++-${GCC_VERSION} #https://github.com/travis-ci/travis-ci/issues/3668
+
+install:
+  - rm -rf ~/.nvm
+  - git clone https://github.com/creationix/nvm.git ~/.nvm
+  - source ~/.nvm/nvm.sh
+  - nvm install $TRAVIS_NODE_VERSION
+  # always use the latest npm
+  - npm install npm
+  - mv node_modules npm
+  # https://github.com/travis-ci/travis-ci/issues/3668
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export CC=/usr/bin/gcc-${GCC_VERSION} CXX=/usr/bin/g++-${GCC_VERSION}
   - export PATH=$HOME/curl/bin:$PATH
+  # output helpful info
+  - node --version
+  - npm/.bin/npm --version
   - gcc --version && g++ --version
+  # grab libcurl
   - if [[ ${LIBCURL_VERSION_TAG} == 'LATEST' ]]; then
       TAG=$(git ls-remote --tags https://github.com/bagder/curl.git | awk '{print $2}' | grep "curl-" | grep -v "[0-9][_-][abp]" | grep -v "{" | sort -t_ -k 1.16,1n -k 2,2n -k 3,3n -k 4,4n | sed -n "s@.*\(curl-[0-9_]\)@\1@p" | tail -n1);
     else
@@ -46,3 +76,7 @@ before_install:
   - curl-config --features
   - curl-config --protocols
   - cd $TRAVIS_BUILD_DIR
+  - npm/.bin/npm install
+
+script:
+  - npm/.bin/npm test

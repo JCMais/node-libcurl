@@ -20,36 +20,52 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-var Curl   = require( '../../lib/Curl' ),
-    curl   = {};
 
-beforeEach( function() {
+/**
+ * Example showing how to use the Multi handle to make async requests.
+ */
+var Curl = require( '../lib/Curl' ),
+    Easy = require( '../lib/Easy' ),
+    Multi= require( '../lib/Multi' ),
+    urls = [
+        'http://google.com', 'http://bing.com',
+        'http://msn.com', 'http://ask.com/'
+    ],
+    multi = new Multi(),
+    finished = 0,
+    handles = [],
+    handle;
 
-    curl = new Curl();
+
+multi.onMessage(function( err, handle, errCode ) {
+
+    if ( err ) {
+        console.log( err );
+    }
+
+    var responseCode = handle.getInfo( 'RESPONSE_CODE' ).data;
+
+    console.log( '# of handles active: ' + multi.getCount() );
+    console.log( urls[ handles.indexOf( handle ) ] + ' returned response code: ' + responseCode );
+
+    multi.removeHandle( handle );
+    handle.close();
+
+    if ( ++finished == urls.length ) {
+
+        console.log( 'Finished all requests!' );
+        multi.close();
+    }
 });
 
-afterEach( function() {
 
-    curl.close();
-});
+for ( var i = 0, len = urls.length; i < len; i++ ) {
 
-it( 'should not crash on timeout', function( done ) {
+    handle = new Easy();
+    handle.setOpt( 'URL', urls[i] );
+    handle.setOpt( 'FOLLOWLOCATION', true );
 
-    //http://stackoverflow.com/a/904609/710693
-    curl.setOpt( Curl.option.URL, '10.255.255.1' );
-    curl.setOpt( Curl.option.CONNECTTIMEOUT, 1 );
+    handles.push( handle );
 
-    curl.on( 'end', function() {
-
-        done( Error( 'Unexpected callback called.' ) );
-
-    });
-
-    curl.on( 'error', function () {
-
-        done();
-    });
-
-    curl.perform();
-
-});
+    multi.addHandle( handle );
+}

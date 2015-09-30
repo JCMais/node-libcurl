@@ -22,35 +22,66 @@
  */
 
 /**
- * Example showing how one could do a simple request using the Curl wrapper.
+ * Example just showing how to use the dupHandle method
+ * to keep requesting the same stuff again and again but using new
+ * instances instead of the same.
  */
 var Curl = require( '../lib/Curl' ),
-    curl = new Curl(),
-    url = process.argv[2] || 'http://www.google.com';
+    querystring = require( 'querystring' ),
+    url  = 'http://localhost/',
+    data = {'Hi!' : 'This was sent using node-libcurl <3!'},
+    curl,
+    count = 0,
+    iterations = 1e4,
+    handles = [],
+    shouldCopyCallbacks = true,
+    shouldCopyEventListeners = true;
+
+curl = new Curl;
+curl.handleNumber = 0; //just so we know which handle is running
+handles.push( curl );
 
 //you can use a string as option
 curl.setOpt( 'URL', url );
-//or use an already defined constant
-curl.setOpt( Curl.option.CONNECTTIMEOUT, 5 );
-curl.setOpt( Curl.option.FOLLOWLOCATION, true );
-// Uncomment to show more debug information.
-//curl.setOpt( Curl.option.VERBOSE, true );
-//keep in mind that if you use an invalid option, a TypeError exception will be thrown
+curl.setOpt( 'CONNECTTIMEOUT', 5 );
+curl.setOpt( 'FOLLOWLOCATION', true );
+curl.setOpt( 'HTTPHEADER', ['User-Agent: node-libcurl/1.0'] );
+curl.setOpt( 'POSTFIELDS', querystring.stringify( data ) );
 
 curl.on( 'end', function ( statusCode, body, headers ) {
 
-    console.info( 'Status Code: ', statusCode );
-    console.info( 'Headers: ', headers );
-    console.info( 'Body length: ', body.length );
+    ++count;
 
+    console.log( 'Handle #' + this.handleNumber + ' finished' );
+
+    console.log( 'Status Code: ', statusCode );
+    console.log( 'Body: ', body );
+
+    if ( count < iterations ) {
+
+        console.log( 'Duplicating handle #' + this.handleNumber );
+
+        var duplicatedHandle = this.dupHandle( shouldCopyCallbacks, shouldCopyEventListeners );
+        duplicatedHandle.handleNumber= count;
+        handles.push( duplicatedHandle );
+
+        console.log( 'Running handle #' + count );
+        handles[count].perform();
+    }
+
+
+    console.log( 'Closing handle #' + this.handleNumber );
     this.close();
+    handles[(count-1)] = null;
 });
 
 curl.on( 'error', function ( err, curlErrCode ) {
 
     console.error( 'Err: ', err );
     console.error( 'Code: ', curlErrCode );
+
     this.close();
 });
 
+console.log( 'Running handle #' + count );
 curl.perform();
