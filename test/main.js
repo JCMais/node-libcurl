@@ -61,7 +61,7 @@ describe( 'Curl', function () {
     importTest( 'setOpt()', './curl/setopt' );
     importTest( 'getInfo()', './curl/getinfo' );
     importTest( 'reset()', './curl/reset' );
-    importTest( 'dupHandle()', './curl/duphandle', true );
+    importTest( 'dupHandle()', './curl/duphandle' );
     importTest( 'feature()', './curl/feature' );
     importTest( 'events', './curl/events' );
     importTest( 'Post Fields', './curl/postfields' );
