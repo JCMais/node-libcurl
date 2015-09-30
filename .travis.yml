@@ -18,6 +18,7 @@ addons:
 env:
   global:
     - GCC_VERSION=4.8
+    - DEBUG="node-libcurl"
   matrix:
   - TRAVIS_NODE_VERSION="0.10" LIBCURL_VERSION_TAG=LATEST
   - TRAVIS_NODE_VERSION="0.12" LIBCURL_VERSION_TAG=LATEST
@@ -73,6 +74,7 @@ install:
   - curl-config --version
   - curl-config --features
   - curl-config --protocols
+  - node tools/curl-config.js
   - cd $TRAVIS_BUILD_DIR
   - npm/.bin/npm install
 
