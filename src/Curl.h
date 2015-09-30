@@ -45,7 +45,7 @@ namespace NodeLibcurl {
     struct CurlConstant
     {
         const char *name;
-        int32_t value; ////There is an warning about overflow here. The biggest value this is going be is 1 << 31, from CURLAUTH_ONLY.
+        int64_t value;
     };
 
     template<typename T>

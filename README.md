@@ -88,5 +88,5 @@ Check the [API Docs](api.md)
 #### What you need to have installed:
 
 * [Python 2.7](https://www.python.org/download/releases/2.7)
-* [Visual Studio >= 2010](http://www.visualstudio.com/downloads/download-visual-studio-vs) (Express version works!)
-* Just that, really.
+* [Visual Studio >= 2013](http://www.visualstudio.com/downloads/download-visual-studio-vs)
+* [git](https://desktop.github.com/)

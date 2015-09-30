@@ -637,7 +637,7 @@ namespace NodeLibcurl {
                     }
                     break;
             }
-            
+
         } // linked list options
         else if ( ( optionId = IsInsideCurlConstantStruct( curlOptionLinkedList, opt ) ) ) {
 
@@ -691,8 +691,9 @@ namespace NodeLibcurl {
 
                         for ( std::vector<CurlConstant>::const_iterator it = curlOptionHttpPost.begin(), end = curlOptionHttpPost.end(); it != end; ++it ) {
 
-                            if ( it->name == optionName )
-                                httpPostId = it->value;
+                            if ( it->name == optionName ) {
+                                httpPostId = static_cast<int32_t>( it->value );
+                            }
                         }
 
                         switch ( httpPostId ) {
@@ -950,8 +951,7 @@ namespace NodeLibcurl {
 
         if ( code != CURLE_OK ) {
 
-            //static_cast to long long due visual studio 10
-            std::string str = std::to_string( static_cast<long long>( code ) );
+            std::string str = std::to_string( static_cast<int>( code ) );
 
             Nan::ThrowError( str.c_str() );
         }

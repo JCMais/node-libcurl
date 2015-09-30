@@ -15,6 +15,11 @@
             "include_dirs" : [
                 "<!(node -e \"require('nan')\")"
             ],
+            'msvs_settings': {
+                'VCCLCompilerTool': {
+                    'DisableSpecificWarnings': ['4506', '4838'] #warning about v8 inline function and narrowing
+                }
+            },
             'configurations' : {
                 'Release': {
                     'msvs_settings': {
@@ -37,11 +42,6 @@
                             'WarnAsError': 'false'
                         }
                     }
-                }
-            },
-            'msvs_settings': {
-                'VCCLCompilerTool': {
-                    'DisableSpecificWarnings': ['4506', '4838'] #warning about v8 inline function and narrowing
                 }
             },
             'cflags' : ['-std=c++11', '-O2', '-Wno-narrowing'],

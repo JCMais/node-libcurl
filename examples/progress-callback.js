@@ -61,7 +61,7 @@ curl.enable( Curl.feature.NO_STORAGE );
 // utility function to convert process.hrtime() call result to ms.
 function hrtimeToMs( hrtimeTouple )
 {
-    return (hrtimeTouple[0] * 1000 + (hrtimeTouple[1] / 1e6)) | 0
+    return (hrtimeTouple[0] * 1000 + (hrtimeTouple[1] / 1e6)) | 0;
 }
 
 // The option XFERINFOFUNCTION was introduced in curl version 7.32.0,
@@ -91,8 +91,8 @@ curl.setProgressCallback( function( dltotal, dlnow/*, ultotal, ulnow*/ ) {
 
     //update no more than 1 time per second, or if it's the last call to the callback.
     if (
-        (hrtimeToMs( speedInfo.timeLast )/1000|0) == (hrtimeToMs( now )/1000|0)
-        && dlnow != dltotal
+        (hrtimeToMs( speedInfo.timeLast )/1000|0) === (hrtimeToMs( now )/1000|0)
+        && dlnow !== dltotal
     ) {
         return 0;
     }
