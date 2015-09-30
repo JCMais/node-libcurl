@@ -459,7 +459,7 @@ namespace NodeLibcurl {
 
         { "USERPWD", CURLOPT_USERPWD },
 
-    #if NODE_LIBCURL_VER_GE( 7, 21, 4 )
+    #if NODE_LIBCURL_VER_GE( 7, 33, 0 )
         { "XOAUTH2_BEARER", CURLOPT_XOAUTH2_BEARER },
     #endif
     };
