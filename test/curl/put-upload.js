@@ -57,7 +57,7 @@ beforeEach( function( done ) {
 
     curl = new Curl();
     curl.setOpt( Curl.option.URL, url + '/upload/upload-result.test' );
-    curl.setOpt( Curl.option.HTTPHEADER, ['Content-Type: application/node-libcurl.raw']);
+    curl.setOpt( Curl.option.HTTPHEADER, ['Content-Type: application/node-libcurl.raw'] );
 
     //write random bytes to a file, this will be our test file.
     fs.writeFileSync( fileName, crypto.randomBytes( fileSize ) );
@@ -97,19 +97,13 @@ before( function( done ) {
 
         uploadLocation = path.resolve( __dirname, req.params['filename'] );
 
-        fs.open( uploadLocation, 'w+', function( err, fd ) {
+        var fd = fs.openSync( uploadLocation, 'w+' );
 
-            fs.write( fd, req.body, 0, req.body.length, 0, function( err, written, buffer ) {
+        fs.writeSync( fd, req.body, 0, req.body.length, 0 );
+        fs.closeSync( fd );
+        hashOfFile( uploadLocation, function( hash ) {
 
-                fs.close( fd, function() {
-
-                    hashOfFile( uploadLocation, function( hash ) {
-
-                        res.send( hash );
-                    });
-                });
-            });
-
+            res.send( hash );
         });
     });
 

@@ -38,7 +38,7 @@ curl.on( 'end', function() {
 
     for ( var infoName in Curl.info ) {
 
-        if ( Curl.info.hasOwnProperty( infoName ) && infoName != 'debug' ) {
+        if ( Curl.info.hasOwnProperty( infoName ) && infoName !== 'debug' ) {
 
             console.info( infoName, ': ', this.getInfo( infoName ) );
         }

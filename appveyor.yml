@@ -1,5 +1,7 @@
 # http://www.appveyor.com/docs/appveyor-yml
 # mostly copied from nan appveyor.yml
+os: Visual Studio 2015
+
 environment:
   DEBUG: "node-libcurl"
   matrix:

@@ -58,7 +58,7 @@ after( function() {
 
 it( 'should reset the curl handler', function ( done ) {
 
-    curl.on( 'end', function( statusCode ) {
+    curl.on( 'end', function() {
 
         if ( !firstRun ) {
             done( new Error( 'Failed to reset.' ) );

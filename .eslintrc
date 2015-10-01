@@ -6,7 +6,7 @@
       "always"
     ],
     "valid-jsdoc": [
-      2,
+      0,
       {
         "requireParamDescription": false,
         "requireReturnDescription": false,

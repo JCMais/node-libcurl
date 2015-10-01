@@ -116,10 +116,6 @@ after( function( done ) {
     fs.unlink( imageFilename, done );
 });
 
-function httpPostReqOnEnd( status, data, done ) {
-
-}
-
 it( 'should correctly send HTTPPOST data when duplicated', function ( done ) {
 
     curl.setOpt( 'HTTPPOST', httpPostData );
@@ -220,7 +216,7 @@ it( 'should correctly send HTTPPOST data when duplicated and the original closed
 
 });
 
-it( 'should correctly send POSTFIELDS data when duplicated and the original closed',function ( done ) {
+it( 'should correctly send POSTFIELDS data when duplicated and the original closed', function ( done ) {
 
     curl.setOpt( 'POSTFIELDS', querystring.stringify( postFieldsData ) );
     curl.setOpt( 'URL', url + '/urlencoded' );

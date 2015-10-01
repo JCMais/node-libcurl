@@ -66,7 +66,7 @@ describe( 'HTTPPOST', function() {
 
             curl.setOpt( 'HTTPPOST', [1, 2, {}] );
 
-        } catch( err ) {
+        } catch ( err ) {
 
             return done();
         }
