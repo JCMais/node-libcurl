@@ -876,7 +876,9 @@ namespace NodeLibcurl {
             }
             else {
 
-                setOptRetCode = curl_easy_setopt( obj->ch, static_cast<CURLoption>( optionId ), val );
+                long curlVal = static_cast<long>( val );
+
+                setOptRetCode = curl_easy_setopt( obj->ch, static_cast<CURLoption>( optionId ), curlVal );
             }
 
             //check if option is a function, and the value is correct
