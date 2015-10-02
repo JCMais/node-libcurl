@@ -1,9 +1,8 @@
 .lock-wscript
 raw/
 build/
-build/.*
 deps/
 docs/
-lib/generated-stubs/*.js
+lib/binding/
 .idea
 *.tgz
