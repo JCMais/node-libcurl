@@ -280,6 +280,8 @@ namespace NodeLibcurl {
         { "SSL_VERIFYSTATUS", CURLOPT_SSL_VERIFYSTATUS },
     #endif
 
+        { "SSLVERSION", CURLOPT_SSLVERSION },
+
     #if NODE_LIBCURL_VER_GE( 7, 25, 0 )
         { "TCP_KEEPALIVE", CURLOPT_TCP_KEEPALIVE },
         { "TCP_KEEPIDLE", CURLOPT_TCP_KEEPIDLE },
