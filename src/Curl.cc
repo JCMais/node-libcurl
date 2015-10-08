@@ -209,6 +209,7 @@ namespace NodeLibcurl {
         { "HTTP_VERSION", CURLOPT_HTTP_VERSION },
         { "IGNORE_CONTENT_LENGTH", CURLOPT_IGNORE_CONTENT_LENGTH },
         { "INFILESIZE", CURLOPT_INFILESIZE },
+        { "IPRESOLVE", CURLOPT_IPRESOLVE },
         { "LOCALPORT", CURLOPT_LOCALPORT },
         { "LOCALPORTRANGE", CURLOPT_LOCALPORTRANGE },
         { "LOW_SPEED_LIMIT", CURLOPT_LOW_SPEED_LIMIT },
@@ -567,6 +568,10 @@ namespace NodeLibcurl {
     };
 
     const std::vector<CurlConstant> curlInfoInteger = {
+    #if NODE_LIBCURL_VER_GE( 7, 45, 0 )
+        { "ACTIVESOCKET", CURLINFO_ACTIVESOCKET },
+    #endif
+
     #if NODE_LIBCURL_VER_GE( 7, 19, 4 )
         { "CONDITION_UNMET", CURLINFO_CONDITION_UNMET },
     #endif
