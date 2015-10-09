@@ -1,5 +1,7 @@
 # node-libcurl
 
+[![Join the chat at https://gitter.im/JCMais/node-libcurl](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/JCMais/node-libcurl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![NPM version][npm-image]][npm-url]
 [![node][node-image]][node-url]
 [![io.js][iojs-image]][iojs-url]
