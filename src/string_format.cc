@@ -13,11 +13,9 @@ std::string string_format( const std::string fmt_str, ... ) {
     std::unique_ptr<char[]> formatted;
 
     va_list ap;
+    int final_n;
 
     while(1) {
-
-        int final_n;
-
         formatted.reset(new char[n]); /* wrap the plain char array into the unique_ptr */
         
         strcpy(&formatted[0], fmt_str.c_str());
@@ -26,8 +24,8 @@ std::string string_format( const std::string fmt_str, ... ) {
         final_n = vsnprintf(&formatted[0], n, fmt_str.c_str(), ap);
         va_end(ap);
         
-        if (final_n < 0 || final_n >= n)
-            n += abs(final_n - n + 1);
+        if (final_n >= n)
+            n = final_n + 1;
         else
             break;
     }
