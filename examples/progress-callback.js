@@ -38,9 +38,9 @@ var curl = new Curl(),
     outputFile = path.resolve( __dirname, 'result.out' ),
     lastdlnow = 0,
     speedInfo = {
-        timeStart   : [0,0],
+        timeStart   : [0, 0],
         timeSpent   : 0,
-        timeLast    : [0,0],
+        timeLast    : [0, 0],
         counter     : 0,
         speedAverage: 0
     },
@@ -59,9 +59,9 @@ curl.setOpt( Curl.option.NOPROGRESS, false );
 curl.enable( Curl.feature.NO_STORAGE );
 
 // utility function to convert process.hrtime() call result to ms.
-function hrtimeToMs( hrtimeTouple )
-{
-    return (hrtimeTouple[0] * 1000 + (hrtimeTouple[1] / 1e6)) | 0;
+function hrtimeToMs( hrtimeTouple ) {
+
+    return ( hrtimeTouple[0] * 1000 + ( hrtimeTouple[1] / 1e6 ) ) | 0;
 }
 
 // The option XFERINFOFUNCTION was introduced in curl version 7.32.0,
@@ -91,7 +91,7 @@ curl.setProgressCallback( function( dltotal, dlnow/*, ultotal, ulnow*/ ) {
 
     //update no more than 1 time per second, or if it's the last call to the callback.
     if (
-        (hrtimeToMs( speedInfo.timeLast )/1000|0) === (hrtimeToMs( now )/1000|0)
+        ( hrtimeToMs( speedInfo.timeLast ) / 1000 | 0 ) === ( hrtimeToMs( now ) / 1000 | 0 )
         && dlnow !== dltotal
     ) {
         return 0;
@@ -100,12 +100,12 @@ curl.setProgressCallback( function( dltotal, dlnow/*, ultotal, ulnow*/ ) {
     speedInfo.timeLast  = now;
 
     //average speed
-    speedInfo.speedAverage = (dlnow / ((speedInfo.timeSpent[0] > 0) ? speedInfo.timeSpent[0] : 1 ));
+    speedInfo.speedAverage = ( dlnow / ( ( speedInfo.timeSpent[0] > 0 ) ? speedInfo.timeSpent[0] : 1 ) );
 
     if ( bar ) {
 
         bar.tick( dlnow - lastdlnow, {
-            speed : (speedInfo.speedAverage / 1000).toFixed(2)
+            speed : ( speedInfo.speedAverage / 1000 ).toFixed( 2 )
         });
 
         lastdlnow = dlnow;

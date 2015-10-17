@@ -15,9 +15,9 @@ var exec = require( 'child_process' ).exec,
     fs   = require( 'fs' ),
     debug  = require( 'debug' )( 'node-libcurl' );
 
-var child, i, len,
+var i, len,
     moduleKey, modulePath,
-    urlKey, url,
+    url,
     moduleInfo,
     paths = [],
     execConfig = {
@@ -106,7 +106,7 @@ function initGitSubmodule( depsPath, err, url ) {
                     replaceTokensOnGypFiles();
 
                     //remove git folder
-                    exec( 'rmdir .git /S /Q', function(){
+                    exec( 'rmdir .git /S /Q', function() {
                         if ( err ) {
                             console.log( err.toString() );
                             process.exit( 1 );

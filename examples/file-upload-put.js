@@ -32,8 +32,7 @@ var Curl = require( '../lib/Curl' ),
 var curl = new Curl(),
     url = 'httpbin.org/put',
     fileSize = 10 * 1024, //1KB
-    fileName = path.resolve( __dirname, 'upload.test' ),
-    fd = -1;
+    fileName = path.resolve( __dirname, 'upload.test' );
 
 //write random bytes to a file, this will be our upload file.
 fs.writeFileSync( fileName, crypto.randomBytes( fileSize ) );

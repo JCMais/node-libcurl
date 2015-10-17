@@ -1,24 +1,23 @@
-var Multi = require( 'bindings' )( 'node-libcurl' ).Multi,
-    //heapdump = require( 'heapdump' ),
-    amount = (process.argv[2]|0) || 1e2,
-    objects= [],
+var Multi  = require( '../lib/Multi' ),
+    amount = ( process.argv[2] | 0 ) || 1e2,
     iterations = 5,
-    timeout = 500,
-    i, len;
+    timeout    = 500,
+    i;
 
-//heapdump.writeSnapshot();
-
-function leak( ) {
+function leak() {
 
     for ( i = 0; i < amount; i++ ) {
 
         new Multi();
     }
-    gc();
 
-    //objects = [];
+    if ( global.gc ) {
+        
+        gc();
+    }
 
     if ( --iterations  ) {
+
         //setTimeout( leak, timeout );
         leak();
     }

@@ -6,3 +6,4 @@ docs/
 lib/binding/
 .idea
 *.tgz
+debug/
