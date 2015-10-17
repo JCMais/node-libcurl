@@ -37,7 +37,7 @@ var Curl = require( '../lib/Curl' ),
     shouldCopyCallbacks = true,
     shouldCopyEventListeners = true;
 
-curl = new Curl;
+curl = new Curl();
 curl.handleNumber = 0; //just so we know which handle is running
 handles.push( curl );
 
@@ -54,6 +54,7 @@ curl.on( 'end', function ( statusCode, body, headers ) {
 
     console.log( 'Handle #' + this.handleNumber + ' finished' );
 
+    console.log( 'Headers: ', headers );
     console.log( 'Status Code: ', statusCode );
     console.log( 'Body: ', body );
 
@@ -72,7 +73,7 @@ curl.on( 'end', function ( statusCode, body, headers ) {
 
     console.log( 'Closing handle #' + this.handleNumber );
     this.close();
-    handles[(count-1)] = null;
+    handles[( count-1 )] = null;
 });
 
 curl.on( 'error', function ( err, curlErrCode ) {

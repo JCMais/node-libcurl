@@ -1,8 +1,7 @@
-var exec = require('child_process').exec,
-    child;
+var exec = require( 'child_process' ).exec;
 
 
-child = exec( 'curl-config --libs', function( error, stdout, stderr ) {
+exec( 'curl-config --libs', function( error, stdout, stderr ) {
 
     if ( error != null ) {
         console.error( 'Could not run curl-config, please make sure libcurl dev package is installed.' );

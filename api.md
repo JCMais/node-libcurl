@@ -52,6 +52,8 @@
   * [.Easy](#module_node-libcurl.Easy)
     * [new Easy([orig])](#new_module_node-libcurl.Easy_new)
     * _instance_
+      * [.onData](#module_node-libcurl.Easy+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
+      * [.onHeader](#module_node-libcurl.Easy+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
       * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Easy+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
       * [.getInfo(infoNameOrId)](#module_node-libcurl.Easy+getInfo) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
       * [.send(buf)](#module_node-libcurl.Easy+send) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
@@ -66,8 +68,6 @@
       * [.close()](#module_node-libcurl.Easy+close)
     * _static_
       * [.socket](#module_node-libcurl.Easy.socket) : <code>enum</code>
-      * [.onData](#module_node-libcurl.Easy.onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
-      * [.onHeader](#module_node-libcurl.Easy.onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
       * [.strError(code)](#module_node-libcurl.Easy.strError) ⇒ <code>String</code>
     * _inner_
       * [~ReturnData](#module_node-libcurl.Easy..ReturnData) : <code>Object</code>
@@ -661,6 +661,8 @@ Progress callback called by libcurl.
 * [.Easy](#module_node-libcurl.Easy)
   * [new Easy([orig])](#new_module_node-libcurl.Easy_new)
   * _instance_
+    * [.onData](#module_node-libcurl.Easy+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
+    * [.onHeader](#module_node-libcurl.Easy+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
     * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Easy+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
     * [.getInfo(infoNameOrId)](#module_node-libcurl.Easy+getInfo) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
     * [.send(buf)](#module_node-libcurl.Easy+send) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
@@ -675,8 +677,6 @@ Progress callback called by libcurl.
     * [.close()](#module_node-libcurl.Easy+close)
   * _static_
     * [.socket](#module_node-libcurl.Easy.socket) : <code>enum</code>
-    * [.onData](#module_node-libcurl.Easy.onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
-    * [.onHeader](#module_node-libcurl.Easy.onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
     * [.strError(code)](#module_node-libcurl.Easy.strError) ⇒ <code>String</code>
   * _inner_
     * [~ReturnData](#module_node-libcurl.Easy..ReturnData) : <code>Object</code>
@@ -693,6 +693,12 @@ Easy handle constructor
 | --- | --- | --- | --- |
 | [orig] | <code>Easy</code> | <code></code> | Creates this handle based on another one, this is going to be the same than calling <code>orig.dupHandle();</code> |
 
+<a name="module_node-libcurl.Easy+onData"></a>
+#### easy.onData : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
+**Kind**: instance property of <code>[Easy](#module_node-libcurl.Easy)</code>  
+<a name="module_node-libcurl.Easy+onHeader"></a>
+#### easy.onHeader : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
+**Kind**: instance property of <code>[Easy](#module_node-libcurl.Easy)</code>  
 <a name="module_node-libcurl.Easy+setOpt"></a>
 #### easy.setOpt(optionIdOrName, optionValue) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
 Use [option](#module_node-libcurl.Curl.option) for predefined constants.
@@ -835,12 +841,6 @@ This is basically the same than [curl_easy_cleanup()](http://curl.haxx.se/libcur
 | READABLE | <code>Number</code> | <code>1</code> | 
 | WRITABLE | <code>Number</code> | <code>2</code> | 
 
-<a name="module_node-libcurl.Easy.onData"></a>
-#### Easy.onData : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
-**Kind**: static property of <code>[Easy](#module_node-libcurl.Easy)</code>  
-<a name="module_node-libcurl.Easy.onHeader"></a>
-#### Easy.onHeader : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
-**Kind**: static property of <code>[Easy](#module_node-libcurl.Easy)</code>  
 <a name="module_node-libcurl.Easy.strError"></a>
 #### Easy.strError(code) ⇒ <code>String</code>
 Returns a description for the given error code.
@@ -879,7 +879,7 @@ it will signal libcurl to abort the transfer, and return with error code CURLE_W
 
 You can return <code>Curl.pause.WRITEFUNC</code> too, this will cause this transfer to become paused.  
 **this**: <code>{module:node-libcurl.Easy}</code>  
-**See**: module:node-libcurl.Easy.onData  
+**See**: module:node-libcurl.Easy#onData  
 
 | Param | Type |
 | --- | --- |
@@ -898,7 +898,7 @@ option.
 **Returns**: <code>Number</code> - The callback must return exactly nmemb * size, otherwise
 it will signal libcurl to abort the transfer, and return with error code CURLE_WRITE_ERROR.  
 **this**: <code>{module:node-libcurl.Easy}</code>  
-**See**: module:node-libcurl.Easy.onHeader  
+**See**: module:node-libcurl.Easy#onHeader  
 
 | Param | Type |
 | --- | --- |

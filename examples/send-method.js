@@ -32,8 +32,7 @@ var Easy = require( '../lib/Easy' ),
     send = new Buffer( 'GET / HTTP/1.0\r\nHost: example.com\r\n\r\n' ),
     recv = new Buffer( 5 * 1024 * 1024 ), //reserve 5mb
     isSent = false,
-    shouldUseMultiHandle = true,
-    interval, socket;
+    shouldUseMultiHandle = true;;
 
 recv.fill( 0 );
 
@@ -44,7 +43,7 @@ easy.setOpt( Curl.option.CONNECT_ONLY, true );
 //This callback is going to be called when there is some action
 // in the socket responsible for this handle.
 // Remember that, for it to be called, one must have called easy.monitorSocketEvents();
-easy.onSocketEvent(function ( err, events ) {
+easy.onSocketEvent( function ( err, events ) {
 
     var ret,
         isWritable = events & Easy.socket.WRITABLE,
@@ -85,7 +84,7 @@ easy.onSocketEvent(function ( err, events ) {
             throw Error( Easy.strError( ret[0] ) );
         }
 
-        console.log( recv.toString('utf8', 0, ret[1] ) );
+        console.log( recv.toString( 'utf8', 0, ret[1] ) );
 
         //we don't need to monitor for events anymore, so let's just stop the socket polling
         this.unmonitorSocketEvents();
@@ -106,9 +105,13 @@ easy.onSocketEvent(function ( err, events ) {
 // if you are using a libcurl version greater than 7.42
 // See: https://github.com/bagder/curl/commit/ecc4940df2c286702262f8c21d7369f893e78968
 if ( shouldUseMultiHandle ) {
-    multi.onMessage(function ( err, easy, errCode ) {
+
+    multi.onMessage( function ( err, easy, errorCode ) {
 
         if ( err ) {
+
+            console.error( 'Error code: ' + errorCode );
+
             throw err;
         }
 
@@ -124,6 +127,7 @@ if ( shouldUseMultiHandle ) {
     var result = easy.perform();
 
     if ( result != Curl.code.CURLE_OK ) {
+        
         throw Error( Easy.strError( result ) );
     }
 

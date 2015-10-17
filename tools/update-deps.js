@@ -1,4 +1,4 @@
-var exec = require( 'child_process' ).exec,
+var exec    = require( 'child_process' ).exec,
     resolve = require( 'path' ).resolve,
     config = {cwd : resolve( __dirname, '..' ) };
 
@@ -7,6 +7,7 @@ exec(
     function ( err ) {
 
         if ( err ) {
+
             console.log( err.toString() );
             process.exit( 1 );
         }

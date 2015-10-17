@@ -31,22 +31,38 @@ var Curl = require( '../lib/Curl' ),
         'http://google.com', 'http://bing.com',
         'http://msn.com', 'http://ask.com/'
     ],
-    multi = new Multi(),
-    finished = 0,
-    handles = [],
+    multi       = new Multi(),
+    finished    = 0,
+    handles     = [],
+    handlesData = [],
     handle;
 
 
 multi.onMessage(function( err, handle, errCode ) {
 
-    if ( err ) {
-        console.log( err );
-    }
-
-    var responseCode = handle.getInfo( 'RESPONSE_CODE' ).data;
+    var responseCode = handle.getInfo( 'RESPONSE_CODE' ).data,
+        handleData   = handlesData[ handles.indexOf( handle  ) ],
+        handleUrl    = urls[ handles.indexOf( handle ) ],
+        responseData = '',
+        i, len;
 
     console.log( '# of handles active: ' + multi.getCount() );
-    console.log( urls[ handles.indexOf( handle ) ] + ' returned response code: ' + responseCode );
+
+    if ( err ) {
+
+        console.log( handleUrl + ' returned error: ' + err.message );
+
+    } else {
+
+        for ( i = 0, len = handleData.length; i < len; i++ ) {
+
+            responseData += handleData[i].toString();
+        }
+
+        console.log( handleUrl + ' returned response code: ' + responseCode );
+
+        console.log( handleUrl + ' returned response body: ' + responseData );
+    }
 
     multi.removeHandle( handle );
     handle.close();
@@ -58,6 +74,17 @@ multi.onMessage(function( err, handle, errCode ) {
     }
 });
 
+//This callback is like the CURLOPT_WRITEFUNCTION libcurl option.
+function onData( data, n, nmemb ) {
+
+    //this === the handle, see the .bind( handle ) call below.
+    var key = handles.indexOf( this );
+
+    handlesData[key].push( data );
+
+    return n * nmemb;
+}
+
 
 for ( var i = 0, len = urls.length; i < len; i++ ) {
 
@@ -65,6 +92,9 @@ for ( var i = 0, len = urls.length; i < len; i++ ) {
     handle.setOpt( 'URL', urls[i] );
     handle.setOpt( 'FOLLOWLOCATION', true );
 
+    handle.onData = onData.bind( handle );
+
+    handlesData.push( [] );
     handles.push( handle );
 
     multi.addHandle( handle );

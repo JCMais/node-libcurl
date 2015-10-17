@@ -6,3 +6,4 @@ examples/cacert*
 docs
 wallaby.json
 lib/binding
+debug
