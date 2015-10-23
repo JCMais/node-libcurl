@@ -1,7 +1,7 @@
 {
     'targets': [
         {
-            "target_name": '<(module_name)',
+            'target_name': '<(module_name)',
             'sources': [
                 'src/node_libcurl.cc',
                 'src/Easy.cc',

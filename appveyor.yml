@@ -3,7 +3,7 @@
 environment:
   DEBUG: "node-libcurl"
   NODE_LIBCURL_GITHUB_TOKEN:
-    secure: +N05iSSaL7xtrREBwgxom12erjGDDDSYMtNyT6sTibkT78Zz7bOnP6NIVfnc38hv
+    secure: o8iCZIMbaOR5HKy9Q/ArQ6N+5LRepyRVYRtLTrxyCo2gCEXUp8xhUYjLMJmZgNu9
   matrix:
     # node.js
     - nodejs_version: 0.10
@@ -32,8 +32,9 @@ install:
   - npm --version
   # Check if we need to publish the package
   - SET PUBLISH_BINARY=false
-  - for /f "usebackq delims=" %x in (`git describe --tags --always HEAD`) do SET BUILDING_TAG=%x
-  - IF %APPVEYOR_REPO_BRANCH% == %TAG% (SET PUBLISH_BINARY=true)
+  - ps: if ( $env:APPVEYOR_REPO_COMMIT_MESSAGE.ToLower().Contains('[publish binary]') -OR $(git describe --tags --always HEAD) -eq $env:APPVEYOR_REPO_BRANCH ) { $env:PUBLISH_MESSAGE=true }
+  #- for /f "usebackq delims=" %x in (`git describe --tags --always HEAD`) do SET TAG=%x
+  #- IF %APPVEYOR_REPO_BRANCH% == %TAG% (SET PUBLISH_BINARY=true)
 
   # Install the curl-for-windows dependencies.
   - git submodule update --init --recursive
@@ -54,7 +55,8 @@ on_success:
   - SET INSTALL_RESULT=0
   - IF %PUBLISH_BINARY% == true (npm install --fallback-to-build=false)
   - IF %PUBLISH_BINARY% == true (SET INSTALL_RESULT=%ERRORLEVEL%)
-  - IF %INSTALL_RESULT% != 0 (for /f "usebackq delims=" %x in (`node-pre-gyp reveal hosted_tarball --silent`) do node scripts\module-packaging.js --unpublish %x)
+  - IF NOT %INSTALL_RESULT% == 0 (for /f "usebackq delims=" %x in (`node-pre-gyp reveal hosted_tarball --silent`) do node scripts\module-packaging.js --unpublish %x)
+  - IF NOT %INSTALL_RESULT% == 0 (echo "Package unpublished since we got an error while installing it.")
   - node-pre-gyp clean
 
 # Don't actually deploy.

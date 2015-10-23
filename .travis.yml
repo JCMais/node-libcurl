@@ -1,91 +1,92 @@
 os:
-  - linux
-  - osx
+- linux
+- osx
 language: cpp
 sudo: false
 addons:
   apt:
     sources:
-      - ubuntu-toolchain-r-test
+    - ubuntu-toolchain-r-test
     packages:
-      - gcc-4.8
-      - g++-4.8
-      - openssl
+    - gcc-4.8
+    - g++-4.8
+    - openssl
 env:
   global:
-    - GCC_VERSION=4.8
-    - DEBUG="node-libcurl"
-    - secure: bJYZ25cE1BLGH/0c2Ta9lM7THyNgL99SLSqcT39vXZBHaz07BKHI/4smCF0Dcp++6g5W7ZkygMKUEWUOhknMLK079UQ8F49eBT4TMqiy075OeJU5eOFNqTzGwEDaPA7xbXZE2a+TS4/oVaGgJJJIKs8YrSGfRGhOJpclTBQx9lk=
+  - GCC_VERSION=4.8
+  - DEBUG="node-libcurl"
+  - secure: fMlmLjSJ/XgUPLYs0nHEPxX1Rc18qk7YLpLj728sjPpGrRsQN4HRFJRAhBt84S30Nornj2YcoLGlU5/B5lEAx8WHdX9jZyA5RYmHMym3vL2dhcxT/g/9wc+mzLbOGnA96rE8emoIkkpvFpVU1MeSewHY3ayd9YpOT77GmDbfGgA=
   matrix:
-    - TRAVIS_NODE_VERSION="0.10" LIBCURL_VERSION_TAG=LATEST
-    - TRAVIS_NODE_VERSION="0.12" LIBCURL_VERSION_TAG=LATEST
-    - TRAVIS_NODE_VERSION="iojs-3" LIBCURL_VERSION_TAG=LATEST
-    - TRAVIS_NODE_VERSION="4" LIBCURL_VERSION_TAG=LATEST
-    # oldest libcurl we support
-    - TRAVIS_NODE_VERSION="0.10" LIBCURL_VERSION_TAG="curl-7_18_0"
-    - TRAVIS_NODE_VERSION="0.12" LIBCURL_VERSION_TAG="curl-7_18_0"
-    - TRAVIS_NODE_VERSION="iojs-3" LIBCURL_VERSION_TAG="curl-7_18_0"
-    - TRAVIS_NODE_VERSION="4" LIBCURL_VERSION_TAG="curl-7_18_0"
+  - TRAVIS_NODE_VERSION="0.10" LIBCURL_VERSION_TAG=LATEST
+  - TRAVIS_NODE_VERSION="0.12" LIBCURL_VERSION_TAG=LATEST
+  - TRAVIS_NODE_VERSION="iojs-3" LIBCURL_VERSION_TAG=LATEST
+  - TRAVIS_NODE_VERSION="4" LIBCURL_VERSION_TAG=LATEST
+  - TRAVIS_NODE_VERSION="0.10" LIBCURL_VERSION_TAG="curl-7_18_0"
+  - TRAVIS_NODE_VERSION="0.12" LIBCURL_VERSION_TAG="curl-7_18_0"
+  - TRAVIS_NODE_VERSION="iojs-3" LIBCURL_VERSION_TAG="curl-7_18_0"
+  - TRAVIS_NODE_VERSION="4" LIBCURL_VERSION_TAG="curl-7_18_0"
 cache:
   directories:
-    - $HOME/curl-source
+  - $HOME/curl-source
 git:
   submodules: false
 before_install:
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
-      export CC=/usr/bin/gcc-${GCC_VERSION};
-      export CXX=/usr/bin/g++-${GCC_VERSION};
-    fi;
-  # since we are using multios there is no
-  # support for nodejs yet so we must install nvm.
-  - rm -rf ~/.nvm
-  - git clone https://github.com/creationix/nvm.git ~/.nvm
-  - source ~/.nvm/nvm.sh
-  - nvm install $TRAVIS_NODE_VERSION
-  - npm install npm
-  - mv node_modules npm
-  - export PATH="./node_modules/.bin/:$PATH"
-  # retrieve latest libcurl version
-  - if [[ $LIBCURL_VERSION_TAG == 'LATEST' ]]; then
-      TAG=$(
-        git ls-remote --tags https://github.com/bagder/curl.git |
-        awk '{print $2}' | grep 'curl-' | grep -v '[0-9][_-][abp]' |
-        grep -v '{' | sort -t_ -k 1.16,1n -k 2,2n -k 3,3n -k 4,4n |
-        sed -n 's@.*\(curl-[0-9_]\)@\1@p' | tail -n1
-      ); else
-      TAG=${LIBCURL_VERSION_TAG};
-    fi;
-  # install libcurl
-  - mkdir -p $HOME/curl-source
-  - cd $HOME/curl-source
-  - if [[ ! -d "$TAG" ]]; then git clone --branch "$TAG" --depth 1 https://github.com/bagder/curl.git "$TAG"; fi;
-  - cd "$TAG"
-  - ./buildconf && ./configure --prefix=$HOME/curl && make && make install
-  - export PATH=$HOME/curl/bin:$PATH
-  - cd $TRAVIS_BUILD_DIR
-  # print useful info
-  - npm/.bin/npm --version
-  - node --version
-  - node tools/curl-config.js
-  - curl --version
-  - curl-config --version
-  - curl-config --features
-  - curl-config --protocols
-  # publish binaries if we are building a branch
-  - PUBLISH_BINARY=false
-  - if [[ $TRAVIS_BRANCH == `git describe --tags --always HEAD` ]]; then PUBLISH_BINARY=true; fi;
+- if [[ $TRAVIS_OS_NAME == "linux" ]]; then
+    export CC=/usr/bin/gcc-${GCC_VERSION};
+    export CXX=/usr/bin/g++-${GCC_VERSION};
+  fi;
+- rm -rf ~/.nvm
+- git clone https://github.com/creationix/nvm.git ~/.nvm
+- source ~/.nvm/nvm.sh
+- nvm install $TRAVIS_NODE_VERSION
+- npm install npm
+- mv node_modules npm
+- export PATH="./node_modules/.bin/:$PATH"
+- if [[ $LIBCURL_VERSION_TAG == 'LATEST' ]]; then
+    TAG=$( git ls-remote --tags https://github.com/bagder/curl.git |
+    awk '{print $2}' | grep 'curl-' | grep -v '[0-9][_-][abp]' |
+    grep -v '{' | sort -t_ -k 1.16,1n -k 2,2n -k 3,3n -k 4,4n |
+    sed -n 's@.*\(curl-[0-9_]\)@\1@p' | tail -n1 );
+  else
+    TAG=${LIBCURL_VERSION_TAG};
+  fi;
+- mkdir -p $HOME/curl-source
+- cd $HOME/curl-source
+- if [[ ! -d "$TAG" ]]; then
+    git clone --branch "$TAG" --depth 1 https://github.com/bagder/curl.git "$TAG";
+  fi;
+- cd "$TAG"
+- ./buildconf && ./configure --prefix=$HOME/curl && make && make install
+- export PATH=$HOME/curl/bin:$PATH
+- cd $TRAVIS_BUILD_DIR
+# output versions
+- npm/.bin/npm --version
+- node --version
+- node tools/curl-config.js
+- curl --version
+- curl-config --version
+- curl-config --features
+- curl-config --protocols
+- openssl version -a
+- PUBLISH_BINARY=false
+- if [[ $TRAVIS_BRANCH == `git describe --tags --always HEAD` ]]; then
+    PUBLISH_BINARY=true;
+  fi;
 install:
-  - npm/.bin/npm install --build-from-source
-  - npm/.bin/npm test
+- npm/.bin/npm install --build-from-source
+- npm/.bin/npm test
 before_script:
-  - if [[ $PUBLISH_BINARY == true && $LIBCURL_VERSION_TAG == LATEST ]]; then
-      node-pre-gyp package testpackage --verbose;
-      node scripts/module-packaging.js --publish "$(node-pre-gyp reveal staged_tarball --silent)";
-    fi;
+- if [[ $PUBLISH_BINARY == true && $LIBCURL_VERSION_TAG == LATEST ]]; then
+    node-pre-gyp package testpackage --verbose;
+    node scripts/module-packaging.js --publish "$(node-pre-gyp reveal staged_tarball --silent)";
+  fi;
 script:
-  - INSTALL_RESULT=0
-  - if [[ $PUBLISH_BINARY == true ]]; then
-      INSTALL_RESULT=$(npm/.bin/npm install --fallback-to-build=false > /dev/null)$? || true;
-    fi;
-  - if [[ $INSTALL_RESULT != 0 ]]; then node scripts/module-packaging.js --unpublish "$(node-pre-gyp reveal hosted_tarball --silent)"; false; fi
-  - node-pre-gyp clean
+- INSTALL_RESULT=0
+- if [[ $PUBLISH_BINARY == true ]]; then
+    INSTALL_RESULT=$(npm/.bin/npm install --fallback-to-build=false > /dev/null)$? || true;
+  fi;
+- if [[ $INSTALL_RESULT != 0 ]]; then
+    node scripts/module-packaging.js --unpublish "$(node-pre-gyp reveal hosted_tarball --silent)";
+    false;
+  fi
+- node-pre-gyp clean
