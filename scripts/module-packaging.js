@@ -1,4 +1,4 @@
-var Octokat    = require( 'octokat' ),
+var octonode   = require( 'octonode' ),
     log        = require( 'npmlog' ),
     fs         = require( 'fs' ),
     path       = require( 'path' ),
@@ -17,14 +17,12 @@ if ( args.length !== 2 ) {
 
 if ( args[0] !== validArgs[0] && args[0] !== validArgs[1] ) {
 
-    log.error( '', 'invalid argument "%s" passed to binaries-util script.', args[0] );
+    log.error( '', 'invalid argument "%s" passed to module-packaging script.', args[0] );
     process.exit( -1 );
 }
 
-var octo = new Octokat({
-        token: process.env['NODE_LIBCURL_GITHUB_TOKEN']
-    }),
-    repo = octo.repos( 'JCMais', 'node-libcurl' ),
+var octo = octonode.client( process.env['NODE_LIBCURL_GITHUB_TOKEN'] ),
+    repo = octo.repo( 'JCMais/node-libcurl' ),
     commands = {
         publish  : publish,
         unpublish: unpublish
@@ -35,65 +33,75 @@ commands[args[0].replace( '--', '' )]( args[1] );
 
 function publish( pathToPackage ) {
 
-    getReleaseByTag( versionTag ).then(
-        function( release ) {
+    getReleaseByTag( versionTag, function( err, data, headers ) {
 
-            attachPackageToRelease( pathToPackage, release );
-        },
-        function ( err ) {
+        if ( err ) {
 
-            // Release for given tag not found! Create one release.
-            if ( err.status && err.status === 404 ) {
+            if ( err.statusCode && err.statusCode === 404 ) {
 
-                log.info( '', 'release "%s" not found.', tag );
-                createRelease( versionTag ).then( attachPackageToRelease.bind( null, pathToPackage ), doSomethingWithError );
+                createRelease( versionTag, attachPackageToRelease.bind( null, pathToPackage ) );
 
             } else {
 
-                doSomethingWithError( err );
+                doSomethingWithError(  err )
             }
-        }
-    )
 
+        } else {
+
+            attachPackageToRelease( pathToPackage, null, data, headers );
+        }
+    });
 }
 
 function unpublish( pathToResource ) {
 
-    getReleaseByTag( versionTag ).then(
-        removePackageFromRelease.bind( null, pathToResource ),
-        doSomethingWithError
-    )
+    getReleaseByTag( versionTag, function ( err, release, headers ) {
+
+        if ( err ) {
+            doSomethingWithError( err );
+            return;
+        }
+
+        removePackageFromRelease( pathToResource, release );
+
+    });
 }
 
-function getReleaseByTag( tagName ) {
+function getReleaseByTag( tagName, cb ) {
 
     log.info( '', 'searching for release "%s"', tagName );
 
-    var result = repo.releases.tags( tagName ).fetch().then( function( release ) {
+    repo.release( 'tags/' + tagName ).info( function( err, data, headers ) {
 
-        log.info( '', 'release "%s" found: %s', release.tagName, release.url );
+        if ( err && err.statusCode && err.statusCode === 404 ) {
 
-        return release;
-    });
+            log.info( '', 'release for tag "%s" not found.', tagName );
 
-    return result;
-}
+        } else {
 
-function createRelease( tagName ) {
+            log.info( '', 'release for tag "%s" found: %s', tagName, data.url );
+        }
 
-    log.info( '', 'creating release for "%s"', tag );
-    return repo.releases.create({
-
-        tag_name : tagName,
-        name : 'node-libcurl ' + tagName + ' TEST',
-        draft: false
-
+        cb( err, data, headers );
     });
 }
 
-function attachPackageToRelease( pckg, release ) {
+function createRelease( tagName, cb ) {
 
-    log.info( '', 'attaching package to release "%s"', release.tagName );
+    log.info( '', 'creating release for tag "%s"', tagName );
+
+    repo.release({
+        tag_name: tagName
+    }, cb );
+}
+
+function attachPackageToRelease( pckg, err, release, headers ) {
+
+    if ( err ) {
+
+        doSomethingWithError( err );
+        return;
+    }
 
     var packagePath = path.resolve( pckg ),
         packageFileName,
@@ -105,7 +113,8 @@ function attachPackageToRelease( pckg, release ) {
         process.exit( -1 );
     }
 
-    fileContent = fs.readFileSync( packagePath );
+    log.info( '', 'attaching package "%s" to release "%s"', packagePath, release.url );
+
     packageFileName = path.basename( packagePath );
 
     // check if the package already exists, if so warn and bail out.
@@ -113,19 +122,27 @@ function attachPackageToRelease( pckg, release ) {
 
         if ( release.assets[i].name === packageFileName ) {
 
-            log.warn( '', 'package "%s" already attached to release "%s"', packageFileName, release.tagName );
+            log.warn( '', 'package "%s" already attached to release "%s"', packageFileName, release.tag_name );
             process.exit( 0 );
         }
     }
 
-    release.upload( packageFileName, 'application/x-gzip', fileContent ).then(
-        function( response ) {
+    fileContent = fs.readFileSync( packagePath );
 
-            log.info( '', 'package attached with success: %s', JSON.parse( response ).browser_download_url );
-            process.exit( 0 );
-        },
-        doSomethingWithError
-    );
+    repo.release( release.id ).uploadAssets( fileContent, {
+        name: packageFileName,
+        contentType: 'application/x-gzip'
+    }, function( err, data, headers ) {
+
+        if ( err ) {
+
+            doSomethingWithError( err );
+            return;
+        }
+
+        log.info( '', 'package attached with success: %s', data.browser_download_url );
+        process.exit( 0 );
+    });
 }
 
 function removePackageFromRelease( packageToDelete, release ) {
@@ -133,7 +150,7 @@ function removePackageFromRelease( packageToDelete, release ) {
     var packageToDeleteName = path.basename( packageToDelete ),
         i, len, releaseAsset, found = false;
 
-    log.info( '', 'removing package "%s" from release "%s"', packageToDelete, release.tagName );
+    log.info( '', 'removing package "%s" from release "%s"', packageToDelete, release.tag_name );
 
     for ( i = 0, len = release.assets.length; i < len; i++ ) {
 
@@ -143,27 +160,32 @@ function removePackageFromRelease( packageToDelete, release ) {
 
             found = true;
 
-            releaseAsset.remove().then(
-                function () {
+            //@FIXME using internals because there is no way to remove directly
+            // uri to remove assets is: repos/:owner/:repo/releases/assets/:id
+            repo.client.del( '/repos/' + repo.name + '/releases/assets/' + releaseAsset.id, null, function( err, data, headers ) {
 
-                    log.info( '', 'removed package "%s" from release "%s"', packageToDelete, release.tagName );
-                    process.exit( 0 );
-                },
-                doSomethingWithError
-            )
+                if ( err ) {
+
+                    doSomethingWithError( err );
+                    return;
+                }
+
+                log.info( '', 'removed package "%s" from release "%s"', packageToDelete, release.tag_name );
+                process.exit( 0 );
+            });
         }
 
     }
 
     if ( !found ) {
 
-        log.error( '', 'package "%s" could be found in release "%s"', packageToDelete, release.tagName );
+        log.error( '', 'package "%s" could be found in release "%s"', packageToDelete, release.tag_name );
         process.exit( -1 );
     }
 }
 
 function doSomethingWithError( err ) {
 
-    log.error( err );
+    log.error(  '', err );
     process.exit( -1 );
 }

@@ -35,7 +35,7 @@
     "nan": "~2.0",
     "node-gyp": "~3.0",
     "node-pre-gyp": "~0.6.11",
-    "npmlog" : "~1.2.1"
+    "npmlog"  : "~1.2.1"
   },
   "devDependencies": {
     "body-parser": "^1.12",
@@ -47,7 +47,7 @@
     "jsdoc-baseline": "hegemonic/baseline",
     "mocha": "^2.2",
     "multiparty": "^4.1",
-    "octokat": "~0.4.12",
+    "octonode": "~0.7.4",
     "progress": "~1.1.8",
     "should": "^7.0"
   },

@@ -105,7 +105,10 @@ it( 'should emit "error" event when the connection fails', function( done ) {
         done( Error( 'end event was called, but the connection failed.' ) );
     });
 
-    curl.on( 'error', function() {
+    curl.on( 'error', function( err, errCode ) {
+
+        err.should.be.instanceof( Error );
+        errCode.should.be.of.type( 'number' ).and.equal( Curl.code.CURLE_HTTP_RETURNED_ERROR );
 
         clearTimeout( timeout );
 
@@ -119,8 +122,10 @@ it( 'should emit "error" event when the connection fails', function( done ) {
 it( 'should emit "error" when the connection is aborted in the progress cb', function ( done ) {
 
     curl.setProgressCallback( function() {
+
         return -1;
     });
+
     curl.setOpt( 'NOPROGRESS', false );
 
     curl.on( 'end', function() {
@@ -132,8 +137,8 @@ it( 'should emit "error" when the connection is aborted in the progress cb', fun
 
     curl.on( 'error', function( err, errCode ) {
 
-        //CURLE_ABORTED_BY_CALLBACK (42)
-        errCode.should.be.of.type( 'number' ).and.equal( 42 );
+        err.should.be.instanceof( Error );
+        errCode.should.be.of.type( 'number' ).and.equal( Curl.code.CURLE_ABORTED_BY_CALLBACK );
 
         clearTimeout( timeout );
 
@@ -147,6 +152,7 @@ it( 'should emit "error" when the connection is aborted in the progress cb', fun
 it( 'should emit "error" when the connection is aborted in the header cb', function( done ) {
 
     curl.onHeader = function() {
+
         return -1;
     };
 
@@ -159,8 +165,8 @@ it( 'should emit "error" when the connection is aborted in the header cb', funct
 
     curl.on( 'error', function( err, errCode ) {
 
-        //CURLE_WRITE_ERROR (23)
-        errCode.should.be.of.type( 'number' ).and.equal( 23 );
+        err.should.be.instanceof( Error );
+        errCode.should.be.of.type( 'number' ).and.equal( Curl.code.CURLE_WRITE_ERROR );
 
         clearTimeout( timeout );
 
@@ -174,6 +180,7 @@ it( 'should emit "error" when the connection is aborted in the header cb', funct
 it( 'should emit "error" when the connection is aborted in the data cb', function( done ) {
 
     curl.onData = function() {
+
         return -1;
     };
 
@@ -186,8 +193,8 @@ it( 'should emit "error" when the connection is aborted in the data cb', functio
 
     curl.on( 'error', function( err, errCode ) {
 
-        //CURLE_WRITE_ERROR (23)
-        errCode.should.be.of.type( 'number' ).and.equal( 23 );
+        err.should.be.instanceof( Error );
+        errCode.should.be.of.type( 'number' ).and.equal( Curl.code.CURLE_WRITE_ERROR );
 
         clearTimeout( timeout );
 
