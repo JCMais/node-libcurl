@@ -69,7 +69,8 @@ before_install:
 - curl-config --protocols
 - openssl version -a
 - PUBLISH_BINARY=false
-- if [[ $TRAVIS_BRANCH == `git describe --tags --always HEAD` ]]; then
+- COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
+- if [[ $TRAVIS_BRANCH == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
     PUBLISH_BINARY=true;
   fi;
 install:
