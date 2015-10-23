@@ -32,7 +32,7 @@ install:
   - npm --version
   # Check if we need to publish the package
   - SET PUBLISH_BINARY=false
-  - ps: if ( $env:APPVEYOR_REPO_COMMIT_MESSAGE.ToLower().Contains('[publish binary]') -OR $(git describe --tags --always HEAD) -eq $env:APPVEYOR_REPO_BRANCH ) { $env:PUBLISH_MESSAGE=true }
+  - ps: if ( $env:APPVEYOR_REPO_COMMIT_MESSAGE.ToLower().Contains('[publish binary]') -OR $(git describe --tags --always HEAD) -eq $env:APPVEYOR_REPO_BRANCH ) { $env:PUBLISH_BINARY=true }
   #- for /f "usebackq delims=" %x in (`git describe --tags --always HEAD`) do SET TAG=%x
   #- IF %APPVEYOR_REPO_BRANCH% == %TAG% (SET PUBLISH_BINARY=true)
   # Install the curl-for-windows dependencies.
