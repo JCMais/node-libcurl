@@ -1,6 +1,6 @@
 {
   "name": "node-libcurl",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "author": "Jonathan Cardoso <me@jonathancardoso.com>",
   "description": "Node bindings for libcurl. Based on the work from node-curl.",
   "keywords": [
@@ -24,7 +24,7 @@
     "module_name": "node_libcurl",
     "module_path": "./lib/binding/",
     "host": "https://github.com/JCMais/node-libcurl/releases/download",
-    "remote_path" : "./v{version}/"
+    "remote_path": "./v{version}/"
   },
   "bundledDependencies": [
     "node-pre-gyp"
@@ -35,7 +35,7 @@
     "nan": "~2.0",
     "node-gyp": "~3.0",
     "node-pre-gyp": "~0.6.11",
-    "npmlog"  : "~1.2.1"
+    "npmlog": "~1.2.1"
   },
   "devDependencies": {
     "body-parser": "^1.12",
