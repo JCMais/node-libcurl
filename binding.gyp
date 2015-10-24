@@ -1,7 +1,7 @@
 {
     'targets': [
         {
-            'target_name': 'node-libcurl',
+            'target_name': '<(module_name)',
             'sources': [
                 'src/node_libcurl.cc',
                 'src/Easy.cc',
@@ -12,7 +12,7 @@
                 'src/string_format.cc',
                 'src/strndup.cc'
             ],
-            "include_dirs" : [
+            'include_dirs' : [
                 "<!(node -e \"require('nan')\")"
             ],
             'msvs_settings': {
@@ -46,10 +46,10 @@
             },
             'cflags' : ['-std=c++11', '-O2', '-Wno-narrowing'],
             'cflags!': [ '-fno-exceptions', '-O3' ], # enable exceptions, remove level 3 optimization
-            "xcode_settings": {
+            'xcode_settings': {
                 'OTHER_CPLUSPLUSFLAGS' : ['-std=c++11','-stdlib=libc++'],
                 'OTHER_LDFLAGS': ['-stdlib=libc++'],
-                'MACOSX_DEPLOYMENT_TARGET': '10.7',
+                'MACOSX_DEPLOYMENT_TARGET': '10.8',
                 'WARNING_CFLAGS':[
                     '-Wno-c++11-narrowing',
                     '-Wno-constant-conversion'
@@ -58,7 +58,7 @@
             'conditions': [
                 ['OS=="win"', {
                     'dependencies': [
-                         'deps/curl-for-windows/curl.gyp:libcurl'
+                        '<!@(node "<(module_root_dir)/tools/retrieve-win-deps.js")'
                     ],
                     'defines' : [
                         'CURL_STATICLIB'
@@ -71,6 +71,17 @@
                         'src/strndup.c' #remove strndup function declaration on non-windows systems.
                     ]
                 }]
+            ]
+        },
+        {
+            'target_name': 'action_after_build',
+            'type': 'none',
+            'dependencies': [ '<(module_name)' ],
+            'copies': [
+                {
+                    'files': [ '<(PRODUCT_DIR)/<(module_name).node' ],
+                    'destination': '<(module_path)'
+                }
             ]
         }
     ]

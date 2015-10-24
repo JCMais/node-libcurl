@@ -5,4 +5,5 @@ npm-debug.log
 examples/cacert*
 docs
 wallaby.json
-debug/
+lib/binding
+debug

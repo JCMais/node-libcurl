@@ -85,10 +85,41 @@ For more examples check the [examples folder](examples).
 
 Check the [API Docs](api.md)
 
-## Installing on Windows
+## Detailed Installation
 
-#### What you need to have installed:
+This package has prebuilt binaries available for the following platforms:
+* Linux 64 bits
+* Mac OS X 64 bits
+* Windows 32 and 64 bits
 
-* [Python 2.7](https://www.python.org/download/releases/2.7)
-* [Visual Studio >= 2013](http://www.visualstudio.com/downloads/download-visual-studio-vs)
-* [git](https://desktop.github.com/)
+Just running ``npm install node-libcurl`` should install a prebuilt binary and no compilation will be needed.
+
+If there is no prebuilt binary available that matches your system, or if the installation fails, then you will
+need an environment capable of compilling nodejs addons, which means [python 2.7](https://www.python.org/download/releases/2.7)
+installed and an updated C++ compiler able to compile C++11.
+
+If you don't want to use a prebuilt binary you can pass ``--build-from-source`` to the arguments list.
+
+### Linux
+
+The only compiler supported on linux is gcc >=4.8, also you need to have the libcurl development files available,
+if you are running debian for example, you must install the ``libcurl4-openssl-dev`` package.
+
+If you don't want to use the libcurl version shipped with your system, since it's probably very old
+(debian 7 uses libcurl 7.26 which is more than 3 years old, and had more than 1000 bugfixes already),
+you can install libcurl from source, the addon will pick the libcurl info using the ``curl-config`` tool,
+that way you only need to make sure that the libcurl you installed is in the path and in higher priority
+than the system one.
+
+### OS X
+
+You need to have installed OS X >=10.8 and xcode >=4.5
+
+If you want to install using a different version of libcurl, the same instructions for linux applies.
+
+### Windows
+
+If installing using a prebuilt binary you only need to have the [visual c++ 2013 runtime library](https://www.microsoft.com/en-us/download/details.aspx?id=40784).
+If building from source, you need to have Python 2.7, [Visual Studio >=2013](http://www.visualstudio.com/downloads/download-visual-studio-vs) and [git](https://desktop.github.com/)
+
+Currently there is no support to use other libcurl version than the one provided by the [curl-for-windows](https://github.com/JCMais/curl-for-windows) submodule.
