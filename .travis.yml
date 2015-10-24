@@ -24,7 +24,7 @@ env:
   #- TRAVIS_NODE_VERSION="0.10" LIBCURL_VERSION_TAG="curl-7_26_0"
   #- TRAVIS_NODE_VERSION="0.12" LIBCURL_VERSION_TAG="curl-7_26_0"
   #- TRAVIS_NODE_VERSION="iojs-3" LIBCURL_VERSION_TAG="curl-7_26_0"
-  - TRAVIS_NODE_VERSION="4" LIBCURL_VERSION_TAG="curl-7_26_0"
+  - TRAVIS_NODE_VERSION="4" LIBCURL_VERSION_TAG="curl-7_27_0"
 cache:
   directories:
   - $HOME/curl-source
@@ -34,16 +34,6 @@ before_install:
 - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
     export CC=/usr/bin/gcc-${GCC_VERSION};
     export CXX=/usr/bin/g++-${GCC_VERSION};
-  fi;
-# install latest automake on mac
-- if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-    curl -OL http://ftp.gnu.org/gnu/automake/automake-1.15.tar.xz;
-    tar xzf automake-1.15.tar.xz;
-    cd automake-*;
-    ./configure --prefix=$HOME;
-    make;
-    make install;
-    cd .. && rm -r automake-*;
   fi;
 - export PATH=$HOME/bin:$PATH
 - rm -rf ~/.nvm
