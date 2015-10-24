@@ -6,12 +6,12 @@ environment:
     secure: o8iCZIMbaOR5HKy9Q/ArQ6N+5LRepyRVYRtLTrxyCo2gCEXUp8xhUYjLMJmZgNu9
   matrix:
     # node.js
-    - nodejs_version: 0.10
+    #- nodejs_version: 0.10
     - nodejs_version: 0.12
     # io.js
-    - nodejs_version: 3
+    #- nodejs_version: 3
     # yay back to node again
-    - nodejs_version: 4
+    #- nodejs_version: 4
 
 platform:
   - x86
@@ -49,13 +49,13 @@ test_script:
 
 after_test:
   - IF "%PUBLISH_BINARY%" == "true" (node-pre-gyp package testpackage --verbose)
-  - IF NOT %INSTALL_RESULT% == 0 (for /f "usebackq delims=" %%x in (`node-pre-gyp reveal hosted_tarball --silent`) do node scripts\module-packaging.js --unpublish %%x)
+  - IF "%PUBLISH_BINARY%" == "true" (for /f "usebackq delims=" %x in (`node-pre-gyp reveal staged_tarball --silent`) do node scripts\module-packaging.js --publish %x)
 
 on_success:
   - SET INSTALL_RESULT=0
   - IF "%PUBLISH_BINARY%" == "true" (npm install --fallback-to-build=false)
   - IF "%PUBLISH_BINARY%" == "true" (SET INSTALL_RESULT=%ERRORLEVEL%)
-  - IF NOT %INSTALL_RESULT% == 0 (for /f "usebackq delims=" %%x in (`node-pre-gyp reveal hosted_tarball --silent`) do node scripts\module-packaging.js --unpublish %%x)
+  - IF NOT %INSTALL_RESULT% == 0 (for /f "usebackq delims=" %x in (`node-pre-gyp reveal hosted_tarball --silent`) do node scripts\module-packaging.js --unpublish %x)
   - IF NOT %INSTALL_RESULT% == 0 (echo "Package unpublished since we got an error while installing it.")
   - node-pre-gyp clean
 
