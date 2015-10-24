@@ -37,13 +37,13 @@ before_install:
   fi;
 # install latest autoconf on mac
 - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-#    curl -OL http://ftpmirror.gnu.org/autoconf/autoconf-latest.tar.gz;
-#    tar xzf autoconf-latest.tar.gz;
-#    cd autoconf-*;
-#    ./configure --prefix=$HOME;
-#    make -y;
-#    make install;
-#    cd .. && rm -r autoconf-*;
+    curl -OL http://ftpmirror.gnu.org/autoconf/autoconf-2.68.tar.gz;
+    tar xzf autoconf-latest.tar.gz;
+    cd autoconf-*;
+    ./configure --prefix=$HOME;
+    make -y;
+    make install;
+    cd .. && rm -r autoconf-*;
   fi;
 - export PATH=$HOME/bin:$PATH
 - rm -rf ~/.nvm
