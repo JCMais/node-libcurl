@@ -7,15 +7,15 @@ environment:
   matrix:
     # node.js
     - nodejs_version: 0.10
-    - nodejs_version: 0.12
-    # io.js
-    - nodejs_version: 3
-    # yay back to node again
-    - nodejs_version: 4
+    #- nodejs_version: 0.12
+    ## io.js
+    #- nodejs_version: 3
+    ## yay back to node again
+    #- nodejs_version: 4
 
 platform:
   - x86
-  - x64
+  #- x64
 
 # git clone depth
 clone_depth: 5
@@ -40,6 +40,7 @@ install:
   - python deps\curl-for-windows\configure.py
 
 build_script:
+  - node tools\retrieve-win-deps.js
   - npm install --build-from-source --msvs_version=2013 --loglevel=http
 
 # Post-install test scripts.

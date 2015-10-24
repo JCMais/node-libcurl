@@ -38,7 +38,7 @@ before_install:
 # install latest autoconf on mac
 - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
     curl -OL http://ftpmirror.gnu.org/autoconf/autoconf-2.68.tar.gz;
-    tar xzf autoconf-latest.tar.gz;
+    tar xzf autoconf-2.68.tar.gz;
     cd autoconf-*;
     ./configure --prefix=$HOME;
     make -y;
