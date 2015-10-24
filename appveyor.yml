@@ -15,7 +15,7 @@ environment:
 
 platform:
   - x86
-  #- x64
+  - x64
 
 # git clone depth
 clone_depth: 5
