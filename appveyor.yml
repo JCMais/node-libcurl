@@ -40,7 +40,7 @@ install:
   - python deps\curl-for-windows\configure.py
 
 build_script:
-  - npm install --build-from-source --msvs_version=2013 --loglevel=http
+  - npm install --build-from-source --msvs_version=2013 --verbose
 
 # Post-install test scripts.
 test_script:
