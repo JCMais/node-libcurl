@@ -32,7 +32,6 @@ exec( 'git rev-parse', function( err ) {
         replaceTokensOnGypFiles();
 
         process.stdout.write( depsGypTarget );
-        setTimeout( function() { process.exit( 0 ) }, 500 );
 
     } else {
 
@@ -115,7 +114,6 @@ function initGitSubmodule( depsPath, err, url ) {
                         }
 
                         process.stdout.write( depsGypTarget );
-                        setTimeout( function() { process.exit( 0 ) }, 500 );
 
                     }, execConfig );
                 },
