@@ -15,6 +15,9 @@
     "type": "git",
     "url": "git://github.com/JCMais/node-libcurl.git"
   },
+  "bugs": {
+    "url": "https://github.com/JCMais/node-libcurl/issues"
+  },
   "main": "./index.js",
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
@@ -32,10 +35,10 @@
   "dependencies": {
     "bindings": "~1.2",
     "debug": "^2.2",
-    "nan": "~2.0",
+    "nan": "~2.1",
     "node-gyp": "~3.0",
-    "node-pre-gyp": "~0.6.11",
-    "npmlog": "~1.2.1"
+    "node-pre-gyp": "~0.6",
+    "npmlog": "~1.2"
   },
   "devDependencies": {
     "body-parser": "^1.12",

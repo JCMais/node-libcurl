@@ -123,3 +123,30 @@ If installing using a prebuilt binary you only need to have the [visual c++ 2013
 If building from source, you need to have Python 2.7, [Visual Studio >=2013](http://www.visualstudio.com/downloads/download-visual-studio-vs) and [git](https://desktop.github.com/)
 
 Currently there is no support to use other libcurl version than the one provided by the [curl-for-windows](https://github.com/JCMais/curl-for-windows) submodule.
+
+### nw.js (aka node-webkit)
+
+Currently there are no prebuilt binaries for node-webkit, to install node-libcurl, do the following:
+
+ 1. Install nw-gyp
+
+ ```javascript
+ npm install nw-gyp -g
+ ```
+ 2. Install node-libcurl
+
+ ```javascript
+ npm instal node-libcurl --runtime=node-webkit --target=0.12.3 --arch=x64 --msvs_version=2013 --build-from-source --save
+ ```
+ ``--target`` says you want to build for the node-webkit version 0.12.3.
+ ``--arch`` says the module should be built for 64bit.
+
+### electron (aka atom-shell)
+
+Currently there are no prebuilt binaries for electron, to install node-libcurl, do the following:
+
+ ```javascript
+ npm instal node-libcurl --runtime=electron --target=0.34.1 --arch=x64 --build-from-source --save
+ ```
+ ``--target`` says you want to build for the electron version 0.34.1.
+ ``--arch`` says the module should be built for 64bit.

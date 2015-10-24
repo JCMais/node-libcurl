@@ -930,14 +930,6 @@ namespace NodeLibcurl {
     // traits class to determine if we need to check for null pointer first
     template <typename> struct ResultTypeIsChar: std::false_type {};
     template <> struct ResultTypeIsChar<char*>: std::true_type {};
-    template<typename T>
-    static Nan::MaybeLocal<T> wrapHandle( v8::Local<T> h ) {
-        return Nan::MaybeLocal<T>( h );
-    }
-    template<typename T>
-    static Nan::MaybeLocal<T> wrapHandle( Nan::MaybeLocal<T> h ) {
-        return h;
-    }
 
     template<typename TResultType, typename Tv8MappingType>
     v8::Local<v8::Value> Easy::GetInfoTmpl( const Easy *obj, int infoId )
@@ -962,11 +954,11 @@ namespace NodeLibcurl {
             //is string
             if ( ResultTypeIsChar<TResultType>::value && !result ) {
 
-                retVal = wrapHandle<v8::String>( Nan::EmptyString() ).ToLocalChecked();
+                retVal = Nan::MakeMaybe( Nan::EmptyString() ).ToLocalChecked();
             }
             else {
 
-                retVal = wrapHandle<Tv8MappingType>( Nan::New<Tv8MappingType>( result ) ).ToLocalChecked();
+                retVal = Nan::MakeMaybe( Nan::New<Tv8MappingType>( result ) ).ToLocalChecked();
             }
 
         }
