@@ -35,6 +35,15 @@ before_install:
     export CC=/usr/bin/gcc-${GCC_VERSION};
     export CXX=/usr/bin/g++-${GCC_VERSION};
   fi;
+# install latest autoconf on mac
+- if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+    curl -OL http://ftpmirror.gnu.org/autoconf/autoconf-latest.tar.gz;
+    tar xzf autoconf-latest.tar.gz;
+    cd autoconf-*;
+    ./configure --prefix=$HOME && make && make install;
+    cd .. && rm -r autoconf-*;
+  fi;
+- export PATH=$HOME/bin:$PATH
 - rm -rf ~/.nvm
 - git clone https://github.com/creationix/nvm.git ~/.nvm
 - source ~/.nvm/nvm.sh
@@ -61,8 +70,7 @@ before_install:
     git clone --branch "$TAG" --depth 1 https://github.com/bagder/curl.git "$TAG";
   fi;
 - cd "$TAG"
-- ./buildconf && ./configure --prefix=$HOME/curl && make && make install
-- export PATH=$HOME/curl/bin:$PATH
+- ./buildconf && ./configure --prefix=$HOME && make && make install
 - cd $TRAVIS_BUILD_DIR
 # output curl version info
 - curl --version
