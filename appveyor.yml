@@ -48,6 +48,7 @@ test_script:
   - IF %nodejs_version% LSS 1 (npm test) ELSE (IF %nodejs_version% LSS 4 (iojs node_modules\mocha\bin\mocha test --reporter spec) ELSE (npm test))
 
 after_test:
+  - IF %PUBLISH_BINARY% == true (node-pre-gyp package testpackage --verbose)
   - IF %PUBLISH_BINARY% == true (for /f "usebackq delims=" %x in (`node-pre-gyp reveal staged_tarball --silent`) do node scripts\module-packaging.js --publish %x)
 
 on_success:
