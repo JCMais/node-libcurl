@@ -53,7 +53,7 @@ before_install:
 - npm/.bin/npm --version
 - node --version
 - node tools/curl-config.js
-- apt-cache policy openssl
+- if [[ $TRAVIS_OS_NAME == "linux" ]]; then apt-cache policy openssl; fi;
 - if [[ $LIBCURL_VERSION_TAG == 'LATEST' ]]; then
     TAG=$( git ls-remote --tags https://github.com/bagder/curl.git |
     awk '{print $2}' | grep 'curl-' | grep -v '[0-9][_-][abp]' |
