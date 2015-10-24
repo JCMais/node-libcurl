@@ -48,15 +48,15 @@ test_script:
   - IF %nodejs_version% LSS 1 (npm test) ELSE (IF %nodejs_version% LSS 4 (iojs node_modules\mocha\bin\mocha test --reporter spec) ELSE (npm test))
 
 after_test:
-  - IF %PUBLISH_BINARY% == true (node-pre-gyp package testpackage --verbose)
-  - IF %PUBLISH_BINARY% == true (for /f "usebackq delims=" %x in (`node-pre-gyp reveal staged_tarball --silent`) do node scripts\module-packaging.js --publish %x)
+  - IF %PUBLISH_BINARY% == true node-pre-gyp package testpackage --verbose
+  - IF %PUBLISH_BINARY% == true for /f "usebackq delims=" %x in (`node-pre-gyp reveal staged_tarball --silent`) do node scripts\module-packaging.js --publish %x
 
 on_success:
   - SET INSTALL_RESULT=0
-  - IF %PUBLISH_BINARY% == true (npm install --fallback-to-build=false)
-  - IF %PUBLISH_BINARY% == true (SET INSTALL_RESULT=%ERRORLEVEL%)
-  - IF NOT %INSTALL_RESULT% == 0 (for /f "usebackq delims=" %x in (`node-pre-gyp reveal hosted_tarball --silent`) do node scripts\module-packaging.js --unpublish %x)
-  - IF NOT %INSTALL_RESULT% == 0 (echo "Package unpublished since we got an error while installing it.")
+  - IF %PUBLISH_BINARY% == true npm install --fallback-to-build=false
+  - IF %PUBLISH_BINARY% == true SET INSTALL_RESULT=%ERRORLEVEL%
+  - IF NOT %INSTALL_RESULT% == 0 for /f "usebackq delims=" %x in (`node-pre-gyp reveal hosted_tarball --silent`) do node scripts\module-packaging.js --unpublish %x
+  - IF NOT %INSTALL_RESULT% == 0 echo "Package unpublished since we got an error while installing it."
   - node-pre-gyp clean
 
 # Don't actually deploy.
