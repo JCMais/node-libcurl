@@ -7,11 +7,11 @@ environment:
   matrix:
     # node.js
     - nodejs_version: 0.10
-    #- nodejs_version: 0.12
-    ## io.js
-    #- nodejs_version: 3
-    ## yay back to node again
-    #- nodejs_version: 4
+    - nodejs_version: 0.12
+    # io.js
+    - nodejs_version: 3
+    # yay back to node again
+    - nodejs_version: 4
 
 platform:
   - x86
