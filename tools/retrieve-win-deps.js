@@ -29,12 +29,10 @@ exec( 'git rev-parse', function( err ) {
 
     if ( !err ) {
 
-        console.error( 'Already a gyp repo.' );
-
         replaceTokensOnGypFiles();
 
-        console.log( depsGypTarget );
-        process.exit( 0 );
+        process.stdout.write( depsGypTarget );
+        setTimeout( function() { process.exit( 0 ) }, 500 );
 
     } else {
 
@@ -116,8 +114,9 @@ function initGitSubmodule( depsPath, err, url ) {
                             process.exit( 1 );
                         }
 
-                        console.log( depsGypTarget );
-                        process.exit( 0 );
+                        process.stdout.write( depsGypTarget );
+                        setTimeout( function() { process.exit( 0 ) }, 500 );
+
                     }, execConfig );
                 },
                 execConfig
@@ -134,8 +133,6 @@ function replaceTokensOnGypFiles() {
         search = /<\(library\)/g,
         replacement = 'static_library',
         i, len, file;
-
-    console.error( 'Replacing tokens' );
 
     for ( i = 0, len = filesToCheck.length; i < len; i++ ) {
 

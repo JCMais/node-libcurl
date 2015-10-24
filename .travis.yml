@@ -36,8 +36,8 @@ before_install:
     export CXX=/usr/bin/g++-${GCC_VERSION};
   fi;
 # install latest autoconf on mac
-- if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-  fi;
+#- if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+#  fi;
 - export PATH=$HOME/bin:$PATH
 - rm -rf ~/.nvm
 - git clone https://github.com/creationix/nvm.git ~/.nvm
