@@ -10,6 +10,7 @@ addons:
     packages:
     - gcc-4.8
     - g++-4.8
+    - libssl-dev
     - openssl
 env:
   global:
@@ -34,6 +35,12 @@ before_install:
 - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
     export CC=/usr/bin/gcc-${GCC_VERSION};
     export CXX=/usr/bin/g++-${GCC_VERSION};
+  fi;
+# update openssl on mac
+- if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+    brew update;
+    brew install openssl;
+    brew link --force openssl;
   fi;
 - export PATH=$HOME/bin:$PATH
 - rm -rf ~/.nvm

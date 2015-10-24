@@ -49,7 +49,7 @@
             'xcode_settings': {
                 'OTHER_CPLUSPLUSFLAGS' : ['-std=c++11','-stdlib=libc++'],
                 'OTHER_LDFLAGS': ['-stdlib=libc++'],
-                'MACOSX_DEPLOYMENT_TARGET': '10.7',
+                'MACOSX_DEPLOYMENT_TARGET': '10.8',
                 'WARNING_CFLAGS':[
                     '-Wno-c++11-narrowing',
                     '-Wno-constant-conversion'
