@@ -224,6 +224,10 @@ namespace NodeLibcurl {
         { "NOPROGRESS", CURLOPT_NOPROGRESS },
         { "NOSIGNAL", CURLOPT_NOSIGNAL },
 
+    #if NODE_LIBCURL_VER_GE( 7, 42, 0 )
+        { "PATH_AS_IS", CURLOPT_PATH_AS_IS },
+    #endif
+
     #if NODE_LIBCURL_VER_GE( 7, 43, 0 )
         { "PIPEWAIT", CURLOPT_PIPEWAIT },
     #endif
@@ -520,7 +524,7 @@ namespace NodeLibcurl {
         { "MAX_TOTAL_CONNECTIONS", CURLMOPT_MAX_TOTAL_CONNECTIONS },
     #endif
         { "MAXCONNECTS", CURLMOPT_MAXCONNECTS },
-        { "PIPELINING", CURLMOPT_PIPELINING },
+        { "PIPELINING", CURLMOPT_PIPELINING }, //@todo add consts http://curl.haxx.se/libcurl/c/CURLMOPT_PIPELINING.html
     };
 
     const std::vector<CurlConstant> curlMultiOptionStringArray = {

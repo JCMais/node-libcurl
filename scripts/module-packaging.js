@@ -28,7 +28,6 @@ var octo = octonode.client( process.env['NODE_LIBCURL_GITHUB_TOKEN'] ),
         unpublish: unpublish
     };
 
-
 commands[args[0].replace( '--', '' )]( args[1] );
 
 function publish( pathToPackage ) {
@@ -43,7 +42,7 @@ function publish( pathToPackage ) {
 
             } else {
 
-                doSomethingWithError(  err )
+                doSomethingWithError(  err );
             }
 
         } else {

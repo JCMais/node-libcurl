@@ -29,7 +29,7 @@ namespace NodeLibcurl {
     Multi::Multi() : isOpen( true ), runningHandles( 0 ), cbOnMessage( nullptr )
     {
         // init uv timer to be used with HandleTimeout
-        this->timeout = deleted_unique_ptr<uv_timer_t>( new uv_timer_t, [&]( uv_timer_t *handle ) { uv_close( reinterpret_cast<uv_handle_t *>( handle ), Multi::OnTimerClose ); } );
+        this->timeout = deleted_unique_ptr<uv_timer_t>( new uv_timer_t, [&]( uv_timer_t *timerhandl ) { uv_close( reinterpret_cast<uv_handle_t *>( timerhandl ), Multi::OnTimerClose ); } );
 
         int timerStatus = uv_timer_init( uv_default_loop(), this->timeout.get() );
         assert( timerStatus == 0 );

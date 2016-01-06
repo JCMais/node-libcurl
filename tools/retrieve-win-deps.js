@@ -127,7 +127,7 @@ function initGitSubmodule( depsPath, err, url ) {
 
 function replaceTokensOnGypFiles() {
 
-    var filesToCheck = [ 'libssh2.gyp', 'openssl.gyp', 'zlib.gyp', 'curl.gyp' ],
+    var filesToCheck = [ 'libssh2.gyp', 'openssl/openssl.gyp', 'zlib.gyp', 'curl.gyp' ],
         search = /<\(library\)/g,
         replacement = 'static_library',
         i, len, file;
