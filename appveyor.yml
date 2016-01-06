@@ -12,6 +12,7 @@ environment:
     - nodejs_version: 3
     # yay back to node again
     - nodejs_version: 4
+    - nodejs_version: 5
 
 platform:
   - x86
