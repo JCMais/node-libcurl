@@ -35,7 +35,7 @@ _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-
 ## Quick Start
 
 ### Install
-```npm install node-libcurl```
+```npm install node-libcurl --save```
 
 ### Simple Request
 ```javascript
@@ -87,7 +87,7 @@ Check the [API Docs](api.md)
 
 ## Detailed Installation
 
-This package has prebuilt binaries available for the following platforms:
+This package has prebuilt binaries (thanks to [node-pre-gyp](https://github.com/mapbox/node-pre-gyp/)) available for the following platforms:
 * Linux 64 bits
 * Mac OS X 64 bits
 * Windows 32 and 64 bits

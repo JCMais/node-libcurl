@@ -2,98 +2,98 @@
 ## node-libcurl
 
 * [node-libcurl](#module_node-libcurl)
-  * [.Curl](#module_node-libcurl.Curl) ⇐ <code>EventEmitter</code>
-    * [new Curl()](#new_module_node-libcurl.Curl_new)
-    * _instance_
-      * [.onData](#module_node-libcurl.Curl+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
-      * [.onHeader](#module_node-libcurl.Curl+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
-      * [.enable(bitmask)](#module_node-libcurl.Curl+enable) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-      * [.disable(bitmask)](#module_node-libcurl.Curl+disable) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-      * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Curl+setOpt) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-      * [.getInfo(infoNameOrId)](#module_node-libcurl.Curl+getInfo) ⇒ <code>String</code> &#124; <code>Number</code> &#124; <code>Array</code>
-      * [.setProgressCallback(cb)](#module_node-libcurl.Curl+setProgressCallback) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-      * [.perform()](#module_node-libcurl.Curl+perform) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-      * [.pause(bitmask)](#module_node-libcurl.Curl+pause) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-      * [.reset()](#module_node-libcurl.Curl+reset) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-      * [.dupHandle([shouldCopyCallbacks], [shouldCopyEventListeners])](#module_node-libcurl.Curl+dupHandle) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-      * [.close()](#module_node-libcurl.Curl+close)
-      * ["data" (chunk)](#module_node-libcurl.Curl+event_data)
-      * ["header" (chunk)](#module_node-libcurl.Curl+event_header)
-      * ["error" (err, errCode)](#module_node-libcurl.Curl+event_error)
-      * ["end" (status, argBody, argBody)](#module_node-libcurl.Curl+event_end)
-    * _static_
-      * [.option](#module_node-libcurl.Curl.option) : <code>enum</code>
-      * [.multi](#module_node-libcurl.Curl.multi) : <code>enum</code>
-      * [.share](#module_node-libcurl.Curl.share) : <code>enum</code>
-      * [.lock](#module_node-libcurl.Curl.lock) : <code>enum</code>
-      * [.info](#module_node-libcurl.Curl.info) : <code>enum</code>
-      * [.auth](#module_node-libcurl.Curl.auth) : <code>enum</code>
-      * [.http](#module_node-libcurl.Curl.http) : <code>enum</code>
-      * [.pause](#module_node-libcurl.Curl.pause) : <code>enum</code>
-      * [.protocol](#module_node-libcurl.Curl.protocol) : <code>enum</code>
-      * [.header](#module_node-libcurl.Curl.header) : <code>enum</code>
-      * [.code](#module_node-libcurl.Curl.code) : <code>enum</code>
-      * [.netrc](#module_node-libcurl.Curl.netrc) : <code>enum</code>
-      * [.ftpauth](#module_node-libcurl.Curl.ftpauth) : <code>enum</code>
-      * [.ftpssl](#module_node-libcurl.Curl.ftpssl) : <code>enum</code>
-      * [.ftpmethod](#module_node-libcurl.Curl.ftpmethod) : <code>enum</code>
-      * [.rtspreq](#module_node-libcurl.Curl.rtspreq) : <code>enum</code>
-      * [.ipresolve](#module_node-libcurl.Curl.ipresolve) : <code>enum</code>
-      * [.usessl](#module_node-libcurl.Curl.usessl) : <code>enum</code>
-      * [.sslversion](#module_node-libcurl.Curl.sslversion) : <code>enum</code>
-      * [.ssh_auth](#module_node-libcurl.Curl.ssh_auth) : <code>enum</code>
-      * [.timecond](#module_node-libcurl.Curl.timecond) : <code>enum</code>
-      * [.feature](#module_node-libcurl.Curl.feature) : <code>enum</code>
-      * [.getCount](#module_node-libcurl.Curl.getCount) ⇒ <code>Number</code>
-      * [.getVersion](#module_node-libcurl.Curl.getVersion) ⇒ <code>String</code>
-      * [.VERSION_NUM](#module_node-libcurl.Curl.VERSION_NUM)
-    * _inner_
-      * [~progressCallback](#module_node-libcurl.Curl..progressCallback) ⇒ <code>Number</code>
-  * [.Easy](#module_node-libcurl.Easy)
-    * [new Easy([orig])](#new_module_node-libcurl.Easy_new)
-    * _instance_
-      * [.onData](#module_node-libcurl.Easy+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
-      * [.onHeader](#module_node-libcurl.Easy+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
-      * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Easy+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-      * [.getInfo(infoNameOrId)](#module_node-libcurl.Easy+getInfo) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
-      * [.send(buf)](#module_node-libcurl.Easy+send) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
-      * [.recv(buf)](#module_node-libcurl.Easy+recv) ⇒ <code>module:node-libcurl.Easy.ReturnData</code>
-      * [.perform()](#module_node-libcurl.Easy+perform) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-      * [.pause(bitmask)](#module_node-libcurl.Easy+pause) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-      * [.reset()](#module_node-libcurl.Easy+reset) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-      * [.dupHandle()](#module_node-libcurl.Easy+dupHandle) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
-      * [.onSocketEvent(cb)](#module_node-libcurl.Easy+onSocketEvent) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
-      * [.monitorSocketEvents()](#module_node-libcurl.Easy+monitorSocketEvents) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
-      * [.unmonitorSocketEvents()](#module_node-libcurl.Easy+unmonitorSocketEvents) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
-      * [.close()](#module_node-libcurl.Easy+close)
-    * _static_
-      * [.socket](#module_node-libcurl.Easy.socket) : <code>enum</code>
-      * [.strError(code)](#module_node-libcurl.Easy.strError) ⇒ <code>String</code>
-    * _inner_
-      * [~ReturnData](#module_node-libcurl.Easy..ReturnData) : <code>Object</code>
-      * [~onDataCallback](#module_node-libcurl.Easy..onDataCallback) ⇒ <code>Number</code>
-      * [~onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback) ⇒ <code>Number</code>
-      * [~onSocketEventCallback](#module_node-libcurl.Easy..onSocketEventCallback) : <code>function</code>
-  * [.Multi](#module_node-libcurl.Multi)
-    * [new Multi()](#new_module_node-libcurl.Multi_new)
-    * _instance_
-      * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Multi+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-      * [.addHandle(handle)](#module_node-libcurl.Multi+addHandle) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-      * [.onMessage(cb)](#module_node-libcurl.Multi+onMessage) ⇒ <code>[Multi](#module_node-libcurl.Multi)</code>
-      * [.removeHandle(handle)](#module_node-libcurl.Multi+removeHandle) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-      * [.getCount()](#module_node-libcurl.Multi+getCount) ⇒ <code>Number</code>
-      * [.close()](#module_node-libcurl.Multi+close)
-    * _static_
-      * [.strError(code)](#module_node-libcurl.Multi.strError) ⇒ <code>String</code>
-    * _inner_
-      * [~onMessageCallback](#module_node-libcurl.Multi..onMessageCallback) : <code>function</code>
-  * [.Share](#module_node-libcurl.Share)
-    * [new Share()](#new_module_node-libcurl.Share_new)
-    * _instance_
-      * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Share+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-      * [.close()](#module_node-libcurl.Share+close)
-    * _static_
-      * [.strError(code)](#module_node-libcurl.Share.strError) ⇒ <code>String</code>
+    * [.Curl](#module_node-libcurl.Curl) ⇐ <code>EventEmitter</code>
+        * [new Curl()](#new_module_node-libcurl.Curl_new)
+        * _instance_
+            * [.onData](#module_node-libcurl.Curl+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
+            * [.onHeader](#module_node-libcurl.Curl+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
+            * [.enable(bitmask)](#module_node-libcurl.Curl+enable) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+            * [.disable(bitmask)](#module_node-libcurl.Curl+disable) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+            * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Curl+setOpt) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+            * [.getInfo(infoNameOrId)](#module_node-libcurl.Curl+getInfo) ⇒ <code>String</code> &#124; <code>Number</code> &#124; <code>Array</code>
+            * [.setProgressCallback(cb)](#module_node-libcurl.Curl+setProgressCallback) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+            * [.perform()](#module_node-libcurl.Curl+perform) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+            * [.pause(bitmask)](#module_node-libcurl.Curl+pause) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+            * [.reset()](#module_node-libcurl.Curl+reset) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+            * [.dupHandle([shouldCopyCallbacks], [shouldCopyEventListeners])](#module_node-libcurl.Curl+dupHandle) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+            * [.close()](#module_node-libcurl.Curl+close)
+            * ["data" (chunk)](#module_node-libcurl.Curl+event_data)
+            * ["header" (chunk)](#module_node-libcurl.Curl+event_header)
+            * ["error" (err, errCode)](#module_node-libcurl.Curl+event_error)
+            * ["end" (status, argBody, argBody)](#module_node-libcurl.Curl+event_end)
+        * _static_
+            * [.option](#module_node-libcurl.Curl.option) : <code>enum</code>
+            * [.multi](#module_node-libcurl.Curl.multi) : <code>enum</code>
+            * [.share](#module_node-libcurl.Curl.share) : <code>enum</code>
+            * [.lock](#module_node-libcurl.Curl.lock) : <code>enum</code>
+            * [.info](#module_node-libcurl.Curl.info) : <code>enum</code>
+            * [.auth](#module_node-libcurl.Curl.auth) : <code>enum</code>
+            * [.http](#module_node-libcurl.Curl.http) : <code>enum</code>
+            * [.pause](#module_node-libcurl.Curl.pause) : <code>enum</code>
+            * [.protocol](#module_node-libcurl.Curl.protocol) : <code>enum</code>
+            * [.header](#module_node-libcurl.Curl.header) : <code>enum</code>
+            * [.code](#module_node-libcurl.Curl.code) : <code>enum</code>
+            * [.netrc](#module_node-libcurl.Curl.netrc) : <code>enum</code>
+            * [.ftpauth](#module_node-libcurl.Curl.ftpauth) : <code>enum</code>
+            * [.ftpssl](#module_node-libcurl.Curl.ftpssl) : <code>enum</code>
+            * [.ftpmethod](#module_node-libcurl.Curl.ftpmethod) : <code>enum</code>
+            * [.rtspreq](#module_node-libcurl.Curl.rtspreq) : <code>enum</code>
+            * [.ipresolve](#module_node-libcurl.Curl.ipresolve) : <code>enum</code>
+            * [.usessl](#module_node-libcurl.Curl.usessl) : <code>enum</code>
+            * [.sslversion](#module_node-libcurl.Curl.sslversion) : <code>enum</code>
+            * [.ssh_auth](#module_node-libcurl.Curl.ssh_auth) : <code>enum</code>
+            * [.timecond](#module_node-libcurl.Curl.timecond) : <code>enum</code>
+            * [.feature](#module_node-libcurl.Curl.feature) : <code>enum</code>
+            * [.getCount](#module_node-libcurl.Curl.getCount) ⇒ <code>Number</code>
+            * [.getVersion](#module_node-libcurl.Curl.getVersion) ⇒ <code>String</code>
+            * [.VERSION_NUM](#module_node-libcurl.Curl.VERSION_NUM)
+        * _inner_
+            * [~progressCallback](#module_node-libcurl.Curl..progressCallback) ⇒ <code>Number</code>
+    * [.Easy](#module_node-libcurl.Easy)
+        * [new Easy([orig])](#new_module_node-libcurl.Easy_new)
+        * _instance_
+            * [.onData](#module_node-libcurl.Easy+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
+            * [.onHeader](#module_node-libcurl.Easy+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
+            * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Easy+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+            * [.getInfo(infoNameOrId)](#module_node-libcurl.Easy+getInfo) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
+            * [.send(buf)](#module_node-libcurl.Easy+send) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
+            * [.recv(buf)](#module_node-libcurl.Easy+recv) ⇒ <code>module:node-libcurl.Easy.ReturnData</code>
+            * [.perform()](#module_node-libcurl.Easy+perform) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+            * [.pause(bitmask)](#module_node-libcurl.Easy+pause) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+            * [.reset()](#module_node-libcurl.Easy+reset) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+            * [.dupHandle()](#module_node-libcurl.Easy+dupHandle) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
+            * [.onSocketEvent(cb)](#module_node-libcurl.Easy+onSocketEvent) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
+            * [.monitorSocketEvents()](#module_node-libcurl.Easy+monitorSocketEvents) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
+            * [.unmonitorSocketEvents()](#module_node-libcurl.Easy+unmonitorSocketEvents) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
+            * [.close()](#module_node-libcurl.Easy+close)
+        * _static_
+            * [.socket](#module_node-libcurl.Easy.socket) : <code>enum</code>
+            * [.strError(code)](#module_node-libcurl.Easy.strError) ⇒ <code>String</code>
+        * _inner_
+            * [~ReturnData](#module_node-libcurl.Easy..ReturnData) : <code>Object</code>
+            * [~onDataCallback](#module_node-libcurl.Easy..onDataCallback) ⇒ <code>Number</code>
+            * [~onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback) ⇒ <code>Number</code>
+            * [~onSocketEventCallback](#module_node-libcurl.Easy..onSocketEventCallback) : <code>function</code>
+    * [.Multi](#module_node-libcurl.Multi)
+        * [new Multi()](#new_module_node-libcurl.Multi_new)
+        * _instance_
+            * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Multi+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+            * [.addHandle(handle)](#module_node-libcurl.Multi+addHandle) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+            * [.onMessage(cb)](#module_node-libcurl.Multi+onMessage) ⇒ <code>[Multi](#module_node-libcurl.Multi)</code>
+            * [.removeHandle(handle)](#module_node-libcurl.Multi+removeHandle) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+            * [.getCount()](#module_node-libcurl.Multi+getCount) ⇒ <code>Number</code>
+            * [.close()](#module_node-libcurl.Multi+close)
+        * _static_
+            * [.strError(code)](#module_node-libcurl.Multi.strError) ⇒ <code>String</code>
+        * _inner_
+            * [~onMessageCallback](#module_node-libcurl.Multi..onMessageCallback) : <code>function</code>
+    * [.Share](#module_node-libcurl.Share)
+        * [new Share()](#new_module_node-libcurl.Share_new)
+        * _instance_
+            * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Share+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+            * [.close()](#module_node-libcurl.Share+close)
+        * _static_
+            * [.strError(code)](#module_node-libcurl.Share.strError) ⇒ <code>String</code>
 
 <a name="module_node-libcurl.Curl"></a>
 ### node-libcurl.Curl ⇐ <code>EventEmitter</code>
@@ -101,52 +101,52 @@
 **Extends:** <code>EventEmitter</code>  
 
 * [.Curl](#module_node-libcurl.Curl) ⇐ <code>EventEmitter</code>
-  * [new Curl()](#new_module_node-libcurl.Curl_new)
-  * _instance_
-    * [.onData](#module_node-libcurl.Curl+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
-    * [.onHeader](#module_node-libcurl.Curl+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
-    * [.enable(bitmask)](#module_node-libcurl.Curl+enable) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-    * [.disable(bitmask)](#module_node-libcurl.Curl+disable) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-    * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Curl+setOpt) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-    * [.getInfo(infoNameOrId)](#module_node-libcurl.Curl+getInfo) ⇒ <code>String</code> &#124; <code>Number</code> &#124; <code>Array</code>
-    * [.setProgressCallback(cb)](#module_node-libcurl.Curl+setProgressCallback) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-    * [.perform()](#module_node-libcurl.Curl+perform) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-    * [.pause(bitmask)](#module_node-libcurl.Curl+pause) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-    * [.reset()](#module_node-libcurl.Curl+reset) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-    * [.dupHandle([shouldCopyCallbacks], [shouldCopyEventListeners])](#module_node-libcurl.Curl+dupHandle) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
-    * [.close()](#module_node-libcurl.Curl+close)
-    * ["data" (chunk)](#module_node-libcurl.Curl+event_data)
-    * ["header" (chunk)](#module_node-libcurl.Curl+event_header)
-    * ["error" (err, errCode)](#module_node-libcurl.Curl+event_error)
-    * ["end" (status, argBody, argBody)](#module_node-libcurl.Curl+event_end)
-  * _static_
-    * [.option](#module_node-libcurl.Curl.option) : <code>enum</code>
-    * [.multi](#module_node-libcurl.Curl.multi) : <code>enum</code>
-    * [.share](#module_node-libcurl.Curl.share) : <code>enum</code>
-    * [.lock](#module_node-libcurl.Curl.lock) : <code>enum</code>
-    * [.info](#module_node-libcurl.Curl.info) : <code>enum</code>
-    * [.auth](#module_node-libcurl.Curl.auth) : <code>enum</code>
-    * [.http](#module_node-libcurl.Curl.http) : <code>enum</code>
-    * [.pause](#module_node-libcurl.Curl.pause) : <code>enum</code>
-    * [.protocol](#module_node-libcurl.Curl.protocol) : <code>enum</code>
-    * [.header](#module_node-libcurl.Curl.header) : <code>enum</code>
-    * [.code](#module_node-libcurl.Curl.code) : <code>enum</code>
-    * [.netrc](#module_node-libcurl.Curl.netrc) : <code>enum</code>
-    * [.ftpauth](#module_node-libcurl.Curl.ftpauth) : <code>enum</code>
-    * [.ftpssl](#module_node-libcurl.Curl.ftpssl) : <code>enum</code>
-    * [.ftpmethod](#module_node-libcurl.Curl.ftpmethod) : <code>enum</code>
-    * [.rtspreq](#module_node-libcurl.Curl.rtspreq) : <code>enum</code>
-    * [.ipresolve](#module_node-libcurl.Curl.ipresolve) : <code>enum</code>
-    * [.usessl](#module_node-libcurl.Curl.usessl) : <code>enum</code>
-    * [.sslversion](#module_node-libcurl.Curl.sslversion) : <code>enum</code>
-    * [.ssh_auth](#module_node-libcurl.Curl.ssh_auth) : <code>enum</code>
-    * [.timecond](#module_node-libcurl.Curl.timecond) : <code>enum</code>
-    * [.feature](#module_node-libcurl.Curl.feature) : <code>enum</code>
-    * [.getCount](#module_node-libcurl.Curl.getCount) ⇒ <code>Number</code>
-    * [.getVersion](#module_node-libcurl.Curl.getVersion) ⇒ <code>String</code>
-    * [.VERSION_NUM](#module_node-libcurl.Curl.VERSION_NUM)
-  * _inner_
-    * [~progressCallback](#module_node-libcurl.Curl..progressCallback) ⇒ <code>Number</code>
+    * [new Curl()](#new_module_node-libcurl.Curl_new)
+    * _instance_
+        * [.onData](#module_node-libcurl.Curl+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
+        * [.onHeader](#module_node-libcurl.Curl+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
+        * [.enable(bitmask)](#module_node-libcurl.Curl+enable) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+        * [.disable(bitmask)](#module_node-libcurl.Curl+disable) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+        * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Curl+setOpt) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+        * [.getInfo(infoNameOrId)](#module_node-libcurl.Curl+getInfo) ⇒ <code>String</code> &#124; <code>Number</code> &#124; <code>Array</code>
+        * [.setProgressCallback(cb)](#module_node-libcurl.Curl+setProgressCallback) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+        * [.perform()](#module_node-libcurl.Curl+perform) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+        * [.pause(bitmask)](#module_node-libcurl.Curl+pause) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+        * [.reset()](#module_node-libcurl.Curl+reset) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+        * [.dupHandle([shouldCopyCallbacks], [shouldCopyEventListeners])](#module_node-libcurl.Curl+dupHandle) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
+        * [.close()](#module_node-libcurl.Curl+close)
+        * ["data" (chunk)](#module_node-libcurl.Curl+event_data)
+        * ["header" (chunk)](#module_node-libcurl.Curl+event_header)
+        * ["error" (err, errCode)](#module_node-libcurl.Curl+event_error)
+        * ["end" (status, argBody, argBody)](#module_node-libcurl.Curl+event_end)
+    * _static_
+        * [.option](#module_node-libcurl.Curl.option) : <code>enum</code>
+        * [.multi](#module_node-libcurl.Curl.multi) : <code>enum</code>
+        * [.share](#module_node-libcurl.Curl.share) : <code>enum</code>
+        * [.lock](#module_node-libcurl.Curl.lock) : <code>enum</code>
+        * [.info](#module_node-libcurl.Curl.info) : <code>enum</code>
+        * [.auth](#module_node-libcurl.Curl.auth) : <code>enum</code>
+        * [.http](#module_node-libcurl.Curl.http) : <code>enum</code>
+        * [.pause](#module_node-libcurl.Curl.pause) : <code>enum</code>
+        * [.protocol](#module_node-libcurl.Curl.protocol) : <code>enum</code>
+        * [.header](#module_node-libcurl.Curl.header) : <code>enum</code>
+        * [.code](#module_node-libcurl.Curl.code) : <code>enum</code>
+        * [.netrc](#module_node-libcurl.Curl.netrc) : <code>enum</code>
+        * [.ftpauth](#module_node-libcurl.Curl.ftpauth) : <code>enum</code>
+        * [.ftpssl](#module_node-libcurl.Curl.ftpssl) : <code>enum</code>
+        * [.ftpmethod](#module_node-libcurl.Curl.ftpmethod) : <code>enum</code>
+        * [.rtspreq](#module_node-libcurl.Curl.rtspreq) : <code>enum</code>
+        * [.ipresolve](#module_node-libcurl.Curl.ipresolve) : <code>enum</code>
+        * [.usessl](#module_node-libcurl.Curl.usessl) : <code>enum</code>
+        * [.sslversion](#module_node-libcurl.Curl.sslversion) : <code>enum</code>
+        * [.ssh_auth](#module_node-libcurl.Curl.ssh_auth) : <code>enum</code>
+        * [.timecond](#module_node-libcurl.Curl.timecond) : <code>enum</code>
+        * [.feature](#module_node-libcurl.Curl.feature) : <code>enum</code>
+        * [.getCount](#module_node-libcurl.Curl.getCount) ⇒ <code>Number</code>
+        * [.getVersion](#module_node-libcurl.Curl.getVersion) ⇒ <code>String</code>
+        * [.VERSION_NUM](#module_node-libcurl.Curl.VERSION_NUM)
+    * _inner_
+        * [~progressCallback](#module_node-libcurl.Curl..progressCallback) ⇒ <code>Number</code>
 
 <a name="new_module_node-libcurl.Curl_new"></a>
 #### new Curl()
@@ -659,30 +659,30 @@ Progress callback called by libcurl.
 **Kind**: static class of <code>[node-libcurl](#module_node-libcurl)</code>  
 
 * [.Easy](#module_node-libcurl.Easy)
-  * [new Easy([orig])](#new_module_node-libcurl.Easy_new)
-  * _instance_
-    * [.onData](#module_node-libcurl.Easy+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
-    * [.onHeader](#module_node-libcurl.Easy+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
-    * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Easy+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-    * [.getInfo(infoNameOrId)](#module_node-libcurl.Easy+getInfo) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
-    * [.send(buf)](#module_node-libcurl.Easy+send) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
-    * [.recv(buf)](#module_node-libcurl.Easy+recv) ⇒ <code>module:node-libcurl.Easy.ReturnData</code>
-    * [.perform()](#module_node-libcurl.Easy+perform) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-    * [.pause(bitmask)](#module_node-libcurl.Easy+pause) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-    * [.reset()](#module_node-libcurl.Easy+reset) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-    * [.dupHandle()](#module_node-libcurl.Easy+dupHandle) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
-    * [.onSocketEvent(cb)](#module_node-libcurl.Easy+onSocketEvent) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
-    * [.monitorSocketEvents()](#module_node-libcurl.Easy+monitorSocketEvents) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
-    * [.unmonitorSocketEvents()](#module_node-libcurl.Easy+unmonitorSocketEvents) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
-    * [.close()](#module_node-libcurl.Easy+close)
-  * _static_
-    * [.socket](#module_node-libcurl.Easy.socket) : <code>enum</code>
-    * [.strError(code)](#module_node-libcurl.Easy.strError) ⇒ <code>String</code>
-  * _inner_
-    * [~ReturnData](#module_node-libcurl.Easy..ReturnData) : <code>Object</code>
-    * [~onDataCallback](#module_node-libcurl.Easy..onDataCallback) ⇒ <code>Number</code>
-    * [~onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback) ⇒ <code>Number</code>
-    * [~onSocketEventCallback](#module_node-libcurl.Easy..onSocketEventCallback) : <code>function</code>
+    * [new Easy([orig])](#new_module_node-libcurl.Easy_new)
+    * _instance_
+        * [.onData](#module_node-libcurl.Easy+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
+        * [.onHeader](#module_node-libcurl.Easy+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
+        * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Easy+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+        * [.getInfo(infoNameOrId)](#module_node-libcurl.Easy+getInfo) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
+        * [.send(buf)](#module_node-libcurl.Easy+send) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
+        * [.recv(buf)](#module_node-libcurl.Easy+recv) ⇒ <code>module:node-libcurl.Easy.ReturnData</code>
+        * [.perform()](#module_node-libcurl.Easy+perform) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+        * [.pause(bitmask)](#module_node-libcurl.Easy+pause) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+        * [.reset()](#module_node-libcurl.Easy+reset) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+        * [.dupHandle()](#module_node-libcurl.Easy+dupHandle) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
+        * [.onSocketEvent(cb)](#module_node-libcurl.Easy+onSocketEvent) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
+        * [.monitorSocketEvents()](#module_node-libcurl.Easy+monitorSocketEvents) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
+        * [.unmonitorSocketEvents()](#module_node-libcurl.Easy+unmonitorSocketEvents) ⇒ <code>[Easy](#module_node-libcurl.Easy)</code>
+        * [.close()](#module_node-libcurl.Easy+close)
+    * _static_
+        * [.socket](#module_node-libcurl.Easy.socket) : <code>enum</code>
+        * [.strError(code)](#module_node-libcurl.Easy.strError) ⇒ <code>String</code>
+    * _inner_
+        * [~ReturnData](#module_node-libcurl.Easy..ReturnData) : <code>Object</code>
+        * [~onDataCallback](#module_node-libcurl.Easy..onDataCallback) ⇒ <code>Number</code>
+        * [~onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback) ⇒ <code>Number</code>
+        * [~onSocketEventCallback](#module_node-libcurl.Easy..onSocketEventCallback) : <code>function</code>
 
 <a name="new_module_node-libcurl.Easy_new"></a>
 #### new Easy([orig])
@@ -923,18 +923,18 @@ OnSocketEvent callback called when there are changes to the connection socket.
 **Kind**: static class of <code>[node-libcurl](#module_node-libcurl)</code>  
 
 * [.Multi](#module_node-libcurl.Multi)
-  * [new Multi()](#new_module_node-libcurl.Multi_new)
-  * _instance_
-    * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Multi+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-    * [.addHandle(handle)](#module_node-libcurl.Multi+addHandle) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-    * [.onMessage(cb)](#module_node-libcurl.Multi+onMessage) ⇒ <code>[Multi](#module_node-libcurl.Multi)</code>
-    * [.removeHandle(handle)](#module_node-libcurl.Multi+removeHandle) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-    * [.getCount()](#module_node-libcurl.Multi+getCount) ⇒ <code>Number</code>
-    * [.close()](#module_node-libcurl.Multi+close)
-  * _static_
-    * [.strError(code)](#module_node-libcurl.Multi.strError) ⇒ <code>String</code>
-  * _inner_
-    * [~onMessageCallback](#module_node-libcurl.Multi..onMessageCallback) : <code>function</code>
+    * [new Multi()](#new_module_node-libcurl.Multi_new)
+    * _instance_
+        * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Multi+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+        * [.addHandle(handle)](#module_node-libcurl.Multi+addHandle) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+        * [.onMessage(cb)](#module_node-libcurl.Multi+onMessage) ⇒ <code>[Multi](#module_node-libcurl.Multi)</code>
+        * [.removeHandle(handle)](#module_node-libcurl.Multi+removeHandle) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+        * [.getCount()](#module_node-libcurl.Multi+getCount) ⇒ <code>Number</code>
+        * [.close()](#module_node-libcurl.Multi+close)
+    * _static_
+        * [.strError(code)](#module_node-libcurl.Multi.strError) ⇒ <code>String</code>
+    * _inner_
+        * [~onMessageCallback](#module_node-libcurl.Multi..onMessageCallback) : <code>function</code>
 
 <a name="new_module_node-libcurl.Multi_new"></a>
 #### new Multi()
@@ -1038,12 +1038,12 @@ are new informations about handles inside this multi instance.
 **Kind**: static class of <code>[node-libcurl](#module_node-libcurl)</code>  
 
 * [.Share](#module_node-libcurl.Share)
-  * [new Share()](#new_module_node-libcurl.Share_new)
-  * _instance_
-    * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Share+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
-    * [.close()](#module_node-libcurl.Share+close)
-  * _static_
-    * [.strError(code)](#module_node-libcurl.Share.strError) ⇒ <code>String</code>
+    * [new Share()](#new_module_node-libcurl.Share_new)
+    * _instance_
+        * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Share+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
+        * [.close()](#module_node-libcurl.Share+close)
+    * _static_
+        * [.strError(code)](#module_node-libcurl.Share.strError) ⇒ <code>String</code>
 
 <a name="new_module_node-libcurl.Share_new"></a>
 #### new Share()
