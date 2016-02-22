@@ -266,6 +266,8 @@ namespace NodeLibcurl {
         { "SASL_IR", CURLOPT_SASL_IR },
     #endif
 
+        { "SSH_AUTH_TYPES", CURLOPT_SSH_AUTH_TYPES },
+
     #if NODE_LIBCURL_VER_GE( 7, 19, 4 )
         { "SOCKS5_GSSAPI_NEC", CURLOPT_SOCKS5_GSSAPI_NEC },
     #endif

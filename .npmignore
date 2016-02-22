@@ -4,9 +4,7 @@
 .idea
 .travis.yml
 appveyor.yml
-jsdoc-tmpl.config.json
 jsdoc.json
-wallaby.json
 build/
 deps/
 docs/
