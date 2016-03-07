@@ -136,7 +136,7 @@ Currently there are no prebuilt binaries for node-webkit, to install node-libcur
  2. Install node-libcurl
 
  ```javascript
- npm instal node-libcurl --runtime=node-webkit --target=0.12.3 --arch=x64 --msvs_version=2013 --build-from-source --save
+ npm install node-libcurl --runtime=node-webkit --target=0.12.3 --arch=x64 --msvs_version=2013 --build-from-source --save
  ```
  ``--target`` says you want to build for the node-webkit version 0.12.3.
 
@@ -147,7 +147,7 @@ Currently there are no prebuilt binaries for node-webkit, to install node-libcur
 Currently there are no prebuilt binaries for electron, to install node-libcurl, do the following:
 
  ```javascript
- npm instal node-libcurl --runtime=electron --target=0.34.1 --arch=x64 --build-from-source --save
+ npm install node-libcurl --runtime=electron --target=0.34.1 --arch=x64 --build-from-source --save
  ```
  ``--target`` says you want to build for the electron version 0.34.1.
 
