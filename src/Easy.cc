@@ -675,6 +675,7 @@ namespace NodeLibcurl {
                     bool hasContentType = false;
                     bool hasContent = false;
                     bool hasName = false;
+                    bool hasNewFileName = false;
 
                     // loop through the properties names, making sure they are valid.
                     for ( uint32_t j = 0; j < postDataLength; ++j ) {
@@ -710,8 +711,11 @@ namespace NodeLibcurl {
                             case CurlHttpPost::NAME:
                                 hasName = true;
                                 break;
+                            case CurlHttpPost::FILENAME:
+                                hasNewFileName = true;
+                                break;
                             case -1: // property not found
-                                std::string errorMsg = string_format( "Invalid property \"%s\" given. Valid properties are FILE, TYPE, CONTENTS and NAME.", *fieldName );
+                                std::string errorMsg = string_format( "Invalid property \"%s\" given. Valid properties are FILE, TYPE, CONTENTS, NAME and FILENAME.", *fieldName );
                                 Nan::ThrowError( errorMsg.c_str() );
                                 return;
                         }
@@ -742,8 +746,15 @@ namespace NodeLibcurl {
 
                             Nan::Utf8String contentType( postData->Get( Nan::New<v8::String>( "type" ).ToLocalChecked() ) );
 
-                            curlFormCode = httpPost->AddFile( *fieldName, fieldName.length(), *file, *contentType );
+                            if ( hasNewFileName ) {
 
+                                Nan::Utf8String fileName( postData->Get( Nan::New<v8::String>( "filename" ).ToLocalChecked() ) );
+                                curlFormCode = httpPost->AddFile( *fieldName, fieldName.length(), *file, *contentType, *fileName );
+                            }
+                            else {
+
+                                curlFormCode = httpPost->AddFile( *fieldName, fieldName.length(), *file, *contentType );
+                            }
                         }
                         else {
 
