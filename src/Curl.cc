@@ -511,6 +511,7 @@ namespace NodeLibcurl {
         { "FILE", CurlHttpPost::FILE },
         { "CONTENTS", CurlHttpPost::CONTENTS },
         { "TYPE", CurlHttpPost::TYPE },
+        { "FILENAME", CurlHttpPost::FILENAME },
     };
 
     const std::vector<CurlConstant> curlOptionSpecific = {

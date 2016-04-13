@@ -59,6 +59,16 @@ namespace NodeLibcurl {
             CURLFORM_END );
     }
 
+    CURLFORMcode CurlHttpPost::AddFile( char *fieldName, long fieldNameLength, char *fileName, char *contentType, char *newFileName )
+    {
+        return curl_formadd( &this->first, &this->last,
+            CURLFORM_COPYNAME, fieldName, CURLFORM_NAMELENGTH, fieldNameLength,
+            CURLFORM_FILE, fileName,
+            CURLFORM_CONTENTTYPE, contentType,
+            CURLFORM_FILENAME, newFileName,
+            CURLFORM_END );
+    }
+
     CURLFORMcode CurlHttpPost::AddField( char *fieldName, long fieldNameLength, char *fieldValue, long fieldValueLength )
     {
         return curl_formadd( &this->first, &this->last,

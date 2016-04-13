@@ -50,13 +50,15 @@ namespace NodeLibcurl {
             FILE,
             CONTENTS,
             TYPE,
-            COUNT
+            COUNT,
+            FILENAME
         };
 
         void Reset();
 
         CURLFORMcode AddFile( char *fieldName, long fieldNameLength, char *fileName );
         CURLFORMcode AddFile( char *fieldName, long fieldNameLength, char *fileName, char *contentType );
+        CURLFORMcode AddFile( char *fieldName, long fieldNameLength, char *fileName, char *contentType, char *newFileName );
         CURLFORMcode AddField( char *fieldName, long fieldNameLength, char *fieldValue, long fieldValueLength );
     };
 }
