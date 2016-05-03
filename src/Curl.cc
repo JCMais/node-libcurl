@@ -313,6 +313,7 @@ namespace NodeLibcurl {
 
         { "UNRESTRICTED_AUTH", CURLOPT_UNRESTRICTED_AUTH },
         { "UPLOAD", CURLOPT_UPLOAD },
+        { "USE_SSL", CURLOPT_USE_SSL },
         { "VERBOSE", CURLOPT_VERBOSE },
 
     #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
