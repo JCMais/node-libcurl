@@ -162,25 +162,15 @@ namespace NodeLibcurl {
 
     void Easy::DisposeCallbacks()
     {
-        if ( this->cbProgress ) {
-            delete this->cbProgress;
-        }
+        delete this->cbProgress;
 
-        if ( this->cbXferinfo ) {
-            delete this->cbXferinfo;
-        }
+        delete this->cbXferinfo;
 
-        if ( this->cbDebug ) {
-            delete this->cbDebug;
-        }
-
-        if ( this->cbOnSocketEvent ) {
-            delete this->cbOnSocketEvent;
-        }
-
-        if ( this->cbRead ) {
-            delete this->cbRead;
-        }
+        delete this->cbDebug;
+        
+        delete this->cbOnSocketEvent;
+        
+        delete this->cbRead;
     }
 
     void Easy::MonitorSockets()
@@ -951,11 +941,8 @@ namespace NodeLibcurl {
                    New libcurls will prefer the new callback and instead use that one even if both callbacks are set. */
                 case CURLOPT_XFERINFOFUNCTION:
 
-                    if ( obj->cbXferinfo ) {
-
-                        delete obj->cbXferinfo;
-                        obj->cbXferinfo = nullptr;
-                    }
+                    delete obj->cbXferinfo;
+                    obj->cbXferinfo = nullptr;
 
                     if ( isNull ) {
 
@@ -973,11 +960,8 @@ namespace NodeLibcurl {
 #endif
                 case CURLOPT_READFUNCTION:
 
-                    if ( obj->cbRead ) {
-
-                        delete obj->cbRead;
-                        obj->cbRead = nullptr;
-                    }
+                    delete obj->cbRead;
+                    obj->cbRead = nullptr;
 
                     setOptRetCode = CURLE_OK;
 
@@ -989,11 +973,8 @@ namespace NodeLibcurl {
                     break;
                 case CURLOPT_PROGRESSFUNCTION:
 
-                    if ( obj->cbProgress ) {
-
-                        delete obj->cbProgress;
-                        obj->cbProgress = nullptr;
-                    }
+                    delete obj->cbProgress;
+                    obj->cbProgress = nullptr;
 
                     if ( isNull ) {
 
@@ -1010,11 +991,8 @@ namespace NodeLibcurl {
                     break;
                 case CURLOPT_DEBUGFUNCTION:
 
-                    if ( obj->cbDebug ) {
-
-                        delete obj->cbDebug;
-                        obj->cbDebug = nullptr;
-                    }
+                    delete obj->cbDebug;
+                    obj->cbDebug = nullptr;
 
                     if ( isNull ) {
 
@@ -1343,11 +1321,9 @@ namespace NodeLibcurl {
 
         if ( arg->IsNull() ) {
 
-            if ( obj->cbOnSocketEvent != nullptr ) {
-                delete obj->cbOnSocketEvent;
-            }
-
+            delete obj->cbOnSocketEvent;
             obj->cbOnSocketEvent = nullptr;
+
             info.GetReturnValue().Set( info.This() );
             return;
         }
