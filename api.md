@@ -974,9 +974,9 @@ This is basically an abstraction over [curl_multi_info_read()](http://curl.haxx.
 **Kind**: instance method of <code>[Multi](#module_node-libcurl.Multi)</code>  
 **Returns**: <code>[Multi](#module_node-libcurl.Multi)</code> - <code>this</code>  
 
-| Param | Type |
-| --- | --- |
-| cb | <code>[onMessageCallback](#module_node-libcurl.Multi..onMessageCallback)</code> | 
+| Param | Type | Description |
+| --- | --- | --- |
+| cb | <code>[onMessageCallback](#module_node-libcurl.Multi..onMessageCallback)</code> &#124; <code>null</code> | You can pass null to remove the current callback set. |
 
 <a name="module_node-libcurl.Multi+removeHandle"></a>
 #### multi.removeHandle(handle) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>

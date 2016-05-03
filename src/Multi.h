@@ -52,6 +52,7 @@ namespace NodeLibcurl {
         void Dispose();
         void ProcessMessages();
         void CallOnMessageCallback( CURL *easy, CURLcode statusCode );
+        void RemoveOnMessageCallback();
 
         // context used with curl_multi_assign to create a relationship between the socket being used and the poll handle.
         struct CurlSocketContext {

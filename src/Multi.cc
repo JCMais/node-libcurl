@@ -68,11 +68,7 @@ namespace NodeLibcurl {
             assert( code == CURLM_OK );
         }
 
-        if ( this->cbOnMessage ) {
-
-            delete this->cbOnMessage;
-            this->cbOnMessage = nullptr;
-        }
+        this->RemoveOnMessageCallback();
 
         uv_timer_stop( this->timeout.get() );
     }
@@ -286,6 +282,12 @@ namespace NodeLibcurl {
         this->cbOnMessage->Call( this->handle(), 3, argv );
     }
 
+    void Multi::RemoveOnMessageCallback()
+    {
+        delete this->cbOnMessage;
+        this->cbOnMessage = nullptr;
+    }
+
     // Add Curl constructor to the module exports
     NAN_MODULE_INIT( Multi::Initialize )
     {
@@ -442,21 +444,27 @@ namespace NodeLibcurl {
 
         if ( !info.Length() ) {
 
-            Nan::ThrowError( "You must specify the callback function." );
+            Nan::ThrowError( "You must specify the callback function. If you want to remove the current one you can pass null." );
             return;
         }
 
         v8::Local<v8::Value> arg = info[0];
 
-        if ( !arg->IsFunction() ) {
+        bool isNull = arg->IsNull();
 
-            Nan::ThrowTypeError( "Invalid callback given." );
+        if ( !arg->IsFunction() && !isNull ) {
+
+            Nan::ThrowTypeError( "Argument must be a Function. If you want to remove the current one you can pass null." );
             return;
         }
 
-        v8::Local<v8::Function> callback = arg.As<v8::Function>();
+        obj->RemoveOnMessageCallback();
 
-        obj->cbOnMessage = new Nan::Callback( callback );
+        if ( !isNull ) {
+
+            v8::Local<v8::Function> callback = arg.As<v8::Function>();
+            obj->cbOnMessage = new Nan::Callback( callback );
+        }
 
         info.GetReturnValue().Set( info.This() );
     }
