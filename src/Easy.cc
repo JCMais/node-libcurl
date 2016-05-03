@@ -56,7 +56,8 @@ namespace NodeLibcurl {
     int32_t Easy::openHandles = 0;
 
     Easy::Easy() :
-        cbProgress( nullptr ), cbXferinfo( nullptr ), cbDebug( nullptr ), cbOnSocketEvent( nullptr ), pollHandle( nullptr ),
+        cbProgress( nullptr ), cbXferinfo( nullptr ), cbDebug( nullptr ), cbOnSocketEvent( nullptr ), cbRead( nullptr ),
+        pollHandle( nullptr ),
         isCbProgressAlreadyAborted( false ), isMonitoringSockets( false ),
         readDataFileDescriptor( -1 ), id( Easy::counter++ ), isInsideMultiCurl( false ), isOpen( true )
     {
@@ -71,7 +72,8 @@ namespace NodeLibcurl {
     }
 
     Easy::Easy( Easy *orig ) :
-        cbProgress( nullptr ), cbXferinfo( nullptr ), cbDebug( nullptr ), cbOnSocketEvent( nullptr ), pollHandle( nullptr ),
+        cbProgress( nullptr ), cbXferinfo( nullptr ), cbDebug( nullptr ), cbOnSocketEvent( nullptr ), cbRead( nullptr ),
+        pollHandle( nullptr ),
         isCbProgressAlreadyAborted( false ), isMonitoringSockets( false ),
         readDataFileDescriptor( -1 ), id( Easy::counter++ ), isInsideMultiCurl( false ), isOpen( true )
     {
@@ -93,6 +95,10 @@ namespace NodeLibcurl {
 
         if ( orig->cbDebug != nullptr ) {
             this->cbDebug = new Nan::Callback( orig->cbDebug->GetFunction() );
+        }
+
+        if ( orig->cbRead != nullptr ) {
+            this->cbRead = new Nan::Callback( orig->cbRead->GetFunction() );
         }
 
         this->toFree = orig->toFree;
@@ -170,6 +176,10 @@ namespace NodeLibcurl {
 
         if ( this->cbOnSocketEvent ) {
             delete this->cbOnSocketEvent;
+        }
+
+        if ( this->cbRead ) {
+            delete this->cbRead;
         }
     }
 
@@ -293,32 +303,60 @@ namespace NodeLibcurl {
     {
         uv_fs_t readReq;
 
-        int ret = 0;
+        int32_t ret = 0;
 
         Easy *obj = static_cast<Easy*>( userdata );
         int32_t fd = obj->readDataFileDescriptor;
 
-        //abort early if we don't have a file descriptor
-        if ( fd == -1 ) {
-            return CURL_READFUNC_ABORT;
-        }
+        //read callback set, use it instead
+        if ( obj->cbRead ) {
 
-        unsigned int len = (unsigned int) ( size * nmemb );
+            size_t n = size * nmemb;
+
+            Nan::HandleScope scope;
+
+            v8::Local<v8::Object> buf = Nan::NewBuffer( static_cast<uint32_t>( n ) ).ToLocalChecked();
+            v8::Local<v8::Uint32> sizeArg = Nan::New<v8::Uint32>( static_cast<uint32_t>( size ) );
+            v8::Local<v8::Uint32> nmembArg = Nan::New<v8::Uint32>( static_cast<uint32_t>( nmemb ) );
+            v8::Local<v8::Value> argv[] = { buf, sizeArg, nmembArg };
+
+            v8::Local<v8::Value> retval = obj->cbRead->Call( obj->handle(), 3, argv );
+            char *data = node::Buffer::Data( buf );
+
+            ret = retval->Int32Value();
+
+            bool hasData = !!data && ret > 0 && ret < CURL_READFUNC_ABORT;
+
+            if ( hasData ) {
+
+                std::memcpy( ptr, data, ret );
+            }
+
+            // otherwise use the default read callback
+        } else {
+
+            //abort early if we don't have a file descriptor
+            if ( fd == -1 ) {
+                return CURL_READFUNC_ABORT;
+            }
+
+            unsigned int len = (unsigned int) ( size * nmemb );
 
 #if UV_VERSION_MAJOR < 1
-        ret = uv_fs_read( uv_default_loop(), &readReq, fd, ptr, 1, -1, NULL );
+            ret = uv_fs_read( uv_default_loop(), &readReq, fd, ptr, 1, -1, NULL );
 #else
-        uv_buf_t uvbuf = uv_buf_init( ptr, len );
+            uv_buf_t uvbuf = uv_buf_init( ptr, len );
 
-        ret = uv_fs_read( uv_default_loop(), &readReq, fd, &uvbuf, 1, -1, NULL );
+            ret = uv_fs_read( uv_default_loop(), &readReq, fd, &uvbuf, 1, -1, NULL );
 #endif
+        }
 
         if ( ret < 0 ) {
 
             return CURL_READFUNC_ABORT;
         }
 
-        return ret;
+        return static_cast<size_t>( ret );
     }
 
     size_t Easy::OnData( char *data, size_t size, size_t nmemb )
@@ -896,9 +934,11 @@ namespace NodeLibcurl {
         }
         else if ( ( optionId = IsInsideCurlConstantStruct( curlOptionFunction, opt ) ) ) {
 
-            if ( !value->IsFunction() ) {
+            bool isNull = value->IsNull();
 
-                Nan::ThrowTypeError( "Option value must be a function." );
+            if ( !value->IsFunction() && !isNull ) {
+
+                Nan::ThrowTypeError( "Option value must be a null or a function." );
                 return;
             }
 
@@ -911,24 +951,82 @@ namespace NodeLibcurl {
                    New libcurls will prefer the new callback and instead use that one even if both callbacks are set. */
                 case CURLOPT_XFERINFOFUNCTION:
 
-                    obj->cbXferinfo = new Nan::Callback( callback );
-                    curl_easy_setopt( obj->ch, CURLOPT_XFERINFODATA, obj );
-                    setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_XFERINFOFUNCTION, Easy::CbXferinfo );
+                    if ( obj->cbXferinfo ) {
+
+                        delete obj->cbXferinfo;
+                        obj->cbXferinfo = nullptr;
+                    }
+
+                    if ( isNull ) {
+
+                        curl_easy_setopt( obj->ch, CURLOPT_XFERINFODATA, NULL );
+                        setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_XFERINFOFUNCTION, NULL );
+                    }
+                    else {
+
+                        obj->cbXferinfo = new Nan::Callback( callback );
+                        curl_easy_setopt( obj->ch, CURLOPT_XFERINFODATA, obj );
+                        setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_XFERINFOFUNCTION, Easy::CbXferinfo );
+                    }
 
                     break;
 #endif
+                case CURLOPT_READFUNCTION:
+
+                    if ( obj->cbRead ) {
+
+                        delete obj->cbRead;
+                        obj->cbRead = nullptr;
+                    }
+
+                    setOptRetCode = CURLE_OK;
+
+                    if ( !isNull ) {
+
+                        obj->cbRead = new Nan::Callback( callback );
+                    }
+
+                    break;
                 case CURLOPT_PROGRESSFUNCTION:
 
-                    obj->cbProgress = new Nan::Callback( callback );
-                    curl_easy_setopt( obj->ch, CURLOPT_PROGRESSDATA, obj );
-                    setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_PROGRESSFUNCTION, Easy::CbProgress );
+                    if ( obj->cbProgress ) {
+
+                        delete obj->cbProgress;
+                        obj->cbProgress = nullptr;
+                    }
+
+                    if ( isNull ) {
+
+                        curl_easy_setopt( obj->ch, CURLOPT_PROGRESSDATA, NULL );
+                        setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_PROGRESSFUNCTION, NULL );
+                    }
+                    else {
+
+                        obj->cbProgress = new Nan::Callback( callback );
+                        curl_easy_setopt( obj->ch, CURLOPT_PROGRESSDATA, obj );
+                        setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_PROGRESSFUNCTION, Easy::CbProgress );
+                    }
 
                     break;
                 case CURLOPT_DEBUGFUNCTION:
 
-                    obj->cbDebug = new Nan::Callback( callback );
-                    curl_easy_setopt( obj->ch, CURLOPT_DEBUGDATA, obj );
-                    setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_DEBUGFUNCTION, Easy::CbDebug );
+                    if ( obj->cbDebug ) {
+
+                        delete obj->cbDebug;
+                        obj->cbDebug = nullptr;
+                    }
+
+                    if ( isNull ) {
+
+                        curl_easy_setopt( obj->ch, CURLOPT_DEBUGDATA, NULL );
+                        setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_DEBUGFUNCTION, NULL );
+                    }
+                    else {
+
+                        obj->cbDebug = new Nan::Callback( callback );
+                        curl_easy_setopt( obj->ch, CURLOPT_DEBUGDATA, obj );
+                        setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_DEBUGFUNCTION, Easy::CbDebug );
+                    }
 
                     break;
             }
@@ -1207,7 +1305,6 @@ namespace NodeLibcurl {
         obj->DisposeCallbacks();
         obj->ResetRequiredHandleOptions();
 
-        //@TODO should we do this or it's unecessary?
         obj->toFree = nullptr;
         obj->toFree = std::make_shared<Easy::ToFree>();
 

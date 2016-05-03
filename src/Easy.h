@@ -72,6 +72,7 @@ namespace NodeLibcurl {
         Nan::Callback *cbXferinfo;
         Nan::Callback *cbDebug;
         Nan::Callback *cbOnSocketEvent;
+        Nan::Callback *cbRead;
 
         // members
         uv_poll_t *pollHandle;

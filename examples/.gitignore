@@ -1,4 +1,6 @@
-*.txt
 *.pem
+cookiejar.txt
+output.txt
+test.txt
 result.out
 upload.png

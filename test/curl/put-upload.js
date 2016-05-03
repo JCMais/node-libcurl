@@ -33,8 +33,7 @@ var server = serverObj.server,
     fileName = path.resolve( __dirname, 'upload.test' ),
     fileHash = '',
     uploadLocation = '',
-    url = '',
-    fd = -1;
+    url = '';
 
 function hashOfFile( file, cb ) {
 
@@ -67,8 +66,6 @@ beforeEach( function( done ) {
     hashOfFile( fileName, function( hash ) {
 
         fileHash = hash;
-
-        fd = fs.openSync( fileName, 'r+' );
         done();
     });
 });
@@ -77,7 +74,6 @@ afterEach( function() {
 
     curl.close();
 
-    fs.closeSync( fd );
     fs.unlinkSync( fileName );
     if ( fs.existsSync( uploadLocation ) ) {
         fs.unlinkSync( uploadLocation );
@@ -122,8 +118,51 @@ after( function() {
 
 it( 'should upload data correctly using put', function ( done ) {
 
+    var fd = fs.openSync( fileName, 'r+' );
+
     curl.setOpt( Curl.option.UPLOAD, 1 );
     curl.setOpt( Curl.option.READDATA, fd );
+
+    curl.on( 'end', function( statusCode, body ) {
+
+        statusCode.should.be.equal( 200 );
+        body.should.be.equal( fileHash );
+
+        fs.closeSync( fd );
+        done();
+    });
+
+    curl.on( 'error', function( err ) {
+
+        fs.closeSync( fd );
+        done( err );
+    });
+
+    curl.perform();
+
+});
+
+it( 'should upload data correctly using READFUNCTION callback option', function ( done ) {
+
+    var fileStream = fs.createReadStream( fileName, {
+            flags : 'r+'
+        }),
+        bytesPerCall = 100;
+
+    curl.setOpt( Curl.option.UPLOAD, 1 );
+    curl.setOpt( Curl.option.READFUNCTION, function( buffer, size, nmemb ) {
+
+        var data = fileStream.read( bytesPerCall );
+
+        if ( !data ) {
+
+            return 0;
+        }
+
+        data.copy( buffer );
+
+        return data.length;
+    });
 
     curl.on( 'end', function( statusCode, body ) {
 
