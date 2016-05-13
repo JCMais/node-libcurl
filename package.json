@@ -21,8 +21,9 @@
   "main": "./index.js",
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
-    "test": "mocha test --reporter spec",
-    "docs": "jsdoc2md lib/*.js > api.md"
+    "test"  : "mocha test --reporter spec",
+    "docs"  : "jsdoc2md lib/*.js > api.md",
+    "pregyp" : "node-pre-gyp"
   },
   "binary": {
     "module_name": "node_libcurl",
@@ -36,7 +37,7 @@
   "dependencies": {
     "bindings": "~1.2",
     "debug": "^2.2",
-    "nan": "~2.2.0",
+    "nan": "~2.3.3",
     "node-gyp": "~3.3.0",
     "node-pre-gyp": "~0.6",
     "npmlog": "~2.0.2"

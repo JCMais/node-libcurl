@@ -67,6 +67,7 @@ namespace NodeLibcurl {
     const extern std::vector<CurlConstant> curlInfoString;
     const extern std::vector<CurlConstant> curlInfoDouble;
     const extern std::vector<CurlConstant> curlInfoInteger;
+    const extern std::vector<CurlConstant> curlInfoSocket;
     const extern std::vector<CurlConstant> curlInfoLinkedList;
 
     const extern std::vector<CurlConstant> curlMultiOptionInteger;

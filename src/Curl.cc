@@ -319,6 +319,14 @@ namespace NodeLibcurl {
     #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
         { "WILDCARDMATCH", CURLOPT_WILDCARDMATCH },
     #endif
+        
+        // _LARGE options
+        { "INFILESIZE_LARGE", CURLOPT_INFILESIZE_LARGE },
+        { "MAXFILESIZE_LARGE", CURLOPT_MAXFILESIZE_LARGE },
+        { "MAX_RECV_SPEED_LARGE", CURLOPT_MAX_RECV_SPEED_LARGE },
+        { "MAX_SEND_SPEED_LARGE", CURLOPT_MAX_SEND_SPEED_LARGE },
+        { "POSTFIELDSIZE_LARGE", CURLOPT_POSTFIELDSIZE_LARGE },
+        { "RESUME_FROM_LARGE", CURLOPT_RESUME_FROM_LARGE }
     };
 
     const std::vector<CurlConstant> curlOptionString = {
@@ -475,10 +483,14 @@ namespace NodeLibcurl {
     };
 
     const std::vector<CurlConstant> curlOptionFunction = {
-        { "DEBUGFUNCTION", CURLOPT_DEBUGFUNCTION },
-        { "PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION },
+    #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
+        { "CHUNK_BGN_FUNCTION", CURLOPT_CHUNK_BGN_FUNCTION },
+        { "CHUNK_END_FUNCTION", CURLOPT_CHUNK_END_FUNCTION },
+    #endif
 
+        { "DEBUGFUNCTION", CURLOPT_DEBUGFUNCTION },
         { "READFUNCTION", CURLOPT_READFUNCTION },
+        { "PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION },
 
     #if NODE_LIBCURL_VER_GE( 7, 32, 0 )
         { "XFERINFOFUNCTION", CURLOPT_XFERINFOFUNCTION },
@@ -578,9 +590,6 @@ namespace NodeLibcurl {
     };
 
     const std::vector<CurlConstant> curlInfoInteger = {
-    #if NODE_LIBCURL_VER_GE( 7, 45, 0 )
-        { "ACTIVESOCKET", CURLINFO_ACTIVESOCKET },
-    #endif
 
     #if NODE_LIBCURL_VER_GE( 7, 19, 4 )
         { "CONDITION_UNMET", CURLINFO_CONDITION_UNMET },
@@ -615,6 +624,12 @@ namespace NodeLibcurl {
     #endif
 
         { "SSL_VERIFYRESULT", CURLINFO_SSL_VERIFYRESULT },
+    };
+
+    const std::vector<CurlConstant> curlInfoSocket = {
+    #if NODE_LIBCURL_VER_GE( 7, 45, 0 )
+        { "ACTIVESOCKET", CURLINFO_ACTIVESOCKET },
+    #endif
     };
 
     const std::vector<CurlConstant> curlInfoLinkedList = {
@@ -824,6 +839,7 @@ namespace NodeLibcurl {
         ExportConstants( infosObj, curlInfoString );
         ExportConstants( infosObj, curlInfoInteger );
         ExportConstants( infosObj, curlInfoDouble );
+        ExportConstants( infosObj, curlInfoSocket );
         ExportConstants( infosObj, curlInfoLinkedList );
 
         // export pause consts

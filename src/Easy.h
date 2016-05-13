@@ -68,11 +68,13 @@ namespace NodeLibcurl {
         static uint32_t counter;
 
         // callbacks
-        Nan::Callback *cbProgress;
-        Nan::Callback *cbXferinfo;
+        Nan::Callback *cbChunkBgn;
+        Nan::Callback *cbChunkEnd;
         Nan::Callback *cbDebug;
         Nan::Callback *cbOnSocketEvent;
+        Nan::Callback *cbProgress;
         Nan::Callback *cbRead;
+        Nan::Callback *cbXferinfo;
 
         // members
         uv_poll_t *pollHandle;
@@ -88,6 +90,7 @@ namespace NodeLibcurl {
         // static methods
         template<typename TResultType, typename Tv8MappingType>
         static v8::Local<v8::Value> GetInfoTmpl( const Easy *obj, int infoId );
+        static v8::Local<v8::Object> CreateV8ObjectFromCurlFileInfo( curl_fileinfo *fileInfo );
 
         // persistent objects
         static Nan::Persistent<v8::String> onDataCbSymbol;
@@ -132,12 +135,15 @@ namespace NodeLibcurl {
         static NAN_METHOD( StrError );
 
         // cURL callbacks
-        static size_t WriteFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
-        static size_t HeaderFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
         static size_t ReadFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
+        static size_t HeaderFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
+        static size_t WriteFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
+
+        static long CbChunkBgn( curl_fileinfo *transferInfo, void *ptr, int remains );
+        static long CbChunkEnd( void *ptr );
+        static int CbDebug( CURL *handle, curl_infotype type, char *data, size_t size, void *userptr );
         static int CbProgress( void *clientp, double dltotal, double dlnow, double ultotal, double ulnow );
         static int CbXferinfo( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow );
-        static int CbDebug( CURL *handle, curl_infotype type, char *data, size_t size, void *userptr );
 
         // libuv callbacks
         static void OnSocket( uv_poll_t* handle, int status, int events );
