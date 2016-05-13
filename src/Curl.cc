@@ -150,6 +150,77 @@ namespace NodeLibcurl {
     };
 #endif
 
+    const std::vector<CurlConstant> curlOptionNotImplemented = {
+        // Options that are complex to add support for.
+        { "SSL_CTX_FUNCTION", CURLOPT_SSL_CTX_FUNCTION },
+        { "OPENSOCKETFUNCTION", CURLOPT_OPENSOCKETFUNCTION },
+    #if NODE_LIBCURL_VER_GE( 7, 21, 7 )
+        { "CLOSESOCKETFUNCTION", CURLOPT_CLOSESOCKETFUNCTION },
+    #endif
+        { "SOCKOPTFUNCTION", CURLOPT_SOCKOPTFUNCTION },
+        { "CONV_FROM_UTF8_FUNCTION", CURLOPT_CONV_FROM_UTF8_FUNCTION },
+        { "CONV_TO_NETWORK_FUNCTION", CURLOPT_CONV_TO_NETWORK_FUNCTION },
+        { "CONV_FROM_NETWORK_FUNCTION", CURLOPT_CONV_FROM_NETWORK_FUNCTION },
+
+        // Options that are used internally.
+        // @NOTE We can allow WRITEFUNCTIOn and HEADERFUNCTION if we deprecate onData and onHeader
+        { "WRITEFUNCTION", CURLOPT_WRITEFUNCTION },
+        { "WRITEDATA", CURLOPT_WRITEDATA },
+        { "HEADERFUNCTION", CURLOPT_HEADERFUNCTION },
+        { "HEADERDATA", CURLOPT_HEADERDATA },
+
+        // Options that are not necessary because javascript nature.
+        { "PRIVATE", CURLOPT_PRIVATE },
+        { "PROGRESSDATA", CURLOPT_PROGRESSDATA },
+    #if NODE_LIBCURL_VER_GE( 7, 32, 0 )
+          { "XFERINFODATA", CURLOPT_XFERINFODATA },
+    #endif
+        { "DEBUGDATA", CURLOPT_DEBUGDATA },
+        { "SEEKDATA", CURLOPT_SEEKDATA },
+        { "IOCTLDATA", CURLOPT_IOCTLDATA },
+        { "SOCKOPTDATA", CURLOPT_SOCKOPTDATA },
+        { "OPENSOCKETDATA", CURLOPT_OPENSOCKETDATA },
+    #if NODE_LIBCURL_VER_GE( 7, 21, 7 )
+        { "CLOSESOCKETDATA", CURLOPT_CLOSESOCKETDATA },
+    #endif
+        { "SSL_CTX_DATA", CURLOPT_SSL_CTX_DATA },
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "INTERLEAVEDATA", CURLOPT_INTERLEAVEDATA },
+    #endif
+    #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
+        { "CHUNK_DATA", CURLOPT_CHUNK_DATA },
+        { "FNMATCH_DATA", CURLOPT_FNMATCH_DATA },
+    #endif
+        { "ERRORBUFFER", CURLOPT_ERRORBUFFER },
+        { "COPYPOSTFIELDS", CURLOPT_COPYPOSTFIELDS },
+    #if NODE_LIBCURL_VER_GE( 7, 19, 6 )
+        { "SSH_KEYDATA", CURLOPT_SSH_KEYDATA },
+    #endif
+        
+        // Maybe?
+    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
+        { "INTERLEAVEFUNCTION", CURLOPT_INTERLEAVEFUNCTION },
+    #endif
+    #if NODE_LIBCURL_VER_GE( 7, 19, 6 )
+        { "SSH_KEYFUNCTION", CURLOPT_SSH_KEYFUNCTION },
+    #endif
+        { "SEEKFUNCTION", CURLOPT_SEEKFUNCTION },
+        { "STDERR", CURLOPT_STDERR },
+    #if NODE_LIBCURL_VER_GE( 7, 46, 0 )
+        { "STREAM_DEPENDS", CURLOPT_STREAM_DEPENDS },
+        { "STREAM_DEPENDS_E", CURLOPT_STREAM_DEPENDS_E },
+        { "STREAM_WEIGHT", CURLOPT_STREAM_WEIGHT },
+    #endif
+
+        // Missing constants.
+    #if NODE_LIBCURL_VER_GE( 7, 25, 0 )
+        { "SSL_OPTIONS", CURLOPT_SSL_OPTIONS },
+    #endif
+    #if NODE_LIBCURL_VER_GE( 7, 22, 0 )
+        { "GSSAPI_DELEGATION", CURLOPT_GSSAPI_DELEGATION },
+    #endif
+    };
+
     const std::vector<CurlConstant> curlOptionInteger = {
     #if NODE_LIBCURL_VER_GE( 7, 24, 0 )
         { "ACCEPTTIMEOUT_MS", CURLOPT_ACCEPTTIMEOUT_MS },
@@ -533,6 +604,19 @@ namespace NodeLibcurl {
     const std::vector<CurlConstant> curlOptionSpecific = {
         { "SHARE", CURLOPT_SHARE }
     };
+    const std::vector<CurlConstant> curlMultiOptionNotImplemented = {
+        // Used internally.
+        { "SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION },
+        { "SOCKETDATA", CURLMOPT_SOCKETDATA },
+        { "TIMERFUNCTION", CURLMOPT_TIMERFUNCTION },
+        { "TIMERDATA", CURLMOPT_TIMERDATA },
+
+        // Maybe?
+    #if NODE_LIBCURL_VER_GE( 7, 44, 0 )
+        { "PUSHFUNCTION", CURLMOPT_PUSHFUNCTION },
+        { "PUSHDATA", CURLMOPT_PUSHDATA },
+    #endif
+    };
 
     const std::vector<CurlConstant> curlMultiOptionInteger = {
     #if NODE_LIBCURL_VER_GE( 7, 30, 0 )
@@ -550,6 +634,22 @@ namespace NodeLibcurl {
     #if NODE_LIBCURL_VER_GE( 7, 30, 0 )
         { "PIPELINING_SERVER_BL", CURLMOPT_PIPELINING_SERVER_BL },
         { "PIPELINING_SITE_BL", CURLMOPT_PIPELINING_SITE_BL },
+    #endif
+    };
+
+    const std::vector<CurlConstant> curlInfoNotImplemented = {
+        // Complex.
+    #if NODE_LIBCURL_VER_GE( 7, 34, 0 )
+        { "TLS_SESSION", CURLINFO_TLS_SESSION },
+    #endif
+    #if NODE_LIBCURL_VER_GE( 7, 48, 0 )
+        { "TLS_SSL_PTR", CURLINFO_TLS_SSL_PTR },
+    #endif
+        // Unecessary.
+        { "PRIVATE", CURLINFO_PRIVATE },
+        // Maybe
+    #if NODE_LIBCURL_VER_GE( 7, 19, 1 )
+        { "CERTINFO", CURLINFO_CERTINFO },
     #endif
     };
 
@@ -802,11 +902,9 @@ namespace NodeLibcurl {
         { "CURLSHE_OK", CURLSHE_OK },
     };
 
-    static void ExportConstants( v8::Local<v8::Object> obj, const std::vector<NodeLibcurl::CurlConstant> &optionGroup )
+    static void ExportConstants( v8::Local<v8::Object> obj, const std::vector<NodeLibcurl::CurlConstant> &optionGroup, v8::PropertyAttribute attributes )
     {
         Nan::HandleScope scope;
-
-        v8::PropertyAttribute attributes = static_cast<v8::PropertyAttribute>( v8::ReadOnly | v8::DontDelete );
 
         for ( std::vector<NodeLibcurl::CurlConstant>::const_iterator it = optionGroup.begin(), end = optionGroup.end(); it != end; ++it ) {
 
@@ -814,7 +912,7 @@ namespace NodeLibcurl {
                 Nan::New<v8::String>( it->name ).ToLocalChecked(),
                 Nan::New<v8::Integer>( static_cast<int32_t>( it->value ) ),
                 attributes
-                );
+            );
         }
     }
 
@@ -826,54 +924,58 @@ namespace NodeLibcurl {
         v8::Local<v8::Object> obj = Nan::New<v8::Object>();
 
         v8::PropertyAttribute attributes = static_cast<v8::PropertyAttribute>( v8::ReadOnly | v8::DontDelete );
+        v8::PropertyAttribute attributesDontEnum = static_cast<v8::PropertyAttribute>( v8::ReadOnly | v8::DontDelete | v8::DontEnum );
 
         // export options
         v8::Local<v8::Object> optionsObj = Nan::New<v8::Object>();
-        ExportConstants( optionsObj, curlOptionString );
-        ExportConstants( optionsObj, curlOptionInteger );
-        ExportConstants( optionsObj, curlOptionFunction );
-        ExportConstants( optionsObj, curlOptionLinkedList );
-        ExportConstants( optionsObj, curlOptionSpecific );
+        ExportConstants( optionsObj, curlOptionNotImplemented, attributesDontEnum );
+        ExportConstants( optionsObj, curlOptionString, attributes );
+        ExportConstants( optionsObj, curlOptionInteger, attributes );
+        ExportConstants( optionsObj, curlOptionFunction, attributes );
+        ExportConstants( optionsObj, curlOptionLinkedList, attributes );
+        ExportConstants( optionsObj, curlOptionSpecific, attributes );
 
         // export infos
         v8::Local<v8::Object> infosObj = Nan::New<v8::Object>();
-        ExportConstants( infosObj, curlInfoString );
-        ExportConstants( infosObj, curlInfoInteger );
-        ExportConstants( infosObj, curlInfoDouble );
-        ExportConstants( infosObj, curlInfoSocket );
-        ExportConstants( infosObj, curlInfoLinkedList );
+        ExportConstants( infosObj, curlInfoNotImplemented, attributesDontEnum );
+        ExportConstants( infosObj, curlInfoString, attributes );
+        ExportConstants( infosObj, curlInfoInteger, attributes );
+        ExportConstants( infosObj, curlInfoDouble, attributes );
+        ExportConstants( infosObj, curlInfoSocket, attributes );
+        ExportConstants( infosObj, curlInfoLinkedList, attributes );
 
         // export pause consts
         v8::Local<v8::Object> pauseObj = Nan::New<v8::Object>();
-        ExportConstants( pauseObj, curlConstPause );
+        ExportConstants( pauseObj, curlConstPause, attributes );
 
         // export auth consts
         v8::Local<v8::Object> authObj = Nan::New<v8::Object>();
-        ExportConstants( authObj, curlConstAuth );
+        ExportConstants( authObj, curlConstAuth, attributes );
 
         // export HTTP consts
         v8::Local<v8::Object> httpObj = Nan::New<v8::Object>();
-        ExportConstants( httpObj, curlConstHttp );
+        ExportConstants( httpObj, curlConstHttp, attributes );
 
 #if NODE_LIBCURL_VER_GE( 7, 19, 4 )
         // export proto consts
         v8::Local<v8::Object> protocolsObj = Nan::New<v8::Object>();
-        ExportConstants( protocolsObj, curlConstProtocol );
+        ExportConstants( protocolsObj, curlConstProtocol, attributes );
 #endif
 
 #if NODE_LIBCURL_VER_GE( 7, 37, 0 )
         //export header consts
         v8::Local<v8::Object> headerObj = Nan::New<v8::Object>();
-        ExportConstants( headerObj, curlConstHeader );
+        ExportConstants( headerObj, curlConstHeader, attributes );
 #endif
         // export Curl codes
         v8::Local<v8::Object> multiObj = Nan::New<v8::Object>();
-        ExportConstants( multiObj, curlMultiOptionInteger );
-        ExportConstants( multiObj, curlMultiOptionStringArray );
+        ExportConstants( multiObj, curlMultiOptionNotImplemented, attributesDontEnum );
+        ExportConstants( multiObj, curlMultiOptionInteger, attributes );
+        ExportConstants( multiObj, curlMultiOptionStringArray, attributes );
 
         // export Curl codes
         v8::Local<v8::Object> codesObj = Nan::New<v8::Object>();
-        ExportConstants( codesObj, curlCode );
+        ExportConstants( codesObj, curlCode, attributes );
 
         // static members
         Nan::ForceSet( obj, Nan::New<v8::String>( "option" ).ToLocalChecked(), optionsObj, attributes );

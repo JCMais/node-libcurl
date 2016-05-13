@@ -797,7 +797,12 @@ namespace NodeLibcurl {
 
         int optionId;
 
-        if ( ( optionId = IsInsideCurlConstantStruct( curlOptionSpecific, opt ) ) ) {
+        if ( ( optionId = IsInsideCurlConstantStruct( curlOptionNotImplemented, opt ) ) ) {
+
+            Nan::ThrowError( "Unsupported option, probably because it's too complex to implement using javascript or unecessary when using javascript (like the _DATA options)." );
+            return;
+        }
+        else if ( ( optionId = IsInsideCurlConstantStruct( curlOptionSpecific, opt ) ) ) {
 
             switch( optionId ) {
                 case CURLOPT_SHARE:
@@ -1293,6 +1298,13 @@ namespace NodeLibcurl {
 
         CURLINFO curlInfo;
         CURLcode code = CURLE_OK;
+
+        // Special case for unsupported info
+        if ( ( infoId = IsInsideCurlConstantStruct( curlInfoNotImplemented, infoVal ) ) ) {
+
+            Nan::ThrowError( "Unsupported info, probably because it's too complex to implement using javascript or unecessary when using javascript." );
+            return;
+        }
 
         Nan::TryCatch tryCatch;
 

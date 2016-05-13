@@ -347,7 +347,12 @@ namespace NodeLibcurl {
         int optionId;
 
         // array of strings option
-        if ( ( optionId = IsInsideCurlConstantStruct( curlMultiOptionStringArray, opt ) ) ) {
+        if ( ( optionId = IsInsideCurlConstantStruct( curlMultiOptionNotImplemented, opt ) ) ) {
+
+            Nan::ThrowError( "Unsupported option, probably because it's too complex to implement using javascript or unecessary when using javascript." );
+            return;
+        }
+        else if ( ( optionId = IsInsideCurlConstantStruct( curlMultiOptionStringArray, opt ) ) ) {
 
             if ( value->IsNull() ) {
 

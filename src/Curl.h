@@ -57,6 +57,7 @@ namespace NodeLibcurl {
     const extern std::vector<CurlConstant> curlConstHttp;
     const extern std::vector<CurlConstant> curlConstHeader;
 
+    const extern std::vector<CurlConstant> curlOptionNotImplemented;
     const extern std::vector<CurlConstant> curlOptionInteger;
     const extern std::vector<CurlConstant> curlOptionString;
     const extern std::vector<CurlConstant> curlOptionFunction;
@@ -64,12 +65,14 @@ namespace NodeLibcurl {
     const extern std::vector<CurlConstant> curlOptionHttpPost;
     const extern std::vector<CurlConstant> curlOptionSpecific;
 
+    const extern std::vector<CurlConstant> curlInfoNotImplemented;
     const extern std::vector<CurlConstant> curlInfoString;
     const extern std::vector<CurlConstant> curlInfoDouble;
     const extern std::vector<CurlConstant> curlInfoInteger;
     const extern std::vector<CurlConstant> curlInfoSocket;
     const extern std::vector<CurlConstant> curlInfoLinkedList;
 
+    const extern std::vector<CurlConstant> curlMultiOptionNotImplemented;
     const extern std::vector<CurlConstant> curlMultiOptionInteger;
     const extern std::vector<CurlConstant> curlMultiOptionStringArray;
 

@@ -60,6 +60,30 @@ after( function() {
     server.close();
 });
 
+it ( 'should not work with non-implemented infos', function ( done ) {
+
+    curl.on( 'end', function( status ) {
+
+        if ( status !== 200 ) {
+            throw Error( 'Invalid status code: ' + status );
+        }
+
+        (function() {
+            curl.getInfo( Curl.info.PRIVATE );
+        }).should.throw( /^Unsupported/ );
+
+        done();
+    });
+
+    curl.on( 'error', function ( err ) {
+
+        done( err );
+    });
+
+    curl.perform();
+
+});
+
 it( 'should get all infos', function ( done ) {
 
     curl.on( 'end', function( status ) {

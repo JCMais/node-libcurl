@@ -33,7 +33,7 @@ afterEach( function() {
     curl.close();
 });
 
-it( 'should not accept invalid argument type', function( done ) {
+it( 'should not accept invalid argument type', function() {
 
     var optionsToTest = [
         ['URL', 0],
@@ -50,17 +50,22 @@ it( 'should not accept invalid argument type', function( done ) {
 
     } catch ( err ) {
 
-        return done();
+        return;
     }
 
     throw Error( 'Invalid option was accepted.' );
+});
 
+it ( 'should not work with non-implemented options', function () {
 
+    (function() {
+        curl.setOpt( Curl.option.SSL_CTX_FUNCTION, 1 );
+    }).should.throw( /^Unsupported/ );
 });
 
 describe( 'HTTPPOST', function() {
 
-    it( 'should not accept invalid arrays', function( done ) {
+    it( 'should not accept invalid arrays', function() {
 
         try {
 
@@ -68,13 +73,13 @@ describe( 'HTTPPOST', function() {
 
         } catch ( err ) {
 
-            return done();
+            return;
         }
 
         throw Error( 'Invalid array accepted.' );
     });
 
-    it( 'should not accept invalid property names', function( done ) {
+    it( 'should not accept invalid property names', function() {
 
         try {
 
@@ -82,7 +87,7 @@ describe( 'HTTPPOST', function() {
 
         } catch ( err ) {
 
-            return done();
+            return;
         }
 
         throw Error( 'Invalid property name accepted.' );
@@ -115,7 +120,5 @@ describe( 'HTTPPOST', function() {
         if ( invalidArgs.length === args.length ) {
             throw Error( 'Invalid property value accepted. Invalid Args: ' + JSON.stringify( invalidArgs ) + ', Args: ' + JSON.stringify( args ) );
         }
-
     });
-
 });
