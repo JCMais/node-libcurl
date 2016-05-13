@@ -22,8 +22,9 @@
  */
 
 /**
- * Example showing how to download files from a FTP server using wildcard pattern matching
- * Mostly based on https://curl.haxx.se/libcurl/c/ftp-wildcard.html
+ * Example showing how to download files from a FTP server
+ * using custom wildcard pattern matching
+ * Based on the ftp-wildcard example
  */
 var Curl = require( '../lib/Curl' ),
     Easy = require( '../lib/Easy' ),
@@ -42,6 +43,7 @@ var handle = new Easy(),
 
 handle.setOpt( Curl.option.URL, url );
 handle.setOpt( Curl.option.WILDCARDMATCH, true );
+handle.setOpt( Curl.option.FNMATCH_FUNCTION, fnMatch );
 handle.setOpt( Curl.option.CHUNK_BGN_FUNCTION, fileIsComing );
 handle.setOpt( Curl.option.CHUNK_END_FUNCTION, filesIsDownloaded );
 
@@ -60,6 +62,49 @@ handle.onData = function( buff, nmemb, size ) {
     }
 
     return written;
+}
+
+// Functions globStringToRegex and pregQuote from: http://stackoverflow.com/a/13818704/710693
+
+function globStringToRegex( str ) {
+
+    return new RegExp( pregQuote( str ).replace( /\\\*/g, '.*' ).replace( /\\\?/g, '.' ), 'g' );
+}
+function pregQuote( str, delimiter ) {
+
+    // http://kevin.vanzonneveld.net
+    // +   original by: booeyOH
+    // +   improved by: Ates Goral (http://magnetiq.com)
+    // +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+    // +   bugfixed by: Onno Marsman
+    // +   improved by: Brett Zamir (http://brett-zamir.me)
+    // *     example 1: preg_quote("$40");
+    // *     returns 1: '\$40'
+    // *     example 2: preg_quote("*RRRING* Hello?");
+    // *     returns 2: '\*RRRING\* Hello\?'
+    // *     example 3: preg_quote("\\.+*?[^]$(){}=!<>|:");
+    // *     returns 3: '\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:'
+    return ( str + '' ).replace(
+        new RegExp( '[.\\\\+*?\\[\\^\\]$(){}=!<>|:\\' + ( delimiter || '' ) + '-]', 'g' ),
+        '\\$&'
+    );
+}
+
+/**
+ * Use our own logic to make the wildcard matching.
+ *
+ * Here we are just changing from the default libcurl logic
+ *  to use one equivalent using javascript RegExp.
+ *
+ * @param {String} pattern
+ * @param {String} string
+ * @returns {number}
+ */
+function fnMatch( pattern, string ) {
+
+    var regex = new RegExp( globStringToRegex( pattern ), 'g' );
+
+    return string.match( regex ) ? Curl.fnmatchfunc.MATCH : Curl.fnmatchfunc.NOMATCH;
 }
 
 /**

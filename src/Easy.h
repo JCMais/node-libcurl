@@ -71,6 +71,7 @@ namespace NodeLibcurl {
         Nan::Callback *cbChunkBgn;
         Nan::Callback *cbChunkEnd;
         Nan::Callback *cbDebug;
+        Nan::Callback *cbFnMatch;
         Nan::Callback *cbOnSocketEvent;
         Nan::Callback *cbProgress;
         Nan::Callback *cbRead;
@@ -142,6 +143,7 @@ namespace NodeLibcurl {
         static long CbChunkBgn( curl_fileinfo *transferInfo, void *ptr, int remains );
         static long CbChunkEnd( void *ptr );
         static int CbDebug( CURL *handle, curl_infotype type, char *data, size_t size, void *userptr );
+        static int CbFnMatch( void *ptr, const char *pattern, const char *string );
         static int CbProgress( void *clientp, double dltotal, double dlnow, double ultotal, double ulnow );
         static int CbXferinfo( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow );
 

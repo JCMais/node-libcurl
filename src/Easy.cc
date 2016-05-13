@@ -56,7 +56,7 @@ namespace NodeLibcurl {
     int32_t Easy::openHandles = 0;
 
     Easy::Easy() :
-        cbChunkBgn( nullptr ), cbChunkEnd( nullptr ), cbDebug( nullptr ),
+        cbChunkBgn( nullptr ), cbChunkEnd( nullptr ), cbDebug( nullptr ), cbFnMatch( nullptr ),
         cbOnSocketEvent( nullptr ), cbProgress( nullptr ), cbRead( nullptr ), cbXferinfo( nullptr ),
         pollHandle( nullptr ),
         isCbProgressAlreadyAborted( false ), isMonitoringSockets( false ),
@@ -73,7 +73,7 @@ namespace NodeLibcurl {
     }
 
     Easy::Easy( Easy *orig ) :
-        cbChunkBgn( nullptr ), cbChunkEnd( nullptr ), cbDebug( nullptr ),
+        cbChunkBgn( nullptr ), cbChunkEnd( nullptr ), cbDebug( nullptr ), cbFnMatch( nullptr ),
         cbOnSocketEvent( nullptr ), cbProgress( nullptr ), cbRead( nullptr ), cbXferinfo( nullptr ),
         pollHandle( nullptr ),
         isCbProgressAlreadyAborted( false ), isMonitoringSockets( false ),
@@ -99,6 +99,11 @@ namespace NodeLibcurl {
 
         if ( this->cbChunkBgn || this->cbChunkEnd ) {
             curl_easy_setopt( this->ch, CURLOPT_CHUNK_DATA, this );
+        }
+
+        if ( orig->cbFnMatch != nullptr ) {
+            this->cbFnMatch = new Nan::Callback( orig->cbFnMatch->GetFunction() );
+            curl_easy_setopt( this->ch, CURLOPT_FNMATCH_DATA, this );
         }
 
         if ( orig->cbDebug != nullptr ) {
@@ -186,6 +191,8 @@ namespace NodeLibcurl {
         delete this->cbChunkEnd;
 
         delete this->cbDebug;
+
+        delete this->cbFnMatch;
 
         delete this->cbOnSocketEvent;
 
@@ -577,7 +584,40 @@ namespace NodeLibcurl {
         return retvalInt;
     }
 
-    // Callbacks
+    int Easy::CbFnMatch( void *ptr, const char *pattern, const char *string )
+    {
+        Nan::HandleScope scope;
+
+        Easy *obj = static_cast<Easy *>( ptr );
+
+        assert( obj );
+
+        int32_t retvalInt32 = CURL_FNMATCHFUNC_FAIL;
+
+        v8::Local<v8::String> argPattern = Nan::New( pattern ).ToLocalChecked();
+        v8::Local<v8::String> argString = Nan::New( string ).ToLocalChecked();
+
+        const int argc = 2;
+        v8::Local<v8::Value> argv[argc] = {
+            argPattern,
+            argString
+        };
+
+        v8::Local<v8::Value> retval = obj->cbFnMatch->Call( obj->handle(), argc, argv );
+
+        if ( !retval->IsInt32() ) {
+
+            Nan::ThrowTypeError( "Return value from the fnmatch callback must be an integer." );
+
+        }
+        else {
+
+            retvalInt32 = retval->Int32Value();
+        }
+
+        return retvalInt32;
+    }
+
     int Easy::CbProgress( void *clientp, double dltotal, double dlnow, double ultotal, double ulnow )
     {
         Nan::HandleScope scope;
@@ -1112,6 +1152,24 @@ namespace NodeLibcurl {
                         setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_DEBUGFUNCTION, Easy::CbDebug );
                     }
 
+                    break;
+
+                case CURLOPT_FNMATCH_FUNCTION:
+
+                    delete obj->cbFnMatch;
+                    obj->cbFnMatch = nullptr;
+
+                    if ( isNull ) {
+
+                        curl_easy_setopt( obj->ch, CURLOPT_FNMATCH_DATA, NULL );
+                        setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_FNMATCH_FUNCTION, NULL );
+                    }
+                    else {
+
+                        obj->cbFnMatch = new Nan::Callback( callback );
+                        curl_easy_setopt( obj->ch, CURLOPT_FNMATCH_DATA, obj );
+                        setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_FNMATCH_FUNCTION, Easy::CbFnMatch );
+                    }
                     break;
 
                 case CURLOPT_PROGRESSFUNCTION:

@@ -3,8 +3,6 @@
 ## node-libcurl
 
 * [node-libcurl](#module_node-libcurl)
-    * _instance_
-        * [.CurlFileInfo](#module_node-libcurl+CurlFileInfo) : <code>Object</code>
     * _static_
         * [.Curl](#module_node-libcurl.Curl) ⇐ <code>EventEmitter</code>
             * [new Curl()](#new_module_node-libcurl.Curl_new)
@@ -100,33 +98,8 @@
                 * [.close()](#module_node-libcurl.Share+close)
             * _static_
                 * [.strError(code)](#module_node-libcurl.Share.strError) ⇒ <code>String</code>
-
-<a name="module_node-libcurl+CurlFileInfo"></a>
-
-### node-libcurl.CurlFileInfo : <code>Object</code>
-CurlFileInfo data type, the first parameter
-passed to the callback set using the option ``CHUNK_BGN_FUNCTION``.
-
-**Kind**: instance typedef of <code>[node-libcurl](#module_node-libcurl)</code>  
-**Read only**: true  
-**Properties**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| fileName | <code>String</code> |  |
-| fileType | <code>Number</code> | Value to be used with [filetype](#module_node-libcurl.Curl.filetype) |
-| time | <code>Date</code> |  |
-| perm | <code>Number</code> |  |
-| uid | <code>Number</code> |  |
-| gid | <code>Number</code> |  |
-| size | <code>Number</code> |  |
-| hardLinks | <code>Number</code> |  |
-| strings | <code>Object</code> |  |
-| strings.time | <code>String</code> |  |
-| strings.perm | <code>String</code> |  |
-| strings.user | <code>String</code> |  |
-| strings.group | <code>String</code> |  |
-| strings.target | <code>String</code> &#124; <code>Null</code> |  |
+    * _inner_
+        * [~CurlFileInfo](#module_node-libcurl..CurlFileInfo) : <code>Object</code>
 
 <a name="module_node-libcurl.Curl"></a>
 
@@ -535,7 +508,7 @@ Object with constants to be used as the return value for the callbacks set
 <a name="module_node-libcurl.Curl.filetype"></a>
 
 #### Curl.filetype : <code>enum</code>
-Object with constants to be used when using the [CurlFileInfo](#module_node-libcurl+CurlFileInfo) object,
+Object with constants to be used when using the [module:node-libcurl#CurlFileInfo](module:node-libcurl#CurlFileInfo) object,
  mostly used alongside the ``CHUNK_BGN_FUNCTION`` option
 
 ``CURLFILETYPE_FILE`` becomes ``Curl.filetype.FILE``
@@ -1240,4 +1213,31 @@ Official libcurl documentation: [curl_share_strerror()](http://curl.haxx.se/libc
 | Param | Type |
 | --- | --- |
 | code | <code>[code](#module_node-libcurl.Curl.code)</code> | 
+
+<a name="module_node-libcurl..CurlFileInfo"></a>
+
+### node-libcurl~CurlFileInfo : <code>Object</code>
+CurlFileInfo data type, the first parameter
+passed to the callback set using the option ``CHUNK_BGN_FUNCTION``.
+
+**Kind**: inner typedef of <code>[node-libcurl](#module_node-libcurl)</code>  
+**Read only**: true  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| fileName | <code>String</code> |  |
+| fileType | <code>Number</code> | Value to be used with [filetype](#module_node-libcurl.Curl.filetype) |
+| time | <code>Date</code> |  |
+| perm | <code>Number</code> |  |
+| uid | <code>Number</code> |  |
+| gid | <code>Number</code> |  |
+| size | <code>Number</code> |  |
+| hardLinks | <code>Number</code> |  |
+| strings | <code>Object</code> |  |
+| strings.time | <code>String</code> |  |
+| strings.perm | <code>String</code> |  |
+| strings.user | <code>String</code> |  |
+| strings.group | <code>String</code> |  |
+| strings.target | <code>String</code> &#124; <code>Null</code> |  |
 
