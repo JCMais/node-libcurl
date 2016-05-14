@@ -3,7 +3,7 @@
 /**
  * @author Jonathan Cardoso Machado
  * @license MIT
- * @copyright 2015, Jonathan Cardoso Machado
+ * @copyright 2015-2016, Jonathan Cardoso Machado
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -109,11 +109,11 @@ namespace NodeLibcurl {
 
         // members
         CURL  *ch;
-        bool isInsideMultiCurl;
+        bool isInsideMultiHandle;
         bool isOpen;
 
         // static members
-        static int32_t openHandles;
+        static int32_t currentOpenedHandles;
 
         // export Easy to js
         static NAN_MODULE_INIT( Initialize );
@@ -121,6 +121,7 @@ namespace NodeLibcurl {
         // js available methods
         static NAN_METHOD( New );
         static NAN_GETTER( IdGetter );
+        static NAN_GETTER( IsInsideMultiHandleGetter );
         static NAN_METHOD( SetOpt );
         static NAN_METHOD( GetInfo );
         static NAN_METHOD( Send );

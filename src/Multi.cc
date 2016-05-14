@@ -26,7 +26,7 @@ namespace NodeLibcurl {
 
     Nan::Persistent<v8::FunctionTemplate> Multi::constructor;
 
-    Multi::Multi() : isOpen( true ), runningHandles( 0 ), cbOnMessage( nullptr )
+    Multi::Multi() : isOpen( true ), amountOfHandles( 0 ), runningHandles( 0 ), cbOnMessage( nullptr )
     {
         // init uv timer to be used with HandleTimeout
         this->timeout = deleted_unique_ptr<uv_timer_t>( new uv_timer_t, [&]( uv_timer_t *timerhandl ) { uv_close( reinterpret_cast<uv_handle_t *>( timerhandl ), Multi::OnTimerClose ); } );
@@ -260,10 +260,17 @@ namespace NodeLibcurl {
     {
         Nan::HandleScope scope;
 
-        Easy *obj = this->easyHandles[easy];
-
         //we don't have an on message callback, just return.
         if ( !this->cbOnMessage ) {
+            return;
+        }
+
+        Easy *obj = nullptr;
+        CURLcode code = curl_easy_getinfo( easy, CURLINFO_PRIVATE, &obj );
+
+        if ( code != CURLE_OK ) {
+
+            Nan::ThrowError( "Error retrieving current handle instance." );
             return;
         }
 
@@ -398,49 +405,6 @@ namespace NodeLibcurl {
         info.GetReturnValue().Set( setOptRetCode );
     }
 
-    NAN_METHOD( Multi::AddHandle )
-    {
-        Nan::HandleScope scope;
-
-        Multi *obj = Nan::ObjectWrap::Unwrap<Multi>( info.This() );
-
-        if ( !obj->isOpen ) {
-
-            Nan::ThrowError( "Multi handle is closed." );
-            return;
-        }
-
-        v8::Local<v8::Value> handle = info[0];
-
-        if ( !handle->IsObject() || !Nan::New( Easy::constructor )->HasInstance( handle ) ) {
-
-            Nan::ThrowError( Nan::TypeError( "Argument must be an instance of an Easy handle." ) );
-            return;
-        }
-        else {
-
-            Easy *easy = Nan::ObjectWrap::Unwrap<Easy>( handle.As<v8::Object>() );
-
-            if ( !easy->isOpen ) {
-                Nan::ThrowError( "Cannot add an Easy handle that is closed." );
-                return;
-            }
-
-            CURLMcode code = curl_multi_add_handle( obj->mh, easy->ch );
-
-            if ( code == CURLM_OK ) {
-
-                obj->easyHandles.insert( std::make_pair( easy->ch, easy ) );
-            }
-
-            v8::Local<v8::Int32> ret = Nan::New( static_cast<int32_t>( code ) );
-
-            easy->isInsideMultiCurl = true;
-
-            info.GetReturnValue().Set( ret );
-        }
-    }
-
     NAN_METHOD( Multi::OnMessage )
     {
         Nan::HandleScope scope;
@@ -474,6 +438,51 @@ namespace NodeLibcurl {
         info.GetReturnValue().Set( info.This() );
     }
 
+    NAN_METHOD( Multi::AddHandle )
+    {
+        Nan::HandleScope scope;
+
+        Multi *obj = Nan::ObjectWrap::Unwrap<Multi>( info.This() );
+
+        if ( !obj->isOpen ) {
+
+            Nan::ThrowError( "Multi handle is closed." );
+            return;
+        }
+
+        v8::Local<v8::Value> handle = info[0];
+
+        if ( !handle->IsObject() || !Nan::New( Easy::constructor )->HasInstance( handle ) ) {
+
+            Nan::ThrowError( Nan::TypeError( "Argument must be an instance of an Easy handle." ) );
+            return;
+        }
+        else {
+
+            Easy *easy = Nan::ObjectWrap::Unwrap<Easy>( handle.As<v8::Object>() );
+
+            if ( !easy->isOpen ) {
+                Nan::ThrowError( "Cannot add an Easy handle that is closed." );
+                return;
+            }
+
+            CURLMcode code = curl_multi_add_handle( obj->mh, easy->ch );
+
+            if ( code != CURLM_OK ) {
+
+                Nan::ThrowError( Nan::TypeError( "Could not add easy handle to the multi handle." ) );
+                return;
+            }
+
+            ++obj->amountOfHandles;
+            easy->isInsideMultiHandle = true;
+
+            v8::Local<v8::Int32> ret = Nan::New( static_cast<int32_t>( code ) );
+
+            info.GetReturnValue().Set( ret );
+        }
+    }
+
     NAN_METHOD( Multi::RemoveHandle )
     {
         Nan::HandleScope scope;
@@ -499,12 +508,14 @@ namespace NodeLibcurl {
 
             CURLMcode code = curl_multi_remove_handle( obj->mh, easy->ch );
 
-            if ( code == CURLM_OK ) {
+            if ( code != CURLM_OK ) {
 
-                obj->easyHandles.erase( easy->ch );
-
-                easy->isInsideMultiCurl = false;
+                Nan::ThrowError( Nan::TypeError( "Could not remove easy handle from multi handle." ) );
+                return;
             }
+
+            --obj->amountOfHandles;
+            easy->isInsideMultiHandle = false;
 
             v8::Local<v8::Int32> ret = Nan::New( static_cast<int32_t>( code ) );
 
@@ -518,7 +529,7 @@ namespace NodeLibcurl {
 
         Multi *obj = Nan::ObjectWrap::Unwrap<Multi>( info.This() );
 
-        v8::Local<v8::Uint32> ret = Nan::New( static_cast<uint32_t>( obj->easyHandles.size() ) );
+        v8::Local<v8::Uint32> ret = Nan::New( static_cast<uint32_t>( obj->amountOfHandles ) );
 
         info.GetReturnValue().Set( ret );
     }

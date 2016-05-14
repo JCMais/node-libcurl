@@ -1,7 +1,7 @@
 /**
  * @author Jonathan Cardoso Machado
  * @license MIT
- * @copyright 2015, Jonathan Cardoso Machado
+ * @copyright 2015-2016, Jonathan Cardoso Machado
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,34 +29,26 @@
 var Curl = require( '../lib/Curl' ),
     path = require( 'path' );
 
-var url = 'http://local.vm/', //local.vm in this case was the default nginx page.
-    file= 'file:///' + path.join( __dirname, 'test.txt' ),
-    instances   = 100,
-    maxRequests = 1e5, //100K requests in total
-    iterations  = 3, //repeat n times to collect data
-    shouldTestFile = false,
+var url  = 'http://localhost/index.html', //localhost in this case was a blank html page served via Apache 2.4
+    file = 'file:///' + path.join( __dirname, 'test.txt' ),
+    instances   = 25,  // 25 instances running at max per iteration
+    maxRequests = 1e4, // 10000 requests in total per iteration
+    iterations  = 3,   // repeat n times to collect data
+    shouldTestFile = true,
     shouldUseHeaderRequest = true,
     precision = 3;
 
-/*
- * With the above configuration, I got the following under nginx running on a virtual box:
-     Iterations ------------  3
-     Requests   ------------  100000
-     Instances  ------------  100
-     Total Time ------------  107.173071657s
-     Iteration Avg ---------  35.724357219s
-     Errors Avg  ------------  0
- */
-
-var finishedRequests   = 0,
-    runningRequests = 0,
+var finishedRequests = 0,
+    runningRequests  = 0,
     requestData = [],
-    id = 0;
+    currentIteration = 0,
+    timeBetweenStdouWrite = 1000,
+    lastTimeStdoutWrite = 0;
 
 function doRequest( data ) {
 
     var curl = new Curl();
-    curl.setOpt( Curl.option.URL, !shouldTestFile ? url : file  );
+    curl.setOpt( Curl.option.URL, shouldTestFile ? file : url );
     curl.setOpt( Curl.option.NOBODY, shouldUseHeaderRequest );
     curl.setOpt( Curl.option.CONNECTTIMEOUT, 5 );
     curl.setOpt( Curl.option.TIMEOUT, 10 );
@@ -71,9 +63,19 @@ function doRequest( data ) {
 
 function cb( code ) {
 
-    var data = this.data;
+    var data = this.data,
+        now = Date.now(),
+        shouldWrite = false;
 
-    if ( code !== 200 ) {
+    if ( now - lastTimeStdoutWrite >= timeBetweenStdouWrite ) {
+
+        shouldWrite = true;
+        lastTimeStdoutWrite = now;
+    }
+
+    this.close();
+
+    if ( code instanceof Error ) {
         ++data.errors;
     }
 
@@ -83,10 +85,9 @@ function cb( code ) {
     if ( ( finishedRequests + runningRequests ) < maxRequests ) {
 
         doRequest( data );
-
     }
 
-    if ( finishedRequests % 100 === 0 || maxRequests - finishedRequests <= instances ) {
+    if ( shouldWrite ) {
         console.info(
             'Curl instances: ', Curl.getCount(),
             ' -> Requests finished: ', finishedRequests,
@@ -99,32 +100,30 @@ function cb( code ) {
         //nano to milli
         data.endTime = process.hrtime( data.startTime );
 
-        console.error( 'Request time: ',
+        console.info( 'Request time: ',
             data.endTime[0] + 's, ' + ( data.endTime[1] / 1e9 ).toFixed( precision ) + 'ms'
         );
 
         process.nextTick( startRequests );
     }
-
-    this.close();
 }
 
 function startRequests() {
 
     var i;
 
-    if ( id >= iterations ) {
+    if ( currentIteration == iterations ) {
 
         return printCollectedData();
     }
 
-    console.log( 'Iteration -> ', id+1 );
+    console.log( 'Iteration -> ', currentIteration+1 );
 
     finishedRequests = 0;
     runningRequests = 0;
 
-    if ( requestData[id] === undefined ) {
-        requestData[id] = {
+    if ( requestData[currentIteration] === undefined ) {
+        requestData[currentIteration] = {
             errors: 0,
             startTime: process.hrtime(),
             endTime: 0
@@ -133,10 +132,10 @@ function startRequests() {
 
     for ( i = 0; i < instances; i++ ) {
 
-        doRequest( requestData[id] );
+        doRequest( requestData[currentIteration] );
     }
 
-    return id++;
+    return currentIteration++;
 }
 
 function printCollectedData() {

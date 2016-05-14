@@ -3,7 +3,7 @@
 /**
  * @author Jonathan Cardoso Machado
  * @license MIT
- * @copyright 2015, Jonathan Cardoso Machado
+ * @copyright 2015-2016, Jonathan Cardoso Machado
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -65,10 +65,10 @@ namespace NodeLibcurl {
         // members
         CURLM *mh;
         bool isOpen;
+        int amountOfHandles;
         int runningHandles;
 
         deleted_unique_ptr<uv_timer_t> timeout;
-        std::map< CURL*, Easy* > easyHandles;
 
         Nan::Callback *cbOnMessage;
 

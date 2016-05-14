@@ -1,7 +1,7 @@
 /**
  * @author Jonathan Cardoso Machado
  * @license MIT
- * @copyright 2015, Jonathan Cardoso Machado
+ * @copyright 2015-2016, Jonathan Cardoso Machado
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,14 +53,14 @@ namespace NodeLibcurl {
     Nan::Persistent<v8::String> Easy::onEndCbSymbol;
 
     uint32_t Easy::counter = 0;
-    int32_t Easy::openHandles = 0;
+    int32_t Easy::currentOpenedHandles = 0;
 
     Easy::Easy() :
         cbChunkBgn( nullptr ), cbChunkEnd( nullptr ), cbDebug( nullptr ), cbFnMatch( nullptr ),
         cbOnSocketEvent( nullptr ), cbProgress( nullptr ), cbRead( nullptr ), cbXferinfo( nullptr ),
         pollHandle( nullptr ),
         isCbProgressAlreadyAborted( false ), isMonitoringSockets( false ),
-        readDataFileDescriptor( -1 ), id( Easy::counter++ ), isInsideMultiCurl( false ), isOpen( true )
+        readDataFileDescriptor( -1 ), id( Easy::counter++ ), isInsideMultiHandle( false ), isOpen( true )
     {
         this->ch = curl_easy_init();
         assert( this->ch );
@@ -69,7 +69,7 @@ namespace NodeLibcurl {
 
         this->ResetRequiredHandleOptions();
 
-        ++Easy::openHandles;
+        ++Easy::currentOpenedHandles;
     }
 
     Easy::Easy( Easy *orig ) :
@@ -77,7 +77,7 @@ namespace NodeLibcurl {
         cbOnSocketEvent( nullptr ), cbProgress( nullptr ), cbRead( nullptr ), cbXferinfo( nullptr ),
         pollHandle( nullptr ),
         isCbProgressAlreadyAborted( false ), isMonitoringSockets( false ),
-        readDataFileDescriptor( -1 ), id( Easy::counter++ ), isInsideMultiCurl( false ), isOpen( true )
+        readDataFileDescriptor( -1 ), id( Easy::counter++ ), isInsideMultiHandle( false ), isOpen( true )
     {
         assert( orig );
         assert( orig != this ); //should not duplicate itself
@@ -129,7 +129,7 @@ namespace NodeLibcurl {
 
         this->ResetRequiredHandleOptions();
 
-        ++Easy::openHandles;
+        ++Easy::currentOpenedHandles;
     }
 
     // Implementation of equality operator overload.
@@ -153,14 +153,16 @@ namespace NodeLibcurl {
 
     void Easy::ResetRequiredHandleOptions()
     {
+        curl_easy_setopt( this->ch, CURLOPT_PRIVATE, this );
+
         curl_easy_setopt( this->ch, CURLOPT_HEADERFUNCTION, Easy::HeaderFunction );
         curl_easy_setopt( this->ch, CURLOPT_HEADERDATA,     this );
 
-        curl_easy_setopt( this->ch, CURLOPT_READFUNCTION,   Easy::ReadFunction );
-        curl_easy_setopt( this->ch, CURLOPT_READDATA,       this );
+        curl_easy_setopt( this->ch, CURLOPT_READFUNCTION, Easy::ReadFunction );
+        curl_easy_setopt( this->ch, CURLOPT_READDATA,     this );
 
         curl_easy_setopt( this->ch, CURLOPT_WRITEFUNCTION, Easy::WriteFunction );
-        curl_easy_setopt( this->ch, CURLOPT_WRITEDATA, this );
+        curl_easy_setopt( this->ch, CURLOPT_WRITEDATA,     this );
     }
 
     // dispose persistent objects and references stored during the life of this obj.
@@ -181,7 +183,7 @@ namespace NodeLibcurl {
 
         this->isOpen = false;
 
-        --Easy::openHandles;
+        --Easy::currentOpenedHandles;
     }
 
     void Easy::DisposeCallbacks()
@@ -727,6 +729,7 @@ namespace NodeLibcurl {
         Nan::SetMethod( tmpl, "strError", Easy::StrError );
 
         Nan::SetAccessor( proto, Nan::New( "id" ).ToLocalChecked(), Easy::IdGetter, 0, v8::Local<v8::Value>(), v8::DEFAULT, v8::ReadOnly );
+        Nan::SetAccessor( proto, Nan::New( "isInsideMultiHandle" ).ToLocalChecked(), Easy::IsInsideMultiHandleGetter, 0, v8::Local<v8::Value>(), v8::DEFAULT, v8::ReadOnly );
 
         Easy::constructor.Reset( tmpl );
 
@@ -776,6 +779,13 @@ namespace NodeLibcurl {
         Easy *obj = Nan::ObjectWrap::Unwrap<Easy>( info.This() );
 
         info.GetReturnValue().Set( Nan::New( obj->id ) );
+    }
+
+    NAN_GETTER( Easy::IsInsideMultiHandleGetter )
+    {
+        Easy *obj = Nan::ObjectWrap::Unwrap<Easy>( info.This() );
+
+        info.GetReturnValue().Set( Nan::New( obj->isInsideMultiHandle ) );
     }
 
     NAN_METHOD( Easy::SetOpt )
@@ -1638,7 +1648,7 @@ namespace NodeLibcurl {
             return;
         }
 
-        if ( obj->isInsideMultiCurl ) {
+        if ( obj->isInsideMultiHandle ) {
 
             Nan::ThrowError( "Curl handle is inside a Multi instance, you must remove it first." );
             return;
