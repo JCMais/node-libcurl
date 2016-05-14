@@ -120,10 +120,12 @@ namespace NodeLibcurl {
             this->cbRead = new Nan::Callback( orig->cbRead->GetFunction() );
         }
 
+#if NODE_LIBCURL_VER_GE( 7, 32, 0 )
         if ( orig->cbXferinfo != nullptr ) {
             this->cbXferinfo = new Nan::Callback( orig->cbXferinfo->GetFunction() );
             curl_easy_setopt( this->ch, CURLOPT_XFERINFODATA, this );
         }
+#endif
 
         this->toFree = orig->toFree;
 
@@ -362,11 +364,11 @@ namespace NodeLibcurl {
                 return CURL_READFUNC_ABORT;
             }
 
-            unsigned int len = (unsigned int) ( size * nmemb );
-
 #if UV_VERSION_MAJOR < 1
             ret = uv_fs_read( uv_default_loop(), &readReq, fd, ptr, 1, -1, NULL );
 #else
+            unsigned int len = (unsigned int) ( size * nmemb );
+
             uv_buf_t uvbuf = uv_buf_init( ptr, len );
 
             ret = uv_fs_read( uv_default_loop(), &readReq, fd, &uvbuf, 1, -1, NULL );
@@ -479,11 +481,11 @@ namespace NodeLibcurl {
         v8::Local<v8::String> fileName = Nan::New( fileInfo->filename ).ToLocalChecked();
         v8::Local<v8::Integer> fileType = Nan::New( fileInfo->filetype );
         v8::Local<v8::Date>    time = Nan::New<v8::Date>( static_cast<double>( fileInfo->time ) * 1000 ).ToLocalChecked();
-        v8::Local<v8::Integer> perm = Nan::New( fileInfo->perm );
+        v8::Local<v8::Uint32> perm = Nan::New( fileInfo->perm );
         v8::Local<v8::Integer> uid = Nan::New( fileInfo->uid );
         v8::Local<v8::Integer> gid = Nan::New( fileInfo->gid );
         v8::Local<v8::Number>  size = Nan::New<v8::Number>( static_cast<double>( fileInfo->size ) );
-        v8::Local<v8::Integer> hardLinks = Nan::New( fileInfo->hardlinks );
+        v8::Local<v8::Integer> hardLinks = Nan::New( static_cast<int32_t>( fileInfo->hardlinks ) );
 
         v8::Local<v8::Object> strings = Nan::New<v8::Object>();
         Nan::Set( strings, Nan::New( "time" ).ToLocalChecked(), NullValueIfInvalidString( fileInfo->strings.time ) );
