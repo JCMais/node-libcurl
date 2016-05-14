@@ -1335,7 +1335,7 @@ namespace NodeLibcurl {
         }
         else if ( ( infoId = IsInsideCurlConstantStruct( curlInfoInteger, infoVal ) ) ) {
 
-            retVal = Easy::GetInfoTmpl<long, v8::Integer>( obj, infoId );
+            retVal = Easy::GetInfoTmpl<long, v8::Number>( obj, infoId );
 
         //ACTIVESOCKET and alike
         }
