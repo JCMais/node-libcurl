@@ -24,8 +24,7 @@
 /**
  * Example showing how to use the Multi handle to make async requests.
  */
-var Curl = require( '../lib/Curl' ),
-    Easy = require( '../lib/Easy' ),
+var Easy = require( '../lib/Easy' ),
     Multi= require( '../lib/Multi' ),
     urls = [
         'http://google.com', 'http://bing.com',
@@ -38,7 +37,7 @@ var Curl = require( '../lib/Curl' ),
     handle;
 
 
-multi.onMessage(function( err, handle, errCode ) {
+multi.onMessage( function( err, handle, errCode ) {
 
     var responseCode = handle.getInfo( 'RESPONSE_CODE' ).data,
         handleData   = handlesData[ handles.indexOf( handle  ) ],
@@ -50,7 +49,7 @@ multi.onMessage(function( err, handle, errCode ) {
 
     if ( err ) {
 
-        console.log( handleUrl + ' returned error: ' + err.message );
+        console.log( handleUrl + ' returned error: "' + err.message + '" with errcode: ' + errCode );
 
     } else {
 

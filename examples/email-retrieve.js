@@ -29,8 +29,6 @@ var Curl = require( '../lib/Curl' ),
     path = require( 'path' );
 
 var curl = new Curl(),
-    to   = 'recipient@example.tld',
-    from = 'sender@example.tld (Example Sender)',
     // This will fetch message 1 from the user's inbox. IMAPS is generally bound to port 993
     url  = 'imaps://sub.domain.tld:993/INBOX/;UID=1',
     certfile = path.join( __dirname, 'cacert.pem' );

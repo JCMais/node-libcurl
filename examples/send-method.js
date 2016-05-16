@@ -1,7 +1,7 @@
 /**
  * @author Jonathan Cardoso Machado
  * @license MIT
- * @copyright 2015, Jonathan Cardoso Machado
+ * @copyright 2015-2016, Jonathan Cardoso Machado
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,7 @@ var Easy = require( '../lib/Easy' ),
     send = new Buffer( 'GET / HTTP/1.0\r\nHost: example.com\r\n\r\n' ),
     recv = new Buffer( 5 * 1024 * 1024 ), //reserve 5mb
     isSent = false,
-    shouldUseMultiHandle = true;;
+    shouldUseMultiHandle = true;
 
 recv.fill( 0 );
 
@@ -127,7 +127,7 @@ if ( shouldUseMultiHandle ) {
     var result = easy.perform();
 
     if ( result != Curl.code.CURLE_OK ) {
-        
+
         throw Error( Easy.strError( result ) );
     }
 

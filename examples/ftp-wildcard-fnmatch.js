@@ -116,10 +116,9 @@ function fileIsComing( fileInfo, remains ) {
 
     process.stdout.write( util.format(
         'Remaining entries: %d / Current: %s / Size: %d - ',
-        remains, fileInfo.fileName, fileInfo.size
-    ));
+        remains, fileInfo.fileName, fileInfo.size ) );
 
-    switch( fileInfo.fileType ) {
+    switch ( fileInfo.fileType ) {
 
         case Curl.filetype.DIRECTORY:
             console.log( ' DIR' );
@@ -132,10 +131,10 @@ function fileIsComing( fileInfo, remains ) {
             break;
     }
 
-    if( fileInfo.fileType == Curl.filetype.FILE ) {
+    if ( fileInfo.fileType == Curl.filetype.FILE ) {
 
         /* do not transfer files > 1MB */
-        if( fileInfo.size > 1024*1024 ) {
+        if ( fileInfo.size > 1024*1024 ) {
 
             console.log( 'SKIPPED' );
             return Curl.chunk.BGN_FUNC_SKIP;
@@ -143,7 +142,7 @@ function fileIsComing( fileInfo, remains ) {
 
         data.output = fs.openSync( path.join( process.cwd(), fileInfo.fileName ), 'w+' );
 
-        if( !data.output ) {
+        if ( !data.output ) {
             return Curl.chunk.BGN_FUNC_FAIL;
         }
     } else {
@@ -157,7 +156,7 @@ function fileIsComing( fileInfo, remains ) {
 
 function filesIsDownloaded() {
 
-    if( data.output ) {
+    if ( data.output ) {
 
         console.log( 'DOWNLOADED' );
         fs.closeSync( data.output );

@@ -4,7 +4,6 @@
 
 [![NPM version][npm-image]][npm-url]
 [![node][node-image]][node-url]
-[![io.js][iojs-image]][iojs-url]
 [![license][license-image]][license-url]
 
 [![Travis CI Status][travis-image]][travis-url]
@@ -22,8 +21,6 @@
 [codeclimate-url]:https://codeclimate.com/github/JCMais/node-libcurl
 [node-image]:https://img.shields.io/badge/node.js-%3E=_0.10-green.svg?style=flat-square
 [node-url]:https://nodejs.org/download/
-[iojs-image]:https://img.shields.io/badge/io.js-%3E=_1.0-brightgreen.svg?style=flat-square
-[iojs-url]:https://iojs.org/en/index.html
 [license-image]:https://img.shields.io/github/license/JCMais/node-libcurl.svg?style=flat-square
 [license-url]:https://raw.githubusercontent.com/JCMais/node-libcurl/develop/LICENSE-MIT
 [deps-image]:https://img.shields.io/david/JCMais/node-libcurl.svg?style=flat-square
