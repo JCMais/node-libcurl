@@ -1,7 +1,7 @@
 /**
  * @author Jonathan Cardoso Machado
  * @license MIT
- * @copyright 2015, Jonathan Cardoso Machado
+ * @copyright 2015-2016, Jonathan Cardoso Machado
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,7 @@ var Curl = require( '../lib/Curl' ),
     ProgressBar = require( 'progress' );
 
 var curl = new Curl(),
-    url = process.argv[2] || 'http://mirror.internode.on.net/pub/test/5meg.test1',
+    url = process.argv[2] || 'http://ipv4.download.thinkbroadband.com/5MB.zip',
     complete   = '\u001b[42m \u001b[0m',
     incomplete = '\u001b[43m \u001b[0m',
     outputFile = path.resolve( __dirname, 'result.out' ),
@@ -116,12 +116,12 @@ curl.setProgressCallback( function( dltotal, dlnow/*, ultotal, ulnow*/ ) {
 
 // This is the same than the data event, however,
 // keep in mind that here the return value is considered.
-curl.onData = function( chunk ) {
+curl.setOpt( Curl.option.WRITEFUNCTION, function( chunk ) {
 
     fs.appendFileSync( outputFile, chunk );
 
     return chunk.length;
-};
+});
 
 curl.on( 'end', curl.close.bind( curl ) );
 

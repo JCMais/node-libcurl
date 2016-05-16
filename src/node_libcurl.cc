@@ -37,14 +37,14 @@ namespace NodeLibcurl {
         curl_global_cleanup();
     }
 
-    NAN_MODULE_INIT( Init ) {
+    CURL_MODULE_INIT( Init ) {
 
         curl_global_init( CURL_GLOBAL_ALL );
 
-        Initialize( target );
-        Easy::Initialize( target );
-        Multi::Initialize( target );
-        Share::Initialize( target );
+        Initialize( exports, module );
+        Easy::Initialize( exports, module );
+        Multi::Initialize( exports, module );
+        Share::Initialize( exports, module );
 
         node::AtExit( AtExitCallback, NULL );
     }

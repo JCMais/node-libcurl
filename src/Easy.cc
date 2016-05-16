@@ -26,7 +26,6 @@
 
 #include "Easy.h"
 #include "Share.h"
-#include "Curl.h"
 
 #include "make_unique.h"
 #include "string_format.h"
@@ -56,8 +55,9 @@ namespace NodeLibcurl {
     int32_t Easy::currentOpenedHandles = 0;
 
     Easy::Easy() :
-        cbChunkBgn( nullptr ), cbChunkEnd( nullptr ), cbDebug( nullptr ), cbFnMatch( nullptr ),
-        cbOnSocketEvent( nullptr ), cbProgress( nullptr ), cbRead( nullptr ), cbXferinfo( nullptr ),
+        cbChunkBgn( nullptr ), cbChunkEnd( nullptr ), cbDebug( nullptr ), cbHeader( nullptr ),
+        cbFnMatch( nullptr ), cbOnSocketEvent( nullptr ), cbProgress( nullptr ), cbRead( nullptr ),
+        cbXferinfo( nullptr ), cbWrite( nullptr ),
         pollHandle( nullptr ),
         isCbProgressAlreadyAborted( false ), isMonitoringSockets( false ),
         readDataFileDescriptor( -1 ), id( Easy::counter++ ), isInsideMultiHandle( false ), isOpen( true )
@@ -73,8 +73,9 @@ namespace NodeLibcurl {
     }
 
     Easy::Easy( Easy *orig ) :
-        cbChunkBgn( nullptr ), cbChunkEnd( nullptr ), cbDebug( nullptr ), cbFnMatch( nullptr ),
-        cbOnSocketEvent( nullptr ), cbProgress( nullptr ), cbRead( nullptr ), cbXferinfo( nullptr ),
+        cbChunkBgn( nullptr ), cbChunkEnd( nullptr ), cbDebug( nullptr ), cbHeader( nullptr ),
+        cbFnMatch( nullptr ), cbOnSocketEvent( nullptr ), cbProgress( nullptr ), cbRead( nullptr ),
+        cbXferinfo( nullptr ), cbWrite( nullptr ),
         pollHandle( nullptr ),
         isCbProgressAlreadyAborted( false ), isMonitoringSockets( false ),
         readDataFileDescriptor( -1 ), id( Easy::counter++ ), isInsideMultiHandle( false ), isOpen( true )
@@ -101,14 +102,18 @@ namespace NodeLibcurl {
             curl_easy_setopt( this->ch, CURLOPT_CHUNK_DATA, this );
         }
 
+        if ( orig->cbDebug != nullptr ) {
+            this->cbDebug = new Nan::Callback( orig->cbDebug->GetFunction() );
+            curl_easy_setopt( this->ch, CURLOPT_DEBUGDATA, this );
+        }
+
         if ( orig->cbFnMatch != nullptr ) {
             this->cbFnMatch = new Nan::Callback( orig->cbFnMatch->GetFunction() );
             curl_easy_setopt( this->ch, CURLOPT_FNMATCH_DATA, this );
         }
 
-        if ( orig->cbDebug != nullptr ) {
-            this->cbDebug = new Nan::Callback( orig->cbDebug->GetFunction() );
-            curl_easy_setopt( this->ch, CURLOPT_DEBUGDATA, this );
+        if ( orig->cbHeader != nullptr ) {
+            this->cbHeader = new Nan::Callback( orig->cbHeader->GetFunction() );
         }
 
         if ( orig->cbProgress != nullptr ) {
@@ -118,6 +123,10 @@ namespace NodeLibcurl {
 
         if ( orig->cbRead != nullptr ) { //no need to reset the _DATA option here since it's reset on ResetRequiredHandleOptions()
             this->cbRead = new Nan::Callback( orig->cbRead->GetFunction() );
+        }
+
+        if ( orig->cbWrite != nullptr ) {
+            this->cbWrite = new Nan::Callback( orig->cbWrite->GetFunction() );
         }
 
 #if NODE_LIBCURL_VER_GE( 7, 32, 0 )
@@ -201,7 +210,7 @@ namespace NodeLibcurl {
         delete this->cbOnSocketEvent;
 
         delete this->cbProgress;
-        
+
         delete this->cbRead;
 
         delete this->cbXferinfo;
@@ -390,23 +399,32 @@ namespace NodeLibcurl {
 
         size_t n = size * nmemb;
 
-        v8::Local<v8::Value> cb = this->handle()->Get( Nan::New( Easy::onDataCbSymbol ) );
+        v8::Local<v8::Value> cbOnData = this->handle()->Get( Nan::New( Easy::onDataCbSymbol ) );
 
-        // cb not set.
-        if ( cb->IsUndefined() ) {
+        // No callback is set
+        if ( this->cbWrite == nullptr && cbOnData->IsUndefined() ) {
 
             return n;
         }
 
-        assert( cb->IsFunction() );
-
+        const int argc = 3;
         v8::Local<v8::Object> buf = Nan::CopyBuffer( data, static_cast<uint32_t>( n ) ).ToLocalChecked();
         v8::Local<v8::Uint32> sizeArg = Nan::New<v8::Uint32>( static_cast<uint32_t>( size ) );
         v8::Local<v8::Uint32> nmembArg = Nan::New<v8::Uint32>( static_cast<uint32_t>( nmemb ) );
 
-        v8::Local<v8::Value> argv[] = { buf, sizeArg, nmembArg };
+        v8::Local<v8::Value> argv[argc] = { buf, sizeArg, nmembArg };
+        v8::Local<v8::Value> retVal;
 
-        v8::Local<v8::Value> retVal = Nan::MakeCallback( this->handle(), cb.As<v8::Function>(), 3, argv );
+        // Callback set with WRITEFUNCTION has priority over the onData one.
+        if ( this->cbWrite ) {
+
+            retVal = this->cbWrite->Call( this->handle(), argc, argv );
+        }
+        else {
+            // if the cbWrite is not set, the onData cb must be
+
+            retVal = Nan::MakeCallback( this->handle(), cbOnData.As<v8::Function>(), argc, argv );
+        }
 
         size_t ret = n;
 
@@ -429,23 +447,32 @@ namespace NodeLibcurl {
 
         size_t n = size * nmemb;
 
-        v8::Local<v8::Value> cb = this->handle()->Get( Nan::New( Easy::onHeaderCbSymbol ) );
+        v8::Local<v8::Value> cbOnHeader = this->handle()->Get( Nan::New( Easy::onHeaderCbSymbol ) );
 
-        // cb not set.
-        if ( cb->IsUndefined() ) {
+        // No callback is set
+        if ( this->cbHeader == nullptr && cbOnHeader->IsUndefined() ) {
 
             return n;
         }
 
-        assert( cb->IsFunction() );
-
+        const int argc = 3;
         v8::Local<v8::Object> buf = Nan::CopyBuffer( data, static_cast<uint32_t>( n ) ).ToLocalChecked();
         v8::Local<v8::Uint32> sizeArg = Nan::New<v8::Uint32>( static_cast<uint32_t>( size ) );
         v8::Local<v8::Uint32> nmembArg = Nan::New<v8::Uint32>( static_cast<uint32_t>( nmemb ) );
 
-        v8::Local<v8::Value> argv[] = { buf, sizeArg, nmembArg };
+        v8::Local<v8::Value> argv[argc] = { buf, sizeArg, nmembArg };
+        v8::Local<v8::Value> retVal;
 
-        v8::Local<v8::Value> retVal = Nan::MakeCallback( this->handle(), cb.As<v8::Function>(), 3, argv );
+        // Callback set with HEADERFUNCTION has priority over the onHeader one.
+        if ( this->cbHeader ) {
+
+            retVal = this->cbHeader->Call( this->handle(), argc, argv );
+        }
+        else {
+            // if the cbHeader is not set, the onData cb must be
+
+            retVal = Nan::MakeCallback( this->handle(), cbOnHeader.As<v8::Function>(), argc, argv );
+        }
 
         size_t ret = n;
 
@@ -455,7 +482,7 @@ namespace NodeLibcurl {
         }
         else {
 
-            ret = retVal->Int32Value();
+            ret = retVal->Uint32Value();
         }
 
         return ret;
@@ -703,7 +730,7 @@ namespace NodeLibcurl {
         return retvalInt32;
     }
 
-    NAN_MODULE_INIT( Easy::Initialize )
+    CURL_MODULE_INIT( Easy::Initialize )
     {
         Nan::HandleScope scope;
 
@@ -740,7 +767,7 @@ namespace NodeLibcurl {
         Easy::onEndCbSymbol.Reset(    Nan::New( "onEnd" ).ToLocalChecked() );
         Easy::onErrorCbSymbol.Reset(  Nan::New( "onError" ).ToLocalChecked() );
 
-        Nan::Set( target, Nan::New( "Easy" ).ToLocalChecked(), tmpl->GetFunction() );
+        Nan::Set( exports, Nan::New( "Easy" ).ToLocalChecked(), tmpl->GetFunction() );
     }
 
     NAN_METHOD( Easy::New )
@@ -1189,6 +1216,20 @@ namespace NodeLibcurl {
                     }
                     break;
 
+                case CURLOPT_HEADERFUNCTION:
+
+                    delete obj->cbHeader;
+                    obj->cbHeader = nullptr;
+
+                    setOptRetCode = CURLE_OK;
+
+                    if ( !isNull ) {
+
+                        obj->cbHeader = new Nan::Callback( callback );
+                    }
+
+                    break;
+
                 case CURLOPT_PROGRESSFUNCTION:
 
                     delete obj->cbProgress;
@@ -1244,6 +1285,20 @@ namespace NodeLibcurl {
 
                     break;
 #endif
+
+                case CURLOPT_WRITEFUNCTION:
+
+                    delete obj->cbWrite;
+                    obj->cbWrite = nullptr;
+
+                    setOptRetCode = CURLE_OK;
+
+                    if ( !isNull ) {
+
+                        obj->cbWrite = new Nan::Callback( callback );
+                    }
+
+                    break;
             }
 
         }

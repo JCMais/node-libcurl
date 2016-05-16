@@ -20,17 +20,44 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-var Curl   = require( '../../lib/Curl' ),
-    curl = {};
+var serverObj = require( './../helper/server' ),
+    Curl   = require( '../../lib/Curl' );
+
+var server = serverObj.server,
+    app    = serverObj.app,
+    curl = {},
+    url;
 
 beforeEach( function() {
 
     curl = new Curl();
+    curl.setOpt( 'URL', url );
 });
 
 afterEach( function() {
 
     curl.close();
+});
+
+before( function( done ) {
+
+    server.listen( serverObj.port, serverObj.host, function() {
+
+        url = server.address().address + ':' + server.address().port;
+
+        done();
+    });
+
+    app.get( '/', function( req, res ) {
+
+        res.send( 'Hello World!' );
+    });
+});
+
+after( function() {
+
+    app._router.stack.pop();
+    server.close();
 });
 
 it( 'should not accept invalid argument type', function() {
@@ -56,11 +83,69 @@ it( 'should not accept invalid argument type', function() {
     throw Error( 'Invalid option was accepted.' );
 });
 
-it ( 'should not work with non-implemented options', function () {
+it( 'should not work with non-implemented options', function () {
 
     (function() {
         curl.setOpt( Curl.option.SSL_CTX_FUNCTION, 1 );
     }).should.throw( /^Unsupported/ );
+});
+
+it( 'should restore default internal callbacks when setting WRITEFUNCTION and HEADERFUNCTION callback back to null', function ( done ) {
+
+    var shouldCallEvents = false,
+        lastCall = false,
+        headerEvtCalled = false,
+        dataEvtCalled = false;
+
+    curl.setOpt( 'WRITEFUNCTION', function ( buf ) {
+
+        buf.should.be.instanceof( Buffer );
+        return buf.length;
+    });
+
+    curl.setOpt( 'HEADERFUNCTION', function ( buf ) {
+
+        buf.should.be.instanceof( Buffer );
+        return buf.length;
+    });
+
+    curl.on( 'data', function( buf ) {
+
+        shouldCallEvents.should.be.true();
+        dataEvtCalled = true;
+    });
+
+    curl.on( 'header', function( buf ) {
+
+        shouldCallEvents.should.be.true();
+        headerEvtCalled = true;
+    });
+
+    curl.on( 'end', function() {
+
+        curl.setOpt( 'WRITEFUNCTION', null );
+        curl.setOpt( 'HEADERFUNCTION', null );
+
+        if ( !lastCall ) {
+
+            lastCall = true;
+            shouldCallEvents = true;
+            curl.perform();
+            return;
+        }
+
+        dataEvtCalled.should.be.true();
+        headerEvtCalled.should.be.true();
+
+        done();
+    });
+
+    curl.on( 'error', function( err ) {
+
+        done( err );
+    });
+
+    curl.perform();
 });
 
 describe( 'HTTPPOST', function() {

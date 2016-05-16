@@ -31,6 +31,7 @@
 
 #include <curl/curl.h>
 
+#include "Curl.h"
 #include "macros.h"
 
 using Nan::ObjectWrap;
@@ -59,7 +60,7 @@ namespace NodeLibcurl {
         bool isOpen;
 
         // export Easy to js
-        static NAN_MODULE_INIT( Initialize );
+        static CURL_MODULE_INIT( Initialize );
 
         // js available methods
         static NAN_METHOD( New );

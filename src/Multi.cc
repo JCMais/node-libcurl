@@ -296,7 +296,7 @@ namespace NodeLibcurl {
     }
 
     // Add Curl constructor to the module exports
-    NAN_MODULE_INIT( Multi::Initialize )
+    CURL_MODULE_INIT( Multi::Initialize )
     {
         Nan::HandleScope scope;
 
@@ -318,7 +318,7 @@ namespace NodeLibcurl {
 
         Multi::constructor.Reset( tmpl );
 
-        Nan::Set( target, Nan::New( "Multi" ).ToLocalChecked(), tmpl->GetFunction() );
+        Nan::Set( exports, Nan::New( "Multi" ).ToLocalChecked(), tmpl->GetFunction() );
     }
 
     NAN_METHOD( Multi::New )

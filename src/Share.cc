@@ -57,7 +57,7 @@ namespace NodeLibcurl {
         this->isOpen = false;
     }
 
-    NAN_MODULE_INIT( Share::Initialize )
+    CURL_MODULE_INIT( Share::Initialize )
     {
         Nan::HandleScope scope;
 
@@ -75,7 +75,7 @@ namespace NodeLibcurl {
 
         Share::constructor.Reset( tmpl );
 
-        Nan::Set( target, Nan::New( "Share" ).ToLocalChecked(), tmpl->GetFunction() );
+        Nan::Set( exports, Nan::New( "Share" ).ToLocalChecked(), tmpl->GetFunction() );
     }
 
     NAN_METHOD( Share::New )

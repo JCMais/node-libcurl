@@ -35,7 +35,6 @@
     "node-pre-gyp"
   ],
   "dependencies": {
-    "bindings": "~1.2",
     "debug": "^2.2",
     "nan": "~2.3.3",
     "node-gyp": "~3.3.0",

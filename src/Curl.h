@@ -41,6 +41,16 @@ using Nan::ObjectWrap;
 
 namespace NodeLibcurl {
 
+    //https://github.com/nodejs/nan/issues/461#issuecomment-140370028
+#if NODE_MODULE_VERSION < IOJS_3_0_MODULE_VERSION
+    typedef v8::Handle<v8::Value> ADDON_REGISTER_FUNCTION_ARGS2_TYPE;
+#else
+    typedef v8::Local<v8::Value> ADDON_REGISTER_FUNCTION_ARGS2_TYPE;
+#endif
+
+#define CURL_MODULE_INIT( name )                                                  \
+    void name( Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE exports, ADDON_REGISTER_FUNCTION_ARGS2_TYPE module )
+
     // store mapping from the CURL[*] constants that can be used in js
     struct CurlConstant
     {
@@ -79,7 +89,7 @@ namespace NodeLibcurl {
     const extern std::vector<CurlConstant> curlCode;
 
     // export Curl to js
-    NAN_MODULE_INIT( Initialize );
+    CURL_MODULE_INIT( Initialize );
 
     // js exported Methods
     NAN_METHOD( GetVersion );

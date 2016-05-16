@@ -1,7 +1,7 @@
 /**
  * @author Jonathan Cardoso Machado
  * @license MIT
- * @copyright 2015, Jonathan Cardoso Machado
+ * @copyright 2015-2016, Jonathan Cardoso Machado
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -74,10 +74,15 @@ multi.onMessage(function( err, handle, errCode ) {
     }
 });
 
-//This callback is like the CURLOPT_WRITEFUNCTION libcurl option.
+/**
+ * @param {Buffer} data
+ * @param {Number} n
+ * @param {Number} nmemb
+ * @returns {number}
+ */
 function onData( data, n, nmemb ) {
 
-    //this === the handle, see the .bind( handle ) call below.
+    //this === the handle
     var key = handles.indexOf( this );
 
     handlesData[key].push( data );
@@ -91,8 +96,7 @@ for ( var i = 0, len = urls.length; i < len; i++ ) {
     handle = new Easy();
     handle.setOpt( 'URL', urls[i] );
     handle.setOpt( 'FOLLOWLOCATION', true );
-
-    handle.onData = onData.bind( handle );
+    handle.setOpt( 'WRITEFUNCTION', onData );
 
     handlesData.push( [] );
     handles.push( handle );

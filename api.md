@@ -7,8 +7,8 @@
         * [.Curl](#module_node-libcurl.Curl) ⇐ <code>EventEmitter</code>
             * [new Curl()](#new_module_node-libcurl.Curl_new)
             * _instance_
-                * [.onData](#module_node-libcurl.Curl+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
-                * [.onHeader](#module_node-libcurl.Curl+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
+                * ~~[.onData](#module_node-libcurl.Curl+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>~~
+                * ~~[.onHeader](#module_node-libcurl.Curl+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>~~
                 * [.enable(bitmask)](#module_node-libcurl.Curl+enable) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
                 * [.disable(bitmask)](#module_node-libcurl.Curl+disable) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
                 * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Curl+setOpt) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
@@ -56,8 +56,8 @@
         * [.Easy](#module_node-libcurl.Easy)
             * [new Easy([orig])](#new_module_node-libcurl.Easy_new)
             * _instance_
-                * [.onData](#module_node-libcurl.Easy+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
-                * [.onHeader](#module_node-libcurl.Easy+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
+                * ~~[.onData](#module_node-libcurl.Easy+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>~~
+                * ~~[.onHeader](#module_node-libcurl.Easy+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>~~
                 * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Easy+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
                 * [.getInfo(infoNameOrId)](#module_node-libcurl.Easy+getInfo) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
                 * [.send(buf)](#module_node-libcurl.Easy+send) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
@@ -110,8 +110,8 @@
 * [.Curl](#module_node-libcurl.Curl) ⇐ <code>EventEmitter</code>
     * [new Curl()](#new_module_node-libcurl.Curl_new)
     * _instance_
-        * [.onData](#module_node-libcurl.Curl+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
-        * [.onHeader](#module_node-libcurl.Curl+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
+        * ~~[.onData](#module_node-libcurl.Curl+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>~~
+        * ~~[.onHeader](#module_node-libcurl.Curl+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>~~
         * [.enable(bitmask)](#module_node-libcurl.Curl+enable) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
         * [.disable(bitmask)](#module_node-libcurl.Curl+disable) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
         * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Curl+setOpt) ⇒ <code>[Curl](#module_node-libcurl.Curl)</code>
@@ -165,16 +165,18 @@ It provides a more *nodejs-friendly* interface.
 
 <a name="module_node-libcurl.Curl+onData"></a>
 
-#### curl.onData : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
-If you want a callback more like the
- [CURLOPT_WRITEFUNCTION](http://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html) option, use this property to set the callback.
+#### ~~curl.onData : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>~~
+***Deprecated***
+
+Use [setOpt](#module_node-libcurl.Curl+setOpt)( Curl.option.WRITEFUNCTION, onDataCallback ) instead.
 
 **Kind**: instance property of <code>[Curl](#module_node-libcurl.Curl)</code>  
 <a name="module_node-libcurl.Curl+onHeader"></a>
 
-#### curl.onHeader : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
-If you want a callback more like the
- [CURLOPT_HEADERFUNCTION](http://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html) option, use this property to set the callback.
+#### ~~curl.onHeader : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>~~
+***Deprecated***
+
+Use [setOpt](#module_node-libcurl.Curl+setOpt)( Curl.option.HEADERFUNCTION, onHeaderCallback ) instead.
 
 **Kind**: instance property of <code>[Curl](#module_node-libcurl.Curl)</code>  
 <a name="module_node-libcurl.Curl+enable"></a>
@@ -757,8 +759,8 @@ Progress callback called by libcurl.
 * [.Easy](#module_node-libcurl.Easy)
     * [new Easy([orig])](#new_module_node-libcurl.Easy_new)
     * _instance_
-        * [.onData](#module_node-libcurl.Easy+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
-        * [.onHeader](#module_node-libcurl.Easy+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
+        * ~~[.onData](#module_node-libcurl.Easy+onData) : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>~~
+        * ~~[.onHeader](#module_node-libcurl.Easy+onHeader) : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>~~
         * [.setOpt(optionIdOrName, optionValue)](#module_node-libcurl.Easy+setOpt) ⇒ <code>[code](#module_node-libcurl.Curl.code)</code>
         * [.getInfo(infoNameOrId)](#module_node-libcurl.Easy+getInfo) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
         * [.send(buf)](#module_node-libcurl.Easy+send) ⇒ <code>[ReturnData](#module_node-libcurl.Easy..ReturnData)</code>
@@ -792,11 +794,19 @@ Easy handle constructor
 
 <a name="module_node-libcurl.Easy+onData"></a>
 
-#### easy.onData : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>
+#### ~~easy.onData : <code>[onDataCallback](#module_node-libcurl.Easy..onDataCallback)</code>~~
+***Deprecated***
+
+Use [setOpt](#module_node-libcurl.Easy+setOpt)( Curl.option.WRITEFUNCTION, onDataCallback ) instead.
+
 **Kind**: instance property of <code>[Easy](#module_node-libcurl.Easy)</code>  
 <a name="module_node-libcurl.Easy+onHeader"></a>
 
-#### easy.onHeader : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>
+#### ~~easy.onHeader : <code>[onHeaderCallback](#module_node-libcurl.Easy..onHeaderCallback)</code>~~
+***Deprecated***
+
+Use [setOpt](#module_node-libcurl.Easy+setOpt)( Curl.option.HEADERFUNCTION, onHeaderCallback ) instead.
+
 **Kind**: instance property of <code>[Easy](#module_node-libcurl.Easy)</code>  
 <a name="module_node-libcurl.Easy+setOpt"></a>
 

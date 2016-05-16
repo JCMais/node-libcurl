@@ -163,10 +163,7 @@ namespace NodeLibcurl {
         { "CONV_FROM_NETWORK_FUNCTION", CURLOPT_CONV_FROM_NETWORK_FUNCTION },
 
         // Options that are used internally.
-        // @NOTE We can allow WRITEFUNCTIOn and HEADERFUNCTION if we deprecate onData and onHeader
-        { "WRITEFUNCTION", CURLOPT_WRITEFUNCTION },
         { "WRITEDATA", CURLOPT_WRITEDATA },
-        { "HEADERFUNCTION", CURLOPT_HEADERFUNCTION },
         { "HEADERDATA", CURLOPT_HEADERDATA },
 
         // Options that are not necessary because javascript nature.
@@ -196,7 +193,7 @@ namespace NodeLibcurl {
     #if NODE_LIBCURL_VER_GE( 7, 19, 6 )
         { "SSH_KEYDATA", CURLOPT_SSH_KEYDATA },
     #endif
-        
+
         // Maybe?
     #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
         { "INTERLEAVEFUNCTION", CURLOPT_INTERLEAVEFUNCTION },
@@ -390,7 +387,7 @@ namespace NodeLibcurl {
     #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
         { "WILDCARDMATCH", CURLOPT_WILDCARDMATCH },
     #endif
-        
+
         // _LARGE options
         { "INFILESIZE_LARGE", CURLOPT_INFILESIZE_LARGE },
         { "MAXFILESIZE_LARGE", CURLOPT_MAXFILESIZE_LARGE },
@@ -561,12 +558,15 @@ namespace NodeLibcurl {
     #endif
 
         { "DEBUGFUNCTION", CURLOPT_DEBUGFUNCTION },
-        { "READFUNCTION", CURLOPT_READFUNCTION },
+        { "HEADERFUNCTION", CURLOPT_HEADERFUNCTION },
         { "PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION },
+        { "READFUNCTION", CURLOPT_READFUNCTION },
 
     #if NODE_LIBCURL_VER_GE( 7, 32, 0 )
         { "XFERINFOFUNCTION", CURLOPT_XFERINFOFUNCTION },
     #endif
+
+        { "WRITEFUNCTION", CURLOPT_WRITEFUNCTION },
     };
 
     const std::vector<CurlConstant> curlOptionLinkedList = {
@@ -917,7 +917,7 @@ namespace NodeLibcurl {
     }
 
     // Add Curl constructor to the module exports
-    NAN_MODULE_INIT( Initialize )
+    CURL_MODULE_INIT( Initialize )
     {
         Nan::HandleScope scope;
 
@@ -1004,7 +1004,7 @@ namespace NodeLibcurl {
         Nan::SetMethod( obj, "getCount",   GetCount );
         Nan::SetAccessor( obj, Nan::New( "VERSION_NUM" ).ToLocalChecked(), GetterVersionNum, 0, v8::Local<v8::Value>(), v8::DEFAULT, attributes );
 
-        Nan::Set( target, Nan::New( "Curl" ).ToLocalChecked(), obj );
+        Nan::Set( exports, Nan::New( "Curl" ).ToLocalChecked(), obj );
     }
 
     int32_t IsInsideCurlConstantStruct( const std::vector<CurlConstant> &curlConstants, const v8::Local<v8::Value> &searchFor )

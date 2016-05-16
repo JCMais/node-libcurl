@@ -126,29 +126,35 @@ Currently there is no support to use other libcurl version than the one provided
 
 ### nw.js (aka node-webkit)
 
-Currently there are no prebuilt binaries for node-webkit, to install node-libcurl, do the following:
+From nw.js documentation:
 
- 1. Install nw-gyp
+> Starting from 0.13.0, native modules built by node-gyp or npm in upstream can be supported.
+>
+>  In Linux and OSX you can just load the native module directly. In windows you’ll need to replace the file
+>  ``%APPDATA%\npm\node_modules\node-gyp\src\win_delay_load_hook.c`` with the one at [https://github.com/nwjs/nw.js/blob/nw13/tools/win_delay_load_hook.c](https://github.com/nwjs/nw.js/blob/nw13/tools/win_delay_load_hook.c)
 
- ```javascript
- npm install nw-gyp -g
- ```
- 2. Install node-libcurl
+http://docs.nwjs.io/en/latest/For%20Users/Advanced/Use%20Native%20Node%20Modules/
 
- ```javascript
- npm install node-libcurl --runtime=node-webkit --target=0.12.3 --arch=x64 --msvs_version=2013 --build-from-source --save
- ```
- ``--target`` says you want to build for the node-webkit version 0.12.3.
-
- ``--arch`` says the module should be built for 64bit.
+Since we require ``node-gyp`` as direct dependency, you probably will need to change that
+file directly in the ``node-gyp`` inside the ``node_modules`` folder of your project.
 
 ### electron (aka atom-shell)
 
 Currently there are no prebuilt binaries for electron, to install node-libcurl, do the following:
 
- ```javascript
- npm install node-libcurl --runtime=electron --target=0.34.1 --arch=x64 --build-from-source --save
+ ```bash
+ npm install node-libcurl --runtime=electron --target=1.0.2 --disturl=https://atom.io/download/atom-shell --arch=x64 --save
  ```
  ``--target`` says you want to build for the electron version 0.34.1.
 
  ``--arch`` says the module should be built for 64bit.
+
+---
+
+You can put those args in a .npmrc file, like so:
+```
+runtime = electron
+target = 1.0.2
+target_arch = x64
+dist_url = https://atom.io/download/atom-shell
+```

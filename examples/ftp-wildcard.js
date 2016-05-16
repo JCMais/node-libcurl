@@ -45,7 +45,7 @@ handle.setOpt( Curl.option.WILDCARDMATCH, true );
 handle.setOpt( Curl.option.CHUNK_BGN_FUNCTION, fileIsComing );
 handle.setOpt( Curl.option.CHUNK_END_FUNCTION, filesIsDownloaded );
 
-handle.onData = function( buff, nmemb, size ) {
+handle.setOpt( Curl.option.WRITEFUNCTION, function( buff, nmemb, size ) {
 
     var written = 0;
 
@@ -60,7 +60,7 @@ handle.onData = function( buff, nmemb, size ) {
     }
 
     return written;
-}
+});
 
 /**
  * @param {module:node-libcurl~CurlFileInfo} fileInfo

@@ -1,7 +1,7 @@
 /**
  * @author Jonathan Cardoso Machado
  * @license MIT
- * @copyright 2015, Jonathan Cardoso Machado
+ * @copyright 2015-2016, Jonathan Cardoso Machado
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,21 +33,20 @@ var Easy = require( '../lib/Easy' ),
 ch = new Easy();
 
 ch.setOpt( Curl.option.URL, url );
-ch.setOpt( Curl.option.VERBOSE, true );
 
-ch.onHeader = function( buf, size, nmemb ) {
-
-    console.log( buf );
-
-    return size * nmemb;
-};
-
-ch.onData = function( buf, size, nmemb ) {
+ch.setOpt( Curl.option.HEADERFUNCTION, function( buf, size, nmemb ) {
 
     console.log( buf );
 
     return size * nmemb;
-};
+});
+
+ch.setOpt( Curl.option.WRITEFUNCTION, function( buf, size, nmemb ) {
+
+    console.log( arguments );
+
+    return size * nmemb;
+});
 
 ret = ch.perform();
 

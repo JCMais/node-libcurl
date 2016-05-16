@@ -33,6 +33,7 @@
 
 #include <curl/curl.h>
 
+#include "Curl.h"
 #include "CurlHttpPost.h"
 #include "macros.h"
 
@@ -71,11 +72,13 @@ namespace NodeLibcurl {
         Nan::Callback *cbChunkBgn;
         Nan::Callback *cbChunkEnd;
         Nan::Callback *cbDebug;
+        Nan::Callback *cbHeader;
         Nan::Callback *cbFnMatch;
         Nan::Callback *cbOnSocketEvent;
         Nan::Callback *cbProgress;
         Nan::Callback *cbRead;
         Nan::Callback *cbXferinfo;
+        Nan::Callback *cbWrite;
 
         // members
         uv_poll_t *pollHandle;
@@ -116,7 +119,7 @@ namespace NodeLibcurl {
         static int32_t currentOpenedHandles;
 
         // export Easy to js
-        static NAN_MODULE_INIT( Initialize );
+        static CURL_MODULE_INIT( Initialize );
 
         // js available methods
         static NAN_METHOD( New );

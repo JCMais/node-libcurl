@@ -82,7 +82,7 @@ namespace NodeLibcurl {
         static Nan::Persistent<v8::FunctionTemplate> constructor;
 
         // export Multi to js
-        static NAN_MODULE_INIT( Initialize );
+        static CURL_MODULE_INIT( Initialize );
 
         // js available Methods
         static NAN_METHOD( New );
