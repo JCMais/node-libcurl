@@ -16,7 +16,6 @@ var exec = require( 'child_process' ).exec,
 
 var i, len,
     moduleKey, modulePath,
-    url,
     moduleInfo,
     paths = [],
     execConfig = {
@@ -62,7 +61,7 @@ function parseSubmodulesConfig() {
 
             paths.push(  modulePath );
 
-            urlKey = moduleKey.replace( '.path', '.url' );
+            var urlKey = moduleKey.replace( '.path', '.url' );
 
             exec( 'git config -f .gitmodules --get ' + urlKey, initGitSubmodule.bind( this, modulePath ), execConfig );
         }

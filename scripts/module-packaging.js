@@ -1,3 +1,4 @@
+/*eslint camelcase: [2, {properties: "never"}]*/
 var octonode   = require( 'octonode' ),
     log        = require( 'npmlog' ),
     fs         = require( 'fs' ),
@@ -54,7 +55,7 @@ function publish( pathToPackage ) {
 
 function unpublish( pathToResource ) {
 
-    getReleaseByTag( versionTag, function ( err, release, headers ) {
+    getReleaseByTag( versionTag, function ( err, release/*, headers*/ ) {
 
         if ( err ) {
             doSomethingWithError( err );
@@ -90,11 +91,11 @@ function createRelease( tagName, cb ) {
     log.info( '', 'creating release for tag "%s"', tagName );
 
     repo.release({
-        tag_name: tagName
+        "tag_name" : tagName
     }, cb );
 }
 
-function attachPackageToRelease( pckg, err, release, headers ) {
+function attachPackageToRelease( pckg, err, release/*, headers*/ ) {
 
     if ( err ) {
 
@@ -131,7 +132,7 @@ function attachPackageToRelease( pckg, err, release, headers ) {
     repo.release( release.id ).uploadAssets( fileContent, {
         name: packageFileName,
         contentType: 'application/x-gzip'
-    }, function( err, data, headers ) {
+    }, function( err, data/*, headers*/ ) {
 
         if ( err ) {
 
@@ -161,7 +162,7 @@ function removePackageFromRelease( packageToDelete, release ) {
 
             //@FIXME using internals because there is no way to remove directly
             // uri to remove assets is: repos/:owner/:repo/releases/assets/:id
-            repo.client.del( '/repos/' + repo.name + '/releases/assets/' + releaseAsset.id, null, function( err, data, headers ) {
+            repo.client.del( '/repos/' + repo.name + '/releases/assets/' + releaseAsset.id, null, function( err/*, data, headers*/ ) {
 
                 if ( err ) {
 

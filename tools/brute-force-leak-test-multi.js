@@ -1,7 +1,6 @@
 var Multi  = require( '../lib/Multi' ),
     amount = ( process.argv[2] | 0 ) || 1e2,
     iterations = 5,
-    timeout    = 500,
     i;
 
 function leak() {
@@ -12,8 +11,8 @@ function leak() {
     }
 
     if ( global.gc ) {
-        
-        gc();
+
+        global.gc();
     }
 
     if ( --iterations  ) {
