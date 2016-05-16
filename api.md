@@ -38,6 +38,7 @@
                 * [.netrc](#module_node-libcurl.Curl.netrc) : <code>enum</code>
                 * [.chunk](#module_node-libcurl.Curl.chunk) : <code>enum</code>
                 * [.filetype](#module_node-libcurl.Curl.filetype) : <code>enum</code>
+                * [.fnmatchfunc](#module_node-libcurl.Curl.fnmatchfunc) : <code>enum</code>
                 * [.ftpauth](#module_node-libcurl.Curl.ftpauth) : <code>enum</code>
                 * [.ftpssl](#module_node-libcurl.Curl.ftpssl) : <code>enum</code>
                 * [.ftpmethod](#module_node-libcurl.Curl.ftpmethod) : <code>enum</code>
@@ -141,6 +142,7 @@
         * [.netrc](#module_node-libcurl.Curl.netrc) : <code>enum</code>
         * [.chunk](#module_node-libcurl.Curl.chunk) : <code>enum</code>
         * [.filetype](#module_node-libcurl.Curl.filetype) : <code>enum</code>
+        * [.fnmatchfunc](#module_node-libcurl.Curl.fnmatchfunc) : <code>enum</code>
         * [.ftpauth](#module_node-libcurl.Curl.ftpauth) : <code>enum</code>
         * [.ftpssl](#module_node-libcurl.Curl.ftpssl) : <code>enum</code>
         * [.ftpmethod](#module_node-libcurl.Curl.ftpmethod) : <code>enum</code>
@@ -529,6 +531,24 @@ Object with constants to be used when using the [module:node-libcurl#CurlFileInf
 | NAMEDPIPE | <code>Number</code> | <code>5</code> | 
 | SOCKET | <code>Number</code> | <code>6</code> | 
 | DOOR | <code>Number</code> | <code>7</code> | 
+
+<a name="module_node-libcurl.Curl.fnmatchfunc"></a>
+
+#### Curl.fnmatchfunc : <code>enum</code>
+Object with constants to be used as the return value for the callback set
+ with the option ``FNMATCH_FUNCTION``.
+
+``CURL_FNMATCHFUNC_MATCH`` becomes ``Curl.fnmatchfunc.MATCH``
+
+**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Read only**: true  
+**Properties**
+
+| Name | Type | Default |
+| --- | --- | --- |
+| MATCH | <code>Number</code> | <code>0</code> | 
+| NOMATCH | <code>Number</code> | <code>1</code> | 
+| FAIL | <code>Number</code> | <code>2</code> | 
 
 <a name="module_node-libcurl.Curl.ftpauth"></a>
 
