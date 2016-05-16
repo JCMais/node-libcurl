@@ -1,6 +1,6 @@
 {
   "name": "node-libcurl",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "author": "Jonathan Cardoso <me@jonathancardoso.com>",
   "description": "Node bindings for libcurl. Based on the work from node-curl.",
   "keywords": [
@@ -21,9 +21,9 @@
   "main": "./index.js",
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
-    "test"  : "mocha test --reporter spec",
-    "docs"  : "jsdoc2md lib/*.js > api.md",
-    "pregyp" : "node-pre-gyp"
+    "test": "mocha test --reporter spec",
+    "docs": "jsdoc2md lib/*.js > api.md",
+    "pregyp": "node-pre-gyp"
   },
   "binary": {
     "module_name": "node_libcurl",
