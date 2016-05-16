@@ -8,11 +8,9 @@ environment:
     # node.js
     - nodejs_version: 0.10
     - nodejs_version: 0.12
-    # io.js
-    - nodejs_version: 3
-    # yay back to node again
     - nodejs_version: 4
     - nodejs_version: 5
+    - nodejs_version: 6
 
 platform:
   - x86
@@ -24,7 +22,7 @@ clone_depth: 5
 # Install scripts. (runs after repo cloning)
 install:
   - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version) $env:Platform
-  # Update nodejs for versions < 1
+  # Update npm for versions < 1
   - IF %nodejs_version% LSS 1 npm -g install npm
   - IF %nodejs_version% LSS 1 set PATH=%APPDATA%\npm;%PATH%
   - SET PATH=%cd%\node_modules\.bin\;%PATH%
@@ -47,7 +45,7 @@ build_script:
 # Post-install test scripts.
 test_script:
   # run tests
-  - IF %nodejs_version% LSS 1 (npm test) ELSE (IF %nodejs_version% LSS 4 (iojs node_modules\mocha\bin\mocha test --reporter spec) ELSE (npm test))
+  - npm test
 
 after_test:
   - IF "%PUBLISH_BINARY%" == "true" (node-pre-gyp package testpackage --verbose)
