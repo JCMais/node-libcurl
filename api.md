@@ -710,10 +710,10 @@ Object with the features currently supported as bitmasks.
 | --- | --- | --- | --- |
 | NO_DATA_PARSING | <code>Number</code> | <code></code> | Data received is passed as a Buffer to the end event. |
 | NO_HEADER_PARSING | <code>Number</code> | <code></code> | Header received is not parsed, it's passed as a Buffer to the end event. |
-| RAW | <code>Number</code> | <code></code> | Same than NO_DATA_PARSING | NO_HEADER_PARSING |
+| RAW | <code>Number</code> | <code></code> | Same than ``NO_DATA_PARSING | NO_HEADER_PARSING`` |
 | NO_DATA_STORAGE | <code>Number</code> | <code></code> | Data received is not stored inside this handle, implies NO_DATA_PARSING. |
 | NO_HEADER_STORAGE | <code>Number</code> | <code></code> | Header received is not stored inside this handle, implies NO_HEADER_PARSING. |
-| NO_STORAGE | <code>Number</code> | <code></code> | Same than NO_DATA_STORAGE | NO_HEADER_STORAGE, implies RAW. |
+| NO_STORAGE | <code>Number</code> | <code></code> | Same than ``NO_DATA_STORAGE | NO_HEADER_STORAGE``, implies RAW. |
 
 <a name="module_node-libcurl.Curl.getCount"></a>
 
