@@ -143,6 +143,14 @@ namespace NodeLibcurl {
         { "VERSION_2", CURL_HTTP_VERSION_2 },
     #endif
 
+    #if NODE_LIBCURL_VER_GE( 7, 47, 0 )
+        { "VERSION_2TLS", CURL_HTTP_VERSION_2TLS },
+    #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 49, 0 )
+        { "VERSION_2_PRIOR_KNOWLEDGE", CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE },
+    #endif
+
         { "VERSION_NONE", CURL_HTTP_VERSION_NONE },
     };
 
@@ -360,6 +368,10 @@ namespace NodeLibcurl {
 
         { "SSLVERSION", CURLOPT_SSLVERSION },
 
+    #if NODE_LIBCURL_VER_GE( 7, 49, 0 )
+        { "TCP_FASTOPEN", CURLOPT_TCP_FASTOPEN },
+    #endif
+
     #if NODE_LIBCURL_VER_GE( 7, 25, 0 )
         { "TCP_KEEPALIVE", CURLOPT_TCP_KEEPALIVE },
         { "TCP_KEEPIDLE", CURLOPT_TCP_KEEPIDLE },
@@ -573,6 +585,11 @@ namespace NodeLibcurl {
     };
 
     const std::vector<CurlConstant> curlOptionLinkedList = {
+
+    #if NODE_LIBCURL_VER_GE( 7, 49, 0 )
+        { "CONNECT_TO", CURLOPT_CONNECT_TO },
+    #endif
+
         { "HTTP200ALIASES", CURLOPT_HTTP200ALIASES },
         { "HTTPHEADER", CURLOPT_HTTPHEADER },
         { "HTTPPOST", CURLOPT_HTTPPOST },
