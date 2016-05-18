@@ -9,8 +9,7 @@
                 'src/Multi.cc',
                 'src/Curl.cc',
                 'src/CurlHttpPost.cc',
-                'src/string_format.cc',
-                'src/strndup.cc'
+                'src/string_format.cc'
             ],
             'include_dirs' : [
                 "<!(node -e \"require('nan')\")"

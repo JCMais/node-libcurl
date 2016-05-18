@@ -1,0 +1,15 @@
+{
+    "critics": {
+        "lint": { "engine": "eslint" },
+        "wc": { "limit": 1500 }
+    },
+    "dependencies": {
+        "unused-ignores": [
+            "node-gyp",
+            "node-pre-gyp",
+            "nan",
+            "debug",
+            "npmlog"
+        ]
+    }
+}

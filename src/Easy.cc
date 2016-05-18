@@ -30,6 +30,9 @@
 #include "make_unique.h"
 #include "string_format.h"
 
+// 36055 was allocated on Win64
+#define MEMORY_PER_HANDLE 30000
+
 namespace NodeLibcurl {
 
     class Easy::ToFree {
@@ -48,8 +51,6 @@ namespace NodeLibcurl {
     Nan::Persistent<v8::FunctionTemplate> Easy::constructor;
     Nan::Persistent<v8::String> Easy::onDataCbSymbol;
     Nan::Persistent<v8::String> Easy::onHeaderCbSymbol;
-    Nan::Persistent<v8::String> Easy::onErrorCbSymbol;
-    Nan::Persistent<v8::String> Easy::onEndCbSymbol;
 
     uint32_t Easy::counter = 0;
     int32_t Easy::currentOpenedHandles = 0;
@@ -64,6 +65,8 @@ namespace NodeLibcurl {
     {
         this->ch = curl_easy_init();
         assert( this->ch );
+
+        NODE_LIBCURL_ADJUST_MEM( MEMORY_PER_HANDLE );
 
         this->toFree = std::make_shared<Easy::ToFree>();
 
@@ -85,6 +88,8 @@ namespace NodeLibcurl {
 
         this->ch = curl_easy_duphandle( orig->ch );
         assert( this->ch );
+
+        NODE_LIBCURL_ADJUST_MEM( MEMORY_PER_HANDLE );
 
         Nan::HandleScope scope;
 
@@ -184,6 +189,8 @@ namespace NodeLibcurl {
         assert( this->ch && "The curl handle ran away." );
 
         curl_easy_cleanup( this->ch );
+
+        NODE_LIBCURL_ADJUST_MEM( -MEMORY_PER_HANDLE );
 
         //dispose persistent callbacks
         this->DisposeCallbacks();
@@ -730,7 +737,7 @@ namespace NodeLibcurl {
         return retvalInt32;
     }
 
-    CURL_MODULE_INIT( Easy::Initialize )
+    NODE_LIBCURL_MODULE_INIT( Easy::Initialize )
     {
         Nan::HandleScope scope;
 
@@ -764,8 +771,6 @@ namespace NodeLibcurl {
 
         Easy::onDataCbSymbol.Reset(   Nan::New( "onData" ).ToLocalChecked() );
         Easy::onHeaderCbSymbol.Reset( Nan::New( "onHeader" ).ToLocalChecked() );
-        Easy::onEndCbSymbol.Reset(    Nan::New( "onEnd" ).ToLocalChecked() );
-        Easy::onErrorCbSymbol.Reset(  Nan::New( "onError" ).ToLocalChecked() );
 
         Nan::Set( exports, Nan::New( "Easy" ).ToLocalChecked(), tmpl->GetFunction() );
     }

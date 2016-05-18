@@ -60,7 +60,7 @@ namespace NodeLibcurl {
         bool isOpen;
 
         // export Easy to js
-        static CURL_MODULE_INIT( Initialize );
+        static NODE_LIBCURL_MODULE_INIT( Initialize );
 
         // js available methods
         static NAN_METHOD( New );

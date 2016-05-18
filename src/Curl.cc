@@ -33,6 +33,9 @@
 //@TODO CHANGE LIBCURL_VERSION_NUM TO NODE_LIBCURL_VER_GE
 namespace NodeLibcurl {
 
+    ssize_t addonAllocatedMemory = 0;
+    bool isLibcurlBuiltWithThreadedResolver = true;
+
     const std::vector<CurlConstant> curlConstAuth = {
         { "ANY", CURLAUTH_ANY },
         { "ANYSAFE", CURLAUTH_ANYSAFE },
@@ -917,7 +920,7 @@ namespace NodeLibcurl {
     }
 
     // Add Curl constructor to the module exports
-    CURL_MODULE_INIT( Initialize )
+    NODE_LIBCURL_MODULE_INIT( Initialize )
     {
         Nan::HandleScope scope;
 
@@ -1044,6 +1047,27 @@ namespace NodeLibcurl {
         }
 
         return 0;
+    }
+
+    void AdjustMemory( ssize_t diff )
+    {
+        addonAllocatedMemory += diff;
+
+        // if v8 is no longer running, don't try to adjust memory
+        // this happens when the v8 vm is shutdown and the program is exiting
+        // our cleanup routines for libxml will be called (freeing memory)
+        // but v8 is already offline and does not need to be informed
+        // trying to adjust after shutdown will result in a fatal error
+#if (NODE_MODULE_VERSION > 0x000B)
+        if ( !v8::Isolate::GetCurrent() ) {
+            return;
+        }
+#endif
+        if ( v8::V8::IsDead() ) {
+            return;
+        }
+
+        Nan::AdjustExternalMemory( static_cast<int>( diff ) );
     }
 
     // Create an Exception with the given message and reason

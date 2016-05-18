@@ -91,7 +91,7 @@ function createRelease( tagName, cb ) {
     log.info( '', 'creating release for tag "%s"', tagName );
 
     repo.release({
-        "tag_name" : tagName
+        tag_name : tagName
     }, cb );
 }
 

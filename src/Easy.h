@@ -99,8 +99,6 @@ namespace NodeLibcurl {
         // persistent objects
         static Nan::Persistent<v8::String> onDataCbSymbol;
         static Nan::Persistent<v8::String> onHeaderCbSymbol;
-        static Nan::Persistent<v8::String> onErrorCbSymbol;
-        static Nan::Persistent<v8::String> onEndCbSymbol;
 
     public:
         // operators
@@ -119,7 +117,7 @@ namespace NodeLibcurl {
         static int32_t currentOpenedHandles;
 
         // export Easy to js
-        static CURL_MODULE_INIT( Initialize );
+        static NODE_LIBCURL_MODULE_INIT( Initialize );
 
         // js available methods
         static NAN_METHOD( New );

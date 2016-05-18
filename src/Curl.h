@@ -48,8 +48,10 @@ namespace NodeLibcurl {
     typedef v8::Local<v8::Value> ADDON_REGISTER_FUNCTION_ARGS2_TYPE;
 #endif
 
-#define CURL_MODULE_INIT( name )                                                  \
+#define NODE_LIBCURL_MODULE_INIT( name )                                                  \
     void name( Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE exports, ADDON_REGISTER_FUNCTION_ARGS2_TYPE module )
+
+#define NODE_LIBCURL_ADJUST_MEM( size ) if ( !isLibcurlBuiltWithThreadedResolver ) AdjustMemory( size )
 
     // store mapping from the CURL[*] constants that can be used in js
     struct CurlConstant
@@ -58,38 +60,41 @@ namespace NodeLibcurl {
         int64_t value;
     };
 
+    extern ssize_t addonAllocatedMemory;
+    extern bool isLibcurlBuiltWithThreadedResolver;
+
     template<typename T>
     using deleted_unique_ptr = std::unique_ptr<T, std::function<void( T* )>>;
 
-    const extern std::vector<CurlConstant> curlConstAuth;
-    const extern std::vector<CurlConstant> curlConstProtocol;
-    const extern std::vector<CurlConstant> curlConstPause;
-    const extern std::vector<CurlConstant> curlConstHttp;
-    const extern std::vector<CurlConstant> curlConstHeader;
+    extern const std::vector<CurlConstant> curlConstAuth;
+    extern const std::vector<CurlConstant> curlConstProtocol;
+    extern const std::vector<CurlConstant> curlConstPause;
+    extern const std::vector<CurlConstant> curlConstHttp;
+    extern const std::vector<CurlConstant> curlConstHeader;
 
-    const extern std::vector<CurlConstant> curlOptionNotImplemented;
-    const extern std::vector<CurlConstant> curlOptionInteger;
-    const extern std::vector<CurlConstant> curlOptionString;
-    const extern std::vector<CurlConstant> curlOptionFunction;
-    const extern std::vector<CurlConstant> curlOptionLinkedList;
-    const extern std::vector<CurlConstant> curlOptionHttpPost;
-    const extern std::vector<CurlConstant> curlOptionSpecific;
+    extern const std::vector<CurlConstant> curlOptionNotImplemented;
+    extern const std::vector<CurlConstant> curlOptionInteger;
+    extern const std::vector<CurlConstant> curlOptionString;
+    extern const std::vector<CurlConstant> curlOptionFunction;
+    extern const std::vector<CurlConstant> curlOptionLinkedList;
+    extern const std::vector<CurlConstant> curlOptionHttpPost;
+    extern const std::vector<CurlConstant> curlOptionSpecific;
 
-    const extern std::vector<CurlConstant> curlInfoNotImplemented;
-    const extern std::vector<CurlConstant> curlInfoString;
-    const extern std::vector<CurlConstant> curlInfoDouble;
-    const extern std::vector<CurlConstant> curlInfoInteger;
-    const extern std::vector<CurlConstant> curlInfoSocket;
-    const extern std::vector<CurlConstant> curlInfoLinkedList;
+    extern const std::vector<CurlConstant> curlInfoNotImplemented;
+    extern const std::vector<CurlConstant> curlInfoString;
+    extern const std::vector<CurlConstant> curlInfoDouble;
+    extern const std::vector<CurlConstant> curlInfoInteger;
+    extern const std::vector<CurlConstant> curlInfoSocket;
+    extern const std::vector<CurlConstant> curlInfoLinkedList;
 
-    const extern std::vector<CurlConstant> curlMultiOptionNotImplemented;
-    const extern std::vector<CurlConstant> curlMultiOptionInteger;
-    const extern std::vector<CurlConstant> curlMultiOptionStringArray;
+    extern const std::vector<CurlConstant> curlMultiOptionNotImplemented;
+    extern const std::vector<CurlConstant> curlMultiOptionInteger;
+    extern const std::vector<CurlConstant> curlMultiOptionStringArray;
 
-    const extern std::vector<CurlConstant> curlCode;
+    extern const std::vector<CurlConstant> curlCode;
 
     // export Curl to js
-    CURL_MODULE_INIT( Initialize );
+    NODE_LIBCURL_MODULE_INIT( Initialize );
 
     // js exported Methods
     NAN_METHOD( GetVersion );
@@ -99,6 +104,7 @@ namespace NodeLibcurl {
     // helper methods
     int32_t IsInsideCurlConstantStruct( const std::vector<CurlConstant> &curlConstants, const v8::Local<v8::Value> &searchFor );
     void ThrowError( const char *message, const char *reason = nullptr );
+    void AdjustMemory( ssize_t size );
 
 }
 #endif

@@ -20,7 +20,11 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+#include <iostream>
 #include "Multi.h"
+
+//85233 was allocated on Win64
+#define MEMORY_PER_HANDLE 60000
 
 namespace NodeLibcurl {
 
@@ -29,7 +33,9 @@ namespace NodeLibcurl {
     Multi::Multi() : isOpen( true ), amountOfHandles( 0 ), runningHandles( 0 ), cbOnMessage( nullptr )
     {
         // init uv timer to be used with HandleTimeout
-        this->timeout = deleted_unique_ptr<uv_timer_t>( new uv_timer_t, [&]( uv_timer_t *timerhandl ) { uv_close( reinterpret_cast<uv_handle_t *>( timerhandl ), Multi::OnTimerClose ); } );
+        this->timeout = deleted_unique_ptr<uv_timer_t>( new uv_timer_t, [&]( uv_timer_t *timerhandl ) {
+            uv_close( reinterpret_cast<uv_handle_t *>( timerhandl ), Multi::OnTimerClose );
+        });
 
         int timerStatus = uv_timer_init( uv_default_loop(), this->timeout.get() );
         assert( timerStatus == 0 );
@@ -37,8 +43,9 @@ namespace NodeLibcurl {
         this->timeout->data = this;
 
         this->mh = curl_multi_init();
-
         assert( this->mh );
+
+        NODE_LIBCURL_ADJUST_MEM( MEMORY_PER_HANDLE );
 
         // set curl_multi cb to use libuv
         curl_multi_setopt( this->mh, CURLMOPT_SOCKETFUNCTION, Multi::HandleSocket );
@@ -64,8 +71,9 @@ namespace NodeLibcurl {
         if ( this->mh ) {
 
             CURLMcode code = curl_multi_cleanup( this->mh );
-
             assert( code == CURLM_OK );
+
+            NODE_LIBCURL_ADJUST_MEM( -MEMORY_PER_HANDLE );
         }
 
         this->RemoveOnMessageCallback();
@@ -227,6 +235,7 @@ namespace NodeLibcurl {
         Multi::CurlSocketContext *ctx = NULL;
 
         ctx = static_cast<Multi::CurlSocketContext*>( malloc( sizeof( *ctx ) ) );
+        assert( ctx && "Not enought memory to allocate a new Multi::CurlSocketContext." );
 
         ctx->sockfd = sockfd;
         ctx->multi = multi;
@@ -296,7 +305,7 @@ namespace NodeLibcurl {
     }
 
     // Add Curl constructor to the module exports
-    CURL_MODULE_INIT( Multi::Initialize )
+    NODE_LIBCURL_MODULE_INIT( Multi::Initialize )
     {
         Nan::HandleScope scope;
 

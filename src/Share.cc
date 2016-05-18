@@ -27,6 +27,10 @@
 #include "Share.h"
 #include "Curl.h"
 
+// 464 was allocated on Win64
+//  Value too small to bother letting v8 know about it
+#define MEMORY_PER_HANDLE 464
+
 namespace NodeLibcurl {
 
     Nan::Persistent<v8::FunctionTemplate> Share::constructor;
@@ -57,7 +61,7 @@ namespace NodeLibcurl {
         this->isOpen = false;
     }
 
-    CURL_MODULE_INIT( Share::Initialize )
+    NODE_LIBCURL_MODULE_INIT( Share::Initialize )
     {
         Nan::HandleScope scope;
 
