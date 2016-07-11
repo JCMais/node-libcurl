@@ -30,7 +30,6 @@
 #include "string_format.h"
 
 
-//@TODO CHANGE LIBCURL_VERSION_NUM TO NODE_LIBCURL_VER_GE
 namespace NodeLibcurl {
 
     ssize_t addonAllocatedMemory = 0;
@@ -313,7 +312,7 @@ namespace NodeLibcurl {
 
         { "PORT", CURLOPT_PORT },
         { "POST", CURLOPT_POST },
-        { "POSTFIELDSIZE", CURLOPT_POSTFIELDSIZE }, //@TODO ADD POSTFIELDSIZE_LARGE
+        { "POSTFIELDSIZE", CURLOPT_POSTFIELDSIZE },
 
     #if NODE_LIBCURL_VER_GE( 7, 19, 1 )
         { "POSTREDIR", CURLOPT_POSTREDIR },
@@ -334,7 +333,7 @@ namespace NodeLibcurl {
         { "REDIR_PROTOCOLS", CURLOPT_REDIR_PROTOCOLS },
     #endif
 
-        { "RESUME_FROM", CURLOPT_RESUME_FROM }, //@TODO ADD RESUME_FROM_LARGE
+        { "RESUME_FROM", CURLOPT_RESUME_FROM },
 
     #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
         { "RTSP_CLIENT_CSEQ", CURLOPT_RTSP_CLIENT_CSEQ },
@@ -647,7 +646,7 @@ namespace NodeLibcurl {
         { "MAX_TOTAL_CONNECTIONS", CURLMOPT_MAX_TOTAL_CONNECTIONS },
     #endif
         { "MAXCONNECTS", CURLMOPT_MAXCONNECTS },
-        { "PIPELINING", CURLMOPT_PIPELINING }, //@todo add consts http://curl.haxx.se/libcurl/c/CURLMOPT_PIPELINING.html
+        { "PIPELINING", CURLMOPT_PIPELINING },
     };
 
     const std::vector<CurlConstant> curlMultiOptionStringArray = {
@@ -1066,15 +1065,12 @@ namespace NodeLibcurl {
         return 0;
     }
 
+    // based on https://github.com/libxmljs/libxmljs/blob/master/src/libxmljs.cc#L45
     void AdjustMemory( ssize_t diff )
     {
         addonAllocatedMemory += diff;
 
         // if v8 is no longer running, don't try to adjust memory
-        // this happens when the v8 vm is shutdown and the program is exiting
-        // our cleanup routines for libxml will be called (freeing memory)
-        // but v8 is already offline and does not need to be informed
-        // trying to adjust after shutdown will result in a fatal error
 #if (NODE_MODULE_VERSION > 0x000B)
         if ( !v8::Isolate::GetCurrent() ) {
             return;

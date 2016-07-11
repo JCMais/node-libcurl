@@ -44,6 +44,8 @@
                 * [.ftpmethod](#module_node-libcurl.Curl.ftpmethod) : <code>enum</code>
                 * [.rtspreq](#module_node-libcurl.Curl.rtspreq) : <code>enum</code>
                 * [.ipresolve](#module_node-libcurl.Curl.ipresolve) : <code>enum</code>
+                * [.proxy](#module_node-libcurl.Curl.proxy) : <code>enum</code>
+                * [.pipe](#module_node-libcurl.Curl.pipe) : <code>enum</code>
                 * [.usessl](#module_node-libcurl.Curl.usessl) : <code>enum</code>
                 * [.sslversion](#module_node-libcurl.Curl.sslversion) : <code>enum</code>
                 * [.ssh_auth](#module_node-libcurl.Curl.ssh_auth) : <code>enum</code>
@@ -148,6 +150,8 @@
         * [.ftpmethod](#module_node-libcurl.Curl.ftpmethod) : <code>enum</code>
         * [.rtspreq](#module_node-libcurl.Curl.rtspreq) : <code>enum</code>
         * [.ipresolve](#module_node-libcurl.Curl.ipresolve) : <code>enum</code>
+        * [.proxy](#module_node-libcurl.Curl.proxy) : <code>enum</code>
+        * [.pipe](#module_node-libcurl.Curl.pipe) : <code>enum</code>
         * [.usessl](#module_node-libcurl.Curl.usessl) : <code>enum</code>
         * [.sslversion](#module_node-libcurl.Curl.sslversion) : <code>enum</code>
         * [.ssh_auth](#module_node-libcurl.Curl.ssh_auth) : <code>enum</code>
@@ -644,6 +648,45 @@ Object with constants for option ``IPRESOLVE``
 | WHATEVER | <code>Number</code> | <code>0</code> | 
 | V4 | <code>Number</code> | <code>1</code> | 
 | V6 | <code>Number</code> | <code>2</code> | 
+
+<a name="module_node-libcurl.Curl.proxy"></a>
+
+#### Curl.proxy : <code>enum</code>
+Object with constants for option ``PROXYTYPE``
+
+``CURLPROXY_HTTP`` becomes ``Curl.proxy.HTTP``
+
+**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Read only**: true  
+**Properties**
+
+| Name | Type | Default |
+| --- | --- | --- |
+| HTTP | <code>Number</code> | <code>0</code> | 
+| HTTP_1_0 | <code>Number</code> | <code>1</code> | 
+| SOCKS4 | <code>Number</code> | <code>4</code> | 
+| SOCKS5 | <code>Number</code> | <code>5</code> | 
+| SOCKS4A | <code>Number</code> | <code>6</code> | 
+| SOCKS5_HOSTNAME | <code>Number</code> | <code>7</code> | 
+
+<a name="module_node-libcurl.Curl.pipe"></a>
+
+#### Curl.pipe : <code>enum</code>
+Object with bit constants to be used with the multi handle option ``PIPELINING``
+Those are available starting with libcurl 7.43.0.
+
+``CURLPIPE_NOTHING`` becomes ``Curl.pipe.NOTHING``
+
+**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Read only**: true  
+**See**: https://curl.haxx.se/libcurl/c/CURLMOPT_PIPELINING.html  
+**Properties**
+
+| Name | Type | Default |
+| --- | --- | --- |
+| NOTHING | <code>Number</code> | <code>0</code> | 
+| HTTP1 | <code>Number</code> | <code>1</code> | 
+| MULTIPLEX | <code>Number</code> | <code>2</code> | 
 
 <a name="module_node-libcurl.Curl.usessl"></a>
 
