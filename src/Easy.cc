@@ -660,11 +660,13 @@ namespace NodeLibcurl {
             return retvalInt32;
         }
 
+        CallbacksMap::iterator it;
+
         // make sure the callback was set
 #if NODE_LIBCURL_VER_GE( 7, 32, 0 )
-        CallbacksMap::iterator it = obj->callbacks.find( CURLOPT_XFERINFOFUNCTION );
-#elif
-        CallbacksMap::iterator it = obj->callbacks.end(); // just to make it compile ¯\_(ツ)_/¯
+        it = obj->callbacks.find( CURLOPT_XFERINFOFUNCTION );
+#else
+        it = obj->callbacks.end(); // just to make it compile ¯\_(ツ)_/¯
 #endif
         assert( it != obj->callbacks.end() && "XFERINFO callback not set." );
 
