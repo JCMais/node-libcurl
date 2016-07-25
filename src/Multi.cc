@@ -30,7 +30,7 @@ namespace NodeLibcurl {
 
     Nan::Persistent<v8::FunctionTemplate> Multi::constructor;
 
-    Multi::Multi() : isOpen( true ), amountOfHandles( 0 ), runningHandles( 0 ), cbOnMessage( nullptr )
+    Multi::Multi()
     {
         // init uv timer to be used with HandleTimeout
         this->timeout = deleted_unique_ptr<uv_timer_t>( new uv_timer_t, [&]( uv_timer_t *timerhandl ) {
@@ -38,20 +38,20 @@ namespace NodeLibcurl {
         });
 
         int timerStatus = uv_timer_init( uv_default_loop(), this->timeout.get() );
-        assert( timerStatus == 0 );
+        assert( timerStatus == 0 && "Could not initialize libuv timer" );
 
         this->timeout->data = this;
 
         this->mh = curl_multi_init();
-        assert( this->mh );
+        assert( this->mh && "Could not initialize libcurl multi handle." );
 
         NODE_LIBCURL_ADJUST_MEM( MEMORY_PER_HANDLE );
 
         // set curl_multi cb to use libuv
         curl_multi_setopt( this->mh, CURLMOPT_SOCKETFUNCTION, Multi::HandleSocket );
         curl_multi_setopt( this->mh, CURLMOPT_SOCKETDATA, this );
-        curl_multi_setopt( this->mh, CURLMOPT_TIMERFUNCTION, Multi::HandleTimeout );
-        curl_multi_setopt( this->mh, CURLMOPT_TIMERDATA, this );
+        curl_multi_setopt( this->mh, CURLMOPT_TIMERFUNCTION,  Multi::HandleTimeout );
+        curl_multi_setopt( this->mh, CURLMOPT_TIMERDATA,  this );
     }
 
     Multi::~Multi()
@@ -75,8 +75,6 @@ namespace NodeLibcurl {
 
             NODE_LIBCURL_ADJUST_MEM( -MEMORY_PER_HANDLE );
         }
-
-        this->RemoveOnMessageCallback();
 
         uv_timer_stop( this->timeout.get() );
     }
@@ -138,12 +136,11 @@ namespace NodeLibcurl {
 
     // This function will be called when the timeout value changes from libcurl.
     // The timeout value is at what latest time the application should call one of
-    // the "performing" functions of the multi interface (curl_multi_socket_action(3) and curl_multi_perform(3)) - to allow libcurl to keep timeouts and retries etc to work.
+    // the "performing" functions of the multi interface (curl_multi_socket_action and curl_multi_perform) - to allow libcurl to keep timeouts and retries etc to work.
     int Multi::HandleTimeout( CURLM *multi, long timeoutMs, void *userp )
     {
         Multi *obj = static_cast<Multi*>( userp );
 
-        // stops running timer.
         uv_timer_stop( obj->timeout.get() );
 
         if ( timeoutMs > 0 ) {
@@ -235,13 +232,13 @@ namespace NodeLibcurl {
         Multi::CurlSocketContext *ctx = NULL;
 
         ctx = static_cast<Multi::CurlSocketContext*>( malloc( sizeof( *ctx ) ) );
-        assert( ctx && "Not enought memory to allocate a new Multi::CurlSocketContext." );
+        assert( ctx && "Not enough memory to allocate a new Multi::CurlSocketContext." );
 
         ctx->sockfd = sockfd;
         ctx->multi = multi;
 
         // uv_poll simply watches file descriptors using the operating system notification mechanism
-        // whenever the OS notices a change of state in file descriptors being polled, libuv will invoke the associated callback.
+        //   whenever the OS notices a change of state in file descriptors being polled, libuv will invoke the associated callback.
         r = uv_poll_init_socket( uv_default_loop(), &ctx->pollHandle, sockfd );
 
         assert( r == 0 );
@@ -269,13 +266,18 @@ namespace NodeLibcurl {
     {
         Nan::HandleScope scope;
 
-        //we don't have an on message callback, just return.
-        if ( !this->cbOnMessage ) {
+        // we don't have an on message callback, just return.
+        if ( this->cbOnMessage == nullptr ) {
             return;
         }
 
-        Easy *obj = nullptr;
-        CURLcode code = curl_easy_getinfo( easy, CURLINFO_PRIVATE, &obj );
+        // From https://curl.haxx.se/libcurl/c/CURLINFO_PRIVATE.html
+        // > Please note that for internal reasons, the value is returned as a char pointer, although effectively being a 'void *'. 
+        char *ptr = nullptr;
+        CURLcode code = curl_easy_getinfo( easy, CURLINFO_PRIVATE, &ptr );
+        assert( ptr != nullptr && "Invalid handle returned from CURLINFO_PRIVATE." );
+
+        Easy *obj = reinterpret_cast<Easy *>( ptr );
 
         if ( code != CURLE_OK ) {
 
@@ -296,12 +298,6 @@ namespace NodeLibcurl {
         v8::Local<v8::Value> argv[] = { err, easyArg, errCode };
 
         this->cbOnMessage->Call( this->handle(), 3, argv );
-    }
-
-    void Multi::RemoveOnMessageCallback()
-    {
-        delete this->cbOnMessage;
-        this->cbOnMessage = nullptr;
     }
 
     // Add Curl constructor to the module exports
@@ -436,12 +432,15 @@ namespace NodeLibcurl {
             return;
         }
 
-        obj->RemoveOnMessageCallback();
 
-        if ( !isNull ) {
+        if ( isNull ) {
+
+            obj->cbOnMessage = nullptr;
+        }
+        else {
 
             v8::Local<v8::Function> callback = arg.As<v8::Function>();
-            obj->cbOnMessage = new Nan::Callback( callback );
+            obj->cbOnMessage.reset( new Nan::Callback( callback ) );
         }
 
         info.GetReturnValue().Set( info.This() );

@@ -36,13 +36,15 @@ ch.setOpt( Curl.option.URL, url );
 
 ch.setOpt( Curl.option.HEADERFUNCTION, function( buf, size, nmemb ) {
 
-    console.log( buf );
+    console.log( 'HEADERFUNCTION: ' );
+    console.log( arguments );
 
     return size * nmemb;
 });
 
 ch.setOpt( Curl.option.WRITEFUNCTION, function( buf, size, nmemb ) {
 
+    console.log( 'WRITEFUNCTION: ' );
     console.log( arguments );
 
     return size * nmemb;

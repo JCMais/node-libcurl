@@ -48,7 +48,6 @@ namespace NodeLibcurl {
         Easy();
         explicit Easy( Easy* orig );
 
-        //@TODO implement copy constructor to the duphandle?
         Easy( const Easy &that );
         Easy& operator=( const Easy &that );
 
@@ -56,7 +55,6 @@ namespace NodeLibcurl {
 
         // instance methods
         void Dispose();
-        void DisposeCallbacks();
         void ResetRequiredHandleOptions();
         void CallSocketEvent( int status, int events );
         void MonitorSockets();
@@ -69,27 +67,19 @@ namespace NodeLibcurl {
         static uint32_t counter;
 
         // callbacks
-        Nan::Callback *cbChunkBgn;
-        Nan::Callback *cbChunkEnd;
-        Nan::Callback *cbDebug;
-        Nan::Callback *cbHeader;
-        Nan::Callback *cbFnMatch;
-        Nan::Callback *cbOnSocketEvent;
-        Nan::Callback *cbProgress;
-        Nan::Callback *cbRead;
-        Nan::Callback *cbXferinfo;
-        Nan::Callback *cbWrite;
+        typedef std::map<CURLoption, std::shared_ptr<Nan::Callback>> CallbacksMap;
+        CallbacksMap callbacks = {};
+        std::shared_ptr<Nan::Callback> cbOnSocketEvent; // still required since it's not related to any CURLoption.
 
         // members
-        uv_poll_t *pollHandle;
+        uv_poll_t *socketPollHandle = nullptr;
+        std::shared_ptr<ToFree> toFree = nullptr;
 
-        std::shared_ptr<ToFree> toFree;
+        bool isCbProgressAlreadyAborted = false; // we need this flag because of https://github.com/curl/curl/commit/907520c4b93616bddea15757bbf0bfb45cde8101
+        bool isMonitoringSockets = false;
 
-        bool isCbProgressAlreadyAborted; // we need this flag because of https://github.com/bagder/curl/commit/907520c4b93616bddea15757bbf0bfb45cde8101
-        bool isMonitoringSockets;
-
-        int32_t readDataFileDescriptor; //READDATA sets that
-        uint32_t id;
+        int32_t readDataFileDescriptor = -1; //READDATA sets that
+        uint32_t id = counter++;
 
         // static methods
         template<typename TResultType, typename Tv8MappingType>
@@ -110,11 +100,11 @@ namespace NodeLibcurl {
 
         // members
         CURL  *ch;
-        bool isInsideMultiHandle;
-        bool isOpen;
+        bool isInsideMultiHandle = false;
+        bool isOpen = true;
 
         // static members
-        static int32_t currentOpenedHandles;
+        static uint32_t currentOpenedHandles;
 
         // export Easy to js
         static NODE_LIBCURL_MODULE_INIT( Initialize );

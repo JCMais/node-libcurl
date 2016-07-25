@@ -23,7 +23,6 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <map>
 #include <memory>
 #include <functional>
 
@@ -52,7 +51,6 @@ namespace NodeLibcurl {
         void Dispose();
         void ProcessMessages();
         void CallOnMessageCallback( CURL *easy, CURLcode statusCode );
-        void RemoveOnMessageCallback();
 
         // context used with curl_multi_assign to create a relationship between the socket being used and the poll handle.
         struct CurlSocketContext {
@@ -64,13 +62,13 @@ namespace NodeLibcurl {
 
         // members
         CURLM *mh;
-        bool isOpen;
-        int amountOfHandles;
-        int runningHandles;
+        bool isOpen = true;
+        int amountOfHandles = 0;
+        int runningHandles = 0;
+
+        std::shared_ptr<Nan::Callback> cbOnMessage;
 
         deleted_unique_ptr<uv_timer_t> timeout;
-
-        Nan::Callback *cbOnMessage;
 
         // static helper methods
         static CurlSocketContext *CreateCurlSocketContext( curl_socket_t sockfd, Multi *multi );
