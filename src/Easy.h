@@ -68,7 +68,7 @@ namespace NodeLibcurl {
 
         // callbacks
         typedef std::map<CURLoption, std::shared_ptr<Nan::Callback>> CallbacksMap;
-        CallbacksMap callbacks = {};
+        CallbacksMap callbacks = CallbacksMap{};
         std::shared_ptr<Nan::Callback> cbOnSocketEvent; // still required since it's not related to any CURLoption.
 
         // members

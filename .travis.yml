@@ -41,6 +41,7 @@ before_install:
 # update openssl on mac
 - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
     brew update;
+    brew reinstall -s libtool;
     brew install openssl;
     brew outdated openssl || brew upgrade openssl;
     brew link --force openssl;
