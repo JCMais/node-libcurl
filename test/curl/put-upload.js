@@ -103,8 +103,9 @@ before( function( done ) {
         });
     });
 
-    app.use( function() {
-
+    app.use( function( err, req, res, next ) {
+        //do nothing
+        next;
     });
 });
 
