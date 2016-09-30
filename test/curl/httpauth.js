@@ -43,7 +43,8 @@ var server = serverObj.server,
     digest = auth.digest(
         {
             realm: realmDigest
-        }, function ( usr, callback ) {
+        },
+        function ( usr, callback ) {
 
             var hash = crypto.createHash( 'md5' );
 

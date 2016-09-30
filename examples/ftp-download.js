@@ -27,13 +27,12 @@
 var Curl = require( '../lib/Curl' ),
     Easy = require( '../lib/Easy' ),
     path = require( 'path' ),
-    util = require( 'util' ),
     fs   = require( 'fs' );
 
 var handle = new Easy(),
     url    = 'ftp://speedtest.tele2.net/1MB.zip',
-    fileOutPath = process.argv[2] || path.join( process.cwd(), '1MB.zip' );
-    fileOut= fs.openSync( fileOutPath, 'w+' );
+    fileOutPath = process.argv[2] || path.join( process.cwd(), '1MB.zip' ),
+    fileOut = fs.openSync( fileOutPath, 'w+' );
 
 handle.setOpt( Curl.option.URL, url );
 

@@ -60,7 +60,7 @@ after( function() {
     server.close();
 });
 
-it ( 'should not work with non-implemented infos', function ( done ) {
+it( 'should not work with non-implemented infos', function ( done ) {
 
     curl.on( 'end', function( status ) {
 
@@ -68,7 +68,7 @@ it ( 'should not work with non-implemented infos', function ( done ) {
             throw Error( 'Invalid status code: ' + status );
         }
 
-        (function() {
+        ( function() {
             curl.getInfo( Curl.info.PRIVATE );
         }).should.throw( /^Unsupported/ );
 

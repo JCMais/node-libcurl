@@ -103,8 +103,8 @@ before( function( done ) {
         });
     });
 
-    app.use( function( err, req, res, next ) {
-        //do nothing
+    app.use( function() {
+
     });
 });
 
@@ -150,7 +150,7 @@ it( 'should upload data correctly using READFUNCTION callback option', function 
         bytesPerCall = 100;
 
     curl.setOpt( Curl.option.UPLOAD, 1 );
-    curl.setOpt( Curl.option.READFUNCTION, function( buffer, size, nmemb ) {
+    curl.setOpt( Curl.option.READFUNCTION, function( buffer ) {
 
         var data = fileStream.read( bytesPerCall );
 
@@ -186,7 +186,7 @@ it( 'should abort upload with invalid fd', function ( done ) {
     curl.setOpt( Curl.option.UPLOAD, 1 );
     curl.setOpt( Curl.option.READDATA, -1 );
 
-    curl.on( 'end', function( statusCode, body ) {
+    curl.on( 'end', function() {
 
         done( new Error( 'Invalid file descriptor specified but upload was performed correctly.' ) );
     });

@@ -85,7 +85,7 @@ it( 'should not accept invalid argument type', function() {
 
 it( 'should not work with non-implemented options', function () {
 
-    (function() {
+    ( function() {
         curl.setOpt( Curl.option.SSL_CTX_FUNCTION, 1 );
     }).should.throw( /^Unsupported/ );
 });
@@ -109,13 +109,13 @@ it( 'should restore default internal callbacks when setting WRITEFUNCTION and HE
         return buf.length;
     });
 
-    curl.on( 'data', function( buf ) {
+    curl.on( 'data', function() {
 
         shouldCallEvents.should.be.true();
         dataEvtCalled = true;
     });
 
-    curl.on( 'header', function( buf ) {
+    curl.on( 'header', function() {
 
         shouldCallEvents.should.be.true();
         headerEvtCalled = true;
