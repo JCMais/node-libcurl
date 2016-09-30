@@ -935,7 +935,8 @@ namespace NodeLibcurl {
 
         for ( std::vector<NodeLibcurl::CurlConstant>::const_iterator it = optionGroup.begin(), end = optionGroup.end(); it != end; ++it ) {
 
-            obj->ForceSet(
+            Nan::ForceSet(
+                obj,
                 Nan::New<v8::String>( it->name ).ToLocalChecked(),
                 Nan::New<v8::Integer>( static_cast<int32_t>( it->value ) ),
                 attributes
@@ -1076,15 +1077,13 @@ namespace NodeLibcurl {
     // based on https://github.com/libxmljs/libxmljs/blob/master/src/libxmljs.cc#L45
     void AdjustMemory( ssize_t diff )
     {
+        Nan::HandleScope scope;
+
         addonAllocatedMemory += diff;
 
         // if v8 is no longer running, don't try to adjust memory
-#if (NODE_MODULE_VERSION > 0x000B)
-        if ( !v8::Isolate::GetCurrent() ) {
-            return;
-        }
-#endif
-        if ( v8::V8::IsDead() ) {
+
+        if (  Nan::GetCurrentContext()->GetIsolate()->IsDead() ) {
             return;
         }
 

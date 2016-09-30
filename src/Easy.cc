@@ -1572,7 +1572,7 @@ namespace NodeLibcurl {
         v8::Local<v8::Value> argv[argc] = { info.This() };
         v8::Local<v8::Function> cons = Nan::New( Easy::constructor )->GetFunction();
 
-        v8::Local<v8::Object> newInstance = cons->NewInstance( argc, argv );
+        v8::Local<v8::Object> newInstance = Nan::NewInstance( cons, argc, argv ).ToLocalChecked();
 
         info.GetReturnValue().Set( newInstance );
     }
