@@ -6,10 +6,8 @@ environment:
     secure: o8iCZIMbaOR5HKy9Q/ArQ6N+5LRepyRVYRtLTrxyCo2gCEXUp8xhUYjLMJmZgNu9
   matrix:
     # node.js
-    - nodejs_version: 0.10
     - nodejs_version: 0.12
     - nodejs_version: 4
-    - nodejs_version: 5
     - nodejs_version: 6
 
 platform:
