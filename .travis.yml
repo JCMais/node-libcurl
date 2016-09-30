@@ -1,6 +1,7 @@
 os:
 - linux
 - osx
+osx_image: beta-xcode6.1
 language: cpp
 sudo: false
 addons:
@@ -41,6 +42,7 @@ before_install:
 - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
     brew update;
     brew install openssl;
+    brew outdated openssl || brew upgrade openssl;
     brew link --force openssl;
   fi;
 - export PATH=$HOME/bin:$PATH
