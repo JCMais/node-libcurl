@@ -1083,9 +1083,20 @@ namespace NodeLibcurl {
 
         // if v8 is no longer running, don't try to adjust memory
 
+        // Return if no available Isolate
+        if ( !v8::Isolate::GetCurrent() ) {
+            return;
+        }
+
+#if NODE_MODULE_VERSION > 14
         if (  Nan::GetCurrentContext()->GetIsolate()->IsDead() ) {
             return;
         }
+#else // Node.js <= 0.12
+        if ( v8::V8::IsDead() ) {
+            return;
+        }
+#endif
 
         Nan::AdjustExternalMemory( static_cast<int>( diff ) );
     }
