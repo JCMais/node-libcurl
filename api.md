@@ -53,6 +53,9 @@
                 * [.feature](#module_node-libcurl.Curl.feature) : <code>enum</code>
                 * [.getCount](#module_node-libcurl.Curl.getCount) ⇒ <code>Number</code>
                 * [.getVersion](#module_node-libcurl.Curl.getVersion) ⇒ <code>String</code>
+                * [.global](#module_node-libcurl.Curl.global) : <code>enum</code>
+                * [.globalInit](#module_node-libcurl.Curl.globalInit) ⇒ <code>Number</code>
+                * [.globalCleanup](#module_node-libcurl.Curl.globalCleanup)
                 * [.VERSION_NUM](#module_node-libcurl.Curl.VERSION_NUM)
             * _inner_
                 * [~progressCallback](#module_node-libcurl.Curl..progressCallback) ⇒ <code>Number</code>
@@ -159,6 +162,9 @@
         * [.feature](#module_node-libcurl.Curl.feature) : <code>enum</code>
         * [.getCount](#module_node-libcurl.Curl.getCount) ⇒ <code>Number</code>
         * [.getVersion](#module_node-libcurl.Curl.getVersion) ⇒ <code>String</code>
+        * [.global](#module_node-libcurl.Curl.global) : <code>enum</code>
+        * [.globalInit](#module_node-libcurl.Curl.globalInit) ⇒ <code>Number</code>
+        * [.globalCleanup](#module_node-libcurl.Curl.globalCleanup)
         * [.VERSION_NUM](#module_node-libcurl.Curl.VERSION_NUM)
     * _inner_
         * [~progressCallback](#module_node-libcurl.Curl..progressCallback) ⇒ <code>Number</code>
@@ -790,6 +796,44 @@ Returns the number of handles currently open in the internal multi handle being 
 Returns libcurl version string.
 The string shows which features are enabled,
  and the version of the libraries that libcurl was built with.
+
+**Kind**: static property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+<a name="module_node-libcurl.Curl.global"></a>
+
+#### Curl.global : <code>enum</code>
+Object with constants for the function [globalInit](#module_node-libcurl.Curl.globalInit)
+
+``CURL_GLOBAL_ALL`` becomes ``Curl.global.ALL``
+
+**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Read only**: true  
+**Properties**
+
+| Name | Type | Default |
+| --- | --- | --- |
+| SSL | <code>Number</code> | <code></code> | 
+| WIN32 | <code>Number</code> | <code></code> | 
+| ALL | <code>Number</code> | <code></code> | 
+| DEFAULT | <code>Number</code> | <code></code> | 
+| NOTHING | <code>Number</code> | <code>0</code> | 
+| ACK_EINTR | <code>Number</code> | <code></code> | 
+
+<a name="module_node-libcurl.Curl.globalInit"></a>
+
+#### Curl.globalInit ⇒ <code>Number</code>
+Calls [curl_global_init()](http://curl.haxx.se/libcurl/c/curl_global_init.html)
+
+**Kind**: static property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Returns**: <code>Number</code> - Status code, see [code](#module_node-libcurl.Curl.code)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| flags | <code>Number</code> | Flag of options, see [global](#module_node-libcurl.Curl.global) |
+
+<a name="module_node-libcurl.Curl.globalCleanup"></a>
+
+#### Curl.globalCleanup
+Calls [curl_global_cleanup()](http://curl.haxx.se/libcurl/c/curl_global_cleanup.html)
 
 **Kind**: static property of <code>[Curl](#module_node-libcurl.Curl)</code>  
 <a name="module_node-libcurl.Curl.VERSION_NUM"></a>

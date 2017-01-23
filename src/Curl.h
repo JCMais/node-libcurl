@@ -97,6 +97,8 @@ namespace NodeLibcurl {
     NODE_LIBCURL_MODULE_INIT( Initialize );
 
     // js exported Methods
+    NAN_METHOD( GlobalInit );
+    NAN_METHOD( GlobalCleanup );
     NAN_METHOD( GetVersion );
     NAN_METHOD( GetCount );
     NAN_GETTER( GetterVersionNum );

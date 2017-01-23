@@ -288,11 +288,11 @@ namespace NodeLibcurl {
         { "IGNORE_CONTENT_LENGTH", CURLOPT_IGNORE_CONTENT_LENGTH },
         { "INFILESIZE", CURLOPT_INFILESIZE },
         { "IPRESOLVE", CURLOPT_IPRESOLVE },
-        
+
     #if NODE_LIBCURL_VER_GE( 7, 51, 0 )
         { "KEEP_SENDING_ON_ERROR", CURLOPT_KEEP_SENDING_ON_ERROR },
     #endif
-        
+
         { "LOCALPORT", CURLOPT_LOCALPORT },
         { "LOCALPORTRANGE", CURLOPT_LOCALPORTRANGE },
         { "LOW_SPEED_LIMIT", CURLOPT_LOW_SPEED_LIMIT },
@@ -695,7 +695,12 @@ namespace NodeLibcurl {
     #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
         { "RTSP_SESSION_ID", CURLINFO_RTSP_SESSION_ID },
     #endif
+
+    #if NODE_LIBCURL_VER_GE( 7, 52, 0 )
+        { "SCHEME", CURLINFO_SCHEME },
+    #endif
     };
+
     const std::vector<CurlConstant> curlInfoDouble = {
     #if NODE_LIBCURL_VER_GE( 7, 19, 0 )
         { "APPCONNECT_TIME", CURLINFO_APPCONNECT_TIME },
@@ -743,6 +748,11 @@ namespace NodeLibcurl {
     #endif
 
         { "PROXYAUTH_AVAIL", CURLINFO_PROXYAUTH_AVAIL },
+
+    #if NODE_LIBCURL_VER_GE( 7, 52, 0 )
+        { "PROTOCOL", CURLINFO_PROTOCOL },
+    #endif
+
         { "REDIRECT_COUNT", CURLINFO_REDIRECT_COUNT },
         { "REQUEST_SIZE", CURLINFO_REQUEST_SIZE },
         { "RESPONSE_CODE", CURLINFO_RESPONSE_CODE },
@@ -1033,6 +1043,8 @@ namespace NodeLibcurl {
 
         Nan::ForceSet( obj, Nan::New<v8::String>( "code" ).ToLocalChecked(), codesObj, attributes );
 
+        Nan::SetMethod( obj, "globalInit", GlobalInit );
+        Nan::SetMethod( obj, "globalCleanup", GlobalCleanup );
         Nan::SetMethod( obj, "getVersion", GetVersion );
         Nan::SetMethod( obj, "getCount",   GetCount );
         Nan::SetAccessor( obj, Nan::New( "VERSION_NUM" ).ToLocalChecked(), GetterVersionNum, 0, v8::Local<v8::Value>(), v8::DEFAULT, attributes );
@@ -1138,6 +1150,104 @@ namespace NodeLibcurl {
         Nan::HandleScope scope;
 
         info.GetReturnValue().Set( Easy::currentOpenedHandles );
+    }
+
+    // The following memory allocation wrappers are mostly the ones at
+    //  https://github.com/gagern/libxmljs/blob/master/src/libxmljs.cc#L77
+    //  made by Martin von Gagern (https://github.com/gagern)
+    //  Related code review at http://codereview.stackexchange.com/q/128547/10394
+    struct MemWrapper {
+        size_t size;
+        curl_off_t data;
+    };
+
+    #define MEMWRAPPER_SIZE offsetof( MemWrapper, data )
+
+    inline void* MemWrapperToClient( MemWrapper* memWrapper ) {
+        return static_cast<void*>( reinterpret_cast<char*>( memWrapper ) + MEMWRAPPER_SIZE );
+    }
+
+    inline MemWrapper* ClientToMemWrapper( void* client ) {
+        return reinterpret_cast<MemWrapper*>( static_cast<char*>( client ) - MEMWRAPPER_SIZE );
+    }
+
+    void* MallocCallback( size_t size )
+    {
+        size_t totalSize = size + MEMWRAPPER_SIZE;
+        MemWrapper* mem = static_cast<MemWrapper*>( malloc( totalSize ) );
+        if ( !mem ) return NULL;
+        mem->size = size;
+        AdjustMemory( totalSize );
+        return MemWrapperToClient( mem );
+    }
+
+    void FreeCallback( void* p )
+    {
+        if ( !p ) return;
+        MemWrapper* mem = ClientToMemWrapper( p );
+        ssize_t totalSize = mem->size + MEMWRAPPER_SIZE;
+        AdjustMemory( -totalSize );
+        free( mem );
+    }
+
+    void* ReallocCallback( void* ptr, size_t size )
+    {
+        if ( !ptr ) return MallocCallback( size );
+        MemWrapper* mem1 = ClientToMemWrapper( ptr );
+        ssize_t oldSize = mem1->size;
+        MemWrapper* mem2 = static_cast<MemWrapper*>( realloc( mem1, size + MEMWRAPPER_SIZE ) );
+        if ( !mem2 ) return NULL;
+        mem2->size = size;
+        AdjustMemory( ssize_t( size ) - oldSize );
+        return MemWrapperToClient( mem2 );
+    }
+
+    char* StrdupCallback( const char* str )
+    {
+        size_t size = strlen( str ) + 1;
+        char* res = static_cast<char*>( MallocCallback( size ) );
+        if ( res ) memcpy( res, str, size );
+        return res;
+    }
+
+    void* CallocCallback( size_t nmemb, size_t size )
+    {
+        void* ptr = MallocCallback( nmemb * size );
+        if ( !ptr ) return NULL;
+        memset( ptr, 0, nmemb * size ); // zero-fill
+        return ptr;
+    }
+
+    NAN_METHOD( GlobalInit )
+    {
+        Nan::HandleScope scope;
+
+        long flags = info[0]->IsUndefined() ? static_cast<long>( info[0]->Int32Value() ) : CURL_GLOBAL_ALL;
+
+        curl_version_info_data *version = curl_version_info( CURLVERSION_NOW );
+        isLibcurlBuiltWithThreadedResolver = ( version->features & CURL_VERSION_ASYNCHDNS ) == CURL_VERSION_ASYNCHDNS;
+
+        CURLcode globalInitRetCode;
+
+        // We only add the allloc wrappers if we are running libcurl without the threaded resolver
+        //  that is because v8 AdjustAmountOfExternalAllocatedMemory must be called from the Node thread
+        if ( !isLibcurlBuiltWithThreadedResolver ) {
+            globalInitRetCode = curl_global_init_mem( flags, MallocCallback, FreeCallback, ReallocCallback, StrdupCallback, CallocCallback );
+        }
+        else {
+            globalInitRetCode = curl_global_init( flags );
+        }
+
+        info.GetReturnValue().Set( globalInitRetCode );
+    }
+
+    NAN_METHOD( GlobalCleanup )
+    {
+        Nan::HandleScope scope;
+
+        curl_global_cleanup();
+
+        info.GetReturnValue().Set( Nan::Undefined() );
     }
 
     // Return hexdecimal representation of the libcurl version.
