@@ -24,6 +24,10 @@
                 * ["error" (err, errCode)](#module_node-libcurl.Curl+event_error)
                 * ["end" (status, argBody, argBody)](#module_node-libcurl.Curl+event_end)
             * _static_
+                * [.getCount](#module_node-libcurl.Curl.getCount) ⇒ <code>Number</code>
+                * [.getVersion](#module_node-libcurl.Curl.getVersion) ⇒ <code>String</code>
+                * [.globalInit](#module_node-libcurl.Curl.globalInit) ⇒ <code>Number</code>
+                * [.globalCleanup](#module_node-libcurl.Curl.globalCleanup)
                 * [.option](#module_node-libcurl.Curl.option) : <code>enum</code>
                 * [.multi](#module_node-libcurl.Curl.multi) : <code>enum</code>
                 * [.share](#module_node-libcurl.Curl.share) : <code>enum</code>
@@ -51,11 +55,7 @@
                 * [.ssh_auth](#module_node-libcurl.Curl.ssh_auth) : <code>enum</code>
                 * [.timecond](#module_node-libcurl.Curl.timecond) : <code>enum</code>
                 * [.feature](#module_node-libcurl.Curl.feature) : <code>enum</code>
-                * [.getCount](#module_node-libcurl.Curl.getCount) ⇒ <code>Number</code>
-                * [.getVersion](#module_node-libcurl.Curl.getVersion) ⇒ <code>String</code>
                 * [.global](#module_node-libcurl.Curl.global) : <code>enum</code>
-                * [.globalInit](#module_node-libcurl.Curl.globalInit) ⇒ <code>Number</code>
-                * [.globalCleanup](#module_node-libcurl.Curl.globalCleanup)
                 * [.VERSION_NUM](#module_node-libcurl.Curl.VERSION_NUM)
             * _inner_
                 * [~progressCallback](#module_node-libcurl.Curl..progressCallback) ⇒ <code>Number</code>
@@ -133,6 +133,10 @@
         * ["error" (err, errCode)](#module_node-libcurl.Curl+event_error)
         * ["end" (status, argBody, argBody)](#module_node-libcurl.Curl+event_end)
     * _static_
+        * [.getCount](#module_node-libcurl.Curl.getCount) ⇒ <code>Number</code>
+        * [.getVersion](#module_node-libcurl.Curl.getVersion) ⇒ <code>String</code>
+        * [.globalInit](#module_node-libcurl.Curl.globalInit) ⇒ <code>Number</code>
+        * [.globalCleanup](#module_node-libcurl.Curl.globalCleanup)
         * [.option](#module_node-libcurl.Curl.option) : <code>enum</code>
         * [.multi](#module_node-libcurl.Curl.multi) : <code>enum</code>
         * [.share](#module_node-libcurl.Curl.share) : <code>enum</code>
@@ -160,11 +164,7 @@
         * [.ssh_auth](#module_node-libcurl.Curl.ssh_auth) : <code>enum</code>
         * [.timecond](#module_node-libcurl.Curl.timecond) : <code>enum</code>
         * [.feature](#module_node-libcurl.Curl.feature) : <code>enum</code>
-        * [.getCount](#module_node-libcurl.Curl.getCount) ⇒ <code>Number</code>
-        * [.getVersion](#module_node-libcurl.Curl.getVersion) ⇒ <code>String</code>
         * [.global](#module_node-libcurl.Curl.global) : <code>enum</code>
-        * [.globalInit](#module_node-libcurl.Curl.globalInit) ⇒ <code>Number</code>
-        * [.globalCleanup](#module_node-libcurl.Curl.globalCleanup)
         * [.VERSION_NUM](#module_node-libcurl.Curl.VERSION_NUM)
     * _inner_
         * [~progressCallback](#module_node-libcurl.Curl..progressCallback) ⇒ <code>Number</code>
@@ -364,6 +364,38 @@ End event
 | argBody | <code>String</code> &#124; <code>Buffer</code> | If [Curl.feature.NO_DATA_PARSING](#module_node-libcurl.Curl.feature) is set, a Buffer is passed instead of a string. |
 | argBody | <code>Array</code> &#124; <code>Buffer</code> | If [Curl.feature.NO_HEADER_PARSING](#module_node-libcurl.Curl.feature) is set, a Buffer is passed instead of an array with the headers. |
 
+<a name="module_node-libcurl.Curl.getCount"></a>
+
+#### Curl.getCount ⇒ <code>Number</code>
+Returns the number of handles currently open in the internal multi handle being used.
+
+**Kind**: static property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+<a name="module_node-libcurl.Curl.getVersion"></a>
+
+#### Curl.getVersion ⇒ <code>String</code>
+Returns libcurl version string.
+The string shows which features are enabled,
+ and the version of the libraries that libcurl was built with.
+
+**Kind**: static property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+<a name="module_node-libcurl.Curl.globalInit"></a>
+
+#### Curl.globalInit ⇒ <code>Number</code>
+Calls [curl_global_init()](http://curl.haxx.se/libcurl/c/curl_global_init.html)
+
+**Kind**: static property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Returns**: <code>Number</code> - Status code, see [code](#module_node-libcurl.Curl.code)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| flags | <code>Number</code> | Flag of options, see [global](#module_node-libcurl.Curl.global) |
+
+<a name="module_node-libcurl.Curl.globalCleanup"></a>
+
+#### Curl.globalCleanup
+Calls [curl_global_cleanup()](http://curl.haxx.se/libcurl/c/curl_global_cleanup.html)
+
+**Kind**: static property of <code>[Curl](#module_node-libcurl.Curl)</code>  
 <a name="module_node-libcurl.Curl.option"></a>
 
 #### Curl.option : <code>enum</code>
@@ -372,7 +404,7 @@ See the official documentation of [curl_easy_setopt()](http://curl.haxx.se/libcu
 
 ``CURLOPT_URL`` becomes ``Curl.option.URL``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 <a name="module_node-libcurl.Curl.multi"></a>
 
@@ -381,14 +413,14 @@ Options to be used with multi.setOpt()
 
 ``CURLMOPT_MAXCONNECTS`` becomes ``Curl.multi.MAXCONNECTS``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 <a name="module_node-libcurl.Curl.share"></a>
 
 #### Curl.share : <code>enum</code>
 Options to be used with share.setOpt()
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **See**: module:node-libcurl.Curl.lock  
 **Properties**
@@ -405,7 +437,7 @@ Options to be used with the Curl.share.SHARE and Curl.share.UNSHARE options.
 
 ``CURL_LOCK_DATA_COOKIE`` becomes ``Curl.lock.DATA_COOKIE``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -423,7 +455,7 @@ See the official documentation of [curl_easy_getinfo()](http://curl.haxx.se/libc
 
 ``CURLINFO_EFFECTIVE_URL`` becomes ``Curl.info.EFFECTIVE_URL``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 <a name="module_node-libcurl.Curl.auth"></a>
 
@@ -432,7 +464,7 @@ Object with bitmasks that should be used with the HTTPAUTH option.
 
 ``CURLAUTH_BASIC`` becomes ``Curl.auth.BASIC``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 <a name="module_node-libcurl.Curl.http"></a>
 
@@ -441,7 +473,7 @@ Object with constants to be used with the HTTP_VERSION option.
 
 ``CURL_HTTP_VERSION_NONE`` becomes ``Curl.http.VERSION_NONE``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 <a name="module_node-libcurl.Curl.pause"></a>
 
@@ -450,7 +482,7 @@ Object with constants to be used with the pause method.
 
 ``CURLPAUSE_RECV`` becomes ``Curl.pause.RECV``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 <a name="module_node-libcurl.Curl.protocol"></a>
 
@@ -460,7 +492,7 @@ Should be used when setting PROTOCOLS and REDIR_PROTOCOLS options.
 
 ``CURLPROTO_HTTP`` becomes ``Curl.proto.HTTP``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 <a name="module_node-libcurl.Curl.header"></a>
 
@@ -471,7 +503,7 @@ Available since libcurl version >= 7.37.0
 
 ``CURLHEADER_UNIFIED`` becomes ``Curl.header.UNIFIED``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 <a name="module_node-libcurl.Curl.code"></a>
 
@@ -480,7 +512,7 @@ Object with the CURLM_ and CURLE_ constants.
 
 ``CURLE_OK`` becomes ``Curl.code.CURLE_OK``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 <a name="module_node-libcurl.Curl.netrc"></a>
 
@@ -489,7 +521,7 @@ Object with constants to be used with NETRC option.
 
 ``CURL_NETRC_OPTIONAL`` becomes ``Curl.netrc.OPTIONAL``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -507,7 +539,7 @@ Object with constants to be used as the return value for the callbacks set
 
 ``CURL_CHUNK_BGN_FUNC_OK`` becomes ``Curl.chunk.BGN_FUNC_OK``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -527,7 +559,7 @@ Object with constants to be used when using the [module:node-libcurl#CurlFileInf
 
 ``CURLFILETYPE_FILE`` becomes ``Curl.filetype.FILE``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -550,7 +582,7 @@ Object with constants to be used as the return value for the callback set
 
 ``CURL_FNMATCHFUNC_MATCH`` becomes ``Curl.fnmatchfunc.MATCH``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -567,7 +599,7 @@ Object with constants for option ``FTPSSLAUTH``
 
 ``CURLFTPAUTH_DEFAULT`` becomes ``Curl.ftpauth.DEFAULT``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -584,7 +616,7 @@ Object with constants for option ``FTP_SSL_CCC``
 
 ``CURLFTPSSL_CCC_NONE`` becomes ``Curl.ftpssl.CCC_NONE``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -601,7 +633,7 @@ Object with constants for option ``FTP_FILEMETHOD``
 
 ``CURLFTPMETHOD_MULTICWD`` becomes ``Curl.ftpmethod.MULTICWD``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -620,7 +652,7 @@ Only available on libcurl >= 7.20
 
 ``CURL_RTSPREQ_OPTIONS`` becomes ``Curl.rtspreq.OPTIONS``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -645,7 +677,7 @@ Object with constants for option ``IPRESOLVE``
 
 ``CURL_IPRESOLVE_V4`` becomes ``Curl.ipresolve.V4``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -662,7 +694,7 @@ Object with constants for option ``PROXYTYPE``
 
 ``CURLPROXY_HTTP`` becomes ``Curl.proxy.HTTP``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -683,7 +715,7 @@ Those are available starting with libcurl 7.43.0.
 
 ``CURLPIPE_NOTHING`` becomes ``Curl.pipe.NOTHING``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **See**: https://curl.haxx.se/libcurl/c/CURLMOPT_PIPELINING.html  
 **Properties**
@@ -701,7 +733,7 @@ Object with constants for option ``USE_SSL``
 
 ``CURLUSESSL_NONE`` becomes ``Curl.usessl.NONE``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -719,7 +751,7 @@ Object with constants for option ``SSLVERSION``
 
 ``CURL_SSLVERSION_DEFAULT`` becomes ``Curl.sslversion.DEFAULT``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -737,7 +769,7 @@ Object with constants for option ``SSH_AUTH_TYPES``
 
 ``CURLSSH_AUTH_PASSWORD`` becomes ``Curl.ssh_auth.PASSWORD``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -757,7 +789,7 @@ Object with constants for option ``TIMECONDITION``
 
 ``CURL_TIMECOND_IFMODSINCE`` becomes ``Curl.timecond.IFMODSINCE``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -771,7 +803,7 @@ Object with constants for option ``TIMECONDITION``
 #### Curl.feature : <code>enum</code>
 Object with the features currently supported as bitmasks.
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -784,20 +816,6 @@ Object with the features currently supported as bitmasks.
 | NO_HEADER_STORAGE | <code>Number</code> | <code></code> | Header received is not stored inside this handle, implies NO_HEADER_PARSING. |
 | NO_STORAGE | <code>Number</code> | <code></code> | Same than ``NO_DATA_STORAGE | NO_HEADER_STORAGE``, implies RAW. |
 
-<a name="module_node-libcurl.Curl.getCount"></a>
-
-#### Curl.getCount ⇒ <code>Number</code>
-Returns the number of handles currently open in the internal multi handle being used.
-
-**Kind**: static property of <code>[Curl](#module_node-libcurl.Curl)</code>  
-<a name="module_node-libcurl.Curl.getVersion"></a>
-
-#### Curl.getVersion ⇒ <code>String</code>
-Returns libcurl version string.
-The string shows which features are enabled,
- and the version of the libraries that libcurl was built with.
-
-**Kind**: static property of <code>[Curl](#module_node-libcurl.Curl)</code>  
 <a name="module_node-libcurl.Curl.global"></a>
 
 #### Curl.global : <code>enum</code>
@@ -805,7 +823,7 @@ Object with constants for the function [globalInit](#module_node-libcurl.Curl.gl
 
 ``CURL_GLOBAL_ALL`` becomes ``Curl.global.ALL``
 
-**Kind**: static enum property of <code>[Curl](#module_node-libcurl.Curl)</code>  
+**Kind**: static enum of <code>[Curl](#module_node-libcurl.Curl)</code>  
 **Read only**: true  
 **Properties**
 
@@ -818,24 +836,6 @@ Object with constants for the function [globalInit](#module_node-libcurl.Curl.gl
 | NOTHING | <code>Number</code> | <code>0</code> | 
 | ACK_EINTR | <code>Number</code> | <code></code> | 
 
-<a name="module_node-libcurl.Curl.globalInit"></a>
-
-#### Curl.globalInit ⇒ <code>Number</code>
-Calls [curl_global_init()](http://curl.haxx.se/libcurl/c/curl_global_init.html)
-
-**Kind**: static property of <code>[Curl](#module_node-libcurl.Curl)</code>  
-**Returns**: <code>Number</code> - Status code, see [code](#module_node-libcurl.Curl.code)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| flags | <code>Number</code> | Flag of options, see [global](#module_node-libcurl.Curl.global) |
-
-<a name="module_node-libcurl.Curl.globalCleanup"></a>
-
-#### Curl.globalCleanup
-Calls [curl_global_cleanup()](http://curl.haxx.se/libcurl/c/curl_global_cleanup.html)
-
-**Kind**: static property of <code>[Curl](#module_node-libcurl.Curl)</code>  
 <a name="module_node-libcurl.Curl.VERSION_NUM"></a>
 
 #### Curl.VERSION_NUM
@@ -1061,7 +1061,7 @@ This is basically the same than [curl_easy_cleanup()](http://curl.haxx.se/libcur
 <a name="module_node-libcurl.Easy.socket"></a>
 
 #### Easy.socket : <code>enum</code>
-**Kind**: static enum property of <code>[Easy](#module_node-libcurl.Easy)</code>  
+**Kind**: static enum of <code>[Easy](#module_node-libcurl.Easy)</code>  
 **Read only**: true  
 **Properties**
 
