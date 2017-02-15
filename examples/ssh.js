@@ -45,4 +45,4 @@ ret = ch.perform();
 
 ch.close();
 
-console.log( ret, ret == Curl.code.CURLE_OK, Easy.strError( ret ) );
+console.log( ret, ret === Curl.code.CURLE_OK, Easy.strError( ret ) );

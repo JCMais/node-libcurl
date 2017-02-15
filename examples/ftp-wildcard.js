@@ -86,7 +86,7 @@ function fileIsComing( fileInfo, remains ) {
             break;
     }
 
-    if ( fileInfo.fileType == Curl.filetype.FILE ) {
+    if ( fileInfo.fileType === Curl.filetype.FILE ) {
 
         /* do not transfer files > 1MB */
         if ( fileInfo.size > 1024*1024 ) {

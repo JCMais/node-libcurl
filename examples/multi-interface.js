@@ -66,7 +66,7 @@ multi.onMessage( function( err, handle, errCode ) {
     multi.removeHandle( handle );
     handle.close();
 
-    if ( ++finished == urls.length ) {
+    if ( ++finished === urls.length ) {
 
         console.log( 'Finished all requests!' );
         multi.close();

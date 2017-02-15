@@ -62,7 +62,7 @@ easy.onSocketEvent( function ( err, events ) {
         // ret is an array, with [0] being returnCode, and [1] the number of bytes sent.
 
         // just lets make sure the returnCode is correct and that all the data was sent.
-        if ( ret[0] != Curl.code.CURLE_OK || ret[1] != send.length ) {
+        if ( ret[0] !== Curl.code.CURLE_OK || ret[1] !== send.length ) {
 
             throw Error( 'Something went wrong.' );
         }
@@ -126,7 +126,7 @@ if ( shouldUseMultiHandle ) {
 
     var result = easy.perform();
 
-    if ( result != Curl.code.CURLE_OK ) {
+    if ( result !== Curl.code.CURLE_OK ) {
 
         throw Error( Easy.strError( result ) );
     }
