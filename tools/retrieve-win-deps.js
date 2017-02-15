@@ -19,14 +19,16 @@ var i, len,
     moduleInfo,
     paths = [],
     execConfig = {
-        cwd : path.resolve( __dirname, '..' )
+        cwd : path.resolve( __dirname + '/..' )
     },
     depsGypTarget = 'deps/curl-for-windows/curl.gyp:libcurl';
 
 //check if we are already in a git repo.
-exec( 'git rev-parse', function( err ) {
+exec( 'git rev-parse --show-toplevel', execConfig, function( err, stdout, stderr ) {
 
-    if ( !err ) {
+    // make sure we are the root git repo
+    //  path.relative will return an empty string if both paths are equal
+    if ( !err && path.relative( execConfig.cwd, stdout.trim() ) === '' ) {
 
         replaceTokensOnGypFiles();
 
@@ -37,11 +39,11 @@ exec( 'git rev-parse', function( err ) {
         parseSubmodulesConfig();
     }
 
-}, execConfig );
+});
 
 function parseSubmodulesConfig() {
 
-    exec( 'git config -f .gitmodules --get-regexp ^submodule\..*\.path$', function ( err, stdout ) {
+    exec( 'git config -f .gitmodules --get-regexp ^submodule\..*\.path$', execConfig, function ( err, stdout ) {
 
         if ( err ) {
 
@@ -63,11 +65,10 @@ function parseSubmodulesConfig() {
 
             var urlKey = moduleKey.replace( '.path', '.url' );
 
-            exec( 'git config -f .gitmodules --get ' + urlKey, initGitSubmodule.bind( this, modulePath ), execConfig );
+            exec( 'git config -f .gitmodules --get ' + urlKey, execConfig, initGitSubmodule.bind( this, modulePath ) );
         }
 
-    }, execConfig );
-
+    });
 }
 
 function initGitSubmodule( depsPath, err, url ) {
@@ -78,7 +79,7 @@ function initGitSubmodule( depsPath, err, url ) {
         process.exit( 1 );
     }
 
-    exec( 'git init -q && git submodule add ' + url.trim() + ' ' + depsPath, function ( depsPath, err ) {
+    exec( 'git init -q && git submodule add ' + url.trim() + ' ' + depsPath, execConfig, function ( depsPath, err ) {
 
         if ( err ) {
 
@@ -91,7 +92,7 @@ function initGitSubmodule( depsPath, err, url ) {
         if ( paths.length === 0 ) {
 
             //everything processed, configure
-            exec( 'git submodule update --init --recursive && python deps/curl-for-windows/configure.py',
+            exec( 'git submodule update --init --recursive && python deps/curl-for-windows/configure.py', execConfig,
                 function ( err ) {
 
                     if ( err ) {
@@ -104,7 +105,7 @@ function initGitSubmodule( depsPath, err, url ) {
                     replaceTokensOnGypFiles();
 
                     //remove git folder
-                    exec( 'rmdir .git /S /Q', function() {
+                    exec( 'rmdir .git /S /Q', execConfig, function() {
 
                         if ( err ) {
 
@@ -114,13 +115,12 @@ function initGitSubmodule( depsPath, err, url ) {
 
                         process.stdout.write( depsGypTarget );
 
-                    }, execConfig );
-                },
-                execConfig
+                    } );
+                }
             );
         }
 
-    }.bind( this, depsPath ), execConfig );
+    }.bind( this, depsPath ) );
 }
 
 
