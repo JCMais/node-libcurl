@@ -21,14 +21,13 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include <iostream>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #include "Easy.h"
 #include "Share.h"
 
 #include "make_unique.h"
-#include "string_format.h"
 
 // 36055 was allocated on Win64
 #define MEMORY_PER_HANDLE 30000
@@ -186,7 +185,11 @@ namespace NodeLibcurl {
 
         if ( retCurl != CURLE_OK ) {
 
-            ThrowError( "Failed to receive socket!", curl_easy_strerror( retCurl ) );
+            std::string errorMsg;
+
+            errorMsg += std::string( "Failed to receive socket. Reason: " ) + curl_easy_strerror( retCurl );
+
+            Nan::ThrowError( errorMsg.c_str() );
             return;
         }
 
@@ -196,7 +199,11 @@ namespace NodeLibcurl {
 
         if ( retUv < 0 ) {
 
-            ThrowError( "Failed to poll on connection socket.", UV_ERROR_STRING( retUv ) );
+            std::string errorMsg;
+
+            errorMsg += std::string( "Failed to poll on connection socket. Reason:" ) + UV_ERROR_STRING( retUv );
+
+            Nan::ThrowError( errorMsg.c_str() );
             return;
         }
 
@@ -208,12 +215,16 @@ namespace NodeLibcurl {
 
     void Easy::UnmonitorSockets()
     {
-        int uvRet;
-        uvRet = uv_poll_stop( this->socketPollHandle );
+        int retUv;
+        retUv = uv_poll_stop( this->socketPollHandle );
 
-        if ( uvRet < 0 ) {
+        if ( retUv < 0 ) {
 
-            ThrowError( "Failed to stop polling on socket.", UV_ERROR_STRING( uvRet ) );
+            std::string errorMsg;
+
+            errorMsg += std::string( "Failed to stop polling on socket. Reason: " ) + UV_ERROR_STRING( retUv );
+
+            Nan::ThrowError( errorMsg.c_str() );
             return;
         }
 
@@ -883,7 +894,7 @@ namespace NodeLibcurl {
                         // convert postDataKey to httppost id
                         Nan::Utf8String fieldName( postDataKey );
                         std::string optionName = std::string( *fieldName );
-                        stringToUpper( optionName );
+                        std::transform( optionName.begin(), optionName.end(), optionName.begin(), ::toupper );
 
                         for ( std::vector<CurlConstant>::const_iterator it = curlOptionHttpPost.begin(), end = curlOptionHttpPost.end(); it != end; ++it ) {
 
@@ -910,7 +921,9 @@ namespace NodeLibcurl {
                                 hasNewFileName = true;
                                 break;
                             case -1: // property not found
-                                std::string errorMsg = string_format( "Invalid property \"%s\" given. Valid properties are FILE, TYPE, CONTENTS, NAME and FILENAME.", *fieldName );
+                                std::string errorMsg;
+
+                                errorMsg += std::string( "Invalid property given: \"" ) + optionName + "\". Valid properties are file, type, contents, name and filename.";
                                 Nan::ThrowError( errorMsg.c_str() );
                                 return;
                         }
@@ -918,7 +931,9 @@ namespace NodeLibcurl {
                         // check if value is a string.
                         if ( !postDataValue->IsString() ) {
 
-                            std::string errorMsg = string_format( "Value for property \"%s\" must be a string.", *fieldName );
+                            std::string errorMsg;
+
+                            errorMsg += std::string( "Value for property \"" ) + optionName + "\" must be a string.";
                             Nan::ThrowTypeError( errorMsg.c_str() );
                             return;
                         }
@@ -970,11 +985,11 @@ namespace NodeLibcurl {
                         return;
                     }
 
-
-
                     if ( curlFormCode != CURL_FORMADD_OK ) {
 
-                        std::string errorMsg = string_format( "Error while adding field \"%s\" to post data. CURL_FORMADD error code: %d", *fieldName, static_cast<int>( curlFormCode ) );
+                        std::string errorMsg;
+
+                        errorMsg += std::string( "Error while adding field \"" ) + *fieldName + "\" to post data.";
                         Nan::ThrowError( errorMsg.c_str() );
                         return;
                     }

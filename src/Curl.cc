@@ -23,11 +23,12 @@
 #include "Curl.h"
 
 #include <iostream>
-#include <stdlib.h>
-#include <string.h>
+#include <algorithm>
+#include <string>
+#include <cstring>
+#include <cstdlib>
 
 #include "Easy.h"
-#include "string_format.h"
 
 
 namespace NodeLibcurl {
@@ -1072,7 +1073,7 @@ namespace NodeLibcurl {
 
             optionName = std::string( *optionNameV8 );
 
-            stringToUpper( optionName );
+            std::transform( optionName.begin(), optionName.end(), optionName.begin(), ::toupper );
 
         }
         else { //int
@@ -1116,21 +1117,6 @@ namespace NodeLibcurl {
 #endif
 
         Nan::AdjustExternalMemory( static_cast<int>( diff ) );
-    }
-
-    // Create an Exception with the given message and reason
-    void ThrowError( const char *message, const char *reason )
-    {
-        const char *what = message;
-        std::string msg;
-
-        if ( reason ) {
-
-            msg = string_format( "%s: %s", message, reason );
-            what = msg.c_str();
-        }
-
-        Nan::ThrowError( what );
     }
 
     // Return human readable string with the version number of libcurl and some of its important components (like OpenSSL version).

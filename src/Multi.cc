@@ -181,7 +181,11 @@ namespace NodeLibcurl {
 
         if ( code != CURLM_OK ) {
 
-            ThrowError( "curl_multi_socket_action Failed", curl_multi_strerror( code ) );
+            std::string errorMsg;
+
+            errorMsg += std::string( "curl_multi_socket_action failed. Reason: " ) + curl_multi_strerror( code );
+
+            Nan::ThrowError( errorMsg.c_str() );
             return;
         }
 
@@ -197,7 +201,11 @@ namespace NodeLibcurl {
 
         if ( code != CURLM_OK ) {
 
-            ThrowError( "curl_multi_socket_action Failed", curl_multi_strerror( code ) );
+            std::string errorMsg;
+
+            errorMsg += std::string( "curl_multi_socket_action failed. Reason: " ) + curl_multi_strerror( code );
+
+            Nan::ThrowError( errorMsg.c_str() );
             return;
         }
 
@@ -272,7 +280,7 @@ namespace NodeLibcurl {
         }
 
         // From https://curl.haxx.se/libcurl/c/CURLINFO_PRIVATE.html
-        // > Please note that for internal reasons, the value is returned as a char pointer, although effectively being a 'void *'. 
+        // > Please note that for internal reasons, the value is returned as a char pointer, although effectively being a 'void *'.
         char *ptr = nullptr;
         CURLcode code = curl_easy_getinfo( easy, CURLINFO_PRIVATE, &ptr );
         assert( ptr != nullptr && "Invalid handle returned from CURLINFO_PRIVATE." );

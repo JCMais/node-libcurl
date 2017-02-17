@@ -21,8 +21,8 @@
 * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #include <iostream>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #include "Share.h"
 #include "Curl.h"
@@ -87,7 +87,7 @@ namespace NodeLibcurl {
         if ( !info.IsConstructCall() ) {
             Nan::ThrowError( "You must use \"new\" to instantiate this object." );
         }
-        
+
         Share *obj = new Share();
 
         obj->Wrap( info.This() );
@@ -115,7 +115,7 @@ namespace NodeLibcurl {
 
         if ( !value->IsInt32() ) {
 
-            ThrowError( "Option value must be an integer." );
+            Nan::ThrowError( "Option value must be an integer." );
             return;
         }
 

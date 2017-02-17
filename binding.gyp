@@ -8,8 +8,7 @@
                 'src/Share.cc',
                 'src/Multi.cc',
                 'src/Curl.cc',
-                'src/CurlHttpPost.cc',
-                'src/string_format.cc'
+                'src/CurlHttpPost.cc'
             ],
             'include_dirs' : [
                 "<!(node -e \"require('nan')\")"
@@ -65,9 +64,6 @@
                 }, { # OS != "win"
                     'libraries': [
                         '<!@(node "<(module_root_dir)/tools/curl-config.js")'
-                    ],
-                    'sources!': [
-                        'src/strndup.c' #remove strndup function declaration on non-windows systems.
                     ]
                 }]
             ]
