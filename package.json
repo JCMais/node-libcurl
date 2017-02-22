@@ -21,6 +21,7 @@
   "main": "./index.js",
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
+    "postinstall": "rimraf ./deps ./build",
     "test": "mocha test --reporter spec",
     "docs": "jsdoc2md lib/*.js > api.md",
     "pregyp": "node-pre-gyp"
@@ -54,6 +55,7 @@
     "multiparty": "^4.1",
     "octonode": "^0.7",
     "progress": "^1.1",
+    "rimraf": "^2.6",
     "should": "^11.1"
   },
   "engines": {
