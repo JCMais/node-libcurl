@@ -39,8 +39,9 @@
     "debug": "^2.2",
     "nan": "~2.5.0",
     "node-gyp": "~3.5.0",
-    "node-pre-gyp": "~0.6",
-    "npmlog": "~4.0.2"
+    "node-pre-gyp": "~0.6.33",
+    "npmlog": "~4.0.2",
+    "rimraf": "~2.6.1"
   },
   "devDependencies": {
     "body-parser": "^1.12",
@@ -55,7 +56,6 @@
     "multiparty": "^4.1",
     "octonode": "^0.7",
     "progress": "^1.1",
-    "rimraf": "^2.6",
     "should": "^11.1"
   },
   "engines": {
