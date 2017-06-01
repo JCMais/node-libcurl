@@ -95,7 +95,7 @@ namespace NodeLibcurl {
 #if NODE_LIBCURL_VER_GE( 7, 32, 0 )
         curl_easy_setopt( this->ch, CURLOPT_XFERINFODATA, this );
 #endif
-        // no need to reset the _DATA option for the READ and WRITE callbacks, since they are reset on ResetRequiredHandleOptions()
+        // no need to reset the _DATA option for the READ, SEEK and WRITE callbacks, since they are reset on ResetRequiredHandleOptions()
 
         this->toFree = orig->toFree;
 
@@ -132,6 +132,9 @@ namespace NodeLibcurl {
 
         curl_easy_setopt( this->ch, CURLOPT_READFUNCTION, Easy::ReadFunction );
         curl_easy_setopt( this->ch, CURLOPT_READDATA,     this );
+
+        curl_easy_setopt( this->ch, CURLOPT_SEEKFUNCTION, Easy::SeekFunction );
+        curl_easy_setopt( this->ch, CURLOPT_SEEKDATA,     this );
 
         curl_easy_setopt( this->ch, CURLOPT_WRITEFUNCTION, Easy::WriteFunction );
         curl_easy_setopt( this->ch, CURLOPT_WRITEDATA,     this );
@@ -293,12 +296,12 @@ namespace NodeLibcurl {
         Easy *obj = static_cast<Easy*>( userdata );
         int32_t fd = obj->readDataFileDescriptor;
 
+        size_t n = size * nmemb;
+
         CallbacksMap::iterator it = obj->callbacks.find( CURLOPT_READFUNCTION );
 
         // Read callback was set, use it instead
         if ( it != obj->callbacks.end() ) {
-
-            size_t n = size * nmemb;
 
             Nan::HandleScope scope;
 
@@ -319,22 +322,27 @@ namespace NodeLibcurl {
                 std::memcpy( ptr, data, ret );
             }
 
-            // otherwise use the default read callback
+        // otherwise use the default read callback
         } else {
 
-            //abort early if we don't have a file descriptor
+            // abort early if we don't have a file descriptor
             if ( fd == -1 ) {
                 return CURL_READFUNC_ABORT;
             }
 
+            // get the offset
+            curl_off_t offset = obj->readDataOffset;
+            if  ( offset > 0 ){
+                // increment it for the next read
+                obj->readDataOffset += n;
+            }
+
 #if UV_VERSION_MAJOR < 1
-            ret = uv_fs_read( uv_default_loop(), &readReq, fd, ptr, 1, -1, NULL );
+            ret = uv_fs_read( uv_default_loop(), &readReq, fd, ptr, 1, offset, NULL );
 #else
-            unsigned int len = (unsigned int) ( size * nmemb );
+            uv_buf_t uvbuf = uv_buf_init( ptr, (unsigned int)( n ) );
 
-            uv_buf_t uvbuf = uv_buf_init( ptr, len );
-
-            ret = uv_fs_read( uv_default_loop(), &readReq, fd, &uvbuf, 1, -1, NULL );
+            ret = uv_fs_read( uv_default_loop(), &readReq, fd, &uvbuf, 1, offset, NULL );
 #endif
         }
 
@@ -344,6 +352,54 @@ namespace NodeLibcurl {
         }
 
         return static_cast<size_t>( ret );
+    }
+
+    size_t Easy::SeekFunction( void *userdata, curl_off_t offset, int origin )
+    {
+        Easy *obj = static_cast<Easy*>( userdata );
+
+        int32_t retValInt = CURL_SEEKFUNC_FAIL;
+
+        CallbacksMap::iterator it = obj->callbacks.find( CURLOPT_READFUNCTION );
+
+        // Read callback was set, look for a seek callback
+        if ( it != obj->callbacks.end() ) {
+            it = obj->callbacks.find( CURLOPT_SEEKFUNCTION );
+
+            // Seek callback was set, use it instead
+            if ( it != obj->callbacks.end() ) {
+
+                Nan::HandleScope scope;
+
+                v8::Local<v8::Uint32> offsetArg = Nan::New<v8::Uint32>( static_cast<uint32_t>( offset ) );
+                v8::Local<v8::Uint32> originArg = Nan::New<v8::Uint32>( static_cast<uint32_t>( origin ) );
+                v8::Local<v8::Value> argv[] = { offsetArg, originArg };
+
+                v8::Local<v8::Value> retVal = it->second->Call( obj->handle(), 2, argv );
+
+                if ( !retVal->IsInt32() ) {
+
+                    Nan::ThrowTypeError( "Return value from the SEEKFUNCTION callback must be an integer." );
+                }
+                else {
+
+                    retValInt = retVal->Int32Value();
+                }
+
+            // otherwise we can't seek directly
+            } else {
+
+                retValInt = CURL_SEEKFUNC_CANTSEEK;
+            }
+
+        // otherwise use the default seek callback
+        } else {
+
+            obj->readDataOffset = offset;
+            retValInt = CURL_SEEKFUNC_OK;
+        }
+
+        return retValInt;
     }
 
     size_t Easy::OnData( char *data, size_t size, size_t nmemb )
@@ -1234,6 +1290,19 @@ namespace NodeLibcurl {
                     if ( !isNull ) {
 
                         obj->callbacks[CURLOPT_READFUNCTION].reset( new Nan::Callback( callback ) );
+                    }
+
+                    break;
+
+                case CURLOPT_SEEKFUNCTION:
+
+                    setOptRetCode = CURLE_OK;
+
+                    obj->callbacks.erase( CURLOPT_SEEKFUNCTION );
+
+                    if ( !isNull ) {
+
+                        obj->callbacks[CURLOPT_SEEKFUNCTION].reset( new Nan::Callback( callback ) );
                     }
 
                     break;
