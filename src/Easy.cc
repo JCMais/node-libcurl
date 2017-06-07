@@ -332,7 +332,7 @@ namespace NodeLibcurl {
 
             // get the offset
             curl_off_t offset = obj->readDataOffset;
-            if  ( offset > 0 ){
+            if  ( offset >= 0 ){
                 // increment it for the next read
                 obj->readDataOffset += n;
             }
