@@ -1643,6 +1643,7 @@ namespace NodeLibcurl {
         obj->toFree = std::make_shared<Easy::ToFree>();
 
         obj->readDataFileDescriptor = -1;
+        obj->readDataOffset = -1;
 
         info.GetReturnValue().Set( info.This() );
     }
