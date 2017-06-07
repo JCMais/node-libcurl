@@ -338,7 +338,7 @@ namespace NodeLibcurl {
             }
 
 #if UV_VERSION_MAJOR < 1
-            ret = uv_fs_read( uv_default_loop(), &readReq, fd, ptr, 1, offset, NULL );
+            ret = uv_fs_read( uv_default_loop(), &readReq, fd, ptr, n, offset, NULL );
 #else
             uv_buf_t uvbuf = uv_buf_init( ptr, (unsigned int)( n ) );
 
