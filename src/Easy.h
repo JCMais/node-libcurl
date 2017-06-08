@@ -78,7 +78,8 @@ namespace NodeLibcurl {
         bool isCbProgressAlreadyAborted = false; // we need this flag because of https://github.com/curl/curl/commit/907520c4b93616bddea15757bbf0bfb45cde8101
         bool isMonitoringSockets = false;
 
-        int32_t readDataFileDescriptor = -1; //READDATA sets that
+        int32_t readDataFileDescriptor = -1; // READDATA sets that
+        curl_off_t readDataOffset = -1; // SEEKDATA sets that
         uint32_t id = counter++;
 
         // static methods
@@ -129,6 +130,7 @@ namespace NodeLibcurl {
 
         // cURL callbacks
         static size_t ReadFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
+        static size_t SeekFunction( void *userdata, curl_off_t offset, int origin );
         static size_t HeaderFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
         static size_t WriteFunction( char *ptr, size_t size, size_t nmemb, void *userdata );
 
