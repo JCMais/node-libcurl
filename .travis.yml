@@ -30,63 +30,63 @@ cache:
 git:
   submodules: false
   before_install:
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
-      export CC=/usr/bin/gcc-${GCC_VERSION};
-      export CXX=/usr/bin/g++-${GCC_VERSION};
-    fi
-  # Update openssl on osx, and add it to the Path
-  # When configuring openssl should we call ths directly? env PKG_CONFIG_PATH=/opt/OpenSSL/lib/pkgconfig ./configure --with-ssl
-  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-      brew update;
-      brew reinstall -s libtool;
-      brew install openssl;
-      brew outdated openssl || brew upgrade openssl;
-      brew link --force openssl;
-      export PATH=/usr/local/opt/openssl/bin:${PATH};
-      export PKG_CONFIG_PATH=/usr/local/opt/openssl/lib/pkgconfig;
-    fi
-  - export PATH=$HOME/bin:$PATH
-  - rm -rf ~/.nvm
-  - git clone https://github.com/creationix/nvm.git ~/.nvm
-  - source ~/.nvm/nvm.sh
-  - nvm install $TRAVIS_NODE_VERSION
-  - npm install npm
-  - mv node_modules npm
-  - export PATH="./node_modules/.bin/:$PATH"
-  # output versions
-  - npm/.bin/npm --version
-  - node --version
-  - node tools/curl-config.js
-  - if [[ $TRAVIS_OS_NAME == "linux" ]];
-      then apt-cache policy openssl;
-    fi
-  - openssl version -a
-  - if [[ $LIBCURL_VERSION_TAG == 'LATEST' ]]; then
-      TAG=$( git ls-remote --tags https://github.com/bagder/curl.git |
-      awk '{print $2}' | grep 'curl-' | grep -v '[0-9][_-][abp]' |
-      grep -v '{' | sort -t_ -k 1.16,1n -k 2,2n -k 3,3n -k 4,4n |
-      sed -n 's@.*\(curl-[0-9_]\)@\1@p' | tail -n1 );
-    else
-      TAG=${LIBCURL_VERSION_TAG};
-    fi
-  - mkdir -p $HOME/curl-source
-  - cd $HOME/curl-source
-  - if [[ ! -d "$TAG" ]]; then
-      git clone --branch "$TAG" --depth 1 https://github.com/bagder/curl.git "$TAG";
-    fi
-  - cd "$TAG"
-  - ./buildconf && ./configure --prefix=$HOME --with-ssl && make && make install
-  - cd $TRAVIS_BUILD_DIR
-  # output curl version info
-  - curl --version
-  - curl-config --version
-  - curl-config --features
-  - curl-config --protocols
-  - PUBLISH_BINARY=false
-  - COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
-  - if [[ $TRAVIS_BRANCH == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
-      PUBLISH_BINARY=true;
-    fi
+    - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
+        export CC=/usr/bin/gcc-${GCC_VERSION};
+        export CXX=/usr/bin/g++-${GCC_VERSION};
+      fi
+    # Update openssl on osx, and add it to the Path
+    # When configuring openssl should we call ths directly? env PKG_CONFIG_PATH=/opt/OpenSSL/lib/pkgconfig ./configure --with-ssl
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+        brew update;
+        brew reinstall -s libtool;
+        brew install openssl;
+        brew outdated openssl || brew upgrade openssl;
+        brew link --force openssl;
+        export PATH=/usr/local/opt/openssl/bin:${PATH};
+        export PKG_CONFIG_PATH=/usr/local/opt/openssl/lib/pkgconfig;
+      fi
+    - export PATH=$HOME/bin:$PATH
+    - rm -rf ~/.nvm
+    - git clone https://github.com/creationix/nvm.git ~/.nvm
+    - source ~/.nvm/nvm.sh
+    - nvm install $TRAVIS_NODE_VERSION
+    - npm install npm
+    - mv node_modules npm
+    - export PATH="./node_modules/.bin/:$PATH"
+    # output versions
+    - npm/.bin/npm --version
+    - node --version
+    - node tools/curl-config.js
+    - if [[ $TRAVIS_OS_NAME == "linux" ]];
+        then apt-cache policy openssl;
+      fi
+    - openssl version -a
+    - if [[ $LIBCURL_VERSION_TAG == 'LATEST' ]]; then
+        TAG=$( git ls-remote --tags https://github.com/bagder/curl.git |
+        awk '{print $2}' | grep 'curl-' | grep -v '[0-9][_-][abp]' |
+        grep -v '{' | sort -t_ -k 1.16,1n -k 2,2n -k 3,3n -k 4,4n |
+        sed -n 's@.*\(curl-[0-9_]\)@\1@p' | tail -n1 );
+      else
+        TAG=${LIBCURL_VERSION_TAG};
+      fi
+    - mkdir -p $HOME/curl-source
+    - cd $HOME/curl-source
+    - if [[ ! -d "$TAG" ]]; then
+        git clone --branch "$TAG" --depth 1 https://github.com/bagder/curl.git "$TAG";
+      fi
+    - cd "$TAG"
+    - ./buildconf && ./configure --prefix=$HOME --with-ssl && make && make install
+    - cd $TRAVIS_BUILD_DIR
+    # output curl version info
+    - curl --version
+    - curl-config --version
+    - curl-config --features
+    - curl-config --protocols
+    - PUBLISH_BINARY=false
+    - COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
+    - if [[ $TRAVIS_BRANCH == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
+        PUBLISH_BINARY=true;
+      fi
 install:
   - npm/.bin/npm install --build-from-source --loglevel=http
   - npm/.bin/npm test
