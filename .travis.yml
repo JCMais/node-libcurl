@@ -41,6 +41,11 @@ before_install:
     brew install openssl;
     brew outdated openssl || brew upgrade openssl;
     brew link --force openssl;
+    # Add the installed openssl to the PATH
+    export PATH="/usr/local/opt/openssl/bin:$PATH";
+    # Should we use it directly
+    #  when configuring openssl? env PKG_CONFIG_PATH=/opt/OpenSSL/lib/pkgconfig ./configure --with-ssl
+    export PKG_CONFIG_PATH=/usr/local/opt/openssl/lib/pkgconfig;
   fi;
 - export PATH=$HOME/bin:$PATH
 - rm -rf ~/.nvm
@@ -70,7 +75,7 @@ before_install:
     git clone --branch "$TAG" --depth 1 https://github.com/bagder/curl.git "$TAG";
   fi;
 - cd "$TAG"
-- ./buildconf && ./configure --prefix=$HOME && make && make install
+- ./buildconf && ./configure --prefix=$HOME --with-ssl && make && make install
 - cd $TRAVIS_BUILD_DIR
 # output curl version info
 - curl --version
