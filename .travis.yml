@@ -50,7 +50,7 @@ before_install:
   - git clone https://github.com/creationix/nvm.git ~/.nvm
   - source ~/.nvm/nvm.sh
   - nvm install $TRAVIS_NODE_VERSION
-  - npm install npm
+  - npm install npm@4.6.1
   - mv node_modules npm
   - export PATH="./node_modules/.bin/:$PATH"
   # output versions
@@ -88,7 +88,6 @@ before_install:
       PUBLISH_BINARY=true;
     fi
 install:
-  - npm/.bin/npm install -g node-pre-gyp
   - npm/.bin/npm install --build-from-source --loglevel=http
   - npm/.bin/npm test
 before_script:
