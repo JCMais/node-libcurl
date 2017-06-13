@@ -88,6 +88,7 @@ before_install:
       PUBLISH_BINARY=true;
     fi
 install:
+  - npm/.bin/npm install -g node-pre-gyp
   - npm/.bin/npm install --build-from-source --loglevel=http
   - npm/.bin/npm test
 before_script:
