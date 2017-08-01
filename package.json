@@ -26,7 +26,7 @@
     "docs": "jsdoc2md lib/*.js > api.md",
     "pregyp": "node-pre-gyp"
   },
-  "__binary": {
+  "binary": {
     "module_name": "node_libcurl",
     "module_path": "./lib/binding/",
     "host": "https://github.com/JCMais/node-libcurl/releases/download",
