@@ -20,7 +20,7 @@
   },
   "main": "./index.js",
   "scripts": {
-    "__install": "node-pre-gyp install --fallback-to-build",
+    "install": "node-pre-gyp build",
     "postinstall": "rimraf ./deps ./build",
     "test": "mocha test --reporter spec",
     "docs": "jsdoc2md lib/*.js > api.md",
