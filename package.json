@@ -37,7 +37,7 @@
   "dependencies": {
     "debug": "^2.2",
     "nan": "~2.5.0",
-    "node-gyp": "~3.5.0",
+    "node-gyp": "~3.6.2",
     "node-pre-gyp": "~0.6",
     "npmlog": "~4.0.2"
   },
