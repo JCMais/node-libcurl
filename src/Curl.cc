@@ -372,6 +372,10 @@ namespace NodeLibcurl {
 
         { "SSLVERSION", CURLOPT_SSLVERSION },
 
+    #if NODE_LIBCURL_VER_GE( 7, 54, 0 )
+        { "SUPPRESS_CONNECT_HEADERS", CURLOPT_SUPPRESS_CONNECT_HEADERS },
+    #endif
+
     #if NODE_LIBCURL_VER_GE( 7, 49, 0 )
         { "TCP_FASTOPEN", CURLOPT_TCP_FASTOPEN },
     #endif
