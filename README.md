@@ -117,7 +117,11 @@ If you want to install using a different version of libcurl, the same instructio
 ### Windows
 
 If installing using a prebuilt binary you only need to have the [visual c++ 2013 runtime library](https://www.microsoft.com/en-us/download/details.aspx?id=40784).
-If building from source, you need to have Python 2.7, [Visual Studio >=2013](http://www.visualstudio.com/downloads/download-visual-studio-vs) and [git](https://desktop.github.com/)
+If building from source, you need to have Python 2.7 and
+[Visual Studio >=2013](http://www.visualstudio.com/downloads/download-visual-studio-vs), you can get all that by running:
+```sh
+npm install --global --production windows-build-tools
+```
 
 Currently there is no support to use other libcurl version than the one provided by the [curl-for-windows](https://github.com/JCMais/curl-for-windows) submodule.
 
@@ -139,7 +143,7 @@ file directly in the ``node-gyp`` inside the ``node_modules`` folder of your pro
 
 Currently there are no prebuilt binaries for electron, to install node-libcurl, do the following:
 
- ```bash
+ ```sh
  npm install node-libcurl --runtime=electron --target=1.0.2 --disturl=https://atom.io/download/atom-shell --arch=x64 --save
  ```
  ``--target`` says you want to build for the electron version 0.34.1.
@@ -154,4 +158,19 @@ runtime = electron
 target = 1.0.2
 target_arch = x64
 dist_url = https://atom.io/download/atom-shell
+```
+
+## Contributing
+
+If on Windows, run:
+```sh
+$ node tools/update-deps.js
+```
+Install the node modules:
+```sh
+$ npm install
+```
+Build node-libcurl:
+```sh
+$ npm run pregyp rebuild
 ```
