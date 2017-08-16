@@ -1489,7 +1489,8 @@ namespace NodeLibcurl {
             Nan::Utf8String msg( tryCatch.Message()->Get() );
 
             std::string errCode = std::string( *msg );
-            errCode.erase( std::remove_if( errCode.begin(), errCode.end(), std::not1( std::ptr_fun( std::isdigit ) ) ), errCode.end() );
+            // based on this interesting answer https://stackoverflow.com/a/27538478/710693
+            errCode.erase( std::remove_if( errCode.begin(), errCode.end(), [](unsigned char c) { return !std::isdigit(c); } ), errCode.end() );
 
             code = static_cast<CURLcode>( std::stoi( errCode ) );
         }
