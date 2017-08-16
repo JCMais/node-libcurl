@@ -1,6 +1,6 @@
 {
-  "name": "node-libcurl",
-  "version": "1.1.0",
+  "name": "insomnia-node-libcurl",
+  "version": "1.2.0",
   "author": "Jonathan Cardoso <me@jonathancardoso.com>",
   "description": "Node bindings for libcurl. Based on the work from node-curl.",
   "keywords": [
@@ -21,6 +21,7 @@
   "main": "./index.js",
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
+    "postinstall": "rimraf ./deps ./build",
     "test": "mocha test --reporter spec",
     "docs": "jsdoc2md lib/*.js > api.md",
     "pregyp": "node-pre-gyp"
@@ -37,6 +38,7 @@
   "dependencies": {
     "debug": "^2.2",
     "nan": "~2.5.0",
+    "rimraf": "~2.6.1",
     "node-gyp": "~3.6.2",
     "node-pre-gyp": "~0.6",
     "npmlog": "~4.0.2"
