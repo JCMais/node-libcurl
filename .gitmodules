@@ -1,5 +1,5 @@
 [submodule "deps/curl-for-windows"]
 	path = deps/curl-for-windows
-	url = https://github.com/JCMais/curl-for-windows.git
+	url = https://github.com/getinsomnia/curl-for-windows.git
 	ignore = dirty
 	branch = 7228c9916cdcac5f9abee63fc86d2a49da5834b5
