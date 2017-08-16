@@ -38,10 +38,10 @@
   "dependencies": {
     "debug": "^2.2",
     "nan": "~2.5.0",
-    "node-gyp": "~3.5.0",
-    "node-pre-gyp": "~0.6.33",
-    "npmlog": "~4.0.2",
-    "rimraf": "~2.6.1"
+    "rimraf": "~2.6.1",
+    "node-gyp": "~3.6.2",
+    "node-pre-gyp": "~0.6",
+    "npmlog": "~4.0.2"
   },
   "devDependencies": {
     "body-parser": "^1.12",
