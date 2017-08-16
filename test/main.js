@@ -22,6 +22,7 @@
  */
 /*eslint no-unused-vars:0*/
 var should = require( 'should' );
+var Curl   = require( '../lib/Curl' );
 
 function importTest( name, path, only, skip ) {
 
@@ -57,6 +58,7 @@ function importTest( name, path, only, skip ) {
 }
 
 describe( 'Curl', function () {
+    console.log('Running tests for libcurl:', Curl.getVersion(), Curl.VERSION_NUM);
     importTest( 'Connection timeout', './curl/connection-timeout' );
     importTest( 'setOpt()', './curl/setopt' );
     importTest( 'getInfo()', './curl/getinfo' );

@@ -1492,7 +1492,8 @@ namespace NodeLibcurl {
             // based on this interesting answer https://stackoverflow.com/a/27538478/710693
             errCode.erase( std::remove_if( errCode.begin(), errCode.end(), [](unsigned char c) { return !std::isdigit(c); } ), errCode.end() );
 
-            code = static_cast<CURLcode>( std::stoi( errCode ) );
+            // 43 is CURLE_BAD_FUNCTION_ARGUMENT
+            code = static_cast<CURLcode>( std::stoi( errCode.length() > 0 ? errCode : "43" ) );
         }
 
         v8::Local<v8::Object> ret = Nan::New<v8::Object>();

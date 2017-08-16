@@ -1,7 +1,7 @@
 os:
   - linux
   - osx
-osx_image: xcode8.3
+osx_image: xcode7.3
 language: cpp
 sudo: false
 addons:
@@ -21,18 +21,25 @@ env:
     - TRAVIS_NODE_VERSION="4" LIBCURL_VERSION_TAG=LATEST
     - TRAVIS_NODE_VERSION="6" LIBCURL_VERSION_TAG=LATEST
     - TRAVIS_NODE_VERSION="8" LIBCURL_VERSION_TAG=LATEST
-    - TRAVIS_NODE_VERSION="4" LIBCURL_VERSION_TAG="curl-7_30_0"
-    - TRAVIS_NODE_VERSION="6" LIBCURL_VERSION_TAG="curl-7_30_0"
-    - TRAVIS_NODE_VERSION="8" LIBCURL_VERSION_TAG="curl-7_30_0"
+    - TRAVIS_NODE_VERSION="4" LIBCURL_VERSION_TAG="curl-7_32_0"
+    - TRAVIS_NODE_VERSION="6" LIBCURL_VERSION_TAG="curl-7_32_0"
+    - TRAVIS_NODE_VERSION="8" LIBCURL_VERSION_TAG="curl-7_32_0"
 cache:
   directories:
     - $HOME/curl-source
+    - $HOME/.node-gyp
+    - $HOME/.npm
+    - node_modules
+
 git:
   submodules: false
 before_install:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
-      export CC=/usr/bin/gcc-${GCC_VERSION};
-      export CXX=/usr/bin/g++-${GCC_VERSION};
+      export CC="gcc-${GCC_VERSION}";
+      export CXX="g++-${GCC_VERSION}";
+      export LINK="gcc-${GCC_VERSION}";
+      export LINKXX="g++-${GCC_VERSION}";
+      export LDFLAGS="-Wl,-rpath,${HOME}/lib";
     fi
   # Update openssl on osx, and add it to the Path
   # When configuring openssl should we call ths directly? env PKG_CONFIG_PATH=/opt/OpenSSL/lib/pkgconfig ./configure --with-ssl
@@ -56,7 +63,6 @@ before_install:
   # output versions
   - npm/.bin/npm --version
   - node --version
-  - node tools/curl-config.js
   - if [[ $TRAVIS_OS_NAME == "linux" ]];
       then apt-cache policy openssl;
     fi
@@ -80,15 +86,25 @@ before_install:
   # output curl version info
   - curl --version
   - curl-config --version
-  - curl-config --features
-  - curl-config --protocols
+  - curl-config --libs
+  - curl-config --static-libs
+  - curl-config --prefix
+  - curl-config --cflags
   - PUBLISH_BINARY=false
   - COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
   - if [[ $TRAVIS_BRANCH == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
       PUBLISH_BINARY=true;
     fi
 install:
-  - npm/.bin/npm install --build-from-source --loglevel=http
+  - node tools/curl-config.js --version
+  - node tools/curl-config.js --libs
+  - node tools/curl-config.js --static-libs
+  - node tools/curl-config.js --prefix
+  - node tools/curl-config.js --cflags
+  - export PKG_CONFIG_PATH=/home/travis/lib/pkgconfig
+  - pkg-config --cflags libcurl
+  - pkg-config --libs libcurl
+  - npm/.bin/npm install --build-from-source --loglevel=info
   - npm/.bin/npm test
 before_script:
   - if [[ $PUBLISH_BINARY == true && $LIBCURL_VERSION_TAG == LATEST ]]; then

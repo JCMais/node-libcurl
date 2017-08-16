@@ -104,15 +104,17 @@ if you are running debian for example, you must install the ``libcurl4-openssl-d
 
 If you don't want to use the libcurl version shipped with your system, since it's probably very old
 (debian 7 uses libcurl 7.26 which is more than 3 years old, and had more than 1000 bugfixes already),
-you can install libcurl from source, the addon will pick the libcurl info using the ``curl-config`` tool,
-that way you only need to make sure that the libcurl you installed is in the path and in higher priority
-than the system one.
+you can install libcurl from source, for the addon to use that libcurl version intead, you need to make sure that:
+ 
+1. ``curl-config`` tool is in the PATH,
+2. You have to setup LDFLAGS so that it poins to the correct directory where the curl lib files are:
+```sh
+export LDFLAGS="-Wl,-rpath,${LIBCURL_PREFIX}/lib";
+```
 
 ### OS X
 
 You need to have installed OS X >=10.8 and xcode >=4.5
-
-If you want to install using a different version of libcurl, the same instructions for linux applies.
 
 ### Windows
 

@@ -94,8 +94,7 @@ it( 'should get all infos', function ( done ) {
 
         for ( var infoId in Curl.info ) {
 
-            if ( Curl.info.hasOwnProperty( infoId ) ) {
-
+            if ( Curl.info.hasOwnProperty( infoId ) && infoId !== 'debug' ) {
                 curl.getInfo( infoId );
             }
         }

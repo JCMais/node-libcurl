@@ -735,7 +735,7 @@ namespace NodeLibcurl {
         { "HTTPAUTH_AVAIL", CURLINFO_HTTPAUTH_AVAIL },
         { "HTTP_CONNECTCODE", CURLINFO_HTTP_CONNECTCODE },
 
-    #if NODE_LIBCURL_VER_GE( 7, 50, 0 )
+    #if NODE_LIBCURL_VER_GE( 7, 50, 1 )
         { "HTTP_VERSION", CURLINFO_HTTP_VERSION },
     #endif
 
