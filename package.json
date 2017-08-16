@@ -1,6 +1,6 @@
 {
   "name": "node-libcurl",
-  "version": "1.1.0",
+  "version": "1.2.1",
   "author": "Jonathan Cardoso <me@jonathancardoso.com>",
   "description": "Node bindings for libcurl. Based on the work from node-curl.",
   "keywords": [
@@ -10,13 +10,13 @@
     "node-libcurl"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/JCMais/node-libcurl",
+  "homepage": "https://github.com/getinsomnia/node-libcurl",
   "repository": {
     "type": "git",
-    "url": "git://github.com/JCMais/node-libcurl.git"
+    "url": "git://github.com/getinsomnia/node-libcurl.git"
   },
   "bugs": {
-    "url": "https://github.com/JCMais/node-libcurl/issues"
+    "url": "https://github.com/getinsomnia/node-libcurl/issues"
   },
   "main": "./index.js",
   "scripts": {
@@ -29,7 +29,7 @@
   "binary": {
     "module_name": "node_libcurl",
     "module_path": "./lib/binding/",
-    "host": "https://github.com/JCMais/node-libcurl/releases/download",
+    "host": "https://github.com/getinsomnia/node-libcurl/releases/download",
     "remote_path": "./v{version}/"
   },
   "bundledDependencies": [
