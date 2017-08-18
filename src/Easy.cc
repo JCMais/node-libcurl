@@ -336,13 +336,13 @@ namespace NodeLibcurl {
 
             // get the offset
             curl_off_t offset = obj->readDataOffset;
-            if  ( offset > 0 ){
+            if  ( offset >= 0 ){
                 // increment it for the next read
                 obj->readDataOffset += n;
             }
 
 #if UV_VERSION_MAJOR < 1
-            ret = uv_fs_read( uv_default_loop(), &readReq, fd, ptr, 1, offset, NULL );
+            ret = uv_fs_read( uv_default_loop(), &readReq, fd, ptr, n, offset, NULL );
 #else
             uv_buf_t uvbuf = uv_buf_init( ptr, (unsigned int)( n ) );
 
@@ -1651,6 +1651,7 @@ namespace NodeLibcurl {
         obj->toFree = std::make_shared<Easy::ToFree>();
 
         obj->readDataFileDescriptor = -1;
+        obj->readDataOffset = -1;
 
         info.GetReturnValue().Set( info.This() );
     }
