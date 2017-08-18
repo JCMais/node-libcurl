@@ -1,6 +1,6 @@
 //only run on win32
 if ( process.platform !== 'win32' ) {
-    process.exit( 0 );
+  process.exit( 0 );
 }
 
 /*
@@ -11,147 +11,121 @@ if ( process.platform !== 'win32' ) {
  */
 
 var exec = require( 'child_process' ).exec,
-    path = require( 'path' ),
-    fs   = require( 'fs' );
+  path = require( 'path' ),
+  fs   = require( 'fs' );
 
-var i, len,
-    moduleKey, modulePath,
-    moduleInfo,
-    paths = [],
-    execConfig = {
+var execConfig = {
         cwd : path.resolve( __dirname + '/..' )
     },
-    depsGypTarget = 'deps/curl-for-windows/curl.gyp:libcurl';
+    depsGypTarget = 'curl-for-windows/curl.gyp:libcurl';
 
-//check if we are already in a git repo.
+var fileWithDepsTag = 'LIBCURL_VERSION_WIN_DEPS';
+var depsRepo = 'https://github.com/JCMais/curl-for-windows.git';
+
+// Check if we are on the root git dir. That is, someone is running this
+//  directly from the node-libcurl repo.
 exec( 'git rev-parse --show-toplevel', execConfig, function( err, stdout, stderr ) {
 
-    // make sure we are the root git repo
-    //  path.relative will return an empty string if both paths are equal
-    if ( !err && path.relative( execConfig.cwd, stdout.trim() ) === '' ) {
+  // Make sure we are the root git repo
+  //  path.relative will return an empty string if both paths are equal
+  if ( !err && path.relative( execConfig.cwd, stdout.trim() ) === '' ) {
 
-        replaceTokensOnGypFiles();
+    replaceTokensOnGypFiles( path.resolve( __dirname, '..', 'deps', 'curl-for-windows' ) );
+    process.stdout.write( 'deps/' + depsGypTarget );
 
-        process.stdout.write( depsGypTarget );
+  } else {
 
-    } else {
-
-        parseSubmodulesConfig();
-    }
+    retrieveWinDeps();
+  }
 
 });
 
-function parseSubmodulesConfig() {
+function retrieveWinDeps() {
+  var depsTag;
 
-    exec( 'git config -f .gitmodules --get-regexp ^submodule\..*\.path$', execConfig, function ( err, stdout ) {
+  if ( !fs.existsSync( fileWithDepsTag ) ) {
+    console.error( 'File: ', fileWithDepsTag, ' not found.' );
+    process.exit( 1 );
+  }
 
-        if ( err ) {
+  depsTag = fs.readFileSync( fileWithDepsTag ).toString().replace(/\n|\s/g, '');
 
-            console.error( err.toString() );
-            process.exit( 1 );
-        }
-
-        var submodules = stdout.split( /\r?\n|\r/g );
-
-        submodules.splice( -1, 1 );
-
-        for ( i = 0, len = submodules.length; i < len; i++ ) {
-
-            moduleInfo = submodules[i].split( ' ' );
-            moduleKey = moduleInfo[0];
-            modulePath= moduleInfo[1];
-
-            paths.push(  modulePath );
-
-            var urlKey = moduleKey.replace( '.path', '.url' );
-
-            exec( 'git config -f .gitmodules --get ' + urlKey, execConfig, initGitSubmodule.bind( this, modulePath ) );
-        }
-
-    });
-}
-
-function initGitSubmodule( depsPath, err, url ) {
+  exec( 'git clone --branch ' + depsTag + ' ' + depsRepo, execConfig, function ( err, stdout ) {
 
     if ( err ) {
 
-        console.error( err.toString() );
-        process.exit( 1 );
-    }
+      if ( err.toString().indexOf( 'already exists and is not an empty directory' ) !== -1 ) {
 
-    exec( 'git init -q && git submodule add ' + url.trim() + ' ' + depsPath, execConfig, function ( depsPath, err ) {
-
-        if ( err ) {
-
+        exec( 'rmdir curl-for-windows /S /Q', execConfig, function( err ) {
+          if ( err ) {
             console.error( err.toString() );
             process.exit( 1 );
+          }
+
+          retrieveWinDeps();
+        });
+
+      } else {
+
+        console.error( err.toString() );
+        process.exit( 1 );
+      }
+
+    } else {
+
+      exec( 'cd curl-for-windows && git submodule update --init && python configure.py', execConfig, function ( err ) {
+
+        if ( err ) {
+          console.error( err.toString() );
+          process.exit( 1 );
         }
 
-        paths.splice( paths.indexOf( depsPath ), 1 );
+        // Grab gyp config files and replace <(library) with static_library
+        replaceTokensOnGypFiles( path.resolve( __dirname, '..', 'curl-for-windows' ) );
 
-        if ( paths.length === 0 ) {
+        // remove git folder
+        exec( 'rmdir curl-for-windows\\.git /S /Q', execConfig, function( err ) {
 
-            //everything processed, configure
-            exec( 'git submodule update --init --recursive && python deps/curl-for-windows/configure.py', execConfig,
-                function ( err ) {
+          if ( err ) {
+            console.error( err.toString() );
+            process.exit( 1 );
+          }
 
-                    if ( err ) {
-
-                        console.error( err.toString() );
-                        process.exit( 1 );
-                    }
-
-                    //Grab gyp config files and replace <(library) with static_library
-                    replaceTokensOnGypFiles();
-
-                    //remove git folder
-                    exec( 'rmdir .git /S /Q', execConfig, function() {
-
-                        if ( err ) {
-
-                            console.error( err.toString() );
-                            process.exit( 1 );
-                        }
-
-                        process.stdout.write( depsGypTarget );
-
-                    } );
-                }
-            );
-        }
-
-    }.bind( this, depsPath ) );
+          process.stdout.write( depsGypTarget );
+        });
+      });
+    }
+  });
 }
 
+function replaceTokensOnGypFiles( dir ) {
 
-function replaceTokensOnGypFiles() {
+  var filesToCheck = [ 'libssh2.gyp', 'openssl/openssl.gyp', 'zlib.gyp', 'curl.gyp' ],
+    search = /<\(library\)/g,
+    replacement = 'static_library',
+    i, len, file;
 
-    var filesToCheck = [ 'libssh2.gyp', 'openssl/openssl.gyp', 'zlib.gyp', 'curl.gyp' ],
-        search = /<\(library\)/g,
-        replacement = 'static_library',
-        i, len, file;
+  for ( i = 0, len = filesToCheck.length; i < len; i++ ) {
 
-    for ( i = 0, len = filesToCheck.length; i < len; i++ ) {
+    file = path.resolve( dir, filesToCheck[i] );
 
-        file = path.resolve( __dirname, '..', 'deps', 'curl-for-windows', filesToCheck[i] );
-
-        replaceOnFile( file, search, replacement );
-    }
+    replaceOnFile( file, search, replacement );
+  }
 }
 
 function replaceOnFile( file, search, replacement ) {
 
-    var fileContent;
+  var fileContent;
 
-    if ( !fs.existsSync( file ) ) {
+  if ( !fs.existsSync( file ) ) {
 
-        console.error( 'File: ', file, ' not found.' );
-        process.exit( 1 );
-    }
+    console.error( 'File: ', file, ' not found.' );
+    process.exit( 1 );
+  }
 
-    fileContent = fs.readFileSync( file ).toString();
+  fileContent = fs.readFileSync( file ).toString();
 
-    fileContent = fileContent.replace( search, replacement );
+  fileContent = fileContent.replace( search, replacement );
 
-    fs.writeFileSync( file, fileContent );
+  fs.writeFileSync( file, fileContent );
 }

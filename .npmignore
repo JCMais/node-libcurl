@@ -3,6 +3,7 @@
 .codeclimate.yml
 .idea
 .travis.yml
+.gitmodules
 appveyor.yml
 jsdoc.json
 build/
