@@ -40,7 +40,8 @@
     "space-in-parens": [2, "always", { "exceptions": ["{}"] }]
   },
   "env": {
-    "node": true
+    "node": true,
+    "es6": true
   },
   "extends": "eslint:recommended"
 }
