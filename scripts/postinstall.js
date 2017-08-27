@@ -11,7 +11,7 @@ log.heading = 'node-libcurl';
 var rootPath = path.join( __dirname, '..' );
 
 function printStandardLibError() {
-    log.error( '', 'the latest libstdc++ is missing on your system!' );
+    log.error( 'the latest libstdc++ is missing on your system!' );
     log.error( 'On Ubuntu you can install it using:' );
     log.error( '$ sudo add-apt-repository ppa:ubuntu-toolchain-r/test' );
     log.error( '$ sudo apt-get update' );
@@ -35,16 +35,16 @@ module.exports = function install() {
         .catch( function( e ) {
             if ( ~e.toString().indexOf( 'Module version mismatch' ) ) {
                 log.warn(
-                  '', 'NodeGit was built for a different version of node.'
+                  'NodeGit was built for a different version of node.'
                 );
                 log.warn(
-                  '', 'If you are building NodeGit for electron/nwjs you can ignore this warning.'
+                  'If you are building NodeGit for electron/nwjs you can ignore this warning.'
                 );
             } else {
                 throw e;
             }
         }).then( function() {
-          // Is we're using node-libcurl from a package manager then let's clean up after
+          // If we're using node-libcurl from a package manager then let's clean up after
           // ourselves when we install successfully.
             if ( !buildFlags.mustBuild ) {
                 // We can't remove the source files yet because apparently the
@@ -67,7 +67,7 @@ module.exports = function install() {
 if ( require.main === module ) {
     module.exports()
         .catch( function( e ) {
-            log.warn( '', 'Could not finish postinstall' );
+            log.warn( 'Could not finish postinstall' );
 
             if ( process.platform === 'linux' && ~e.toString().indexOf( 'libstdc++' ) ) {
                 printStandardLibError();
