@@ -84,7 +84,9 @@ Check the [API Docs](api.md)
 
 ## Detailed Installation
 
-This package has prebuilt binaries (thanks to [node-pre-gyp](https://github.com/mapbox/node-pre-gyp/)) available for the following platforms:
+The latest version of this package has prebuilt binaries (thanks to [node-pre-gyp](https://github.com/mapbox/node-pre-gyp/)) 
+ available for the latest two (2) versions of Node.js on Active LTS (or Maintenance LTS, see https://github.com/nodejs/Release) 
+ and for the following platforms:
 * Linux 64 bits
 * Mac OS X 64 bits
 * Windows 32 and 64 bits
@@ -164,15 +166,17 @@ dist_url = https://atom.io/download/atom-shell
 
 ## Contributing
 
+We are using [`yarn`](https://yarnpkg.com/) on this project.
+
 If on Windows, run:
 ```sh
 $ node tools/update-deps.js
 ```
 Install the node modules:
 ```sh
-$ npm install
+$ yarn install
 ```
 Build node-libcurl:
 ```sh
-$ npm run pregyp rebuild
+$ yarn pregyp rebuild
 ```

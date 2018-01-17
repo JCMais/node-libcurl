@@ -955,7 +955,7 @@ namespace NodeLibcurl {
 
         for ( std::vector<NodeLibcurl::CurlConstant>::const_iterator it = optionGroup.begin(), end = optionGroup.end(); it != end; ++it ) {
 
-            Nan::ForceSet(
+            Nan::DefineOwnProperty(
                 obj,
                 Nan::New<v8::String>( it->name ).ToLocalChecked(),
                 Nan::New<v8::Integer>( static_cast<int32_t>( it->value ) ),
@@ -1026,27 +1026,27 @@ namespace NodeLibcurl {
         ExportConstants( codesObj, curlCode, attributes );
 
         // static members
-        Nan::ForceSet( obj, Nan::New<v8::String>( "option" ).ToLocalChecked(), optionsObj, attributes );
-        Nan::ForceSet( obj, Nan::New<v8::String>( "info" ).ToLocalChecked(), infosObj, attributes );
+        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "option" ).ToLocalChecked(), optionsObj, attributes );
+        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "info" ).ToLocalChecked(), infosObj, attributes );
 
         // add WRITEFUNC to the pause obj
-        Nan::ForceSet( pauseObj, Nan::New<v8::String>( "WRITEFUNC" ).ToLocalChecked(), Nan::New<v8::Uint32>( CURL_WRITEFUNC_PAUSE ), attributes );
-        Nan::ForceSet( obj, Nan::New<v8::String>( "pause" ).ToLocalChecked(), pauseObj, attributes );
+        Nan::DefineOwnProperty( pauseObj, Nan::New<v8::String>( "WRITEFUNC" ).ToLocalChecked(), Nan::New<v8::Uint32>( CURL_WRITEFUNC_PAUSE ), attributes );
+        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "pause" ).ToLocalChecked(), pauseObj, attributes );
 
-        Nan::ForceSet( obj, Nan::New<v8::String>( "auth" ).ToLocalChecked(), authObj, attributes );
-        Nan::ForceSet( obj, Nan::New<v8::String>( "http" ).ToLocalChecked(), httpObj, attributes );
+        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "auth" ).ToLocalChecked(), authObj, attributes );
+        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "http" ).ToLocalChecked(), httpObj, attributes );
 
 #if NODE_LIBCURL_VER_GE( 7, 19, 4 )
-        Nan::ForceSet( obj, Nan::New<v8::String>( "protocol" ).ToLocalChecked(), protocolsObj, attributes );
+        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "protocol" ).ToLocalChecked(), protocolsObj, attributes );
 #endif
 
 #if NODE_LIBCURL_VER_GE( 7, 37, 0 )
-        Nan::ForceSet( obj, Nan::New<v8::String>( "header" ).ToLocalChecked(), headerObj, attributes );
+        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "header" ).ToLocalChecked(), headerObj, attributes );
 #endif
 
-        Nan::ForceSet( obj, Nan::New<v8::String>( "multi" ).ToLocalChecked(), multiObj, attributes );
+        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "multi" ).ToLocalChecked(), multiObj, attributes );
 
-        Nan::ForceSet( obj, Nan::New<v8::String>( "code" ).ToLocalChecked(), codesObj, attributes );
+        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "code" ).ToLocalChecked(), codesObj, attributes );
 
         Nan::SetMethod( obj, "globalInit", GlobalInit );
         Nan::SetMethod( obj, "globalCleanup", GlobalCleanup );
