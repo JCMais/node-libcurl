@@ -81,11 +81,13 @@ before( function( done ) {
 
 after( function( done ) {
 
-    server.close();
+    server.close(function ( err ) {
+        if ( err ) return done( err );
+
+        fs.unlink( imageFilePath, done );
+    });
 
     app._router.stack.pop();
-
-    fs.unlink( imageFilePath, done );
 });
 
 it( 'should upload file correctly', function ( done ) {

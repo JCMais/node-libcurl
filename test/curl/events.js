@@ -68,9 +68,10 @@ before( function( done ) {
     });
 });
 
-after( function() {
+after( function( done ) {
 
     app._router.stack.pop();
+    server.close( done );
 });
 
 it( 'should emit "end" event when the connection ends without errors.', function ( done ) {

@@ -109,9 +109,9 @@ before( function( done ) {
     });
 });
 
-after( function() {
+after( function( done ) {
 
-    server.close();
+    server.close( done );
 
     app._router.stack.pop();
     app._router.stack.pop();

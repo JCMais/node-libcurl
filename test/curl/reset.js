@@ -47,13 +47,11 @@ before( function( done ) {
     });
 });
 
-after( function() {
+after( function(done) {
 
     curl.close();
-
+    server.close( done );
     app._router.stack.pop();
-
-    server.close();
 });
 
 it( 'should reset the curl handler', function ( done ) {

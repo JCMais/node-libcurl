@@ -54,10 +54,10 @@ before( function( done ) {
     });
 });
 
-after( function() {
+after( function( done ) {
 
+    server.close( done );
     app._router.stack.pop();
-    server.close();
 });
 
 it( 'should not accept invalid argument type', function() {

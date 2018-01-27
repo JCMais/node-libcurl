@@ -43,10 +43,10 @@ beforeEach( function( done ) {
     });
 });
 
-afterEach( function() {
+afterEach( function( done ) {
 
     curl.close();
-    server.close();
+    server.close( done );
 });
 
 before( function() {
