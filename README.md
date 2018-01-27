@@ -120,9 +120,9 @@ You need to have installed OS X >=10.8 and xcode >=4.5
 
 ### Windows
 
-If installing using a prebuilt binary you only need to have the [visual c++ 2013 runtime library](https://www.microsoft.com/en-us/download/details.aspx?id=40784).
+If installing using a prebuilt binary you only need to have the [visual c++ 2015 runtime library](https://www.microsoft.com/en-us/download/details.aspx?id=40784).
 If building from source, you need to have Python 2.7 and
-[Visual Studio >=2013](http://www.visualstudio.com/downloads/download-visual-studio-vs), you can get all that by running:
+[Visual Studio >= 2015](http://www.visualstudio.com/downloads/download-visual-studio-vs), you can get all that by running:
 ```sh
 npm install --global --production windows-build-tools
 ```
