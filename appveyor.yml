@@ -1,5 +1,7 @@
 # http://www.appveyor.com/docs/appveyor-yml
 # mostly copied from nan appveyor.yml
+os: Visual Studio 2015
+
 environment:
   DEBUG: "node-libcurl"
   NODE_LIBCURL_GITHUB_TOKEN:
@@ -38,7 +40,7 @@ install:
 
 build_script:
   - node tools\retrieve-win-deps.js
-  - npm install --build-from-source --msvs_version=2013 --loglevel=http
+  - npm install --build-from-source --msvs_version=2015 --loglevel=http
 
 # Post-install test scripts.
 test_script:
