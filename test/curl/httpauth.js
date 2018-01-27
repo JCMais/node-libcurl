@@ -86,9 +86,9 @@ before( function( done ) {
     });
 });
 
-after( function( done ) {
+after( function() {
 
-    server.close(done);
+    server.close();
 });
 
 it( 'should authenticate using basic auth', function ( done ) {

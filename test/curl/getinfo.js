@@ -54,10 +54,10 @@ before( function( done ) {
     });
 });
 
-after( function( done ) {
+after( function() {
 
     app._router.stack.pop();
-    server.close( done );
+    server.close();
 });
 
 it( 'should not work with non-implemented infos', function ( done ) {

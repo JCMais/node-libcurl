@@ -47,10 +47,10 @@ before( function( done ) {
     });
 });
 
-after( function(done) {
+after( function() {
 
     curl.close();
-    server.close( done );
+    server.close();
     app._router.stack.pop();
 });
 

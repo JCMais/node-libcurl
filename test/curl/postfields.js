@@ -44,10 +44,10 @@ beforeEach( function( done ) {
     });
 });
 
-afterEach( function( done ) {
+afterEach( function() {
 
     curl.close();
-    server.close( done );
+    server.close();
 });
 
 before( function() {

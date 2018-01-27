@@ -56,10 +56,9 @@ before( function( done ) {
     });
 });
 
-after( function(done) {
+after( function() {
 
-    server.close(done);
-
+    server.close();
     app._router.stack.pop();
 });
 
