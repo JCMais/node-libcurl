@@ -1,0 +1,6 @@
+{
+  "rules": {
+    // console is valid on examples folder!
+    "no-console": 0
+  }
+}

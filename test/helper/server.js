@@ -20,23 +20,24 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-var express = require( 'express' ),
-    bodyParser = require( 'body-parser' ),
-    cookiesParser = require( 'cookie-parser' ),
-    http = require( 'http' );
+var express = require('express'),
+  bodyParser = require('body-parser'),
+  cookiesParser = require('cookie-parser'),
+  http = require('http');
 
 var app = express(),
-    server = http.createServer( app );
+  server = http.createServer(app);
 
-app.use( bodyParser.urlencoded({ extended: true }) )
-    .use( bodyParser.raw({ limit: '100MB', type: 'application/node-libcurl.raw' }) )
-    .use( cookiesParser() );
+app
+  .use(bodyParser.urlencoded({ extended: true }))
+  .use(bodyParser.raw({ limit: '100MB', type: 'application/node-libcurl.raw' }))
+  .use(cookiesParser());
 
-app.disable( 'etag' );
+app.disable('etag');
 
 module.exports = {
-    server : server,
-    app    : app,
-    port   : 3000,
-    host   : 'localhost'
+  server: server,
+  app: app,
+  port: 3000,
+  host: 'localhost',
 };

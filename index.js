@@ -1,9 +1,9 @@
-var Easy = require( './lib/Easy' ),
-    Multi= require( './lib/Multi' ),
-    Share= require( './lib/Share' ),
-    Curl = require( './lib/Curl' );
+const Easy = require('./lib/Easy');
+const Multi = require('./lib/Multi');
+const Share = require('./lib/Share');
+const Curl = require('./lib/Curl');
 
-module.exports.Easy  = Easy;
+module.exports.Easy = Easy;
 module.exports.Multi = Multi;
 module.exports.Share = Share;
-module.exports.Curl  = Curl;
+module.exports.Curl = Curl;

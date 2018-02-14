@@ -659,9 +659,14 @@ namespace NodeLibcurl {
             Nan::New( string ).ToLocalChecked()
         };
 
+        Nan::TryCatch tryCatch;
+
         v8::Local<v8::Value> retval = it->second->Call( obj->handle(), argc, argv );
 
-        if ( !retval->IsInt32() ) {
+        if ( tryCatch.HasCaught() ) {
+            tryCatch.ReThrow();
+        }
+        else if ( !retval->IsInt32() ) {
 
             Nan::ThrowTypeError( "Return value from the FNMATCH callback must be an integer." );
 

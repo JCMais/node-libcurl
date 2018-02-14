@@ -7,3 +7,5 @@ docs
 wallaby.json
 lib/binding
 debug
+
+yarn-error.log

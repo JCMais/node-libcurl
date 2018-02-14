@@ -6,5 +6,8 @@
     "after"   : false,
     "beforeEach": true,
     "afterEach" : false
+  },
+  "rules": {
+    "no-console": 0
   }
 }

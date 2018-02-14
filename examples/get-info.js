@@ -24,27 +24,24 @@
 /**
  * Example that shows all information you can get from a single request.
  */
-var Curl = require( '../lib/Curl' );
+var Curl = require('../lib/Curl');
 
 var curl = new Curl(),
-    url  = 'http://www.google.com';
+  url = 'http://www.google.com';
 
-curl.setOpt( Curl.option.URL, url );
-curl.setOpt( Curl.option.FOLLOWLOCATION, true );
-curl.setOpt( Curl.option.COOKIEFILE, '' ); //enable cookies
+curl.setOpt(Curl.option.URL, url);
+curl.setOpt(Curl.option.FOLLOWLOCATION, true);
+curl.setOpt(Curl.option.COOKIEFILE, ''); //enable cookies
 curl.perform();
 
-curl.on( 'end', function() {
-
-    for ( var infoName in Curl.info ) {
-
-        if ( Curl.info.hasOwnProperty( infoName ) && infoName !== 'debug' ) {
-
-            console.info( infoName, ': ', this.getInfo( infoName ) );
-        }
+curl.on('end', function() {
+  for (var infoName in Curl.info) {
+    if (Curl.info.hasOwnProperty(infoName) && infoName !== 'debug') {
+      console.info(infoName, ': ', this.getInfo(infoName));
     }
+  }
 
-    this.close();
+  this.close();
 });
 
-curl.on( 'error', curl.close.bind( curl ) );
+curl.on('error', curl.close.bind(curl));

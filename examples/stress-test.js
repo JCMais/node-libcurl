@@ -26,143 +26,132 @@
  * Don't put a real domain here if you don't want to be blocked by some firewall.
  */
 
-var Curl = require( '../lib/Curl' ),
-    path = require( 'path' );
+var Curl = require('../lib/Curl'),
+  path = require('path');
 
-var url  = 'http://localhost/index.html', //localhost in this case was a blank html page served via Apache 2.4
-    file = 'file:///' + path.join( __dirname, 'test.txt' ),
-    instances   = 25,  // 25 instances running at max per iteration
-    maxRequests = 1e4, // 10000 requests in total per iteration
-    iterations  = 3,   // repeat n times to collect data
-    shouldTestFile = true,
-    shouldUseHeaderRequest = true,
-    precision = 3;
+var url = 'http://localhost/index.html', //localhost in this case was a blank html page served via Apache 2.4
+  file = 'file:///' + path.join(__dirname, 'test.txt'),
+  instances = 25, // 25 instances running at max per iteration
+  maxRequests = 1e4, // 10000 requests in total per iteration
+  iterations = 3, // repeat n times to collect data
+  shouldTestFile = true,
+  shouldUseHeaderRequest = true,
+  precision = 3;
 
 var finishedRequests = 0,
-    runningRequests  = 0,
-    requestData = [],
-    currentIteration = 0,
-    timeBetweenStdouWrite = 1000,
-    lastTimeStdoutWrite = 0;
+  runningRequests = 0,
+  requestData = [],
+  currentIteration = 0,
+  timeBetweenStdouWrite = 1000,
+  lastTimeStdoutWrite = 0;
 
-function doRequest( data ) {
+function doRequest(data) {
+  var curl = new Curl();
+  curl.setOpt(Curl.option.URL, shouldTestFile ? file : url);
+  curl.setOpt(Curl.option.NOBODY, shouldUseHeaderRequest);
+  curl.setOpt(Curl.option.CONNECTTIMEOUT, 5);
+  curl.setOpt(Curl.option.TIMEOUT, 10);
+  curl.on('end', cb.bind(curl));
+  curl.on('error', cb.bind(curl));
 
-    var curl = new Curl();
-    curl.setOpt( Curl.option.URL, shouldTestFile ? file : url );
-    curl.setOpt( Curl.option.NOBODY, shouldUseHeaderRequest );
-    curl.setOpt( Curl.option.CONNECTTIMEOUT, 5 );
-    curl.setOpt( Curl.option.TIMEOUT, 10 );
-    curl.on( 'end', cb.bind( curl ) );
-    curl.on( 'error', cb.bind( curl ) );
+  curl.data = data;
 
-    curl.data = data;
-
-    curl.perform();
-    ++runningRequests;
+  curl.perform();
+  ++runningRequests;
 }
 
-function cb( code ) {
+function cb(code) {
+  var data = this.data,
+    now = Date.now(),
+    shouldWrite = false;
 
-    var data = this.data,
-        now = Date.now(),
-        shouldWrite = false;
+  if (now - lastTimeStdoutWrite >= timeBetweenStdouWrite) {
+    shouldWrite = true;
+    lastTimeStdoutWrite = now;
+  }
 
-    if ( now - lastTimeStdoutWrite >= timeBetweenStdouWrite ) {
+  this.close();
 
-        shouldWrite = true;
-        lastTimeStdoutWrite = now;
-    }
+  if (code instanceof Error) {
+    ++data.errors;
+  }
 
-    this.close();
+  --runningRequests;
+  ++finishedRequests;
 
-    if ( code instanceof Error ) {
-        ++data.errors;
-    }
+  if (finishedRequests + runningRequests < maxRequests) {
+    doRequest(data);
+  }
 
-    --runningRequests;
-    ++finishedRequests;
+  if (shouldWrite) {
+    console.info(
+      'Curl instances: ',
+      Curl.getCount(),
+      ' -> Requests finished: ',
+      finishedRequests,
+      ' -> Time: ',
+      process.hrtime(data.startTime)[0],
+      's'
+    );
+  }
 
-    if ( ( finishedRequests + runningRequests ) < maxRequests ) {
+  if (runningRequests === 0) {
+    //nano to milli
+    data.endTime = process.hrtime(data.startTime);
 
-        doRequest( data );
-    }
+    console.info('Request time: ', data.endTime[0] + 's, ' + (data.endTime[1] / 1e9).toFixed(precision) + 'ms');
 
-    if ( shouldWrite ) {
-        console.info(
-            'Curl instances: ', Curl.getCount(),
-            ' -> Requests finished: ', finishedRequests,
-            ' -> Time: ', process.hrtime( data.startTime )[0], 's'
-        );
-    }
-
-    if ( runningRequests === 0 ) {
-
-        //nano to milli
-        data.endTime = process.hrtime( data.startTime );
-
-        console.info( 'Request time: ',
-            data.endTime[0] + 's, ' + ( data.endTime[1] / 1e9 ).toFixed( precision ) + 'ms'
-        );
-
-        process.nextTick( startRequests );
-    }
+    process.nextTick(startRequests);
+  }
 }
 
 function startRequests() {
+  var i;
 
-    var i;
+  if (currentIteration == iterations) {
+    return printCollectedData();
+  }
 
-    if ( currentIteration == iterations ) {
+  console.log('Iteration -> ', currentIteration + 1);
 
-        return printCollectedData();
-    }
+  finishedRequests = 0;
+  runningRequests = 0;
 
-    console.log( 'Iteration -> ', currentIteration+1 );
+  if (requestData[currentIteration] === undefined) {
+    requestData[currentIteration] = {
+      errors: 0,
+      startTime: process.hrtime(),
+      endTime: 0,
+    };
+  }
 
-    finishedRequests = 0;
-    runningRequests = 0;
+  for (i = 0; i < instances; i++) {
+    doRequest(requestData[currentIteration]);
+  }
 
-    if ( requestData[currentIteration] === undefined ) {
-        requestData[currentIteration] = {
-            errors: 0,
-            startTime: process.hrtime(),
-            endTime: 0
-        };
-    }
-
-    for ( i = 0; i < instances; i++ ) {
-
-        doRequest( requestData[currentIteration] );
-    }
-
-    return currentIteration++;
+  return currentIteration++;
 }
 
 function printCollectedData() {
+  //Sum all timings
+  var timingSumNs = requestData.reduce(function(prev, curr) {
+    var currTimingNs = curr.endTime[0] * 1e9 + curr.endTime[1];
 
-    //Sum all timings
-    var timingSumNs = requestData.reduce( function( prev, curr ) {
+    return prev + currTimingNs;
+  }, 0);
 
-        var currTimingNs = curr.endTime[0] * 1e9 + curr.endTime[1];
+  var errors = requestData.reduce(function(prev, curr) {
+    return prev + curr.errors;
+  }, 0);
 
-        return prev + currTimingNs;
+  console.info('Iterations ------------ ', iterations);
+  console.info('Requests   ------------ ', maxRequests);
+  console.info('Instances  ------------ ', instances);
 
-    }, 0 );
-
-    var errors = requestData.reduce( function( prev, curr ) {
-
-        return prev + curr.errors;
-
-    }, 0 );
-
-    console.info( 'Iterations ------------ ', iterations );
-    console.info( 'Requests   ------------ ', maxRequests );
-    console.info( 'Instances  ------------ ', instances );
-
-    console.info( 'Total Time ------------ ', timingSumNs / 1e9 + 's' );
-    console.info( 'Iteration Avg --------- ', ( timingSumNs / 1e9 ) / iterations + 's' );
-    console.info( 'Errors Avg  ------------ ', errors );
+  console.info('Total Time ------------ ', timingSumNs / 1e9 + 's');
+  console.info('Iteration Avg --------- ', timingSumNs / 1e9 / iterations + 's');
+  console.info('Errors Avg  ------------ ', errors);
 }
 
-console.log( 'Starting...' );
-process.nextTick( startRequests );
+console.log('Starting...');
+process.nextTick(startRequests);

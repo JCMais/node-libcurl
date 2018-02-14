@@ -20,186 +20,162 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-var serverObj = require( './../helper/server' ),
-    Curl   = require( '../../lib/Curl' ),
-    path = require( 'path' ),
-    fs   = require( 'fs' ),
-    crypto = require( 'crypto' );
+var serverObj = require('./../helper/server'),
+  Curl = require('../../lib/Curl'),
+  path = require('path'),
+  fs = require('fs'),
+  crypto = require('crypto');
 
 var server = serverObj.server,
-    app    = serverObj.app,
-    curl   = new Curl(),
-    fileSize = 10 * 1024, //10Kb
-    fileName = path.resolve( __dirname, 'upload.test' ),
-    fileHash = '',
-    uploadLocation = '',
-    url = '';
+  app = serverObj.app,
+  curl = new Curl(),
+  fileSize = 10 * 1024, //10Kb
+  fileName = path.resolve(__dirname, 'upload.test'),
+  fileHash = '',
+  uploadLocation = '',
+  url = '';
 
-function hashOfFile( file, cb ) {
+function hashOfFile(file, cb) {
+  var fd = fs.createReadStream(file),
+    hash = crypto.createHash('sha1');
 
-    var fd = fs.createReadStream( file ),
-        hash = crypto.createHash( 'sha1' );
+  hash.setEncoding('hex');
 
-    hash.setEncoding( 'hex' );
+  fd.on('end', function() {
+    hash.end();
 
-    fd.on( 'end', function() {
+    cb(hash.read());
+  });
 
-        hash.end();
-
-        cb( hash.read() );
-    });
-
-    fd.pipe( hash );
+  fd.pipe(hash);
 }
 
-beforeEach( function( done ) {
+beforeEach(function(done) {
+  curl = new Curl();
+  curl.setOpt(Curl.option.URL, url + '/upload/upload-result.test');
+  curl.setOpt(Curl.option.HTTPHEADER, ['Content-Type: application/node-libcurl.raw']);
 
-    curl = new Curl();
-    curl.setOpt( Curl.option.URL, url + '/upload/upload-result.test' );
-    curl.setOpt( Curl.option.HTTPHEADER, ['Content-Type: application/node-libcurl.raw'] );
+  //write random bytes to a file, this will be our test file.
+  fs.writeFileSync(fileName, crypto.randomBytes(fileSize));
 
-    //write random bytes to a file, this will be our test file.
-    fs.writeFileSync( fileName, crypto.randomBytes( fileSize ) );
-
-    //get a hash of given file so we can assert later
-    // that the file sent is equals to the one we created.
-    hashOfFile( fileName, function( hash ) {
-
-        fileHash = hash;
-        done();
-    });
+  //get a hash of given file so we can assert later
+  // that the file sent is equals to the one we created.
+  hashOfFile(fileName, function(hash) {
+    fileHash = hash;
+    done();
+  });
 });
 
-afterEach( function() {
+afterEach(function() {
+  curl.close();
 
-    curl.close();
+  fs.unlinkSync(fileName);
+  if (fs.existsSync(uploadLocation)) {
+    fs.unlinkSync(uploadLocation);
+  }
+});
 
-    fs.unlinkSync( fileName );
-    if ( fs.existsSync( uploadLocation ) ) {
-        fs.unlinkSync( uploadLocation );
+before(function(done) {
+  server.listen(serverObj.port, serverObj.host, function() {
+    url = server.address().address + ':' + server.address().port;
+
+    done();
+  });
+
+  app.put('/upload/:filename', function(req, res) {
+    uploadLocation = path.resolve(__dirname, req.params['filename']);
+
+    var fd = fs.openSync(uploadLocation, 'w+');
+
+    fs.writeSync(fd, req.body, 0, req.body.length, 0);
+    fs.closeSync(fd);
+    hashOfFile(uploadLocation, function(hash) {
+      res.send(hash);
+    });
+  });
+
+  app.use(function(err, req, res, next) {
+    //do nothing
+    next;
+  });
+});
+
+after(function() {
+  server.close();
+
+  app._router.stack.pop();
+  app._router.stack.pop();
+});
+
+it('should upload data correctly using put', function(done) {
+  var fd = fs.openSync(fileName, 'r+');
+
+  curl.setOpt(Curl.option.UPLOAD, 1);
+  curl.setOpt(Curl.option.READDATA, fd);
+
+  curl.on('end', function(statusCode, body) {
+    statusCode.should.be.equal(200);
+    body.should.be.equal(fileHash);
+
+    fs.closeSync(fd);
+    done();
+  });
+
+  curl.on('error', function(err) {
+    fs.closeSync(fd);
+    done(err);
+  });
+
+  curl.perform();
+});
+
+it('should upload data correctly using READFUNCTION callback option', function(done) {
+  var fileStream = fs.createReadStream(fileName, {
+      flags: 'r+',
+    }),
+    bytesPerCall = 100;
+
+  curl.setOpt(Curl.option.UPLOAD, 1);
+  curl.setOpt(Curl.option.READFUNCTION, function(buffer) {
+    var data = fileStream.read(bytesPerCall);
+
+    if (!data) {
+      return 0;
     }
+
+    data.copy(buffer);
+
+    return data.length;
+  });
+
+  curl.on('end', function(statusCode, body) {
+    statusCode.should.be.equal(200);
+    body.should.be.equal(fileHash);
+
+    done();
+  });
+
+  curl.on('error', function(err) {
+    done(err);
+  });
+
+  curl.perform();
 });
 
-before( function( done ) {
+it('should abort upload with invalid fd', function(done) {
+  curl.setOpt(Curl.option.UPLOAD, 1);
+  curl.setOpt(Curl.option.READDATA, -1);
 
-    server.listen( serverObj.port, serverObj.host, function() {
+  curl.on('end', function() {
+    done(new Error('Invalid file descriptor specified but upload was performed correctly.'));
+  });
 
-        url = server.address().address + ':' + server.address().port;
+  curl.on('error', function(err, errCode) {
+    //[Error: Operation was aborted by an application callback]
+    errCode.should.be.equal(42);
 
-        done();
-    });
+    done();
+  });
 
-    app.put( '/upload/:filename', function( req, res ) {
-
-        uploadLocation = path.resolve( __dirname, req.params['filename'] );
-
-        var fd = fs.openSync( uploadLocation, 'w+' );
-
-        fs.writeSync( fd, req.body, 0, req.body.length, 0 );
-        fs.closeSync( fd );
-        hashOfFile( uploadLocation, function( hash ) {
-
-            res.send( hash );
-        });
-    });
-
-    app.use( function( err, req, res, next ) {
-        //do nothing
-        next;
-    });
-});
-
-after( function() {
-
-    server.close();
-
-    app._router.stack.pop();
-    app._router.stack.pop();
-});
-
-it( 'should upload data correctly using put', function ( done ) {
-
-    var fd = fs.openSync( fileName, 'r+' );
-
-    curl.setOpt( Curl.option.UPLOAD, 1 );
-    curl.setOpt( Curl.option.READDATA, fd );
-
-    curl.on( 'end', function( statusCode, body ) {
-
-        statusCode.should.be.equal( 200 );
-        body.should.be.equal( fileHash );
-
-        fs.closeSync( fd );
-        done();
-    });
-
-    curl.on( 'error', function( err ) {
-
-        fs.closeSync( fd );
-        done( err );
-    });
-
-    curl.perform();
-
-});
-
-it( 'should upload data correctly using READFUNCTION callback option', function ( done ) {
-
-    var fileStream = fs.createReadStream( fileName, {
-            flags : 'r+'
-        }),
-        bytesPerCall = 100;
-
-    curl.setOpt( Curl.option.UPLOAD, 1 );
-    curl.setOpt( Curl.option.READFUNCTION, function( buffer ) {
-
-        var data = fileStream.read( bytesPerCall );
-
-        if ( !data ) {
-
-            return 0;
-        }
-
-        data.copy( buffer );
-
-        return data.length;
-    });
-
-    curl.on( 'end', function( statusCode, body ) {
-
-        statusCode.should.be.equal( 200 );
-        body.should.be.equal( fileHash );
-
-        done();
-    });
-
-    curl.on( 'error', function( err ) {
-
-        done( err );
-    });
-
-    curl.perform();
-
-});
-
-it( 'should abort upload with invalid fd', function ( done ) {
-
-    curl.setOpt( Curl.option.UPLOAD, 1 );
-    curl.setOpt( Curl.option.READDATA, -1 );
-
-    curl.on( 'end', function() {
-
-        done( new Error( 'Invalid file descriptor specified but upload was performed correctly.' ) );
-    });
-
-    curl.on( 'error', function( err, errCode ) {
-
-        //[Error: Operation was aborted by an application callback]
-        errCode.should.be.equal( 42 );
-
-        done();
-    });
-
-    curl.perform();
-
+  curl.perform();
 });

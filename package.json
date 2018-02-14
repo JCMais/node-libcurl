@@ -24,7 +24,10 @@
     "test": "mocha test --reporter spec --timeout 5000",
     "docs": "jsdoc2md lib/*.js > api.md",
     "postinstall": "node scripts/postinstall",
-    "pregyp": "node-pre-gyp"
+    "pregyp": "node-pre-gyp",
+    "prettier": "prettier --write --single-quote true --trailing-comma es5 --print-width 120",
+    "prettier:all": "yarn prettier lib/**/*.js tools/**/*.js scripts/**/*.js test/**/*.js examples/**/*.js",
+    "lint": "node_modules/.bin/eslint . --max-warnings=0"
   },
   "binary": {
     "module_name": "node_libcurl",
@@ -41,25 +44,41 @@
     "nan": "2.8.0",
     "node-gyp": "~3.6.2",
     "node-pre-gyp": "~0.6",
-    "npmlog": "~4.0.2"
+    "npmlog": "~4.0.2",
+    "prettier": "^1.10.2"
   },
   "devDependencies": {
     "body-parser": "^1.12",
     "cookie-parser": "^1.3",
-    "eslint": "^3.6",
+    "eslint": "^4.17",
     "express": "^4.12",
-    "http-auth": "^2.4",
+    "http-auth": "^3.2.3",
+    "husky": "^0.15.0-rc.8",
     "ink-docstrap": "^1.1",
     "jsdoc": "^3.3",
     "jsdoc-to-markdown": "^2.0",
+    "lint-staged": "^6.1.0",
     "mocha": "^3.1",
     "multiparty": "^4.1",
     "octonode": "^0.7",
     "progress": "^1.1",
     "should": "^11.1"
   },
+  "lint-staged": {
+    "*.js": [
+      "yarn prettier",
+      "eslint --fix",
+      "git add"
+    ]
+  },
   "engines": {
     "node": ">= 4",
     "npm": ">= 2.14"
+  },
+  "husky": {
+    "hooks": {
+      "commitmsg": "commitlint -e $GIT_PARAMS",
+      "pre-commit": "lint-staged"
+    }
   }
 }

@@ -20,93 +20,78 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-var serverObj = require( './../helper/server' ),
-    Curl   = require( '../../lib/Curl' );
+var serverObj = require('./../helper/server'),
+  Curl = require('../../lib/Curl');
 
 var server = serverObj.server,
-    app    = serverObj.app,
-    curl = {},
-    url;
+  app = serverObj.app,
+  curl = {},
+  url;
 
-beforeEach( function() {
-
-    curl = new Curl();
-    curl.setOpt( 'URL', url );
+beforeEach(function() {
+  curl = new Curl();
+  curl.setOpt('URL', url);
 });
 
-afterEach( function() {
-
-    curl.close();
+afterEach(function() {
+  curl.close();
 });
 
-before( function( done ) {
+before(function(done) {
+  server.listen(serverObj.port, serverObj.host, function() {
+    url = server.address().address + ':' + server.address().port;
 
-    server.listen( serverObj.port, serverObj.host, function() {
+    done();
+  });
 
-        url = server.address().address + ':' + server.address().port;
-
-        done();
-    });
-
-    app.get( '/', function( req, res ) {
-
-        res.send( 'Hello World!' );
-    });
+  app.get('/', function(req, res) {
+    res.send('Hello World!');
+  });
 });
 
-after( function() {
-
-    app._router.stack.pop();
-    server.close();
+after(function() {
+  app._router.stack.pop();
+  server.close();
 });
 
-it( 'should not work with non-implemented infos', function ( done ) {
+it('should not work with non-implemented infos', function(done) {
+  curl.on('end', function(status) {
+    if (status !== 200) {
+      throw Error('Invalid status code: ' + status);
+    }
 
-    curl.on( 'end', function( status ) {
+    (function() {
+      curl.getInfo(Curl.info.PRIVATE);
+    }.should.throw(/^Unsupported/));
 
-        if ( status !== 200 ) {
-            throw Error( 'Invalid status code: ' + status );
-        }
+    done();
+  });
 
-        ( function() {
-            curl.getInfo( Curl.info.PRIVATE );
-        }).should.throw( /^Unsupported/ );
+  curl.on('error', function(err) {
+    done(err);
+  });
 
-        done();
-    });
-
-    curl.on( 'error', function ( err ) {
-
-        done( err );
-    });
-
-    curl.perform();
-
+  curl.perform();
 });
 
-it( 'should get all infos', function ( done ) {
+it('should get all infos', function(done) {
+  curl.on('end', function(status) {
+    if (status !== 200) {
+      throw Error('Invalid status code: ' + status);
+    }
 
-    curl.on( 'end', function( status ) {
+    for (var infoId in Curl.info) {
+      if (Curl.info.hasOwnProperty(infoId) && infoId !== 'debug') {
+        curl.getInfo(infoId);
+      }
+    }
 
-        if ( status !== 200 ) {
-            throw Error( 'Invalid status code: ' + status );
-        }
+    done();
+  });
 
-        for ( var infoId in Curl.info ) {
+  curl.on('error', function(err) {
+    done(err);
+  });
 
-            if ( Curl.info.hasOwnProperty( infoId ) && infoId !== 'debug' ) {
-                curl.getInfo( infoId );
-            }
-        }
-
-        done();
-    });
-
-    curl.on( 'error', function ( err ) {
-
-        done( err );
-    });
-
-    curl.perform();
-
+  curl.perform();
 });

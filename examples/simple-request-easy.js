@@ -24,34 +24,32 @@
 /**
  * Example showing how one could do a simple request using the Easy handle.
  */
-var Easy = require( '../lib/Easy' ),
-    Curl = require( '../lib/Curl' ),
-    url = process.argv[2] || 'http://www.google.com',
-    ret,
-    ch;
+var Easy = require('../lib/Easy'),
+  Curl = require('../lib/Curl'),
+  url = process.argv[2] || 'http://www.google.com',
+  ret,
+  ch;
 
 ch = new Easy();
 
-ch.setOpt( Curl.option.URL, url );
+ch.setOpt(Curl.option.URL, url);
 
-ch.setOpt( Curl.option.HEADERFUNCTION, function( buf, size, nmemb ) {
+ch.setOpt(Curl.option.HEADERFUNCTION, function(buf, size, nmemb) {
+  console.log('HEADERFUNCTION: ');
+  console.log(arguments);
 
-    console.log( 'HEADERFUNCTION: ' );
-    console.log( arguments );
-
-    return size * nmemb;
+  return size * nmemb;
 });
 
-ch.setOpt( Curl.option.WRITEFUNCTION, function( buf, size, nmemb ) {
+ch.setOpt(Curl.option.WRITEFUNCTION, function(buf, size, nmemb) {
+  console.log('WRITEFUNCTION: ');
+  console.log(arguments);
 
-    console.log( 'WRITEFUNCTION: ' );
-    console.log( arguments );
-
-    return size * nmemb;
+  return size * nmemb;
 });
 
 ret = ch.perform();
 
 ch.close();
 
-console.log( ret, ret === Curl.code.CURLE_OK, Easy.strError( ret ) );
+console.log(ret, ret === Curl.code.CURLE_OK, Easy.strError(ret));

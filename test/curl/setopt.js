@@ -20,190 +20,153 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-var serverObj = require( './../helper/server' ),
-    Curl   = require( '../../lib/Curl' );
+var serverObj = require('./../helper/server'),
+  Curl = require('../../lib/Curl');
 
 var server = serverObj.server,
-    app    = serverObj.app,
-    curl = {},
-    url;
+  app = serverObj.app,
+  curl = {},
+  url;
 
-beforeEach( function() {
-
-    curl = new Curl();
-    curl.setOpt( 'URL', url );
+beforeEach(function() {
+  curl = new Curl();
+  curl.setOpt('URL', url);
 });
 
-afterEach( function() {
-
-    curl.close();
+afterEach(function() {
+  curl.close();
 });
 
-before( function( done ) {
+before(function(done) {
+  server.listen(serverObj.port, serverObj.host, function() {
+    url = server.address().address + ':' + server.address().port;
 
-    server.listen( serverObj.port, serverObj.host, function() {
+    done();
+  });
 
-        url = server.address().address + ':' + server.address().port;
-
-        done();
-    });
-
-    app.get( '/', function( req, res ) {
-
-        res.send( 'Hello World!' );
-    });
+  app.get('/', function(req, res) {
+    res.send('Hello World!');
+  });
 });
 
-after( function() {
-
-    server.close();
-    app._router.stack.pop();
+after(function() {
+  server.close();
+  app._router.stack.pop();
 });
 
-it( 'should not accept invalid argument type', function() {
+it('should not accept invalid argument type', function() {
+  var optionsToTest = [['URL', 0], ['HTTPPOST', 0], ['POSTFIELDS', 0]];
 
-    var optionsToTest = [
-        ['URL', 0],
-        ['HTTPPOST', 0],
-        ['POSTFIELDS', 0]
-    ];
+  try {
+    for (var i = 0; i < optionsToTest.length; i++) {
+      curl.setOpt.apply(curl, optionsToTest[i]);
+    }
+  } catch (err) {
+    return;
+  }
 
-    try {
+  throw Error('Invalid option was accepted.');
+});
 
-        for ( var i = 0; i < optionsToTest.length; i++ ) {
+it('should not work with non-implemented options', function() {
+  (function() {
+    curl.setOpt(Curl.option.SSL_CTX_FUNCTION, 1);
+  }.should.throw(/^Unsupported/));
+});
 
-            curl.setOpt.apply( curl, optionsToTest[i] );
-        }
+it('should restore default internal callbacks when setting WRITEFUNCTION and HEADERFUNCTION callback back to null', function(done) {
+  var shouldCallEvents = false,
+    lastCall = false,
+    headerEvtCalled = false,
+    dataEvtCalled = false;
 
-    } catch ( err ) {
+  curl.setOpt('WRITEFUNCTION', function(buf) {
+    buf.should.be.instanceof(Buffer);
+    return buf.length;
+  });
 
-        return;
+  curl.setOpt('HEADERFUNCTION', function(buf) {
+    buf.should.be.instanceof(Buffer);
+    return buf.length;
+  });
+
+  curl.on('data', function() {
+    shouldCallEvents.should.be.true();
+    dataEvtCalled = true;
+  });
+
+  curl.on('header', function() {
+    shouldCallEvents.should.be.true();
+    headerEvtCalled = true;
+  });
+
+  curl.on('end', function() {
+    curl.setOpt('WRITEFUNCTION', null);
+    curl.setOpt('HEADERFUNCTION', null);
+
+    if (!lastCall) {
+      lastCall = true;
+      shouldCallEvents = true;
+      curl.perform();
+      return;
     }
 
-    throw Error( 'Invalid option was accepted.' );
+    dataEvtCalled.should.be.true();
+    headerEvtCalled.should.be.true();
+
+    done();
+  });
+
+  curl.on('error', function(err) {
+    done(err);
+  });
+
+  curl.perform();
 });
 
-it( 'should not work with non-implemented options', function () {
+describe('HTTPPOST', function() {
+  it('should not accept invalid arrays', function() {
+    try {
+      curl.setOpt('HTTPPOST', [1, 2, {}]);
+    } catch (err) {
+      return;
+    }
 
-    ( function() {
-        curl.setOpt( Curl.option.SSL_CTX_FUNCTION, 1 );
-    }).should.throw( /^Unsupported/ );
-});
+    throw Error('Invalid array accepted.');
+  });
 
-it( 'should restore default internal callbacks when setting WRITEFUNCTION and HEADERFUNCTION callback back to null', function ( done ) {
+  it('should not accept invalid property names', function() {
+    try {
+      curl.setOpt('HTTPPOST', [{ dummy: 'property' }]);
+    } catch (err) {
+      return;
+    }
 
-    var shouldCallEvents = false,
-        lastCall = false,
-        headerEvtCalled = false,
-        dataEvtCalled = false;
+    throw Error('Invalid property name accepted.');
+  });
 
-    curl.setOpt( 'WRITEFUNCTION', function ( buf ) {
+  it('should not accept invalid property value', function() {
+    var args = [{}, [], 1, null, false, undefined],
+      invalidArgs = [],
+      len = args.length;
 
-        buf.should.be.instanceof( Buffer );
-        return buf.length;
-    });
+    while (--len) {
+      var arg = args.pop();
 
-    curl.setOpt( 'HEADERFUNCTION', function ( buf ) {
+      try {
+        curl.setOpt('HTTPPOST', [{ name: arg }]);
+      } catch (err) {
+        invalidArgs.push(arg === null ? 'null' : typeof arg);
+      }
+    }
 
-        buf.should.be.instanceof( Buffer );
-        return buf.length;
-    });
-
-    curl.on( 'data', function() {
-
-        shouldCallEvents.should.be.true();
-        dataEvtCalled = true;
-    });
-
-    curl.on( 'header', function() {
-
-        shouldCallEvents.should.be.true();
-        headerEvtCalled = true;
-    });
-
-    curl.on( 'end', function() {
-
-        curl.setOpt( 'WRITEFUNCTION', null );
-        curl.setOpt( 'HEADERFUNCTION', null );
-
-        if ( !lastCall ) {
-
-            lastCall = true;
-            shouldCallEvents = true;
-            curl.perform();
-            return;
-        }
-
-        dataEvtCalled.should.be.true();
-        headerEvtCalled.should.be.true();
-
-        done();
-    });
-
-    curl.on( 'error', function( err ) {
-
-        done( err );
-    });
-
-    curl.perform();
-});
-
-describe( 'HTTPPOST', function() {
-
-    it( 'should not accept invalid arrays', function() {
-
-        try {
-
-            curl.setOpt( 'HTTPPOST', [1, 2, {}] );
-
-        } catch ( err ) {
-
-            return;
-        }
-
-        throw Error( 'Invalid array accepted.' );
-    });
-
-    it( 'should not accept invalid property names', function() {
-
-        try {
-
-            curl.setOpt( 'HTTPPOST', [{ dummy : 'property' }] );
-
-        } catch ( err ) {
-
-            return;
-        }
-
-        throw Error( 'Invalid property name accepted.' );
-
-    });
-
-    it( 'should not accept invalid property value', function () {
-
-        var args = [
-                {}, [], 1, null, false, undefined
-            ],
-            invalidArgs = [],
-            len = args.length;
-
-        while ( --len ) {
-
-            var arg = args.pop();
-
-            try {
-
-                curl.setOpt( 'HTTPPOST', [{ 'name' : arg }] );
-
-            } catch ( err ) {
-
-                invalidArgs.push( arg === null ? 'null' : typeof arg );
-
-            }
-        }
-
-        if ( invalidArgs.length === args.length ) {
-            throw Error( 'Invalid property value accepted. Invalid Args: ' + JSON.stringify( invalidArgs ) + ', Args: ' + JSON.stringify( args ) );
-        }
-    });
+    if (invalidArgs.length === args.length) {
+      throw Error(
+        'Invalid property value accepted. Invalid Args: ' +
+          JSON.stringify(invalidArgs) +
+          ', Args: ' +
+          JSON.stringify(args)
+      );
+    }
+  });
 });

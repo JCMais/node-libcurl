@@ -20,62 +20,55 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-var serverObj = require( './../helper/server' ),
-    Curl      = require( '../../lib/Curl' );
+var serverObj = require('./../helper/server'),
+  Curl = require('../../lib/Curl');
 
 var server = serverObj.server,
-    app    = serverObj.app,
-    firstRun = true,
-    curl = {};
+  app = serverObj.app,
+  firstRun = true,
+  curl = {};
 
-before( function( done ) {
+before(function(done) {
+  curl = new Curl();
 
-    curl = new Curl();
+  app.get('/', function(req, res) {
+    res.send('Hi');
+  });
 
-    app.get( '/', function( req, res ) {
+  server.listen(serverObj.port, serverObj.host, function() {
+    var url = server.address().address + ':' + server.address().port;
 
-        res.send( 'Hi' );
-    });
+    curl.setOpt('URL', url);
 
-    server.listen( serverObj.port, serverObj.host, function() {
-
-        var url = server.address().address + ':' + server.address().port;
-
-        curl.setOpt( 'URL', url );
-
-        done();
-    });
+    done();
+  });
 });
 
-after( function() {
-
-    curl.close();
-    server.close();
-    app._router.stack.pop();
+after(function() {
+  curl.close();
+  server.close();
+  app._router.stack.pop();
 });
 
-it( 'should reset the curl handler', function ( done ) {
+it('should reset the curl handler', function(done) {
+  curl.on('end', function() {
+    if (!firstRun) {
+      done(new Error('Failed to reset.'));
+      return;
+    }
 
-    curl.on( 'end', function() {
+    firstRun = false;
 
-        if ( !firstRun ) {
-            done( new Error( 'Failed to reset.' ) );
-            return;
-        }
+    this.reset();
 
-        firstRun = false;
+    //try to make another request
+    this.perform();
+  });
 
-        this.reset();
+  curl.on('error', function(err, curlCode) {
+    //curlCode == 3 -> Invalid URL
+    done(curlCode === 3 ? undefined : err);
+  });
 
-        //try to make another request
-        this.perform();
-    });
-
-    curl.on( 'error', function( err, curlCode ) {
-
-        //curlCode == 3 -> Invalid URL
-        done( ( curlCode === 3 ) ? undefined : err );
-    });
-
-    curl.perform();
+  curl.perform();
 });

@@ -20,36 +20,29 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-var Curl   = require( '../../lib/Curl' ),
-    curl   = {};
+var Curl = require('../../lib/Curl'),
+  curl = {};
 
-beforeEach( function() {
-
-    curl = new Curl();
+beforeEach(function() {
+  curl = new Curl();
 });
 
-afterEach( function() {
-
-    curl.close();
+afterEach(function() {
+  curl.close();
 });
 
-it( 'should not crash on timeout', function( done ) {
+it('should not crash on timeout', function(done) {
+  //http://stackoverflow.com/a/904609/710693
+  curl.setOpt(Curl.option.URL, '10.255.255.1');
+  curl.setOpt(Curl.option.CONNECTTIMEOUT, 1);
 
-    //http://stackoverflow.com/a/904609/710693
-    curl.setOpt( Curl.option.URL, '10.255.255.1' );
-    curl.setOpt( Curl.option.CONNECTTIMEOUT, 1 );
+  curl.on('end', function() {
+    done(Error('Unexpected callback called.'));
+  });
 
-    curl.on( 'end', function() {
+  curl.on('error', function() {
+    done();
+  });
 
-        done( Error( 'Unexpected callback called.' ) );
-
-    });
-
-    curl.on( 'error', function () {
-
-        done();
-    });
-
-    curl.perform();
-
+  curl.perform();
 });

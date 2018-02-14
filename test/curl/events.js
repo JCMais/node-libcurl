@@ -20,187 +20,155 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-var serverObj = require( './../helper/server' ),
-    Curl   = require( '../../lib/Curl' );
+var serverObj = require('./../helper/server'),
+  Curl = require('../../lib/Curl');
 
 var server = serverObj.server,
-    app    = serverObj.app,
-    url    = '',
-    timeout= 0;
+  app = serverObj.app,
+  url = '',
+  timeout = 0;
 
 var curl;
 
-beforeEach( function() {
-
-    curl = new Curl();
-    curl.setOpt( 'URL', url );
+beforeEach(function() {
+  curl = new Curl();
+  curl.setOpt('URL', url);
 });
 
-afterEach( function() {
-
-    curl.close();
+afterEach(function() {
+  curl.close();
 });
 
-before( function( done ) {
+before(function(done) {
+  app.all('/', function(req, res) {
+    if (req.body.errReq) {
+      res.status(500);
+      res.end();
+    } else {
+      res.send('Hello World!');
+    }
 
-    app.all( '/', function( req, res ) {
+    timeout = setTimeout(function() {
+      throw Error('No action taken.');
+    }, 1000);
+  });
 
-        if ( req.body.errReq ) {
+  server.listen(serverObj.port, serverObj.host, function() {
+    url = server.address().address + ':' + server.address().port;
 
-            res.status( 500 );
-            res.end();
-
-        } else {
-
-            res.send( 'Hello World!' );
-        }
-
-        timeout = setTimeout( function () {
-            throw Error( 'No action taken.' );
-        }, 1000 );
-    });
-
-    server.listen( serverObj.port, serverObj.host, function() {
-
-        url = server.address().address + ':' + server.address().port;
-
-        done();
-    });
+    done();
+  });
 });
 
-after( function() {
-
-    app._router.stack.pop();
-    server.close();
+after(function() {
+  app._router.stack.pop();
+  server.close();
 });
 
-it( 'should emit "end" event when the connection ends without errors.', function ( done ) {
+it('should emit "end" event when the connection ends without errors.', function(done) {
+  curl.on('end', function() {
+    clearTimeout(timeout);
 
-    curl.on( 'end', function() {
+    done();
+  });
 
-        clearTimeout( timeout );
+  curl.on('error', function(err) {
+    clearTimeout(timeout);
 
-        done();
-    });
+    done(err);
+  });
 
-    curl.on( 'error', function( err ) {
-
-        clearTimeout( timeout );
-
-        done( err );
-    });
-
-    curl.perform();
-
+  curl.perform();
 });
 
-it( 'should emit "error" event when the connection fails', function( done ) {
+it('should emit "error" event when the connection fails', function(done) {
+  curl.setOpt('POSTFIELDS', 'errReq=true');
+  curl.setOpt('FAILONERROR', true);
 
-    curl.setOpt( 'POSTFIELDS', 'errReq=true' );
-    curl.setOpt( 'FAILONERROR', true );
+  curl.on('end', function() {
+    clearTimeout(timeout);
 
-    curl.on( 'end', function() {
+    done(Error('end event was called, but the connection failed.'));
+  });
 
-        clearTimeout( timeout );
+  curl.on('error', function(err, errCode) {
+    err.should.be.instanceof(Error);
+    errCode.should.be.of.type('number').and.equal(Curl.code.CURLE_HTTP_RETURNED_ERROR);
 
-        done( Error( 'end event was called, but the connection failed.' ) );
-    });
+    clearTimeout(timeout);
 
-    curl.on( 'error', function( err, errCode ) {
+    done();
+  });
 
-        err.should.be.instanceof( Error );
-        errCode.should.be.of.type( 'number' ).and.equal( Curl.code.CURLE_HTTP_RETURNED_ERROR );
-
-        clearTimeout( timeout );
-
-        done();
-    });
-
-    curl.perform();
-
+  curl.perform();
 });
 
-it( 'should emit "error" when the connection is aborted in the progress cb', function ( done ) {
+it('should emit "error" when the connection is aborted in the progress cb', function(done) {
+  curl.setProgressCallback(function() {
+    return 1;
+  });
 
-    curl.setProgressCallback( function() {
+  curl.setOpt('NOPROGRESS', false);
 
-        return 1;
-    });
+  curl.on('end', function() {
+    clearTimeout(timeout);
 
-    curl.setOpt( 'NOPROGRESS', false );
+    done(Error('end event was called, but the connection was aborted.'));
+  });
 
-    curl.on( 'end', function() {
+  curl.on('error', function(err) {
+    err.should.be.instanceof(Error);
 
-        clearTimeout( timeout );
+    clearTimeout(timeout);
 
-        done( Error( 'end event was called, but the connection was aborted.' ) );
-    });
+    done();
+  });
 
-    curl.on( 'error', function( err, errCode ) {
-
-        err.should.be.instanceof( Error );
-
-        clearTimeout( timeout );
-
-        done();
-    });
-
-    curl.perform();
-
+  curl.perform();
 });
 
-it( 'should emit "error" when the connection is aborted in the header cb', function( done ) {
+it('should emit "error" when the connection is aborted in the header cb', function(done) {
+  curl.onHeader = function() {
+    return -1;
+  };
 
-    curl.onHeader = function() {
+  curl.on('end', function() {
+    clearTimeout(timeout);
 
-        return -1;
-    };
+    done(Error('end event was called, but the connection was aborted.'));
+  });
 
-    curl.on( 'end', function() {
+  curl.on('error', function(err, errCode) {
+    err.should.be.instanceof(Error);
+    errCode.should.be.of.type('number').and.equal(Curl.code.CURLE_WRITE_ERROR);
 
-        clearTimeout( timeout );
+    clearTimeout(timeout);
 
-        done( Error( 'end event was called, but the connection was aborted.' ) );
-    });
+    done();
+  });
 
-    curl.on( 'error', function( err, errCode ) {
-
-        err.should.be.instanceof( Error );
-        errCode.should.be.of.type( 'number' ).and.equal( Curl.code.CURLE_WRITE_ERROR );
-
-        clearTimeout( timeout );
-
-        done();
-    });
-
-    curl.perform();
-
+  curl.perform();
 });
 
-it( 'should emit "error" when the connection is aborted in the data cb', function( done ) {
+it('should emit "error" when the connection is aborted in the data cb', function(done) {
+  curl.onData = function() {
+    return -1;
+  };
 
-    curl.onData = function() {
+  curl.on('end', function() {
+    clearTimeout(timeout);
 
-        return -1;
-    };
+    done(Error('end event was called, but the connection was aborted.'));
+  });
 
-    curl.on( 'end', function() {
+  curl.on('error', function(err, errCode) {
+    err.should.be.instanceof(Error);
+    errCode.should.be.of.type('number').and.equal(Curl.code.CURLE_WRITE_ERROR);
 
-        clearTimeout( timeout );
+    clearTimeout(timeout);
 
-        done( Error( 'end event was called, but the connection was aborted.' ) );
-    });
+    done();
+  });
 
-    curl.on( 'error', function( err, errCode ) {
-
-        err.should.be.instanceof( Error );
-        errCode.should.be.of.type( 'number' ).and.equal( Curl.code.CURLE_WRITE_ERROR );
-
-        clearTimeout( timeout );
-
-        done();
-    });
-
-    curl.perform();
-
+  curl.perform();
 });
