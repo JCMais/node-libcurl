@@ -1,7 +1,5 @@
 # node-libcurl
 
-[![Join the chat at https://gitter.im/JCMais/node-libcurl](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/JCMais/node-libcurl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 [![NPM version][npm-image]][npm-url]
 [![node][node-image]][node-url]
 [![license][license-image]][license-url]
@@ -19,7 +17,7 @@
 [appveyor-url]:https://ci.appveyor.com/project/JCMais/node-libcurl
 [codeclimate-image]:https://img.shields.io/codeclimate/github/JCMais/node-libcurl.svg?style=flat-square
 [codeclimate-url]:https://codeclimate.com/github/JCMais/node-libcurl
-[node-image]:https://img.shields.io/badge/node.js-%3E=_0.10-green.svg?style=flat-square
+[node-image]:https://img.shields.io/badge/node.js-%3E=_4-green.svg?style=flat-square
 [node-url]:https://nodejs.org/download/
 [license-image]:https://img.shields.io/github/license/JCMais/node-libcurl.svg?style=flat-square
 [license-url]:https://raw.githubusercontent.com/JCMais/node-libcurl/develop/LICENSE-MIT
@@ -32,48 +30,50 @@ _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-
 ## Quick Start
 
 ### Install
-```npm install node-libcurl --save```
+```npm i node-libcurl --save```
+or
+```yarn add node-libcurl```
 
 ### Simple Request
 ```javascript
-var Curl = require( 'node-libcurl' ).Curl;
+var Curl = require('node-libcurl').Curl;
 
 var curl = new Curl();
 
-curl.setOpt( 'URL', 'www.google.com' );
-curl.setOpt( 'FOLLOWLOCATION', true );
+curl.setOpt('URL', 'www.google.com');
+curl.setOpt('FOLLOWLOCATION', true);
 
-curl.on( 'end', function( statusCode, body, headers ) {
+curl.on('end', function(statusCode, body, headers) {
 
-    console.info( statusCode );
-    console.info( '---' );
-    console.info( body.length );
-    console.info( '---' );
-    console.info( this.getInfo( 'TOTAL_TIME' ) );
+    console.info(statusCode);
+    console.info('---');
+    console.info(body.length);
+    console.info('---');
+    console.info(this.getInfo( 'TOTAL_TIME'));
 
     this.close();
 });
 
-curl.on( 'error', curl.close.bind( curl ) );
+curl.on('error', curl.close.bind(curl));
 curl.perform();
 ```
 
 ### MultiPart Upload / HttpPost libcurl Option
 
 ```javascript
-var Curl = require( 'node-libcurl' ).Curl;
+var Curl = require('node-libcurl').Curl;
 
 var curl = new Curl(),
-    close = curl.close.bind( curl );
+    close = curl.close.bind(curl);
 
-curl.setOpt( curl.option.URL, '127.0.0.1/upload.php' );
-curl.setOpt( curl.option.HTTPPOST, [
+curl.setOpt(curl.option.URL, '127.0.0.1/upload.php');
+curl.setOpt(curl.option.HTTPPOST, [
     { name: 'input-name', file: '/file/path', type: 'text/html' },
     { name: 'input-name2', contents: 'field-contents' }
 ]);
 
-curl.on( 'end', close );
-curl.on( 'error', close );
+curl.on('end', close);
+curl.on('error', close);
 ```
 
 For more examples check the [examples folder](examples).
@@ -81,6 +81,8 @@ For more examples check the [examples folder](examples).
 ## API
 
 Check the [API Docs](api.md)
+
+Almost all [CURL options](https://curl.haxx.se/libcurl/c/curl_easy_setopt.html) are supported, if you pass one that is not, an error will be thrown.
 
 ## Detailed Installation
 
