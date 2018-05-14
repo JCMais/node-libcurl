@@ -402,7 +402,7 @@ namespace NodeLibcurl {
             }
 
         } //check if option is integer, and the value is correct
-        else if ( ( optionId = IsInsideCurlConstantStruct( curlOptionInteger, opt ) ) ) {
+        else if ( ( optionId = IsInsideCurlConstantStruct( curlMultiOptionInteger, opt ) ) ) {
 
             int32_t val = value->Int32Value();
 
