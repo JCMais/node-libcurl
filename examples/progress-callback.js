@@ -32,7 +32,7 @@ var Curl = require('../lib/Curl'),
   ProgressBar = require('progress');
 
 var curl = new Curl(),
-  url = process.argv[2] || 'http://ipv4.download.thinkbroadband.com/5MB.zip',
+  url = process.argv[2] || 'http://ovh.net/files/100Mio.dat',
   complete = '\u001b[42m \u001b[0m',
   incomplete = '\u001b[43m \u001b[0m',
   outputFile = path.resolve(__dirname, 'result.out'),
@@ -73,6 +73,7 @@ curl.setProgressCallback(function(dltotal, dlnow /*, ultotal, ulnow*/) {
   }
 
   if (!bar) {
+    console.log();
     bar = new ProgressBar('Downloading [:bar] :percent :etas - Avg :speed Kb/s', {
       complete: complete,
       incomplete: incomplete,
@@ -114,9 +115,15 @@ curl.setOpt(Curl.option.WRITEFUNCTION, function(chunk) {
   return chunk.length;
 });
 
-curl.on('end', curl.close.bind(curl));
+curl.on('end', function() {
+  console.log('Download ended');
+  curl.close();
+});
 
-curl.on('error', curl.close.bind(curl));
+curl.on('error', function(err) {
+  console.log('Failed to download file', err);
+  curl.close();
+});
 
 speedInfo.timeStart = process.hrtime();
 curl.perform();
