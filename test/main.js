@@ -65,4 +65,5 @@ describe('Curl', function() {
   importTest('HTTP Post', './curl/httppost');
   importTest('Binary Data', './curl/binary-data');
   importTest('Put Upload', './curl/put-upload');
+  importTest('Callbacks', './curl/callbacks');
 });
