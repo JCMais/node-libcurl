@@ -1,4 +1,5 @@
 var Easy = require('../lib/Easy'),
+  Curl = require('../lib/Curl'),
   readline = require('readline');
 
 var rl = readline.createInterface({
@@ -36,6 +37,7 @@ function createOrCloseCurlHandles() {
     } else {
       handle = new Easy();
       handle.setOpt('HTTPPOST', postData);
+      handle.setOpt(Curl.option.XFERINFOFUNCTION, () => {});
       instances[i] = handle;
     }
   }
