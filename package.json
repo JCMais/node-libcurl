@@ -41,9 +41,9 @@
   "dependencies": {
     "debug": "^2.2",
     "fs-extra": "^4.0.1",
-    "nan": "2.8.0",
-    "node-gyp": "~3.6.2",
-    "node-pre-gyp": "~0.6",
+    "nan": "2.10.0",
+    "node-gyp": "3.8.0",
+    "node-pre-gyp": "0.10.3",
     "npmlog": "~4.0.2",
     "prettier": "^1.10.2"
   },
