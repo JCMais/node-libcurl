@@ -17,7 +17,9 @@
                 ['OS=="win"', {
                     'msvs_settings': {
                         'VCCLCompilerTool': {
-                            'DisableSpecificWarnings': ['4506', '4838'] #warning about v8 inline function and narrowing
+                            # 4506 and 4838 -> about v8 inline function and narrowing
+                            # 4996 -> Declared wrongly Nan::Callback::Call
+                            'DisableSpecificWarnings': ['4506', '4838', '4996']
                         }
                     },
                     'configurations' : {
