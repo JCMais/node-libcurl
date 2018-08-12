@@ -4,6 +4,7 @@
 .idea
 .travis.yml
 .gitmodules
+.vscode/
 appveyor.yml
 jsdoc.json
 build/
