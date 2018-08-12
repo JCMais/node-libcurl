@@ -7,5 +7,6 @@ docs
 wallaby.json
 lib/binding
 debug
+.vscode/
 
 yarn-error.log
