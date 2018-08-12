@@ -268,12 +268,13 @@ namespace NodeLibcurl {
             err = Nan::Error( UV_ERROR_STRING( status ) );
         }
 
+        const int argc = 2;
         v8::Local<v8::Value> argv[] = {
             err,
             Nan::New<v8::Integer>( events )
         };
 
-        this->cbOnSocketEvent->Call( this->handle(), 2, argv );
+        Nan::Call( *(this->cbOnSocketEvent.get()), this->handle(), argc, argv );
     }
 
     // Called by libcurl when some chunk of data (from body) is available
@@ -429,16 +430,16 @@ namespace NodeLibcurl {
         v8::Local<v8::Uint32> nmembArg = Nan::New<v8::Uint32>( static_cast<uint32_t>( nmemb ) );
 
         v8::Local<v8::Value> argv[argc] = { buf, sizeArg, nmembArg };
-        v8::Local<v8::Value> retVal;
+        Nan::MaybeLocal<v8::Value> retVal;
 
         // Callback set with WRITEFUNCTION has priority over the onData one.
         if ( hasWriteCallback ) {
 
-            retVal = it->second->Call( this->handle(), argc, argv );
+            retVal = Nan::Call( *(it->second.get()), this->handle(), argc, argv );
         }
         else {
 
-            retVal = Nan::MakeCallback( this->handle(), cbOnData.As<v8::Function>(), argc, argv );
+            retVal = Nan::CallAsFunction( cbOnData->ToObject(), this->handle(), argc, argv );
         }
 
         size_t ret = n;
@@ -449,7 +450,7 @@ namespace NodeLibcurl {
         }
         else {
 
-            ret = retVal->Uint32Value();
+            ret = retVal.ToLocalChecked()->Uint32Value();
         }
 
         return ret;
@@ -479,16 +480,16 @@ namespace NodeLibcurl {
         v8::Local<v8::Uint32> nmembArg = Nan::New<v8::Uint32>( static_cast<uint32_t>( nmemb ) );
 
         v8::Local<v8::Value> argv[argc] = { buf, sizeArg, nmembArg };
-        v8::Local<v8::Value> retVal;
+        Nan::MaybeLocal<v8::Value> retVal;
 
         // Callback set with HEADERFUNCTION has priority over the onHeader one.
         if ( hasHeaderCallback ) {
 
-            retVal = it->second->Call( this->handle(), argc, argv );
+            retVal = Nan::Call( *(it->second.get()), this->handle(), argc, argv );
         }
         else {
 
-            retVal = Nan::MakeCallback( this->handle(), cbOnHeader.As<v8::Function>(), argc, argv );
+            retVal = Nan::CallAsFunction( cbOnHeader->ToObject(), this->handle(), argc, argv );
         }
 
         size_t ret = n;
@@ -499,7 +500,7 @@ namespace NodeLibcurl {
         }
         else {
 
-            ret = retVal->Uint32Value();
+            ret = retVal.ToLocalChecked()->Uint32Value();
         }
 
         return ret;
@@ -558,8 +559,6 @@ namespace NodeLibcurl {
 
         assert( obj );
 
-        int32_t retValInt = CURL_CHUNK_BGN_FUNC_FAIL;
-
         CallbacksMap::iterator it = obj->callbacks.find( CURLOPT_CHUNK_BGN_FUNCTION );
         assert( it != obj->callbacks.end() && "CHUNK_BGN callback not set." );
 
@@ -569,18 +568,27 @@ namespace NodeLibcurl {
             Nan::New<v8::Number>( remains )
         };
 
-        v8::Local<v8::Value> retVal = it->second->Call( obj->handle(), argc, argv );
+        int32_t returnValue = CURL_CHUNK_BGN_FUNC_FAIL;
 
-        if ( !retVal->IsInt32() ) {
+        Nan::TryCatch tryCatch;
+        Nan::MaybeLocal<v8::Value> returnValueCallback = Nan::Call( *(it->second.get()), obj->handle(), argc, argv );
+
+        if ( tryCatch.HasCaught() ) {
+            tryCatch.ReThrow();
+            return returnValue;
+        }
+
+        if ( returnValueCallback.IsEmpty() || !returnValueCallback.ToLocalChecked()->IsInt32() ) {
 
             Nan::ThrowTypeError( "Return value from the CHUNK_BGN callback must be an integer." );
+            tryCatch.ReThrow();
         }
         else {
 
-            retValInt = retVal->Int32Value();
+            returnValue = returnValueCallback.ToLocalChecked()->Int32Value();
         }
 
-        return retValInt;
+        return returnValue;
     }
 
     long Easy::CbChunkEnd( void *ptr )
@@ -589,23 +597,30 @@ namespace NodeLibcurl {
 
         assert( obj );
 
-        int32_t retValInt = CURL_CHUNK_END_FUNC_FAIL;
-
         CallbacksMap::iterator it = obj->callbacks.find( CURLOPT_CHUNK_END_FUNCTION );
         assert( it != obj->callbacks.end() && "CHUNK_END callback not set." );
 
-        v8::Local<v8::Value> retVal = it->second->Call( obj->handle(), 0, NULL );
+        int32_t returnValue = CURL_CHUNK_END_FUNC_FAIL;
 
-        if ( !retVal->IsInt32() ) {
+        Nan::TryCatch tryCatch;
+        Nan::MaybeLocal<v8::Value> returnValueCallback = Nan::Call( *(it->second.get()), obj->handle(), 0, NULL );
+
+        if ( tryCatch.HasCaught() ) {
+            tryCatch.ReThrow();
+            return returnValue;
+        }
+
+        if ( returnValueCallback.IsEmpty() || !returnValueCallback.ToLocalChecked()->IsInt32() ) {
 
             Nan::ThrowTypeError( "Return value from the CHUNK_END callback must be an integer." );
+            tryCatch.ReThrow();
         }
         else {
 
-            retValInt = retVal->Int32Value();
+            returnValue = returnValueCallback.ToLocalChecked()->Int32Value();
         }
 
-        return retValInt;
+        return returnValue;
     }
 
     int Easy::CbDebug( CURL *handle, curl_infotype type, char *data, size_t size, void *userptr )
@@ -616,28 +631,36 @@ namespace NodeLibcurl {
 
         assert( obj );
 
-        int32_t retvalInt = 1;
-
         CallbacksMap::iterator it = obj->callbacks.find( CURLOPT_DEBUGFUNCTION );
         assert( it != obj->callbacks.end() && "DEBUG callback not set." );
 
+        const int argc = 2;
         v8::Local<v8::Value> argv[] = {
             Nan::New<v8::Integer>( type ),
             Nan::New<v8::String>( data, static_cast<int>( size ) ).ToLocalChecked()
         };
 
-        v8::Local<v8::Value> retval = it->second->Call( obj->handle(), 2, argv );
+        int32_t returnValue = 1;
 
-        if ( !retval->IsInt32() ) {
+        Nan::TryCatch tryCatch;
+        Nan::MaybeLocal<v8::Value> returnValueCallback = Nan::Call( *(it->second.get()), obj->handle(), argc, argv );
+
+        if ( tryCatch.HasCaught() ) {
+            tryCatch.ReThrow();
+            return returnValue;
+        }
+
+        if ( returnValueCallback.IsEmpty() || !returnValueCallback.ToLocalChecked()->IsInt32() ) {
 
             Nan::ThrowTypeError( "Return value from the DEBUG callback must be an integer." );
+            tryCatch.ReThrow();
         }
         else {
 
-            retvalInt = retval->Int32Value();
+            returnValue = returnValueCallback.ToLocalChecked()->Int32Value();
         }
 
-        return retvalInt;
+        return returnValue;
     }
 
     int Easy::CbFnMatch( void *ptr, const char *pattern, const char *string )
@@ -648,8 +671,6 @@ namespace NodeLibcurl {
 
         assert( obj );
 
-        int32_t retvalInt32 = CURL_FNMATCHFUNC_FAIL;
-
         CallbacksMap::iterator it = obj->callbacks.find( CURLOPT_FNMATCH_FUNCTION );
         assert( it != obj->callbacks.end() && "FNMATCH callback not set." );
 
@@ -659,24 +680,27 @@ namespace NodeLibcurl {
             Nan::New( string ).ToLocalChecked()
         };
 
-        Nan::TryCatch tryCatch;
+        int32_t returnValue = CURL_FNMATCHFUNC_FAIL;
 
-        v8::Local<v8::Value> retval = it->second->Call( obj->handle(), argc, argv );
+        Nan::TryCatch tryCatch;
+        Nan::MaybeLocal<v8::Value> returnValueCallback = Nan::Call( *(it->second.get()), obj->handle(), argc, argv );
 
         if ( tryCatch.HasCaught() ) {
             tryCatch.ReThrow();
+            return returnValue;
         }
-        else if ( !retval->IsInt32() ) {
+
+        if ( returnValueCallback.IsEmpty() || !returnValueCallback.ToLocalChecked()->IsInt32() ) {
 
             Nan::ThrowTypeError( "Return value from the FNMATCH callback must be an integer." );
-
+            tryCatch.ReThrow();
         }
         else {
 
-            retvalInt32 = retval->Int32Value();
+            returnValue = returnValueCallback.ToLocalChecked()->Int32Value();
         }
 
-        return retvalInt32;
+        return returnValue;
     }
 
     int Easy::CbProgress( void *clientp, double dltotal, double dlnow, double ultotal, double ulnow )
@@ -687,15 +711,20 @@ namespace NodeLibcurl {
 
         assert( obj );
 
-        int32_t retvalInt32 = 1;
+        int32_t returnValue = 1;
 
+        // See the thread here for explanation on why this flag is needed
+        //  https://curl.haxx.se/mail/lib-2014-06/0062.html
+        // This was fixed here
+        //  https://github.com/curl/curl/commit/907520c4b93616bddea15757bbf0bfb45cde8101
         if ( obj->isCbProgressAlreadyAborted ) {
-            return retvalInt32;
+            return returnValue;
         }
 
         CallbacksMap::iterator it = obj->callbacks.find( CURLOPT_PROGRESSFUNCTION );
         assert( it != obj->callbacks.end() && "PROGRESS callback not set." );
 
+        const int argc = 4;
         v8::Local<v8::Value> argv[] = {
             Nan::New<v8::Number>( static_cast<double>( dltotal ) ),
             Nan::New<v8::Number>( static_cast<double>( dlnow ) ),
@@ -703,23 +732,29 @@ namespace NodeLibcurl {
             Nan::New<v8::Number>( static_cast<double>( ulnow ) )
         };
 
-        // Should handle possible exceptions here?
-        v8::Local<v8::Value> retval = it->second->Call( obj->handle(), 4, argv );
+        Nan::TryCatch tryCatch;
+        Nan::MaybeLocal<v8::Value> returnValueCallback = Nan::Call( *(it->second.get()), obj->handle(), argc, argv );
 
-        if ( !retval->IsInt32() ) {
+        if ( tryCatch.HasCaught() ) {
+            tryCatch.ReThrow();
+            return returnValue;
+        }
+
+        if ( returnValueCallback.IsEmpty() || !returnValueCallback.ToLocalChecked()->IsInt32() ) {
 
             Nan::ThrowTypeError( "Return value from the PROGRESS callback must be an integer." );
+            tryCatch.ReThrow();
         }
         else {
 
-            retvalInt32 = retval->Int32Value();
+            returnValue = returnValueCallback.ToLocalChecked()->Int32Value();
         }
 
-        if ( retvalInt32 ) {
+        if ( returnValue ) {
             obj->isCbProgressAlreadyAborted = true;
         }
 
-        return retvalInt32;
+        return returnValue;
     }
 
     int Easy::CbXferinfo( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow )
@@ -730,10 +765,11 @@ namespace NodeLibcurl {
 
         assert( obj );
 
-        int32_t retvalInt32 = 1;
+        int32_t returnValue = 1;
 
+        // same check than above, see it for comments.
         if ( obj->isCbProgressAlreadyAborted ) {
-            return retvalInt32;
+            return returnValue;
         }
 
         CallbacksMap::iterator it;
@@ -746,6 +782,7 @@ namespace NodeLibcurl {
 #endif
         assert( it != obj->callbacks.end() && "XFERINFO callback not set." );
 
+        const int argc = 4;
         v8::Local<v8::Value> argv[] = {
             Nan::New<v8::Number>( static_cast<double>( dltotal ) ),
             Nan::New<v8::Number>( static_cast<double>( dlnow ) ),
@@ -753,23 +790,28 @@ namespace NodeLibcurl {
             Nan::New<v8::Number>( static_cast<double>( ulnow ) )
         };
 
-        v8::Local<v8::Value> retval = it->second->Call( obj->handle(), 4, argv );
+        Nan::TryCatch tryCatch;
+        Nan::MaybeLocal<v8::Value> returnValueCallback = Nan::Call( *(it->second.get()), obj->handle(), argc, argv );
 
-        if ( !retval->IsInt32() ) {
+        if ( tryCatch.HasCaught() ) {
+            tryCatch.ReThrow();
+            return returnValue;
+        }
 
+        if ( returnValueCallback.IsEmpty() || !returnValueCallback.ToLocalChecked()->IsInt32() ) {
             Nan::ThrowTypeError( "Return value from the XFERINFO callback must be an integer." );
-
+            tryCatch.ReThrow();
         }
         else {
 
-            retvalInt32 = retval->Int32Value();
+            returnValue = returnValueCallback.ToLocalChecked()->Int32Value();
         }
 
-        if ( retvalInt32 ) {
+        if ( returnValue ) {
             obj->isCbProgressAlreadyAborted = true;
         }
 
-        return retvalInt32;
+        return returnValue;
     }
 
     NODE_LIBCURL_MODULE_INIT( Easy::Initialize )
