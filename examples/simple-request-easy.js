@@ -33,6 +33,11 @@ var Easy = require('../lib/Easy'),
 ch = new Easy();
 
 ch.setOpt(Curl.option.URL, url);
+ch.setOpt(Curl.option.NOPROGRESS, false);
+
+ch.setOpt(Curl.option.XFERINFOFUNCTION, function(dltotal, dlnow, ultotal, ulnow) {
+  console.log('PROGRESS', dltotal, dlnow, ultotal, ulnow);
+});
 
 ch.setOpt(Curl.option.HEADERFUNCTION, function(buf, size, nmemb) {
   console.log('HEADERFUNCTION: ');
