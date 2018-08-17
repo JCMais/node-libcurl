@@ -51,7 +51,7 @@ after(function() {
 });
 
 it('should reset the curl handler', function(done) {
-  curl.on('end', function() {
+  var endHandler = function() {
     if (!firstRun) {
       done(new Error('Failed to reset.'));
       return;
@@ -61,14 +61,19 @@ it('should reset the curl handler', function(done) {
 
     this.reset();
 
+    curl.on('end', endHandler);
+    curl.on('error', errorHandler);
+    
     //try to make another request
     this.perform();
-  });
-
-  curl.on('error', function(err, curlCode) {
+  };
+  
+  var errorHandler = function(err, curlCode) {
     //curlCode == 3 -> Invalid URL
     done(curlCode === 3 ? undefined : err);
-  });
-
+  };
+  
+  curl.on('end', endHandler);
+  curl.on('error', errorHandler);
   curl.perform();
 });
