@@ -130,23 +130,14 @@ it('should upload data correctly using put', function(done) {
 });
 
 it('should upload data correctly using READFUNCTION callback option', function(done) {
-  var fileStream = fs.createReadStream(fileName, {
-      flags: 'r+',
-    }),
-    bytesPerCall = 100;
+  var CURL_READFUNC_PAUSE = 0x10000001;
+  var CURL_READFUNC_ABORT = 0x10000000;
+  var CURLPAUSE_CONT = 0;
 
-  curl.setOpt(Curl.option.UPLOAD, 1);
-  curl.setOpt(Curl.option.READFUNCTION, function(buffer) {
-    var data = fileStream.read(bytesPerCall);
+  var stream = fs.createReadStream(fileName);
+  var cancelRequested = false;
 
-    if (!data) {
-      return 0;
-    }
-
-    data.copy(buffer);
-
-    return data.length;
-  });
+  curl.setOpt(Curl.option.UPLOAD, true);
 
   curl.on('end', function(statusCode, body) {
     statusCode.should.be.equal(200);
@@ -157,6 +148,49 @@ it('should upload data correctly using READFUNCTION callback option', function(d
 
   curl.on('error', function(err) {
     done(err);
+  });
+
+  stream.on('error', function(err) {
+    done(err);
+
+    // make sure curl is not left in "waiting for data" state
+    cancelRequested = true;
+    curl.pause(CURLPAUSE_CONT); // resume curl
+  });
+
+  var isReadable = true; // flag not to spam curl with resume requests
+  stream.on('readable', function() {
+    if (!isReadable) {
+      curl.pause(CURLPAUSE_CONT); // resume curl to let it ask for available data
+      isReadable = true;
+    }
+  });
+  var isEnded = false; // stream has no method to get this state
+  stream.on('end', function() {
+    isEnded = true;
+  });
+
+  curl.setOpt(Curl.option.READFUNCTION, function(targetBuffer) {
+    if (cancelRequested) {
+      return CURL_READFUNC_ABORT;
+    }
+
+    // stream returns null if it has < requestedBytes available
+    var readBuffer = stream.read(100) || stream.read();
+
+    if (readBuffer === null) {
+      console.log('nothing read, if ended', isEnded);
+
+      if (isEnded) {
+        return 0;
+      }
+      // stream buffer was drained and we need to pause curl while waiting for new data
+      isReadable = false;
+      return CURL_READFUNC_PAUSE;
+    }
+
+    readBuffer.copy(targetBuffer);
+    return readBuffer.length;
   });
 
   curl.perform();
