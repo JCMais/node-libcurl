@@ -88,6 +88,7 @@
                         ],
                         'LD_RUNPATH_SEARCH_PATHS': [
                           '/opt/local/lib',
+                          '/usr/local/opt/curl/lib',
                           '/usr/local/lib',
                           '/usr/lib'
                         ]
