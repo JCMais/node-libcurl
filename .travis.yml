@@ -85,7 +85,7 @@ before_install:
   - cd "$TAG"
   - CURL_PREFIX=$HOME
   - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-      CURL_PREFIX=/usr/local
+      CURL_PREFIX=/usr/local;
     fi
   - ./buildconf && ./configure --prefix=$CURL_PREFIX --with-ssl && make && make install
   - cd $TRAVIS_BUILD_DIR
