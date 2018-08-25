@@ -83,7 +83,11 @@ before_install:
       git clone --branch "$TAG" --depth 1 https://github.com/bagder/curl.git "$TAG";
     fi
   - cd "$TAG"
-  - ./buildconf && ./configure --prefix=$HOME --with-ssl && make && make install
+  - CURL_PREFIX=$HOME
+  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+      CURL_PREFIX=/usr/local;
+    fi
+  - ./buildconf && ./configure --prefix=$CURL_PREFIX --with-ssl && make && make install
   - cd $TRAVIS_BUILD_DIR
   # output curl version info
   - curl --version

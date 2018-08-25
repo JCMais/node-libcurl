@@ -85,13 +85,19 @@
                         'WARNING_CFLAGS':[
                             '-Wno-c++11-narrowing',
                             '-Wno-constant-conversion'
+                        ],
+                        'LD_RUNPATH_SEARCH_PATHS': [
+                          '/opt/local/lib',
+                          '/usr/local/opt/curl/lib',
+                          '/usr/local/lib',
+                          '/usr/lib'
                         ]
                     },
                     'include_dirs' : [
                         '<!@(node "<(module_root_dir)/tools/curl-config.js" --cflags | sed s/-I//g)'
                     ],
                     'libraries': [
-                        '<!@(node "<(module_root_dir)/tools/curl-config.js" --libs)'
+                        '-L <!@(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib -lcurl'
                     ]
                 }]
             ]
@@ -105,7 +111,21 @@
                     'files': [ '<(PRODUCT_DIR)/<(module_name).node' ],
                     'destination': '<(module_path)'
                 }
-            ]
+            ],
+            'conditions': [['OS == "mac"', {
+                'postbuilds': [
+                    {
+                      'postbuild_name': '@rpath for libcurl',
+                      'action': [
+                        'install_name_tool',
+                        '-change',
+                        '<!@(otool -D `curl-config --prefix`/lib/libcurl.dylib | sed -n 2p)',
+                        '@rpath/libcurl.dylib',
+                        '<(module_path)/<(module_name).node'
+                      ],
+                    },
+                ]
+            }]]
         }
     ]
 }
