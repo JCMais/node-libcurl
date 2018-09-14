@@ -6,8 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Breaking Change
+- Dropped support for Node.js 4
+- Curl.reset now correctly resets their instance (#141)
 ### Added
+- add missing CURLOPT_FTP_FILEMETHOD (#148)
+- Errors thrown inside callbacks are correctly caught / passed forward (if using multi interface)
 ### Changed
+- fix condition for custom handler for Curl.option.HEADERFUNCTION (#142)
+- mac libs should be linked against @rpath (#145)
 ### Removed
 
 ## [1.3.3]
