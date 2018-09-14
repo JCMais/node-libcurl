@@ -299,8 +299,12 @@ namespace NodeLibcurl {
         v8::Local<v8::Int32> errCode = Nan::New( static_cast<int32_t>( statusCode ) );
 
         if ( statusCode != CURLE_OK ) {
+            
+            bool hasError = !obj->callbackError.IsEmpty();
 
-            err = Nan::Error( curl_easy_strerror( statusCode ) );
+            err = hasError
+                ? Nan::New(obj->callbackError)
+                : Nan::Error( curl_easy_strerror( statusCode ) );
         }
 
         v8::Local<v8::Value> argv[] = { err, easyArg, errCode };

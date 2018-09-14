@@ -1111,15 +1111,9 @@ namespace NodeLibcurl {
             return;
         }
 
-#if NODE_MODULE_VERSION > 14
         if (  Nan::GetCurrentContext()->GetIsolate()->IsDead() ) {
             return;
         }
-#else // Node.js <= 0.12
-        if ( v8::V8::IsDead() ) {
-            return;
-        }
-#endif
 
         Nan::AdjustExternalMemory( static_cast<int>( diff ) );
     }

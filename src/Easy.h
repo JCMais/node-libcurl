@@ -104,6 +104,9 @@ namespace NodeLibcurl {
         bool isInsideMultiHandle = false;
         bool isOpen = true;
 
+        // used to return callback errors when inside Multi interface
+        Nan::Persistent<v8::Value> callbackError;
+
         // static members
         static uint32_t currentOpenedHandles;
 

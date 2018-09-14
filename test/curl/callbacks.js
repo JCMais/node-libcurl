@@ -88,8 +88,7 @@ describe('progress', function() {
     curl.perform();
   });
 
-  // skipped, see https://github.com/JCMais/node-libcurl/issues/140
-  it.skip('should not accept undefined return', function(done) {
+  it('should not accept undefined return', function(done) {
     curl.setOpt('URL', url + '/delayed');
     curl.setOpt(Curl.option.NOPROGRESS, false);
 
@@ -102,7 +101,9 @@ describe('progress', function() {
     });
 
     curl.on('error', function(err) {
-      done(err);
+      // eslint-disable-next-line no-undef
+      should(err).be.a.instanceOf(TypeError);
+      done();
     });
 
     curl.perform();
