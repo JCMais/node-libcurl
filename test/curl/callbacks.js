@@ -44,7 +44,7 @@ before(function(done) {
   });
 
   app.get('/delayed', function(req, res) {
-    var delayBetweenSends = 500;
+    var delayBetweenSends = 10;
     var data = ['<html>', '<body>', '<h1>Hello, World!</h1>', '</body>', '</html>'];
     function send() {
       const item = data.shift();
@@ -70,15 +70,20 @@ after(function() {
 describe('progress', function() {
   this.timeout(10000);
   it('should work', function(done) {
+    let wasCalled = false;
     curl.setOpt(Curl.option.NOPROGRESS, false);
-    curl.setProgressCallback(function(dltotal, dlnow) {
+    curl.setProgressCallback(function(dltotal, dlnow, ultotal, ulnow) {
+      wasCalled = true;
       dltotal.should.be.a.Number();
       dlnow.should.be.a.Number();
+      ultotal.should.be.a.Number();
+      ulnow.should.be.a.Number();
       return 0;
     });
     curl.setOpt('URL', url + '/delayed');
 
     curl.on('end', function() {
+      wasCalled.should.be.true;
       done();
     });
 
