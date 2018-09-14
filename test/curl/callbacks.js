@@ -68,6 +68,7 @@ after(function() {
 });
 
 describe('progress', function() {
+  this.timeout(10000);
   it('should work', function(done) {
     curl.setOpt(Curl.option.NOPROGRESS, false);
     curl.setProgressCallback(function(dltotal, dlnow) {
