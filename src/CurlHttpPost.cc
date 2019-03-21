@@ -21,11 +21,12 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "CurlHttpPost.h"
+#include <string>
+using namespace std;
 #ifdef _WIN32
 #include <locale>
 #include <codecvt>
-#include <string>
-using namespace std;
+
 
 std::wstring UTF8ToWide(const std::string& source)
 {
