@@ -24,6 +24,8 @@
 #ifdef _WIN32
 #include <locale>
 #include <codecvt>
+#include <string>
+using namespace std;
 
 std::wstring UTF8ToWide(const std::string& source)
 {
