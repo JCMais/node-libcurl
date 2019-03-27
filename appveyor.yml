@@ -24,6 +24,7 @@ clone_depth: 5
 install:
   # Get nasm
   - cinst nasm
+  - set PATH=%PROGRAMFILES%\NASM;%PATH%
   # in case above does not work
   # - curl -L -o nasminst.exe http://libgd.blob.core.windows.net/nasm/nasm-2.07-installer.exe
   # - start /wait nasminst.exe /S
