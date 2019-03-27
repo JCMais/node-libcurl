@@ -49,7 +49,6 @@ install:
   - python deps\curl-for-windows\configure.py
 
 build_script:
-  - node tools\retrieve-win-deps.js
   #- npm install --build-from-source --msvs_version=2015 --loglevel=http
   # Let's use yarn
   - set npm_config_build_from_source=true

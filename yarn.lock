@@ -2075,7 +2075,7 @@ osenv@0, osenv@^0.1.4:
     os-homedir "^1.0.0"
     os-tmpdir "^1.0.0"
 
-osenv@^0.1.5:
+osenv@0.1.5:
   version "0.1.5"
   resolved "https://registry.yarnpkg.com/osenv/-/osenv-0.1.5.tgz#85cdfafaeb28e8677f416e287592b5f3f49ea410"
   integrity sha512-0CWcCECdMVc2Rw3U5w9ZjqX6ga6ubk1xDVKxtBQPK7wis/0F2r9T6k4ydGYhecl7YUBxBVxhL5oisPsNxAPe2g==
