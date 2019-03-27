@@ -1,43 +1,62 @@
 // Mostly copied from https://github.com/nodegit/nodegit/blob/288ab93/lifecycleScripts/postinstall.js
-var fse = require('fs-extra');
-var path = require('path');
-var log = require('npmlog');
+const fse = require('fs-extra')
+const path = require('path')
+const fs = require('fs')
 
-var buildFlags = require('./buildFlags');
-var exec = require('./execPromise');
+const log = require('npmlog')
+const osenv = require('osenv')
 
-log.heading = 'node-libcurl';
+const homeDir = osenv.home()
 
-var rootPath = path.join(__dirname, '..');
+const { version } = process
+
+// node-gyp path from here: https://github.com/nodejs/node-gyp/blob/v3.8.0/bin/node-gyp.js#L31
+const gypDir = path.resolve(homeDir, '.node-gyp', version.replace('v', ''))
+
+// reverting what we do on tools/retrieve-win-deps.js
+const opensslFolder = path.resolve(gypDir, 'include', 'node', 'openssl')
+const opensslFolderDisabled = `${opensslFolder}.disabled`
+if (fs.existsSync(opensslFolderDisabled)) {
+  fs.renameSync(opensslFolderDisabled, opensslFolder)
+}
+
+const buildFlags = require('./buildFlags')
+const exec = require('./execPromise')
+
+log.heading = 'node-libcurl'
+
+const rootPath = path.join(__dirname, '..')
 
 function printStandardLibError() {
-  log.error('the latest libstdc++ is missing on your system!');
-  log.error('On Ubuntu you can install it using:');
-  log.error('$ sudo add-apt-repository ppa:ubuntu-toolchain-r/test');
-  log.error('$ sudo apt-get update');
-  log.error('$ sudo apt-get install libstdc++-4.9-dev');
+  log.error('the latest libstdc++ is missing on your system!')
+  log.error('On Ubuntu you can install it using:')
+  log.error('$ sudo add-apt-repository ppa:ubuntu-toolchain-r/test')
+  log.error('$ sudo apt-get update')
+  log.error('$ sudo apt-get install libstdc++-4.9-dev')
 }
 
 module.exports = function install() {
   if (buildFlags.isGitRepo) {
     // If we're building NodeGit from a git repo we aren't going to do any
     // cleaning up
-    return Promise.resolve();
+    return Promise.resolve()
   }
 
   if (buildFlags.isElectron || buildFlags.isNWjs) {
     // If we're building for electron or NWjs, we're unable to require the
     // built library so we have to just assume success, unfortunately.
-    return Promise.resolve();
+    return Promise.resolve()
   }
 
   return exec('node "' + path.join(rootPath, 'lib/Curl.js"'))
     .catch(function(e) {
       if (~e.toString().indexOf('Module version mismatch')) {
-        log.warn('NodeGit was built for a different version of node.');
-        log.warn('If you are building NodeGit for electron/nwjs you can ignore this warning.');
+        log.warn('node-libcurl was built for a different version of node.')
+        log.warn(
+          'If you are building node-libcurl for electron/nwjs you can ignore this warning.'
+        )
       } else {
-        throw e;
+        throw e
       }
     })
     .then(function() {
@@ -52,23 +71,23 @@ module.exports = function install() {
         // fse.removeSync(path.join(rootPath, "vendor"));
         // fse.removeSync(path.join(rootPath, "src"));
         // fse.removeSync(path.join(rootPath, "include"));
-        fse.removeSync(path.join(rootPath, 'build'));
+        fse.removeSync(path.join(rootPath, 'build'))
         if (fse.pathExists(path.join(rootPath, 'curl-for-windows'))) {
-          fse.removeSync(path.join(rootPath, 'curl-for-windows'));
+          fse.removeSync(path.join(rootPath, 'curl-for-windows'))
         }
       }
-    });
-};
+    })
+}
 
 // Called on the command line
 if (require.main === module) {
   module.exports().catch(function(e) {
-    log.warn('Could not finish postinstall');
+    log.warn('Could not finish postinstall')
 
     if (process.platform === 'linux' && ~e.toString().indexOf('libstdc++')) {
-      printStandardLibError();
+      printStandardLibError()
     } else {
-      log.error(e);
+      log.error(e)
     }
-  });
+  })
 }

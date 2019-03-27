@@ -1,6 +1,6 @@
 //only run on win32
 if (process.platform !== 'win32') {
-  process.exit(0);
+  process.exit(0)
 }
 
 /*
@@ -10,18 +10,44 @@ if (process.platform !== 'win32') {
  * only on Windows machines during install is not worth it.
  */
 
-var exec = require('child_process').exec,
-  path = require('path'),
-  fs = require('fs');
+const { exec } = require('child_process')
+const fs = require('fs')
+const path = require('path')
 
-var execConfig = {
-    cwd: path.resolve(__dirname + '/..'),
-  },
-  depsGypTarget = 'curl-for-windows/curl.gyp:libcurl';
+const osenv = require('osenv')
 
-var fileWithDepsTag = 'LIBCURL_VERSION_WIN_DEPS';
-var depsRepo = 'https://github.com/JCMais/curl-for-windows.git';
-var envCurlForWindowsDepsVersionTag = process.env.NODE_LIBCURL_WINDEPS_TAG;
+const homeDir = osenv.home()
+
+const { version } = process
+
+// node-gyp path from here: https://github.com/nodejs/node-gyp/blob/v3.8.0/bin/node-gyp.js#L31
+const gypDir = path.resolve(homeDir, '.node-gyp', version.replace('v', ''))
+
+// we are renaming openssl directory
+//  so it does not get used when compilling.
+// node-gyp default addon.gyp file adds the above folder as include, which would make
+//  the c++ includes for openssl/* point to that folder, instead of using the one from the openssl
+//  we are building. This only happens for node >= 10, probably because only there openssl started to
+//  to be have their symbols exported on Windows. Or for other obscure motive.
+const opensslFolder = path.resolve(gypDir, 'include', 'node', 'openssl')
+const opensslFolderDisabled = `${opensslFolder}.disabled`
+if (fs.existsSync(opensslFolder)) {
+  fs.renameSync(opensslFolder, opensslFolderDisabled)
+}
+
+const execConfig = {
+  cwd: path.resolve(__dirname + '/..'),
+}
+
+const depsGypTarget = 'curl-for-windows/curl.gyp:libcurl'
+
+const fileWithDepsTag = 'LIBCURL_VERSION_WIN_DEPS'
+const depsRepo = 'https://github.com/JCMais/curl-for-windows.git'
+const envCurlForWindowsDepsVersionTag = process.env.NODE_LIBCURL_WINDEPS_TAG
+
+const cleanupAndExit = (code = 0) => {
+  process.exit(code)
+}
 
 // Check if we are on the root git dir. That is, someone is running this
 //  directly from the node-libcurl repo.
@@ -29,94 +55,128 @@ exec('git rev-parse --show-toplevel', execConfig, function(err, stdout) {
   // Make sure we are the root git repo
   //  path.relative will return an empty string if both paths are equal
   if (!err && path.relative(execConfig.cwd, stdout.trim()) === '') {
-    replaceTokensOnGypFiles(path.resolve(__dirname, '..', 'deps', 'curl-for-windows'));
-    process.stdout.write('deps/' + depsGypTarget);
+    replaceTokensOnFiles(
+      path.resolve(__dirname, '..', 'deps', 'curl-for-windows')
+    )
+    process.stdout.write('deps/' + depsGypTarget)
   } else {
-    retrieveWinDeps();
+    retrieveWinDeps()
   }
-});
+
+  cleanupAndExit()
+})
 
 function retrieveWinDeps() {
-  var depsTag;
-  var fileExists = fs.existsSync(fileWithDepsTag);
+  const fileExists = fs.existsSync(fileWithDepsTag)
 
   if (!fileExists && !envCurlForWindowsDepsVersionTag) {
-    console.error('File: ', fileWithDepsTag, ' not found, and no NODE_LIBCURL_WINDEPS_TAG environment variable found.');
-    return process.exit(1);
+    console.error(
+      'File: ',
+      fileWithDepsTag,
+      ' not found, and no NODE_LIBCURL_WINDEPS_TAG environment variable found.'
+    )
+    cleanupAndExit(1)
   }
 
-  depsTag = envCurlForWindowsDepsVersionTag
+  const depsTag = envCurlForWindowsDepsVersionTag
     ? envCurlForWindowsDepsVersionTag.trim()
     : fs
         .readFileSync(fileWithDepsTag)
         .toString()
-        .replace(/\n|\s/g, '');
+        .replace(/\n|\s/g, '')
 
-  exec('git clone --branch ' + depsTag + ' ' + depsRepo, execConfig, function(err) {
+  exec('git clone --branch ' + depsTag + ' ' + depsRepo, execConfig, function(
+    err
+  ) {
     if (err) {
-      if (err.toString().indexOf('already exists and is not an empty directory') !== -1) {
+      if (
+        err
+          .toString()
+          .indexOf('already exists and is not an empty directory') !== -1
+      ) {
         exec('rmdir curl-for-windows /S /Q', execConfig, function(err) {
           if (err) {
-            console.error(err.toString());
-            process.exit(1);
+            console.error(err.toString())
+            cleanupAndExit(1)
           }
 
-          retrieveWinDeps();
-        });
+          retrieveWinDeps()
+        })
       } else {
-        console.error(err.toString());
-        process.exit(1);
+        console.error(err.toString())
+        cleanupAndExit(1)
       }
     } else {
-      exec('cd curl-for-windows && git submodule update --init && python configure.py', execConfig, function(err) {
-        if (err) {
-          console.error(err.toString());
-          process.exit(1);
-        }
-
-        // Grab gyp config files and replace <(library) with static_library
-        replaceTokensOnGypFiles(path.resolve(__dirname, '..', 'curl-for-windows'));
-
-        // remove git folder
-        exec('rmdir curl-for-windows\\.git /S /Q', execConfig, function(err) {
+      exec(
+        'cd curl-for-windows && git submodule update --init && python configure.py',
+        execConfig,
+        function(err) {
           if (err) {
-            console.error(err.toString());
-            process.exit(1);
+            console.error(err.toString())
+            cleanupAndExit(1)
           }
 
-          process.stdout.write(depsGypTarget);
-        });
-      });
+          // Grab gyp config files and replace <(library) with static_library
+          replaceTokensOnFiles(
+            path.resolve(__dirname, '..', 'curl-for-windows')
+          )
+
+          // remove git folder
+          exec('rmdir curl-for-windows\\.git /S /Q', execConfig, function(err) {
+            if (err) {
+              console.error(err.toString())
+              cleanupAndExit(1)
+            }
+
+            process.stdout.write(depsGypTarget)
+          })
+        }
+      )
     }
-  });
+  })
 }
 
-function replaceTokensOnGypFiles(dir) {
-  var filesToCheck = ['libssh2.gyp', 'openssl/openssl.gyp', 'zlib.gyp', 'curl.gyp'],
-    search = /<\(library\)/g,
-    replacement = 'static_library',
-    i,
-    len,
-    file;
+function replaceTokensOnFiles(dir) {
+  const filesToCheck = [
+    'libssh2.gyp',
+    'openssl/openssl.gyp',
+    'zlib.gyp',
+    'curl.gyp',
+  ]
+  // const pattern = /<\(library\)/g;
+  const replacements = [
+    {
+      pattern: /<\(library\)/g,
+      replacement: 'static_library',
+    },
+    // {
+    //   pattern: /curl_for_windows_build_openssl%': 'true'/g,
+    //   replacement: 'curl_for_windows_build_openssl\': \'false\'',
+    // },
+  ]
 
-  for (i = 0, len = filesToCheck.length; i < len; i++) {
-    file = path.resolve(dir, filesToCheck[i]);
-
-    replaceOnFile(file, search, replacement);
+  for (const file of filesToCheck) {
+    const filePath = path.resolve(dir, file)
+    for (const patternReplacementPair of replacements) {
+      replaceOnFile(
+        filePath,
+        patternReplacementPair.pattern,
+        patternReplacementPair.replacement
+      )
+    }
   }
 }
 
 function replaceOnFile(file, search, replacement) {
-  var fileContent;
-
   if (!fs.existsSync(file)) {
-    console.error('File: ', file, ' not found.');
-    process.exit(1);
+    console.error('File: ', file, ' not found.')
+    cleanupAndExit(1)
   }
 
-  fileContent = fs.readFileSync(file).toString();
+  const fileContent = fs
+    .readFileSync(file)
+    .toString()
+    .replace(search, replacement)
 
-  fileContent = fileContent.replace(search, replacement);
-
-  fs.writeFileSync(file, fileContent);
+  fs.writeFileSync(file, fileContent)
 }
