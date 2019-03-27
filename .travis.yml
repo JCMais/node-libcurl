@@ -63,11 +63,11 @@ before_install:
   - git clone https://github.com/creationix/nvm.git ~/.nvm
   - source ~/.nvm/nvm.sh
   - nvm install $TRAVIS_NODE_VERSION
-  - npm install npm@4.6.1
+  # - npm install npm@4.6.1
   - mv node_modules npm
   - export PATH="./node_modules/.bin/:$PATH"
   # output versions
-  - npm/.bin/npm --version
+  # - npm/.bin/npm --version
   - yarn --version
   - node --version
   - if [[ $TRAVIS_OS_NAME == "linux" ]];
