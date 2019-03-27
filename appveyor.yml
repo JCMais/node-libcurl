@@ -22,6 +22,13 @@ clone_depth: 5
 
 # Install scripts. (runs after repo cloning)
 install:
+  # Get nasm
+  - cinst nasm
+  # in case above does not work
+  # - curl -L -o nasminst.exe http://libgd.blob.core.windows.net/nasm/nasm-2.07-installer.exe
+  # - start /wait nasminst.exe /S
+  # - ps: $env:path="C:\Program Files (x86)\nasm;$($env:path)"
+  
   - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version) $env:Platform
   # Update npm for versions < 1
   - IF %nodejs_version% LSS 1 npm -g install npm
