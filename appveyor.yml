@@ -1,6 +1,6 @@
 # http://www.appveyor.com/docs/appveyor-yml
 # mostly copied from nan appveyor.yml
-os: Visual Studio 2015
+os: Visual Studio 2017
 
 environment:
   DEBUG: "node-libcurl"
@@ -23,7 +23,7 @@ clone_depth: 5
 # Install scripts. (runs after repo cloning)
 install:
   # Get nasm
-  - cinst nasm
+  - cinst nasm -y
   - set PATH=%PROGRAMFILES%\NASM;%PATH%
   # in case above does not work
   # - curl -L -o nasminst.exe http://libgd.blob.core.windows.net/nasm/nasm-2.07-installer.exe
@@ -53,7 +53,7 @@ build_script:
   #- npm install --build-from-source --msvs_version=2015 --loglevel=http
   # Let's use yarn
   - set npm_config_build_from_source=true
-  - set npm_config_msvs_version=2015
+  - set npm_config_msvs_version=2017
   - yarn install --frozen-lockfile
 # Post-install test scripts.
 test_script:
