@@ -32,10 +32,14 @@ cache:
     - $HOME/.node-gyp
     - $HOME/.npm
     - node_modules
+  yarn: true
 
 git:
   submodules: false
 before_install:
+  # Install yarn
+  - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.15.2
+  - export PATH=$HOME/.yarn/bin:$PATH
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
       export CC="gcc-${GCC_VERSION}";
       export CXX="g++-${GCC_VERSION}";
@@ -64,6 +68,7 @@ before_install:
   - export PATH="./node_modules/.bin/:$PATH"
   # output versions
   - npm/.bin/npm --version
+  - yarn --version
   - node --version
   - if [[ $TRAVIS_OS_NAME == "linux" ]];
       then apt-cache policy openssl;
@@ -110,8 +115,11 @@ install:
   - export PKG_CONFIG_PATH=/home/travis/lib/pkgconfig
   - pkg-config --cflags libcurl
   - pkg-config --libs libcurl
-  - npm/.bin/npm install --build-from-source --loglevel=info
-  - npm/.bin/npm test
+  # - npm/.bin/npm install --build-from-source --loglevel=info
+  # - npm/.bin/npm test
+  # Let's use yarn
+  - npm_config_build_from_source=true yarn install --frozen-lockfile
+  - yarn test
 before_script:
   - if [[ $PUBLISH_BINARY == true && $LIBCURL_VERSION_TAG == LATEST ]]; then
       node-pre-gyp package testpackage --verbose;
@@ -120,7 +128,7 @@ before_script:
 script:
   - INSTALL_RESULT=0
   - if [[ $PUBLISH_BINARY == true ]]; then
-      INSTALL_RESULT=$(npm/.bin/npm install --fallback-to-build=false > /dev/null)$? || true;
+      INSTALL_RESULT=$(npm_config_fallback_to_build=false yarn install --frozen-lockfile > /dev/null)$? || true;
     fi
   - if [[ $INSTALL_RESULT != 0 ]]; then
       node scripts/module-packaging.js --unpublish "$(node-pre-gyp reveal hosted_tarball --silent)";

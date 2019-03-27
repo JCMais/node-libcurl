@@ -30,6 +30,7 @@ install:
   # Output useful info for debugging.
   - node --version
   - npm --version
+  - yarn --version
   # Check if we need to publish the package
   - SET PUBLISH_BINARY=false
   # we are creating a empty file named publish
@@ -41,12 +42,15 @@ install:
 
 build_script:
   - node tools\retrieve-win-deps.js
-  - npm install --build-from-source --msvs_version=2015 --loglevel=http
-
+  #- npm install --build-from-source --msvs_version=2015 --loglevel=http
+  # Let's use yarn
+  - set npm_config_build_from_source=true
+  - set npm_config_msvs_version=2015
+  - yarn install --frozen-lockfile
 # Post-install test scripts.
 test_script:
   # run tests
-  - npm test
+  - yarn test
 
 after_test:
   - IF "%PUBLISH_BINARY%" == "true" (node-pre-gyp package testpackage --verbose)
@@ -54,7 +58,8 @@ after_test:
 
 on_success:
   - SET INSTALL_RESULT=0
-  - IF "%PUBLISH_BINARY%" == "true" (npm install --fallback-to-build=false)
+  - set npm_config_fallback_to_build=false
+  - IF "%PUBLISH_BINARY%" == "true" (yarn install --frozen-lockfile)
   - IF "%PUBLISH_BINARY%" == "true" (SET INSTALL_RESULT=%ERRORLEVEL%)
   - IF NOT %INSTALL_RESULT% == 0 (for /f "usebackq delims=" %%x in (`node-pre-gyp reveal hosted_tarball --silent`) do node scripts\module-packaging.js --unpublish %%x)
   - IF NOT %INSTALL_RESULT% == 0 (echo "Package unpublished since we got an error while installing it.")
