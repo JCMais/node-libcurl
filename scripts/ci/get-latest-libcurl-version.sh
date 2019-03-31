@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 git ls-remote --tags https://github.com/curl/curl.git \
   | awk '{print $2}' \
   | grep 'curl-' \

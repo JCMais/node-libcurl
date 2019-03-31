@@ -1,5 +1,6 @@
 #!/bin/sh
 # https://stackoverflow.com/a/13350100/710693
+set -ev
 
 # download tar gz file from source_url and unpack it to destination
 # download_and_upack <source_url> <destination>
