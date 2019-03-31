@@ -87,7 +87,12 @@ before_install:
   # OpenSSL version must match Node.js one
   - OPENSSL_RELEASE=$(node -e "console.log(process.versions.openssl.replace(/\./g, '_'))")
   - OPENSSL_DEST_FOLDER=$HOME/deps/openssl
-  - ./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER
+  # We must pass KERNEL_BITS=64 on macOS to make sure a x86_64 lib is built, the default is to build an i386 one
+  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+      KERNEL_BITS=64 ./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER;
+    else
+      ./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER;
+    fi
   - export OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build
   ###################
   # Build zlib
