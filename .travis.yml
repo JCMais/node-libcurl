@@ -1,5 +1,5 @@
 os:
-  # - linux
+  - linux
   - osx
 # macos version
 osx_image: xcode7.3
