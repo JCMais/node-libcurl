@@ -1,5 +1,5 @@
 os:
-  - linux
+  # - linux
   - osx
 # macos version
 osx_image: xcode7.3
@@ -8,8 +8,8 @@ dist: trusty
 language: node_js
 node_js:
   - "8"
-  - "10"
-  - "11"
+  # - "10"
+  # - "11"
 # Being deprecated
 # sudo: false
 addons:
@@ -33,7 +33,7 @@ env:
     - LIBSSH2_RELEASE=1.8.2
     - secure: d64E8XbVGHuQ0kls1oVUF1y6pnj3iqZB34roKBHAFTyWBXReC1FWLb+qEShCJicUDkeK2At7vQUz7ohMn2mL/hVXiRbuSaYuDKFx8iDeei9mTgE+iy258mSovnNvXfG72EP5+LB+UOhgmTGe0qyTALOQ6ceCgjdscul3IGWE8lw=
   matrix:
-    - LIBCURL_RELEASE=LATEST
+    # - LIBCURL_RELEASE=LATEST
     - LIBCURL_RELEASE=7_32_0
 
 cache:
@@ -58,6 +58,11 @@ before_install:
       export LINK="gcc-${GCC_VERSION}";
       export LINKXX="g++-${GCC_VERSION}";
     fi
+  # core utils give us gsort
+  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+      brew update;
+      brew install coreutils;
+    fi
   # Update openssl on osx, and add it to the Path
   # When configuring openssl should we call ths directly?
   # PKG_CONFIG_PATH=/opt/OpenSSL/lib/pkgconfig ./configure --with-ssl
@@ -79,7 +84,7 @@ before_install:
   # nghttp2 version must match Node.js one
   - NGHTTP2_RELEASE=$(node -e "console.log(process.versions.nghttp2)")
   - NGHTTP2_DEST_FOLDER=$HOME/deps/nghttp2
-  - ./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER
+  - ./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER >/dev/null
   - export NGHTTP2_BUILD_FOLDER=$NGHTTP2_DEST_FOLDER/build
   ###################
   # Build OpenSSL
@@ -87,7 +92,7 @@ before_install:
   # OpenSSL version must match Node.js one
   - OPENSSL_RELEASE=$(node -e "console.log(process.versions.openssl.replace(/\./g, '_'))")
   - OPENSSL_DEST_FOLDER=$HOME/deps/openssl
-  - ./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER
+  - ./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER >/dev/null
   - export OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build
   ###################
   # Build zlib
@@ -95,14 +100,14 @@ before_install:
   # Zlib version must match Node.js one
   - ZLIB_RELEASE=$(node -e "console.log(process.versions.zlib)")
   - ZLIB_DEST_FOLDER=$HOME/deps/zlib
-  - ./scripts/ci/build-zlib.sh $ZLIB_RELEASE $ZLIB_DEST_FOLDER
+  - ./scripts/ci/build-zlib.sh $ZLIB_RELEASE $ZLIB_DEST_FOLDER >/dev/null
   - export ZLIB_BUILD_FOLDER=$ZLIB_DEST_FOLDER/build
   ###################
   # Build libssh2
   ###################
   - LIBSSH2_RELEASE=$LIBSSH2_RELEASE # just to be pedantic
   - LIBSSH2_DEST_FOLDER=$HOME/deps/libssh2
-  - ./scripts/ci/build-libssh2.sh $LIBSSH2_RELEASE $LIBSSH2_DEST_FOLDER
+  - ./scripts/ci/build-libssh2.sh $LIBSSH2_RELEASE $LIBSSH2_DEST_FOLDER >/dev/null
   - export LIBSSH2_BUILD_FOLDER=$LIBSSH2_DEST_FOLDER/build
   ###################
   # Build libcurl
@@ -111,6 +116,10 @@ before_install:
       LIBCURL_RELEASE=$(./scripts/ci/get-latest-libcurl-version.sh);
     fi
   - LIBCURL_DEST_FOLDER=$HOME/deps/libcurl
+  # MACOSX_DEPLOYMENT_TARGET matches the one we have on binding.gyp
+  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+      export MACOSX_DEPLOYMENT_TARGET="10.8";
+    fi
   - ./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER
   # Make curl-config and curl binaries visible
   - PATH=$LIBCURL_DEST_FOLDER/build/bin:$PATH 
@@ -133,7 +142,13 @@ install:
   - node tools/curl-config.js --static-libs
   - node tools/curl-config.js --prefix
   - node tools/curl-config.js --cflags
-  - npm_config_build_from_source=true npm_config_curl_static_build=true yarn install --frozen-lockfile
+  - echo "OTOOL -D"
+  - otool -D `curl-config --prefix`/lib/libcurl.dylib
+  - echo "OTOOL -D | sed"
+  - otool -D `curl-config --prefix`/lib/libcurl.dylib | sed -n 2p
+  - npm_config_build_from_source=true npm_config_curl_static_build=true npm_config_verbose=true yarn install --frozen-lockfile
+  - echo "OTOOL module"
+  - otool -D ./lib/binding/node_libcurl.node
   - yarn test
 before_script:
   - if [[ $PUBLISH_BINARY == true && $LIBCURL_VERSION_TAG == LATEST ]]; then

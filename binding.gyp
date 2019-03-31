@@ -138,7 +138,11 @@
               '-Wno-c++11-narrowing',
               '-Wno-constant-conversion'
             ],
+            # if building statically do we need to add all other folders here too (for openssl, libssh2, etc)?
+            #  we could use the following for example:
+            # <!@(node "<(module_root_dir)/tools/curl-config.js" --static-libs | node -e "console.log(require('fs').readFileSync(0, 'utf-8').split(' ').filter(i => i.startsWith('-L')).join(' ').replace(/-L/g, ''))")
             'LD_RUNPATH_SEARCH_PATHS': [
+              '<!(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib',
               '/opt/local/lib',
               '/usr/local/opt/curl/lib',
               '/usr/local/lib',
