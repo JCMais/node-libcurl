@@ -80,7 +80,7 @@ before_install:
   - NGHTTP2_RELEASE=$(node -e "console.log(process.versions.nghttp2)")
   - NGHTTP2_DEST_FOLDER=$HOME/deps/nghttp2
   - ./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER >/dev/null
-  - export NGHTTP2_BUILD_FOLDER=$NGHTTP2_DEST_FOLDER/build
+  - export NGHTTP2_BUILD_FOLDER=$NGHTTP2_DEST_FOLDER/build/$NGHTTP2_RELEASE
   ###################
   # Build OpenSSL
   ###################
@@ -93,7 +93,7 @@ before_install:
     else
       ./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER;
     fi
-  - export OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build
+  - export OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build/$OPENSSL_RELEASE
   ###################
   # Build zlib
   ###################
@@ -101,14 +101,14 @@ before_install:
   - ZLIB_RELEASE=$(node -e "console.log(process.versions.zlib)")
   - ZLIB_DEST_FOLDER=$HOME/deps/zlib
   - ./scripts/ci/build-zlib.sh $ZLIB_RELEASE $ZLIB_DEST_FOLDER >/dev/null
-  - export ZLIB_BUILD_FOLDER=$ZLIB_DEST_FOLDER/build
+  - export ZLIB_BUILD_FOLDER=$ZLIB_DEST_FOLDER/build/$ZLIB_RELEASE
   ###################
   # Build libssh2
   ###################
   - LIBSSH2_RELEASE=$LIBSSH2_RELEASE # just to be pedantic
   - LIBSSH2_DEST_FOLDER=$HOME/deps/libssh2
   - ./scripts/ci/build-libssh2.sh $LIBSSH2_RELEASE $LIBSSH2_DEST_FOLDER >/dev/null
-  - export LIBSSH2_BUILD_FOLDER=$LIBSSH2_DEST_FOLDER/build
+  - export LIBSSH2_BUILD_FOLDER=$LIBSSH2_DEST_FOLDER/build/$LIBSSH2_RELEASE
   ###################
   # Build libcurl
   ###################
@@ -122,7 +122,7 @@ before_install:
     fi
   - ./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER
   # Make curl-config and curl binaries visible
-  - PATH=$LIBCURL_DEST_FOLDER/build/bin:$PATH 
+  - PATH=$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin:$PATH 
   # output curl version info
   - curl --version
   - curl-config --version
