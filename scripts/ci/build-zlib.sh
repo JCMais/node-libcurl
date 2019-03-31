@@ -17,10 +17,10 @@ cd $2/source/$1
 # make distclean
 
 # Debug
-# CFLAGS="-fPIC" ./configure --prefix=$ZLIB_BUILD_FOLDER --static --debug
+# CFLAGS="-fPIC" ./configure --prefix=$build_folder --static --debug
 
 # Release - Static
-CFLAGS="-fPIC" ./configure --prefix=$ZLIB_BUILD_FOLDER --static
+CFLAGS="-fPIC" ./configure --prefix=$build_folder --static
 
 # Release - Both
 # CFLAGS="-fPIC" ./configure --prefix=$build_folder
