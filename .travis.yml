@@ -137,13 +137,17 @@ install:
   - node tools/curl-config.js --static-libs
   - node tools/curl-config.js --prefix
   - node tools/curl-config.js --cflags
-  - echo "OTOOL -D"
-  - otool -D `curl-config --prefix`/lib/libcurl.dylib
-  - echo "OTOOL -D | sed"
-  - otool -D `curl-config --prefix`/lib/libcurl.dylib | sed -n 2p
+  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+      echo "OTOOL -D"
+      otool -D `curl-config --prefix`/lib/libcurl.dylib
+      echo "OTOOL -D | sed"
+      otool -D `curl-config --prefix`/lib/libcurl.dylib | sed -n 2p
+    fi
   - npm_config_build_from_source=true npm_config_curl_static_build=true npm_config_verbose=true yarn install --frozen-lockfile
-  - echo "OTOOL module"
-  - otool -D ./lib/binding/node_libcurl.node
+  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+      echo "OTOOL module"
+      otool -D ./lib/binding/node_libcurl.node
+    fi
   - ldd lib/binding/*/*/*node
   - yarn test
 before_script:
