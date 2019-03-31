@@ -80,6 +80,7 @@ before_install:
   - NGHTTP2_RELEASE=$(node -e "console.log(process.versions.nghttp2)")
   - NGHTTP2_DEST_FOLDER=$HOME/deps/nghttp2
   - ./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER
+  - export NGHTTP2_BUILD_FOLDER=$NGHTTP2_DEST_FOLDER/build
   ###################
   # Build OpenSSL
   ###################
@@ -87,6 +88,7 @@ before_install:
   - OPENSSL_RELEASE=$(node -e "console.log(process.versions.openssl.replace(/\./g, '_'))")
   - OPENSSL_DEST_FOLDER=$HOME/deps/openssl
   - ./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER
+  - export OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build
   ###################
   # Build zlib
   ###################
@@ -94,14 +96,14 @@ before_install:
   - ZLIB_RELEASE=$(node -e "console.log(process.versions.zlib)")
   - ZLIB_DEST_FOLDER=$HOME/deps/zlib
   - ./scripts/ci/build-zlib.sh $ZLIB_RELEASE $ZLIB_DEST_FOLDER
+  - export ZLIB_BUILD_FOLDER=$ZLIB_DEST_FOLDER/build
   ###################
   # Build libssh2
   ###################
   - LIBSSH2_RELEASE=$LIBSSH2_RELEASE # just to be pedantic
   - LIBSSH2_DEST_FOLDER=$HOME/deps/libssh2
-  - OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build \
-      ZLIB_BUILD_FOLDER=$ZLIB_DEST_FOLDER/build \
-      ./scripts/ci/build-libssh2.sh $LIBSSH2_RELEASE $LIBSSH2_DEST_FOLDER
+  - ./scripts/ci/build-libssh2.sh $LIBSSH2_RELEASE $LIBSSH2_DEST_FOLDER
+  - export LIBSSH2_BUILD_FOLDER=$LIBSSH2_DEST_FOLDER/build
   ###################
   # Build libcurl
   ###################
@@ -109,11 +111,7 @@ before_install:
       LIBCURL_RELEASE=$(./scripts/ci/get-latest-libcurl-version.sh);
     fi
   - LIBCURL_DEST_FOLDER=$HOME/deps/libcurl
-  - LIBSSH2_BUILD_FOLDER=$LIBSSH2_DEST_FOLDER/build \
-      NGHTTP2_BUILD_FOLDER=$NGHTTP2_DEST_FOLDER/build \
-      OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build \
-      ZLIB_BUILD_FOLDER=$ZLIB_DEST_FOLDER/build \
-      ./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER
+  - ./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER
   # Make curl-config and curl binaries visible
   - PATH=$LIBCURL_DEST_FOLDER/build/bin:$PATH 
   # output curl version info
@@ -135,9 +133,7 @@ install:
   - node tools/curl-config.js --static-libs
   - node tools/curl-config.js --prefix
   - node tools/curl-config.js --cflags
-  - npm_config_build_from_source=true \
-      npm_config_curl_static_build=true \
-      yarn install --frozen-lockfile
+  - npm_config_build_from_source=true npm_config_curl_static_build=true yarn install --frozen-lockfile
   - yarn test
 before_script:
   - if [[ $PUBLISH_BINARY == true && $LIBCURL_VERSION_TAG == LATEST ]]; then

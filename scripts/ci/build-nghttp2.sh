@@ -1,6 +1,6 @@
 #!/bin/bash
 # <release> <dest_folder>
-set -ev
+set -e
 
 build_folder=$2/build
 curr_dirname=$(dirname "$0")
