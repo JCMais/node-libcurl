@@ -165,7 +165,7 @@
           'destination': '<(module_path)'
         }
       ],
-      'conditions': [['OS == "mac"', {
+      'conditions': [['OS == "mac" and curl_static_build!="true"', {
         'postbuilds': [
           {
             'postbuild_name': '@rpath for libcurl',
