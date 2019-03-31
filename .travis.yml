@@ -58,11 +58,6 @@ before_install:
       export LINK="gcc-${GCC_VERSION}";
       export LINKXX="g++-${GCC_VERSION}";
     fi
-  # core utils give us gsort
-  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-      brew update;
-      brew install coreutils;
-    fi
   # Update openssl on osx, and add it to the Path
   # When configuring openssl should we call ths directly?
   # PKG_CONFIG_PATH=/opt/OpenSSL/lib/pkgconfig ./configure --with-ssl
@@ -149,6 +144,7 @@ install:
   - npm_config_build_from_source=true npm_config_curl_static_build=true npm_config_verbose=true yarn install --frozen-lockfile
   - echo "OTOOL module"
   - otool -D ./lib/binding/node_libcurl.node
+  - ldd lib/binding/*/*/*node
   - yarn test
 before_script:
   - if [[ $PUBLISH_BINARY == true && $LIBCURL_VERSION_TAG == LATEST ]]; then
