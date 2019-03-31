@@ -6,6 +6,10 @@ osx_image: xcode7.3
 # linux dist
 dist: trusty
 language: node_js
+node_js:
+  - "8"
+  - "10"
+  - "11"
 # Being deprecated
 # sudo: false
 addons:
