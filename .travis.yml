@@ -87,7 +87,7 @@ before_install:
   # OpenSSL version must match Node.js one
   - OPENSSL_RELEASE=$(node -e "console.log(process.versions.openssl.replace(/\./g, '_'))")
   - OPENSSL_DEST_FOLDER=$HOME/deps/openssl
-  - ./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER >/dev/null
+  - ./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER
   - export OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build
   ###################
   # Build zlib
