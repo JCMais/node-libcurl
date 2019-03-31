@@ -21,7 +21,7 @@
   "main": "./index.js",
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
-    "test": "mocha test --reporter spec --timeout 5000",
+    "test": "mocha test --reporter spec --timeout 20000",
     "docs": "jsdoc2md lib/*.js > api.md",
     "postinstall": "node scripts/postinstall",
     "pregyp": "node-pre-gyp",

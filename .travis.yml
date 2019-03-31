@@ -1,31 +1,41 @@
 os:
   - linux
   - osx
+# macos version
 osx_image: xcode7.3
-language: cpp
-sudo: false
+# linux dist
+dist: trusty
+language: generic
+# Being deprecated
+# sudo: false
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
+      # Those are the defaults for trusty release on TravisCI
       - gcc-4.8
       - g++-4.8
+      # Upgrade openssl
       - openssl
+node_js:
+  - "8"
+  - "10"
+  - "11"
 env:
   global:
     - GCC_VERSION=4.8
-    - DEBUG="node-libcurl"
+    - DEBUG=node-libcurl
+    - LIBSSH2_RELEASE=1.8.2
     - secure: d64E8XbVGHuQ0kls1oVUF1y6pnj3iqZB34roKBHAFTyWBXReC1FWLb+qEShCJicUDkeK2At7vQUz7ohMn2mL/hVXiRbuSaYuDKFx8iDeei9mTgE+iy258mSovnNvXfG72EP5+LB+UOhgmTGe0qyTALOQ6ceCgjdscul3IGWE8lw=
   matrix:
-    - TRAVIS_NODE_VERSION="6" LIBCURL_VERSION_TAG=LATEST
-    - TRAVIS_NODE_VERSION="8" LIBCURL_VERSION_TAG=LATEST
-    - TRAVIS_NODE_VERSION="9" LIBCURL_VERSION_TAG=LATEST
-    - TRAVIS_NODE_VERSION="10" LIBCURL_VERSION_TAG=LATEST
-    - TRAVIS_NODE_VERSION="6" LIBCURL_VERSION_TAG="curl-7_32_0"
-    - TRAVIS_NODE_VERSION="8" LIBCURL_VERSION_TAG="curl-7_32_0"
-    - TRAVIS_NODE_VERSION="9" LIBCURL_VERSION_TAG="curl-7_32_0"
-    - TRAVIS_NODE_VERSION="10" LIBCURL_VERSION_TAG="curl-7_32_0"
+    - LIBCURL_RELEASE=LATEST
+    - LIBCURL_RELEASE=7_32_0
+matrix:
+  fast_finish: true
+  allow_failures:
+    - node_js: "11"
+
 cache:
   directories:
     - $HOME/curl-source
@@ -35,9 +45,11 @@ cache:
   yarn: true
 
 git:
+  depth: 10
   submodules: false
+
 before_install:
-  # Install yarn
+  # Use latest yarn
   - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.15.2
   - export PATH=$HOME/.yarn/bin:$PATH
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
@@ -45,55 +57,65 @@ before_install:
       export CXX="g++-${GCC_VERSION}";
       export LINK="gcc-${GCC_VERSION}";
       export LINKXX="g++-${GCC_VERSION}";
-      export LDFLAGS="-Wl,-rpath,${HOME}/lib";
     fi
   # Update openssl on osx, and add it to the Path
-  # When configuring openssl should we call ths directly? env PKG_CONFIG_PATH=/opt/OpenSSL/lib/pkgconfig ./configure --with-ssl
-  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-      brew update;
-      brew reinstall -s libtool;
-      brew install openssl;
-      brew outdated openssl || brew upgrade openssl;
-      brew link --force openssl;
-      export PATH=/usr/local/opt/openssl/bin:${PATH};
-      export PKG_CONFIG_PATH=/usr/local/opt/openssl/lib/pkgconfig;
-    fi
+  # When configuring openssl should we call ths directly?
+  # PKG_CONFIG_PATH=/opt/OpenSSL/lib/pkgconfig ./configure --with-ssl
+  # - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+  #     brew update;
+  #     brew reinstall -s libtool;
+  #     brew install openssl;
+  #     brew outdated openssl || brew upgrade openssl;
+  #     brew link --force openssl;
+  #     export PATH=/usr/local/opt/openssl/bin:${PATH};
+  #     export PKG_CONFIG_PATH=/usr/local/opt/openssl/lib/pkgconfig;
+  #   fi
   - export PATH=$HOME/bin:$PATH
-  - rm -rf ~/.nvm
-  - git clone https://github.com/creationix/nvm.git ~/.nvm
-  - source ~/.nvm/nvm.sh
-  - nvm install $TRAVIS_NODE_VERSION
-  # - npm install npm@4.6.1
-  - mv node_modules npm
-  - export PATH="./node_modules/.bin/:$PATH"
-  # output versions
-  # - npm/.bin/npm --version
   - yarn --version
   - node --version
-  - if [[ $TRAVIS_OS_NAME == "linux" ]];
-      then apt-cache policy openssl;
+  ###################
+  # Build nghttp2
+  ###################
+  # nghttp2 version must match Node.js one
+  - NGHTTP2_RELEASE=$(node -e "console.log(process.versions.nghttp2)")
+  - NGHTTP2_DEST_FOLDER=$HOME/deps/nghttp2
+  - ./ci/scripts/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER
+  ###################
+  # Build OpenSSL
+  ###################
+  # OpenSSL version must match Node.js one
+  - OPENSSL_RELEASE=$(node -e "console.log(process.versions.openssl.replace(/\./g, '_'))")
+  - OPENSSL_DEST_FOLDER=$HOME/deps/openssl
+  - ./ci/scripts/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER
+  ###################
+  # Build zlib
+  ###################
+  # Zlib version must match Node.js one
+  - ZLIB_RELEASE=$(node -e "console.log(process.versions.zlib)")
+  - ZLIB_DEST_FOLDER=$HOME/deps/zlib
+  - ./ci/scripts/build-zlib.sh $ZLIB_RELEASE $ZLIB_DEST_FOLDER
+  ###################
+  # Build libssh2
+  ###################
+  - LIBSSH2_RELEASE=$LIBSSH2_RELEASE # just to be pedantic
+  - LIBSSH2_DEST_FOLDER=$HOME/deps/libssh2
+  - OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build \
+      ZLIB_BUILD_FOLDER=$ZLIB_DEST_FOLDER/build \
+      ./ci/scripts/build-libssh2.sh $LIBSSH2_RELEASE $LIBSSH2_DEST_FOLDER
+  ###################
+  # Build libcurl
+  ###################
+  - if [[ $LIBCURL_RELEASE == 'LATEST' ]]; then
+      LIBCURL_RELEASE=$(./scripts/ci/get-latest-libcurl-version.sh);
     fi
-  - openssl version -a
-  - if [[ $LIBCURL_VERSION_TAG == 'LATEST' ]]; then
-      TAG=$( git ls-remote --tags https://github.com/bagder/curl.git |
-      awk '{print $2}' | grep 'curl-' | grep -v '[0-9][_-][abp]' |
-      grep -v '{' | sort -t_ -k 1.16,1n -k 2,2n -k 3,3n -k 4,4n |
-      sed -n 's@.*\(curl-[0-9_]\)@\1@p' | tail -n1 );
-    else
-      TAG=${LIBCURL_VERSION_TAG};
-    fi
-  - mkdir -p $HOME/curl-source
-  - cd $HOME/curl-source
-  - if [[ ! -d "$TAG" ]]; then
-      git clone --branch "$TAG" --depth 1 https://github.com/bagder/curl.git "$TAG";
-    fi
-  - cd "$TAG"
-  - CURL_PREFIX=$HOME
-  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-      CURL_PREFIX=/usr/local;
-    fi
-  - ./buildconf && ./configure --prefix=$CURL_PREFIX --with-ssl && make && make install
-  - cd $TRAVIS_BUILD_DIR
+  - LIBCURL_DEST_FOLDER=$HOME/deps/libcurl
+  - LIBSSH2_BUILD_FOLDER=$LIBSSH2_DEST_FOLDER/build \
+      NGHTTP2_BUILD_FOLDER=$NGHTTP2_DEST_FOLDER/build \
+      OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build \
+      ZLIB_BUILD_FOLDER=$ZLIB_DEST_FOLDER/build \
+      ./ci/scripts/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER
+  # Make curl-config and curl binaries visible
+  - PATH=$LIBCURL_DEST_FOLDER/build/bin:$PATH 
   # output curl version info
   - curl --version
   - curl-config --version
@@ -107,23 +129,20 @@ before_install:
       PUBLISH_BINARY=true;
     fi
 install:
+  # Make sure we can see the correct curl-config
   - node tools/curl-config.js --version
   - node tools/curl-config.js --libs
   - node tools/curl-config.js --static-libs
   - node tools/curl-config.js --prefix
   - node tools/curl-config.js --cflags
-  - export PKG_CONFIG_PATH=/home/travis/lib/pkgconfig
-  - pkg-config --cflags libcurl
-  - pkg-config --libs libcurl
-  # - npm/.bin/npm install --build-from-source --loglevel=info
-  # - npm/.bin/npm test
-  # Let's use yarn
-  - npm_config_build_from_source=true yarn install --frozen-lockfile
+  - npm_config_build_from_source=true \
+      npm_config_curl_static_build=true \
+      yarn install --frozen-lockfile
   - yarn test
 before_script:
   - if [[ $PUBLISH_BINARY == true && $LIBCURL_VERSION_TAG == LATEST ]]; then
-      node-pre-gyp package testpackage --verbose;
-      node scripts/module-packaging.js --publish "$(node-pre-gyp reveal staged_tarball --silent)";
+      yarn pregyp package testpackage --verbose;
+      node scripts/module-packaging.js --publish "$(yarn pregyp reveal staged_tarball --silent)";
     fi
 script:
   - INSTALL_RESULT=0
@@ -131,7 +150,7 @@ script:
       INSTALL_RESULT=$(npm_config_fallback_to_build=false yarn install --frozen-lockfile > /dev/null)$? || true;
     fi
   - if [[ $INSTALL_RESULT != 0 ]]; then
-      node scripts/module-packaging.js --unpublish "$(node-pre-gyp reveal hosted_tarball --silent)";
+      node scripts/module-packaging.js --unpublish "$(yarn pregyp reveal hosted_tarball --silent)";
       false;
     fi
-  - node-pre-gyp clean
+  - yarn pregyp clean
