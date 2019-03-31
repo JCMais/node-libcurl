@@ -18,10 +18,17 @@ addons:
       - g++-4.8
       # Upgrade openssl
       - openssl
-node_js:
-  - "8"
-  - "10"
-  - "11"
+matrix:
+  include:
+    - language: node_js
+      node_js: "8"
+    - language: node_js
+      node_js: "10"
+    - language: node_js
+      node_js: "11"
+  fast_finish: true
+  allow_failures:
+    - node_js: "11"
 env:
   global:
     - GCC_VERSION=4.8
@@ -31,10 +38,6 @@ env:
   matrix:
     - LIBCURL_RELEASE=LATEST
     - LIBCURL_RELEASE=7_32_0
-matrix:
-  fast_finish: true
-  allow_failures:
-    - node_js: "11"
 
 cache:
   directories:
@@ -79,21 +82,21 @@ before_install:
   # nghttp2 version must match Node.js one
   - NGHTTP2_RELEASE=$(node -e "console.log(process.versions.nghttp2)")
   - NGHTTP2_DEST_FOLDER=$HOME/deps/nghttp2
-  - ./ci/scripts/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER
+  - ./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER
   ###################
   # Build OpenSSL
   ###################
   # OpenSSL version must match Node.js one
   - OPENSSL_RELEASE=$(node -e "console.log(process.versions.openssl.replace(/\./g, '_'))")
   - OPENSSL_DEST_FOLDER=$HOME/deps/openssl
-  - ./ci/scripts/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER
+  - ./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER
   ###################
   # Build zlib
   ###################
   # Zlib version must match Node.js one
   - ZLIB_RELEASE=$(node -e "console.log(process.versions.zlib)")
   - ZLIB_DEST_FOLDER=$HOME/deps/zlib
-  - ./ci/scripts/build-zlib.sh $ZLIB_RELEASE $ZLIB_DEST_FOLDER
+  - ./scripts/ci/build-zlib.sh $ZLIB_RELEASE $ZLIB_DEST_FOLDER
   ###################
   # Build libssh2
   ###################
@@ -101,7 +104,7 @@ before_install:
   - LIBSSH2_DEST_FOLDER=$HOME/deps/libssh2
   - OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build \
       ZLIB_BUILD_FOLDER=$ZLIB_DEST_FOLDER/build \
-      ./ci/scripts/build-libssh2.sh $LIBSSH2_RELEASE $LIBSSH2_DEST_FOLDER
+      ./scripts/ci/build-libssh2.sh $LIBSSH2_RELEASE $LIBSSH2_DEST_FOLDER
   ###################
   # Build libcurl
   ###################
@@ -113,7 +116,7 @@ before_install:
       NGHTTP2_BUILD_FOLDER=$NGHTTP2_DEST_FOLDER/build \
       OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build \
       ZLIB_BUILD_FOLDER=$ZLIB_DEST_FOLDER/build \
-      ./ci/scripts/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER
+      ./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER
   # Make curl-config and curl binaries visible
   - PATH=$LIBCURL_DEST_FOLDER/build/bin:$PATH 
   # output curl version info
