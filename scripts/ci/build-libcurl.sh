@@ -2,10 +2,13 @@
 # <release> <dest_folder>
 set -e
 
-build_folder=$2/build
+build_folder=$2/build/$1
 curr_dirname=$(dirname "$0")
 
 sort_cmd=sort
+
+mkdir -p $build_folder
+mkdir -p $2/source
 
 # On macOS we need gsort from coreutils, can be installed with: brew install coreutils
 if [ "$(uname)" == "Darwin" ]; then
@@ -30,7 +33,8 @@ if printf '%s\n%s' "$version_with_dots" "7.53.1" | $sort_cmd -CV; then
     https://github.com/curl/curl/archive/curl-$1.tar.gz \
     $2
 
-  cd $2/curl-curl-$1
+  mv $2/curl-curl-$1 $2/source/$1
+  cd $2/source/$1
 
   ./buildconf
 else
@@ -40,7 +44,8 @@ else
     https://github.com/curl/curl/releases/download/curl-$1/curl-$version_with_dots.tar.gz \
     $2
 
-  cd $2/curl-$version_with_dots
+  mv $2/curl-$version_with_dots $2/source/$1
+  cd $2/source/$1
 fi
 
 # if rebuilding
@@ -57,20 +62,20 @@ fi
 #     --prefix=$build_folder
 
 # Release - Static
-# ./configure \
-#     --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
-#     --with-ssl=$OPENSSL_BUILD_FOLDER \
-#     --with-libssh2=$LIBSSH2_BUILD_FOLDER \
-#     --with-zlib=$ZLIB_BUILD_FOLDER \
-#     --disable-shared \
-#     --prefix=$build_folder
+./configure \
+    --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
+    --with-ssl=$OPENSSL_BUILD_FOLDER \
+    --with-libssh2=$LIBSSH2_BUILD_FOLDER \
+    --with-zlib=$ZLIB_BUILD_FOLDER \
+    --disable-shared \
+    --prefix=$build_folder
     
 # Release - Both
-./configure \
-  --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
-  --with-ssl=$OPENSSL_BUILD_FOLDER \
-  --with-libssh2=$LIBSSH2_BUILD_FOLDER \
-  --with-zlib=$ZLIB_BUILD_FOLDER \
-  --prefix=$build_folder
+# ./configure \
+#   --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
+#   --with-ssl=$OPENSSL_BUILD_FOLDER \
+#   --with-libssh2=$LIBSSH2_BUILD_FOLDER \
+#   --with-zlib=$ZLIB_BUILD_FOLDER \
+#   --prefix=$build_folder
 
 make && make install
