@@ -1317,9 +1317,7 @@ namespace NodeLibcurl {
                 Nan::ThrowTypeError( "Option value must be a null or a function." );
                 return;
             }
-
-            v8::Local<v8::Function> callback = value.As<v8::Function>();
-
+            
             switch ( optionId ) {
 
                 case CURLOPT_CHUNK_BGN_FUNCTION:
@@ -1336,7 +1334,7 @@ namespace NodeLibcurl {
                     }
                     else {
 
-                        obj->callbacks[CURLOPT_CHUNK_BGN_FUNCTION].reset( new Nan::Callback( callback ) );
+                        obj->callbacks[CURLOPT_CHUNK_BGN_FUNCTION].reset( new Nan::Callback( value.As<v8::Function>() ) );
 
                         curl_easy_setopt( obj->ch, CURLOPT_CHUNK_DATA, obj );
                         setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_CHUNK_BGN_FUNCTION, Easy::CbChunkBgn );
@@ -1358,7 +1356,7 @@ namespace NodeLibcurl {
                     }
                     else {
 
-                        obj->callbacks[CURLOPT_CHUNK_END_FUNCTION].reset( new Nan::Callback( callback ) );
+                        obj->callbacks[CURLOPT_CHUNK_END_FUNCTION].reset( new Nan::Callback( value.As<v8::Function>() ) );
 
                         curl_easy_setopt( obj->ch, CURLOPT_CHUNK_DATA, obj );
                         setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_CHUNK_END_FUNCTION, Easy::CbChunkEnd );
@@ -1376,7 +1374,7 @@ namespace NodeLibcurl {
                     }
                     else {
 
-                        obj->callbacks[CURLOPT_DEBUGFUNCTION].reset( new Nan::Callback( callback ) );
+                        obj->callbacks[CURLOPT_DEBUGFUNCTION].reset( new Nan::Callback( value.As<v8::Function>() ) );
 
                         curl_easy_setopt( obj->ch, CURLOPT_DEBUGDATA, obj );
                         setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_DEBUGFUNCTION, Easy::CbDebug );
@@ -1394,7 +1392,7 @@ namespace NodeLibcurl {
                     }
                     else {
 
-                        obj->callbacks[CURLOPT_FNMATCH_FUNCTION].reset( new Nan::Callback( callback ) );
+                        obj->callbacks[CURLOPT_FNMATCH_FUNCTION].reset( new Nan::Callback( value.As<v8::Function>() ) );
 
                         curl_easy_setopt( obj->ch, CURLOPT_FNMATCH_DATA, obj );
                         setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_FNMATCH_FUNCTION, Easy::CbFnMatch );
@@ -1409,7 +1407,7 @@ namespace NodeLibcurl {
 
                     if ( !isNull ) {
 
-                        obj->callbacks[CURLOPT_HEADERFUNCTION].reset( new Nan::Callback( callback ) );
+                        obj->callbacks[CURLOPT_HEADERFUNCTION].reset( new Nan::Callback( value.As<v8::Function>() ) );
                     }
 
                     break;
@@ -1424,7 +1422,7 @@ namespace NodeLibcurl {
                     }
                     else {
 
-                        obj->callbacks[CURLOPT_PROGRESSFUNCTION].reset( new Nan::Callback( callback ) );
+                        obj->callbacks[CURLOPT_PROGRESSFUNCTION].reset( new Nan::Callback( value.As<v8::Function>() ) );
 
                         curl_easy_setopt( obj->ch, CURLOPT_PROGRESSDATA, obj );
                         setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_PROGRESSFUNCTION, Easy::CbProgress );
@@ -1440,7 +1438,7 @@ namespace NodeLibcurl {
 
                     if ( !isNull ) {
 
-                        obj->callbacks[CURLOPT_READFUNCTION].reset( new Nan::Callback( callback ) );
+                        obj->callbacks[CURLOPT_READFUNCTION].reset( new Nan::Callback( value.As<v8::Function>() ) );
                     }
 
                     break;
@@ -1453,7 +1451,7 @@ namespace NodeLibcurl {
 
                     if ( !isNull ) {
 
-                        obj->callbacks[CURLOPT_SEEKFUNCTION].reset( new Nan::Callback( callback ) );
+                        obj->callbacks[CURLOPT_SEEKFUNCTION].reset( new Nan::Callback( value.As<v8::Function>() ) );
                     }
 
                     break;
@@ -1471,7 +1469,7 @@ namespace NodeLibcurl {
                     }
                     else {
 
-                        obj->callbacks[CURLOPT_XFERINFOFUNCTION].reset( new Nan::Callback( callback ) );
+                        obj->callbacks[CURLOPT_XFERINFOFUNCTION].reset( new Nan::Callback( value.As<v8::Function>() ) );
 
                         curl_easy_setopt( obj->ch, CURLOPT_XFERINFODATA, obj );
                         setOptRetCode = curl_easy_setopt( obj->ch, CURLOPT_XFERINFOFUNCTION, Easy::CbXferinfo );
@@ -1488,7 +1486,7 @@ namespace NodeLibcurl {
 
                     if ( !isNull ) {
 
-                        obj->callbacks[CURLOPT_WRITEFUNCTION].reset( new Nan::Callback( callback ) );
+                        obj->callbacks[CURLOPT_WRITEFUNCTION].reset( new Nan::Callback( value.As<v8::Function>() ) );
                     }
 
                     break;
