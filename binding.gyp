@@ -6,9 +6,9 @@
   # 
   'variables': {
     # Comma separated list
-    'curl_link_flags%': 'false',
+    'curl_include_dirs%': '',
+    'curl_libraries%': '',
     'curl_static_build%': 'false',
-    'curl_static_build_libs%': '',
   },
   'targets': [
     {
@@ -23,9 +23,15 @@
         'src/CurlHttpPost.cc'
       ],
       'include_dirs' : [
-        "<!(node -e \"require('nan')\")"
+        "<!(node -e \"require('nan')\")",
       ],
       'conditions': [
+        ['curl_include_dirs!=""', {
+          'include_dirs': ['<@(curl_include_dirs)']
+        }],
+        ['curl_libraries!=""', {
+          'libraries': ['<@(curl_libraries)']
+        }],
         # Windows is only build statically
         # In the future we can add support for other build types 
         ['OS=="win"', {
@@ -70,11 +76,6 @@
             'CURL_STATICLIB'
           ]
         }, { # OS != "win"
-          'conditions': [
-            ['curl_link_flags!="false"', {
-              'libraries+': ['<(curl_link_flags)']
-            }],
-          ],
             # Use level 2 optimizations
           'cflags' : [
             '-O2',
@@ -94,8 +95,13 @@
             '-fno-exceptions',
             '-O3'
           ],
-          'include_dirs' : [
-            '<!@(node "<(module_root_dir)/tools/curl-config.js" --cflags | sed "s/-D.* //g" | sed s/-I//g)'
+          'conditions': [
+            ['curl_include_dirs==""', {
+              'include_dirs' : [
+                # '<!@(node "<(module_root_dir)/tools/curl-config.js" --cflags | sed "s/-D.* //g" | sed s/-I//g)'
+                '<!(node "<(module_root_dir)/tools/curl-config.js" --prefix)/include'
+              ],
+            }],
           ],
         }],
         ['OS=="linux"', {
@@ -103,20 +109,13 @@
             ['curl_static_build=="true"', {
               # pretty sure cflags adds that
               'defines': [
-                  'CURL_STATICLIB',
-                  'NODE_LIBCURL_INSIDE_A',
+                'CURL_STATICLIB',
+                'NODE_LIBCURL_INSIDE_A',
               ],
               'conditions': [
-                ['curl_static_build_libs!=""', {
+                ['curl_libraries==""', {
                   'defines': [
                       'NODE_LIBCURL_INSIDE_A1',
-                  ],
-                  'libraries': [
-                    '<@(curl_static_build_libs)',
-                  ],
-                }, {
-                  'defines': [
-                      'NODE_LIBCURL_INSIDE_A2',
                   ],
                   'libraries': [
                     '<!@(node "<(module_root_dir)/tools/curl-config.js" --static-libs)',
@@ -125,11 +124,18 @@
               ],
             }, { # do not use static linking - default
               'defines': [
-                  'NODE_LIBCURL_INSIDE_B',
+                'NODE_LIBCURL_INSIDE_B',
               ],
-              'libraries': [
-                '-Wl,-rpath <!(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib',
-                '<!@(node "<(module_root_dir)/tools/curl-config.js" --libs)',
+              'conditions': [
+                ['curl_libraries==""', {
+                  'defines': [
+                      'NODE_LIBCURL_INSIDE_B1',
+                  ],
+                  'libraries': [
+                    '-Wl,-rpath <!(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib',
+                    '<!@(node "<(module_root_dir)/tools/curl-config.js" --libs)',
+                  ],
+                }]
               ],
             }]
           ],
