@@ -8,6 +8,7 @@
     # Comma separated list
     'curl_link_flags%': 'false',
     'curl_static_build%': 'false',
+    'curl_static_build_libs%': '',
   },
   'targets': [
     {
@@ -104,8 +105,16 @@
               'defines': [
                   'CURL_STATICLIB',
               ],
-              'libraries+': [
-                '<!@(node "<(module_root_dir)/tools/curl-config.js" --static-libs)',
+              'conditions': [
+                ['curl_static_build_libs!=""', {
+                  'libraries+': [
+                    '<@(curl_static_build_libs)',
+                  ],
+                }, {
+                  'libraries+': [
+                    '<!@(node "<(module_root_dir)/tools/curl-config.js" --static-libs)',
+                  ],
+                }]
               ],
             }, { # do not use static linking - default
               'libraries+': [

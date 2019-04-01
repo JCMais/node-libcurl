@@ -147,7 +147,7 @@ install:
   - node tools/curl-config.js --static-libs
   - node tools/curl-config.js --prefix
   - node tools/curl-config.js --cflags
-  - CFLAGS="-v" LDFLAGS="-Wl,--verbose" npm_config_build_from_source=true npm_config_curl_static_build=true npm_config_verbose=true yarn install --frozen-lockfile
+  - CFLAGS="-v" LDFLAGS="-Wl,--verbose" npm_config_build_from_source="true" npm_config_curl_static_build="true" npm_config_verbose="true" yarn install --frozen-lockfile
   - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
       otool -D ./lib/binding/node_libcurl.node;
       otool -D `curl-config --prefix`/lib/libcurl.dylib;
