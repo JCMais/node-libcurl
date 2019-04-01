@@ -18,17 +18,19 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       # Those are the defaults for trusty release on TravisCI
-      - gcc-4.8
-      - g++-4.8
+      # - gcc-4.8
+      # - g++-4.8
+      - gcc-6
       # Upgrade openssl
-      - openssl
+      # - openssl
 matrix:
   fast_finish: true
   allow_failures:
     - node_js: "11"
 env:
   global:
-    - GCC_VERSION=4.8
+    - GCC_VERSION=6
+    # brew install gcc6?
     - DEBUG=node-libcurl
     - LIBSSH2_RELEASE=1.8.2
     - MACOSX_DEPLOYMENT_TARGET=10.12
@@ -157,7 +159,7 @@ install:
       otool -D `curl-config --prefix`/lib/libcurl.dylib | sed -n 2p;
     else
       CFLAGS="-v" LDFLAGS="-Wl,--verbose" npm_config_build_from_source="true" npm_config_curl_static_build="true" npm_config_verbose="true" yarn install --frozen-lockfile;
-      cat ./build/node_libcurl.target.mk
+      cat ./build/node_libcurl.target.mk;
       readelf -d ./lib/binding/node_libcurl.node;
       ldd ./lib/binding/node_libcurl.node;
     fi
