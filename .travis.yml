@@ -31,10 +31,11 @@ env:
     - GCC_VERSION=4.8
     - DEBUG=node-libcurl
     - LIBSSH2_RELEASE=1.8.2
+    - MACOSX_DEPLOYMENT_TARGET=10.12
     - secure: d64E8XbVGHuQ0kls1oVUF1y6pnj3iqZB34roKBHAFTyWBXReC1FWLb+qEShCJicUDkeK2At7vQUz7ohMn2mL/hVXiRbuSaYuDKFx8iDeei9mTgE+iy258mSovnNvXfG72EP5+LB+UOhgmTGe0qyTALOQ6ceCgjdscul3IGWE8lw=
   matrix:
     - LIBCURL_RELEASE=LATEST
-    - LIBCURL_RELEASE=7_32_0
+    - LIBCURL_RELEASE=7_38_0
 
 cache:
   directories:
@@ -122,7 +123,7 @@ before_install:
   - LIBCURL_DEST_FOLDER=$HOME/deps/libcurl
   # MACOSX_DEPLOYMENT_TARGET matches the one we have on binding.gyp
   - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-      export MACOSX_DEPLOYMENT_TARGET="10.8";
+      export MACOSX_DEPLOYMENT_TARGET="10.12";
     fi
   - ./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER
   # Make curl-config and curl binaries visible

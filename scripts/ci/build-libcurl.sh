@@ -93,7 +93,10 @@ LIBS=$LIBS ./configure \
     --without-libpsl \
     --without-libmetalink \
     --without-librtmp \
+    --without-libidn \
     --without-libidn2 \
+    --disable-ldap \
+    --disable-ldaps \
     --disable-shared \
     --prefix=$build_folder
     

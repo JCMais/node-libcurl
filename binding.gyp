@@ -104,11 +104,11 @@
               'defines': [
                   'CURL_STATICLIB',
               ],
-              'libraries': [
+              'libraries+': [
                 '<!@(node "<(module_root_dir)/tools/curl-config.js" --static-libs)',
               ],
             }, { # do not use static linking - default
-              'libraries': [
+              'libraries+': [
                 '-Wl,-rpath <!(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib',
                 '<!@(node "<(module_root_dir)/tools/curl-config.js" --libs)',
               ],
@@ -122,7 +122,7 @@
               'defines': [
                   'CURL_STATICLIB',
               ],
-              'libraries': [
+              'libraries+': [
                 '<!@(node "<(module_root_dir)/tools/curl-config.js" --static-libs)',
               ],
               'xcode_settings': {
@@ -131,11 +131,11 @@
                 ],
               }
             }, { # do not use static linking - default
-              'libraries': [
+              'libraries+': [
                 '-L <!@(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib -lcurl'
               ],
               'xcode_settings': {
-                'LD_RUNPATH_SEARCH_PATHS': [
+                'LD_RUNPATH_SEARCH_PATHS+': [
                   '<!(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib',
                   '/opt/local/lib',
                   '/usr/local/opt/curl/lib',
@@ -159,7 +159,7 @@
             ],
             'GCC_ENABLE_CPP_RTTI': 'YES',
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
-            'MACOSX_DEPLOYMENT_TARGET':'10.8',
+            'MACOSX_DEPLOYMENT_TARGET':'10.12',
             'CLANG_CXX_LIBRARY': 'libc++',
             'CLANG_CXX_LANGUAGE_STANDARD':'c++11',
             'OTHER_LDFLAGS': ['-stdlib=libc++'],
