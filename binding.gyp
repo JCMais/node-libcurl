@@ -95,7 +95,7 @@
             '-O3'
           ],
           'include_dirs' : [
-            '<!@(curl-config --cflags | sed s/-I//g)'
+            '<!@(node "<(module_root_dir)/tools/curl-config.js" --cflags | sed "s/-D.* //g" | sed s/-I//g)'
           ],
         }],
         ['OS=="linux"', {
@@ -111,15 +111,15 @@
                   'defines': [
                       'NODE_LIBCURL_INSIDE_A1',
                   ],
-                  'libraries+': [
+                  'libraries': [
                     '<@(curl_static_build_libs)',
                   ],
                 }, {
                   'defines': [
                       'NODE_LIBCURL_INSIDE_A2',
                   ],
-                  'libraries+': [
-                    '<!@(curl-config --static-libs)',
+                  'libraries': [
+                    '<!@(node "<(module_root_dir)/tools/curl-config.js" --static-libs)',
                   ],
                 }]
               ],
@@ -127,9 +127,9 @@
               'defines': [
                   'NODE_LIBCURL_INSIDE_B',
               ],
-              'libraries+': [
-                '-Wl,-rpath <!(curl-config --prefix)/lib',
-                '<!@(curl-config --libs)',
+              'libraries': [
+                '-Wl,-rpath <!(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib',
+                '<!@(node "<(module_root_dir)/tools/curl-config.js" --libs)',
               ],
             }]
           ],
@@ -141,21 +141,21 @@
               'defines': [
                   'CURL_STATICLIB',
               ],
-              'libraries+': [
-                '<!@(curl-config --static-libs)',
+              'libraries': [
+                '<!@(node "<(module_root_dir)/tools/curl-config.js" --static-libs)',
               ],
               'xcode_settings': {
-                'LD_RUNPATH_SEARCH_PATHS+': [
-                  '<!@(curl-config --static-libs | node -e "console.log(require(\'fs\').readFileSync(0, \'utf-8\').split(\' \').filter(i => i.startsWith(\'-L\')).join(\' \').replace(/-L/g, \'\'))")'
+                'LD_RUNPATH_SEARCH_PATHS': [
+                  '<!@(node "<(module_root_dir)/tools/curl-config.js" --static-libs | node -e "console.log(require(\'fs\').readFileSync(0, \'utf-8\').split(\' \').filter(i => i.startsWith(\'-L\')).join(\' \').replace(/-L/g, \'\'))")'
                 ],
               }
             }, { # do not use static linking - default
-              'libraries+': [
-                '-L <!@(curl-config --prefix)/lib -lcurl'
+              'libraries': [
+                '-L <!@(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib -lcurl'
               ],
               'xcode_settings': {
-                'LD_RUNPATH_SEARCH_PATHS+': [
-                  '<!(curl-config --prefix)/lib',
+                'LD_RUNPATH_SEARCH_PATHS': [
+                  '<!(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib',
                   '/opt/local/lib',
                   '/usr/local/opt/curl/lib',
                   '/usr/local/lib',
@@ -167,10 +167,10 @@
           'xcode_settings': {
             'OTHER_CPLUSPLUSFLAGS':[
               '-std=c++11','-stdlib=libc++',
-              '<!@(curl-config --cflags)',
+              '<!@(node "<(module_root_dir)/tools/curl-config.js" --cflags)',
             ],
             'OTHER_CFLAGS':[
-              '<!@(curl-config --cflags)'
+              '<!@(node "<(module_root_dir)/tools/curl-config.js" --cflags)'
             ],
             'OTHER_LDFLAGS':[
               '-Wl,-bind_at_load',
@@ -185,16 +185,6 @@
             'WARNING_CFLAGS':[
               '-Wno-c++11-narrowing',
               '-Wno-constant-conversion'
-            ],
-            # if building statically do we need to add all other folders here too (for openssl, libssh2, etc)?
-            #  we could use the following for example:
-            # <!@(curl-config --static-libs | node -e "console.log(require('fs').readFileSync(0, 'utf-8').split(' ').filter(i => i.startsWith('-L')).join(' ').replace(/-L/g, ''))")
-            'LD_RUNPATH_SEARCH_PATHS': [
-              '<!(curl-config --prefix)/lib',
-              '/opt/local/lib',
-              '/usr/local/opt/curl/lib',
-              '/usr/local/lib',
-              '/usr/lib'
             ],
           },
         }],
