@@ -172,12 +172,18 @@
             }]
           ],
           'xcode_settings': {
+            'conditions': [
+              ['curl_include_dirs==""', {
+                'OTHER_CPLUSPLUSFLAGS' : [
+                  '<!(<(curl_config_bin) --prefix)/include',
+                ],
+                'OTHER_CFLAGS':[
+                  '<!(<(curl_config_bin) --prefix)/include',
+                ],
+              }],
+            ],
             'OTHER_CPLUSPLUSFLAGS':[
               '-std=c++11','-stdlib=libc++',
-              '<!@(<(curl_config_bin) --cflags)',
-            ],
-            'OTHER_CFLAGS':[
-              '<!@(<(curl_config_bin) --cflags)'
             ],
             'OTHER_LDFLAGS':[
               '-Wl,-bind_at_load',
