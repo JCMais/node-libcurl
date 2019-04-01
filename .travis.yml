@@ -33,7 +33,7 @@ env:
     - LIBSSH2_RELEASE=1.8.2
     - secure: d64E8XbVGHuQ0kls1oVUF1y6pnj3iqZB34roKBHAFTyWBXReC1FWLb+qEShCJicUDkeK2At7vQUz7ohMn2mL/hVXiRbuSaYuDKFx8iDeei9mTgE+iy258mSovnNvXfG72EP5+LB+UOhgmTGe0qyTALOQ6ceCgjdscul3IGWE8lw=
   matrix:
-    # - LIBCURL_RELEASE=LATEST
+    - LIBCURL_RELEASE=LATEST
     - LIBCURL_RELEASE=7_32_0
 
 cache:
@@ -148,9 +148,9 @@ install:
   - node tools/curl-config.js --cflags
   - npm_config_build_from_source=true npm_config_curl_static_build=true npm_config_verbose=true yarn install --frozen-lockfile
   - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+      otool -D ./lib/binding/node_libcurl.node;
       otool -D `curl-config --prefix`/lib/libcurl.dylib;
       otool -D `curl-config --prefix`/lib/libcurl.dylib | sed -n 2p;
-      otool -D ./lib/binding/node_libcurl.node;
     else
       readelf -d ./lib/binding/node_libcurl.node;
       ldd ./lib/binding/node_libcurl.node;

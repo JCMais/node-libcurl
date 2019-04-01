@@ -26,30 +26,49 @@ version_with_dots=$(echo $1 | sed 's/\_/./g')
 # Up to 7.53.1 only source tarballs were available, so the url
 #  needs to be changed to something like: https://github.com/curl/curl/archive/curl-7_53_1.tar.gz
 # And as it is just a source tarball, we must also create the ./configure script
-if printf '%s\n%s' "$version_with_dots" "7.53.1" | $sort_cmd -CV; then
+(printf '%s\n%s' "$version_with_dots" "7.53.1" | $sort_cmd -CV)
+# 
+is_less_than_7_54_1=$?
 
-  echo "Using source tarball instead of release"
-  $curr_dirname/download-and-unpack.sh \
-    https://github.com/curl/curl/archive/curl-$1.tar.gz \
-    $2
-
-  mv $2/curl-curl-$1 $2/source/$1
-  cd $2/source/$1
-
-  ./buildconf
-else
-  echo "Using release tarball"
-
-  $curr_dirname/download-and-unpack.sh \
-    https://github.com/curl/curl/releases/download/curl-$1/curl-$version_with_dots.tar.gz \
-    $2
-
-  mv $2/curl-$version_with_dots $2/source/$1
-  cd $2/source/$1
+LIBS=""
+if [ "$is_less_than_7_54_1" == "0" ]; then
+  # https://github.com/curl/curl/pull/1427#issuecomment-295783852
+  # The detection was broken for libcurl < 7.54.1, which in fact matches this condition here!
+  # pthread is needed if using OpenSSL >= 1.1.0, however we are just addind it anyway as required
+  # no harm done
+  LIBS="-ldl -lpthread"
 fi
 
-# if rebuilding
-# make distclean
+if [ ! -d $2/source/$1 ]; then
+  if [ "$is_less_than_7_54_1" == "0" ]; then
+    echo "Using source tarball instead of release"
+    $curr_dirname/download-and-unpack.sh \
+      https://github.com/curl/curl/archive/curl-$1.tar.gz \
+      $2
+
+    mv $2/curl-curl-$1 $2/source/$1
+    cd $2/source/$1
+
+
+    ./buildconf
+  else
+    echo "Using release tarball"
+
+    $curr_dirname/download-and-unpack.sh \
+      https://github.com/curl/curl/releases/download/curl-$1/curl-$version_with_dots.tar.gz \
+      $2
+
+    mv $2/curl-$version_with_dots $2/source/$1
+    cd $2/source/$1
+  fi
+else
+  cd $2/source/$1
+  if [ -f ./configure ]; then
+    make distclean || true;
+  else
+    ./buildconf
+  fi
+fi
 
 # Debug
 # ./configure \
@@ -62,11 +81,19 @@ fi
 #     --prefix=$build_folder
 
 # Release - Static
-./configure \
-    --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
+# It may be needed to pass PKG_CONFIG_PATH here, it should point to:
+# openssl/build/$ver/lib/pkgconfig
+LIBS=$LIBS ./configure \
     --with-ssl=$OPENSSL_BUILD_FOLDER \
+    --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
     --with-libssh2=$LIBSSH2_BUILD_FOLDER \
     --with-zlib=$ZLIB_BUILD_FOLDER \
+    # --without-nghttp2 --without-libssh2 --without-zlib \
+    --without-nss \
+    --without-libpsl \
+    --without-libmetalink \
+    --without-librtmp \
+    --without-libidn2 \
     --disable-shared \
     --prefix=$build_folder
     

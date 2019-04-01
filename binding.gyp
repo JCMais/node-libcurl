@@ -178,9 +178,6 @@
               '/usr/lib'
             ],
           },
-          'libraries': [
-            '-L <!@(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib -lcurl'
-          ]
         }],
       ]
     },
