@@ -1,6 +1,6 @@
 #!/bin/bash
 # <release> <dest_folder>
-set -e
+set -eu
 
 build_folder=$2/build/$1
 curr_dirname=$(dirname "$0")
@@ -22,13 +22,14 @@ fi
 
 version_with_dots=$(echo $1 | sed 's/\_/./g')
 
+echo "Preparing release for libcurl $1"
+
 # libcurl only started having proper releases only with 7.54
 # Up to 7.53.1 only source tarballs were available, so the url
 #  needs to be changed to something like: https://github.com/curl/curl/archive/curl-7_53_1.tar.gz
 # And as it is just a source tarball, we must also create the ./configure script
-(printf '%s\n%s' "$version_with_dots" "7.53.1" | $sort_cmd -CV)
-# 
-is_less_than_7_54_1=$?
+is_less_than_7_54_1=0
+(printf '%s\n%s' "$version_with_dots" "7.53.1" | $sort_cmd -CV) || is_less_than_7_54_1=$?
 
 LIBS=""
 if [ "$is_less_than_7_54_1" == "0" ]; then
@@ -88,7 +89,6 @@ LIBS=$LIBS ./configure \
     --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
     --with-libssh2=$LIBSSH2_BUILD_FOLDER \
     --with-zlib=$ZLIB_BUILD_FOLDER \
-    # --without-nghttp2 --without-libssh2 --without-zlib \
     --without-nss \
     --without-libpsl \
     --without-libmetalink \
