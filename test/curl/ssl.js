@@ -1,7 +1,7 @@
 /**
  * @author Jonathan Cardoso Machado
  * @license MIT
- * @copyright 2015, Jonathan Cardoso Machado
+ * @copyright 2019, Jonathan Cardoso Machado
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,48 +20,42 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const http = require('http')
-const https = require('https')
-const http2 = require('http2')
-const fs = require('fs')
-const path = require('path')
+const serverObj = require('./../helper/server')
+const Curl = require('../../lib/Curl')
 
-const express = require('express')
-const bodyParser = require('body-parser')
-const cookiesParser = require('cookie-parser')
+const { app, serverHttps } = serverObj
 
-const file = path.resolve.bind(this, __dirname)
-const key = fs.readFileSync(file('./ssl/cert.key'))
-const cert = fs.readFileSync(file('./ssl/cert.pem'))
+before(function(done) {
+  serverHttps.listen(serverObj.portHttps, serverObj.host, function() {
+    done()
+  })
 
-const app = express()
-const serverHttp = http.createServer(app)
-const serverHttps = https.createServer(
-  {
-    key,
-    cert,
-  },
-  app
-)
-const serverHttp2 = http2.createSecureServer({
-  key,
-  cert,
+  app.get('/', function(req, res) {
+    res.send('ok')
+  })
 })
 
-app
-  .use(bodyParser.urlencoded({ extended: true }))
-  .use(bodyParser.raw({ limit: '100MB', type: 'application/node-libcurl.raw' }))
-  .use(cookiesParser())
+after(function() {
+  serverHttps.close()
+  app._router.stack.pop()
+})
 
-app.disable('etag')
+it('should work with ssl site', function(done) {
+  const curl = new Curl()
 
-module.exports = {
-  server: serverHttp,
-  serverHttps,
-  serverHttp2,
-  app: app,
-  port: 3000,
-  portHttps: 3443,
-  portHttp2: 3333,
-  host: 'localhost',
-}
+  curl.setOpt('URL', `https://${serverObj.host}:${serverObj.portHttps}/`)
+  curl.setOpt('SSL_VERIFYPEER', false)
+
+  curl.on('end', statusCode => {
+    statusCode.should.be.equal(200)
+    curl.close()
+    done()
+  })
+
+  curl.on('error', error => {
+    curl.close()
+    done(error)
+  })
+
+  curl.perform()
+})

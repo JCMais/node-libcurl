@@ -20,50 +20,52 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/*eslint no-unused-vars:0*/
-var should = require('should');
-var Curl = require('../lib/Curl');
+const should = require('should')
+
+const Curl = require('../lib/Curl')
 
 function importTest(name, path, only, skip) {
   if (typeof only === 'undefined') {
-    only = false;
+    only = false
   }
 
   if (typeof skip === 'undefined') {
-    skip = false;
+    skip = false
   }
 
-  only = !!only;
-  skip = !!skip;
+  only = !!only
+  skip = !!skip
 
   if (only) {
     describe.only(name, function() {
-      require(path);
-    });
+      require(path)
+    })
   } else if (skip) {
     describe.skip(name, function() {
-      require(path);
-    });
+      require(path)
+    })
   } else {
     describe(name, function() {
-      require(path);
-    });
+      require(path)
+    })
   }
 }
 
 describe('Curl', function() {
-  console.log('Running tests for libcurl:', Curl.getVersion(), Curl.VERSION_NUM);
-  importTest('Connection timeout', './curl/connection-timeout');
-  importTest('setOpt()', './curl/setopt');
-  importTest('getInfo()', './curl/getinfo');
-  importTest('reset()', './curl/reset');
-  importTest('dupHandle()', './curl/duphandle');
-  importTest('feature()', './curl/feature');
-  importTest('events', './curl/events');
-  importTest('Post Fields', './curl/postfields');
-  importTest('HTTP Auth', './curl/httpauth');
-  importTest('HTTP Post', './curl/httppost');
-  importTest('Binary Data', './curl/binary-data');
-  importTest('Put Upload', './curl/put-upload');
-  importTest('Callbacks', './curl/callbacks');
-});
+  console.log('Running tests for libcurl:', Curl.getVersion(), Curl.VERSION_NUM)
+  importTest('Connection timeout', './curl/connection-timeout')
+  importTest('setOpt()', './curl/setopt')
+  importTest('getInfo()', './curl/getinfo')
+  importTest('reset()', './curl/reset')
+  importTest('dupHandle()', './curl/duphandle')
+  importTest('feature()', './curl/feature')
+  importTest('events', './curl/events')
+  importTest('Post Fields', './curl/postfields')
+  importTest('HTTP Auth', './curl/httpauth')
+  importTest('HTTP Post', './curl/httppost')
+  importTest('Binary Data', './curl/binary-data')
+  importTest('Put Upload', './curl/put-upload')
+  importTest('Callbacks', './curl/callbacks')
+  importTest('SSL', './curl/ssl')
+  importTest('HTTP2', './curl/http2')
+})

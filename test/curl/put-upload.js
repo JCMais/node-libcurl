@@ -24,7 +24,7 @@ var serverObj = require('./../helper/server'),
   Curl = require('../../lib/Curl'),
   path = require('path'),
   fs = require('fs'),
-  crypto = require('crypto');
+  crypto = require('crypto')
 
 var server = serverObj.server,
   app = serverObj.app,
@@ -33,183 +33,187 @@ var server = serverObj.server,
   fileName = path.resolve(__dirname, 'upload.test'),
   fileHash = '',
   uploadLocation = '',
-  url = '';
+  url = ''
 
 function hashOfFile(file, cb) {
   var fd = fs.createReadStream(file),
-    hash = crypto.createHash('sha1');
+    hash = crypto.createHash('sha1')
 
-  hash.setEncoding('hex');
+  hash.setEncoding('hex')
 
   fd.on('end', function() {
-    hash.end();
+    hash.end()
 
-    cb(hash.read());
-  });
+    cb(hash.read())
+  })
 
-  fd.pipe(hash);
+  fd.pipe(hash)
 }
 
 beforeEach(function(done) {
-  curl = new Curl();
-  curl.setOpt(Curl.option.URL, url + '/upload/upload-result.test');
-  curl.setOpt(Curl.option.HTTPHEADER, ['Content-Type: application/node-libcurl.raw']);
+  curl = new Curl()
+  curl.setOpt(Curl.option.URL, url + '/upload/upload-result.test')
+  curl.setOpt(Curl.option.HTTPHEADER, [
+    'Content-Type: application/node-libcurl.raw',
+  ])
 
   //write random bytes to a file, this will be our test file.
-  fs.writeFileSync(fileName, crypto.randomBytes(fileSize));
+  fs.writeFileSync(fileName, crypto.randomBytes(fileSize))
 
   //get a hash of given file so we can assert later
   // that the file sent is equals to the one we created.
   hashOfFile(fileName, function(hash) {
-    fileHash = hash;
-    done();
-  });
-});
+    fileHash = hash
+    done()
+  })
+})
 
 afterEach(function() {
-  curl.close();
+  curl.close()
 
-  fs.unlinkSync(fileName);
+  fs.unlinkSync(fileName)
   if (fs.existsSync(uploadLocation)) {
-    fs.unlinkSync(uploadLocation);
+    fs.unlinkSync(uploadLocation)
   }
-});
+})
 
 before(function(done) {
   server.listen(serverObj.port, serverObj.host, function() {
-    url = server.address().address + ':' + server.address().port;
+    url = server.address().address + ':' + server.address().port
 
-    done();
-  });
+    done()
+  })
 
   app.put('/upload/:filename', function(req, res) {
-    uploadLocation = path.resolve(__dirname, req.params['filename']);
+    uploadLocation = path.resolve(__dirname, req.params['filename'])
 
-    var fd = fs.openSync(uploadLocation, 'w+');
+    var fd = fs.openSync(uploadLocation, 'w+')
 
-    fs.writeSync(fd, req.body, 0, req.body.length, 0);
-    fs.closeSync(fd);
+    fs.writeSync(fd, req.body, 0, req.body.length, 0)
+    fs.closeSync(fd)
     hashOfFile(uploadLocation, function(hash) {
-      res.send(hash);
-    });
-  });
+      res.send(hash)
+    })
+  })
 
   app.use(function(err, req, res, next) {
     //do nothing
-    next;
-  });
-});
+    next
+  })
+})
 
 after(function() {
-  server.close();
+  server.close()
 
-  app._router.stack.pop();
-  app._router.stack.pop();
-});
+  app._router.stack.pop()
+  app._router.stack.pop()
+})
 
 it('should upload data correctly using put', function(done) {
-  var fd = fs.openSync(fileName, 'r+');
+  var fd = fs.openSync(fileName, 'r+')
 
-  curl.setOpt(Curl.option.UPLOAD, 1);
-  curl.setOpt(Curl.option.READDATA, fd);
+  curl.setOpt(Curl.option.UPLOAD, 1)
+  curl.setOpt(Curl.option.READDATA, fd)
 
   curl.on('end', function(statusCode, body) {
-    statusCode.should.be.equal(200);
-    body.should.be.equal(fileHash);
+    statusCode.should.be.equal(200)
+    body.should.be.equal(fileHash)
 
-    fs.closeSync(fd);
-    done();
-  });
+    fs.closeSync(fd)
+    done()
+  })
 
   curl.on('error', function(err) {
-    fs.closeSync(fd);
-    done(err);
-  });
+    fs.closeSync(fd)
+    done(err)
+  })
 
-  curl.perform();
-});
+  curl.perform()
+})
 
 it('should upload data correctly using READFUNCTION callback option', function(done) {
-  var CURL_READFUNC_PAUSE = 0x10000001;
-  var CURL_READFUNC_ABORT = 0x10000000;
-  var CURLPAUSE_CONT = 0;
+  var CURL_READFUNC_PAUSE = 0x10000001
+  var CURL_READFUNC_ABORT = 0x10000000
+  var CURLPAUSE_CONT = 0
 
-  var stream = fs.createReadStream(fileName);
-  var cancelRequested = false;
+  var stream = fs.createReadStream(fileName)
+  var cancelRequested = false
 
-  curl.setOpt(Curl.option.UPLOAD, true);
+  curl.setOpt(Curl.option.UPLOAD, true)
 
   curl.on('end', function(statusCode, body) {
-    statusCode.should.be.equal(200);
-    body.should.be.equal(fileHash);
+    statusCode.should.be.equal(200)
+    body.should.be.equal(fileHash)
 
-    done();
-  });
+    done()
+  })
 
   curl.on('error', function(err) {
-    done(err);
-  });
+    done(err)
+  })
 
   stream.on('error', function(err) {
-    done(err);
+    done(err)
 
     // make sure curl is not left in "waiting for data" state
-    cancelRequested = true;
-    curl.pause(CURLPAUSE_CONT); // resume curl
-  });
+    cancelRequested = true
+    curl.pause(CURLPAUSE_CONT) // resume curl
+  })
 
-  var isReadable = true; // flag not to spam curl with resume requests
+  var isReadable = true // flag not to spam curl with resume requests
   stream.on('readable', function() {
     if (!isReadable) {
-      curl.pause(CURLPAUSE_CONT); // resume curl to let it ask for available data
-      isReadable = true;
+      curl.pause(CURLPAUSE_CONT) // resume curl to let it ask for available data
+      isReadable = true
     }
-  });
-  var isEnded = false; // stream has no method to get this state
+  })
+  var isEnded = false // stream has no method to get this state
   stream.on('end', function() {
-    isEnded = true;
-  });
+    isEnded = true
+  })
 
   curl.setOpt(Curl.option.READFUNCTION, function(targetBuffer) {
     if (cancelRequested) {
-      return CURL_READFUNC_ABORT;
+      return CURL_READFUNC_ABORT
     }
 
     // stream returns null if it has < requestedBytes available
-    var readBuffer = stream.read(100) || stream.read();
+    var readBuffer = stream.read(100) || stream.read()
 
     if (readBuffer === null) {
-      console.log('nothing read, if ended', isEnded);
-
       if (isEnded) {
-        return 0;
+        return 0
       }
       // stream buffer was drained and we need to pause curl while waiting for new data
-      isReadable = false;
-      return CURL_READFUNC_PAUSE;
+      isReadable = false
+      return CURL_READFUNC_PAUSE
     }
 
-    readBuffer.copy(targetBuffer);
-    return readBuffer.length;
-  });
+    readBuffer.copy(targetBuffer)
+    return readBuffer.length
+  })
 
-  curl.perform();
-});
+  curl.perform()
+})
 
 it('should abort upload with invalid fd', function(done) {
-  curl.setOpt(Curl.option.UPLOAD, 1);
-  curl.setOpt(Curl.option.READDATA, -1);
+  curl.setOpt(Curl.option.UPLOAD, 1)
+  curl.setOpt(Curl.option.READDATA, -1)
 
   curl.on('end', function() {
-    done(new Error('Invalid file descriptor specified but upload was performed correctly.'));
-  });
+    done(
+      new Error(
+        'Invalid file descriptor specified but upload was performed correctly.'
+      )
+    )
+  })
 
   curl.on('error', function(err, errCode) {
     //[Error: Operation was aborted by an application callback]
-    errCode.should.be.equal(42);
+    errCode.should.be.equal(42)
 
-    done();
-  });
+    done()
+  })
 
-  curl.perform();
-});
+  curl.perform()
+})
