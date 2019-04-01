@@ -9,6 +9,7 @@
     'curl_include_dirs%': '',
     'curl_libraries%': '',
     'curl_static_build%': 'false',
+    'curl_config_bin%': '<(module_root_dir)/tools/curl-config.js',
   },
   'targets': [
     {
@@ -99,7 +100,7 @@
             ['curl_include_dirs==""', {
               'include_dirs' : [
                 # '<!@(node "<(module_root_dir)/tools/curl-config.js" --cflags | sed "s/-D.* //g" | sed s/-I//g)'
-                '<!(node "<(module_root_dir)/tools/curl-config.js" --prefix)/include'
+                '<!(<(curl_config_bin) --prefix)/include'
               ],
             }],
           ],
@@ -118,7 +119,7 @@
                       'NODE_LIBCURL_INSIDE_A1',
                   ],
                   'libraries': [
-                    '<!@(node "<(module_root_dir)/tools/curl-config.js" --static-libs)',
+                    '<!@(<(curl_config_bin) --static-libs)',
                   ],
                 }]
               ],
@@ -132,8 +133,8 @@
                       'NODE_LIBCURL_INSIDE_B1',
                   ],
                   'libraries': [
-                    '-Wl,-rpath <!(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib',
-                    '<!@(node "<(module_root_dir)/tools/curl-config.js" --libs)',
+                    '-Wl,-rpath <!(<(curl_config_bin) --prefix)/lib',
+                    '<!@(<(curl_config_bin) --libs)',
                   ],
                 }]
               ],
@@ -148,20 +149,20 @@
                   'CURL_STATICLIB',
               ],
               'libraries': [
-                '<!@(node "<(module_root_dir)/tools/curl-config.js" --static-libs)',
+                '<!@(<(curl_config_bin) --static-libs)',
               ],
               'xcode_settings': {
                 'LD_RUNPATH_SEARCH_PATHS': [
-                  '<!@(node "<(module_root_dir)/tools/curl-config.js" --static-libs | node -e "console.log(require(\'fs\').readFileSync(0, \'utf-8\').split(\' \').filter(i => i.startsWith(\'-L\')).join(\' \').replace(/-L/g, \'\'))")'
+                  '<!@(<(curl_config_bin) --static-libs | node -e "console.log(require(\'fs\').readFileSync(0, \'utf-8\').split(\' \').filter(i => i.startsWith(\'-L\')).join(\' \').replace(/-L/g, \'\'))")'
                 ],
               }
             }, { # do not use static linking - default
               'libraries': [
-                '-L <!@(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib -lcurl'
+                '-L <!@(<(curl_config_bin) --prefix)/lib -lcurl'
               ],
               'xcode_settings': {
                 'LD_RUNPATH_SEARCH_PATHS': [
-                  '<!(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib',
+                  '<!(<(curl_config_bin) --prefix)/lib',
                   '/opt/local/lib',
                   '/usr/local/opt/curl/lib',
                   '/usr/local/lib',
@@ -173,10 +174,10 @@
           'xcode_settings': {
             'OTHER_CPLUSPLUSFLAGS':[
               '-std=c++11','-stdlib=libc++',
-              '<!@(node "<(module_root_dir)/tools/curl-config.js" --cflags)',
+              '<!@(<(curl_config_bin) --cflags)',
             ],
             'OTHER_CFLAGS':[
-              '<!@(node "<(module_root_dir)/tools/curl-config.js" --cflags)'
+              '<!@(<(curl_config_bin) --cflags)'
             ],
             'OTHER_LDFLAGS':[
               '-Wl,-bind_at_load',
