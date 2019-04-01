@@ -81,7 +81,7 @@ before_install:
   - NGHTTP2_DEST_FOLDER=$HOME/deps/nghttp2
   - ./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER >/dev/null
   - export NGHTTP2_BUILD_FOLDER=$NGHTTP2_DEST_FOLDER/build/$NGHTTP2_RELEASE
-  - ls -al $NGHTTP2_BUILD_FOLDER
+  - ls -al $NGHTTP2_BUILD_FOLDER/lib
   ###################
   # Build OpenSSL
   ###################
@@ -95,7 +95,7 @@ before_install:
       ./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER;
     fi
   - export OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build/$OPENSSL_RELEASE
-  - ls -al $OPENSSL_BUILD_FOLDER
+  - ls -al $OPENSSL_BUILD_FOLDER/lib
   ###################
   # Build zlib
   ###################
@@ -104,7 +104,7 @@ before_install:
   - ZLIB_DEST_FOLDER=$HOME/deps/zlib
   - ./scripts/ci/build-zlib.sh $ZLIB_RELEASE $ZLIB_DEST_FOLDER >/dev/null
   - export ZLIB_BUILD_FOLDER=$ZLIB_DEST_FOLDER/build/$ZLIB_RELEASE
-  - ls -al $ZLIB_BUILD_FOLDER
+  - ls -al $ZLIB_BUILD_FOLDER/lib
   ###################
   # Build libssh2
   ###################
@@ -112,7 +112,7 @@ before_install:
   - LIBSSH2_DEST_FOLDER=$HOME/deps/libssh2
   - ./scripts/ci/build-libssh2.sh $LIBSSH2_RELEASE $LIBSSH2_DEST_FOLDER >/dev/null
   - export LIBSSH2_BUILD_FOLDER=$LIBSSH2_DEST_FOLDER/build/$LIBSSH2_RELEASE
-  - ls -al $LIBSSH2_BUILD_FOLDER
+  - ls -al $LIBSSH2_BUILD_FOLDER/lib
   ###################
   # Build libcurl
   ###################

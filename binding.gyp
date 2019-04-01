@@ -72,7 +72,7 @@
           'conditions': [
             ['curl_link_flags!="false"', {
               'libraries+': ['<(curl_link_flags)']
-            }]
+            }],
           ],
             # Use level 2 optimizations
           'cflags' : [
@@ -116,6 +116,35 @@
           ],
         }],
         ['OS=="mac"', {
+          'conditions': [
+            ['curl_static_build=="true"', {
+              # pretty sure cflags adds that
+              'defines': [
+                  'CURL_STATICLIB',
+              ],
+              'libraries': [
+                '<!@(node "<(module_root_dir)/tools/curl-config.js" --static-libs)',
+              ],
+              'xcode_settings': {
+                'LD_RUNPATH_SEARCH_PATHS+': [
+                  '<!@(node "<(module_root_dir)/tools/curl-config.js" --static-libs | node -e "console.log(require(\'fs\').readFileSync(0, \'utf-8\').split(\' \').filter(i => i.startsWith(\'-L\')).join(\' \').replace(/-L/g, \'\'))")'
+                ],
+              }
+            }, { # do not use static linking - default
+              'libraries': [
+                '-L <!@(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib -lcurl'
+              ],
+              'xcode_settings': {
+                'LD_RUNPATH_SEARCH_PATHS': [
+                  '<!(node "<(module_root_dir)/tools/curl-config.js" --prefix)/lib',
+                  '/opt/local/lib',
+                  '/usr/local/opt/curl/lib',
+                  '/usr/local/lib',
+                  '/usr/lib'
+                ],
+              }
+            }]
+          ],
           'xcode_settings': {
             'OTHER_CPLUSPLUSFLAGS':[
               '-std=c++11','-stdlib=libc++',
@@ -165,7 +194,7 @@
           'destination': '<(module_path)'
         }
       ],
-      'conditions': [['OS == "mac" and curl_static_build!="true"', {
+      'conditions': [['OS=="mac" and curl_static_build!="true"', {
         'postbuilds': [
           {
             'postbuild_name': '@rpath for libcurl',
