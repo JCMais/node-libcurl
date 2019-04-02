@@ -42,12 +42,14 @@ function hashOfFile(file, cb) {
   hash.setEncoding('hex')
 
   fd.on('end', function() {
+    console.log('hashOfFile - end')
     hash.end()
 
     cb(null, hash.read())
   })
 
   fd.on('error', function(error) {
+    console.log('hashOfFile - error', error)
     cb(error)
   })
 
@@ -67,6 +69,7 @@ beforeEach(function(done) {
   //get a hash of given file so we can assert later
   // that the file sent is equals to the one we created.
   hashOfFile(fileName, function(error, hash) {
+    console.log('beforeEach - obtained hash', error, hash)
     fileHash = hash
     done(error)
   })
@@ -96,6 +99,7 @@ before(function(done) {
     fs.writeSync(fd, req.body, 0, req.body.length, 0)
     fs.closeSync(fd)
     hashOfFile(uploadLocation, function(error, hash) {
+      console.log('server - obtained hash', error, hash)
       if (error) {
         res.status(500).send(error.message)
       } else {
@@ -106,6 +110,7 @@ before(function(done) {
   })
 
   app.use(function(error, req, res, next) {
+    console.log('server - error', error)
     if (error.type !== 'request.aborted') {
       res.status(500).send(error.message)
     } else {
@@ -154,6 +159,7 @@ it('should upload data correctly using READFUNCTION callback option', function(d
   curl.setOpt(Curl.option.UPLOAD, true)
 
   curl.on('end', function(statusCode, body) {
+    console.log('curl - evt - end', statusCode, body)
     statusCode.should.be.equal(200)
     body.should.be.equal(fileHash)
 
@@ -161,6 +167,7 @@ it('should upload data correctly using READFUNCTION callback option', function(d
   })
 
   curl.on('error', function(err) {
+    console.log('curl - evt - error', err)
     done(err)
   })
 
@@ -168,24 +175,34 @@ it('should upload data correctly using READFUNCTION callback option', function(d
     done(err)
 
     // make sure curl is not left in "waiting for data" state
+    console.log('stream - evt - error - cancelling readfunc')
     cancelRequested = true
     curl.pause(CURLPAUSE_CONT) // resume curl
   })
 
   var isReadable = true // flag not to spam curl with resume requests
   stream.on('readable', function() {
+    console.log('stream - evt - readable')
     if (!isReadable) {
+      console.log('stream - evt - readable - readfunc was paused, resuming')
       curl.pause(CURLPAUSE_CONT) // resume curl to let it ask for available data
       isReadable = true
     }
   })
   var isEnded = false // stream has no method to get this state
   stream.on('end', function() {
+    console.log('stream - evt - ended')
     isEnded = true
   })
 
   curl.setOpt(Curl.option.READFUNCTION, function(targetBuffer) {
+    console.log('readfunction callback - start', {
+      cancelRequested,
+      isEnded,
+      isReadable,
+    })
     if (cancelRequested) {
+      console.log('readfunction callback - cancelling by request')
       return CURL_READFUNC_ABORT
     }
 
@@ -194,14 +211,17 @@ it('should upload data correctly using READFUNCTION callback option', function(d
 
     if (readBuffer === null) {
       if (isEnded) {
+        console.log('readfunction callback - returning 0 because it ended')
         return 0
       }
       // stream buffer was drained and we need to pause curl while waiting for new data
       isReadable = false
+      console.log('readfunction callback - pausing because stream was drained')
       return CURL_READFUNC_PAUSE
     }
 
     readBuffer.copy(targetBuffer)
+    console.log(`returning length of data sent: ${readBuffer.length}`)
     return readBuffer.length
   })
 
