@@ -8,5 +8,6 @@ wallaby.json
 lib/binding
 debug
 .vscode/
+test/curl/upload.png
 
 yarn-error.log

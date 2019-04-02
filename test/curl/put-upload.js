@@ -44,7 +44,11 @@ function hashOfFile(file, cb) {
   fd.on('end', function() {
     hash.end()
 
-    cb(hash.read())
+    cb(null, hash.read())
+  })
+
+  fd.on('error', function(error) {
+    cb(error)
   })
 
   fd.pipe(hash)
@@ -62,9 +66,9 @@ beforeEach(function(done) {
 
   //get a hash of given file so we can assert later
   // that the file sent is equals to the one we created.
-  hashOfFile(fileName, function(hash) {
+  hashOfFile(fileName, function(error, hash) {
     fileHash = hash
-    done()
+    done(error)
   })
 })
 
@@ -84,21 +88,29 @@ before(function(done) {
     done()
   })
 
-  app.put('/upload/:filename', function(req, res) {
+  app.put('/upload/:filename', function(req, res, next) {
     uploadLocation = path.resolve(__dirname, req.params['filename'])
 
     var fd = fs.openSync(uploadLocation, 'w+')
 
     fs.writeSync(fd, req.body, 0, req.body.length, 0)
     fs.closeSync(fd)
-    hashOfFile(uploadLocation, function(hash) {
-      res.send(hash)
+    hashOfFile(uploadLocation, function(error, hash) {
+      if (error) {
+        res.status(500).send(error.message)
+      } else {
+        res.send(hash)
+      }
+      next()
     })
   })
 
-  app.use(function(err, req, res, next) {
-    //do nothing
-    next
+  app.use(function(error, req, res, next) {
+    if (error.type !== 'request.aborted') {
+      res.status(500).send(error.message)
+    } else {
+      res.status(error.status).send('Aborted')
+    }
   })
 })
 
