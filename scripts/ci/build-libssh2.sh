@@ -16,11 +16,14 @@ cd $2/source/$1
 
 ./buildconf
 
+# pthread below is only necessary for openssl 1.1.x from what I can tell
+#  however I see no harm on keeping in there for other versions
+
 # if rebuilding
 # make distclean
 
 # Debug
-# CFLAGS="-fPIC" LDFLAGS="-ldl" ./configure \
+# CFLAGS="-fPIC" LDFLAGS="-ldl -lpthread" ./configure \
 #   --with-openssl \
 #   --with-libssl-prefix=$OPENSSL_BUILD_FOLDER \
 #   --with-libz \
@@ -30,7 +33,7 @@ cd $2/source/$1
 #   --prefix=$build_folder
 
 # Release - Static
-CFLAGS="-fPIC" LDFLAGS="-ldl" ./configure \
+CFLAGS="-fPIC" LDFLAGS="-ldl -lpthread" ./configure \
   --with-openssl \
   --with-libssl-prefix=$OPENSSL_BUILD_FOLDER \
   --with-libz \
@@ -39,7 +42,7 @@ CFLAGS="-fPIC" LDFLAGS="-ldl" ./configure \
   --prefix=$build_folder
 
 # Release - Both 
-# CFLAGS="-fPIC" LDFLAGS="-ldl" ./configure \
+# CFLAGS="-fPIC" LDFLAGS="-ldl -lpthread" ./configure \
 #   --with-openssl \
 #   --with-libssl-prefix=$OPENSSL_BUILD_FOLDER \
 #   --with-libz \
