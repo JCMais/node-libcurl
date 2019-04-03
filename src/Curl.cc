@@ -1107,11 +1107,7 @@ namespace NodeLibcurl {
         // if v8 is no longer running, don't try to adjust memory
 
         // Return if no available Isolate
-        if ( !v8::Isolate::GetCurrent() ) {
-            return;
-        }
-
-        if (  Nan::GetCurrentContext()->GetIsolate()->IsDead() ) {
+        if ( v8::Isolate::GetCurrent() == 0 || v8::Isolate::GetCurrent()->IsDead() ) {
             return;
         }
 
