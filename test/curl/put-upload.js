@@ -171,35 +171,47 @@ it('should upload data correctly using READFUNCTION callback option', function(d
     done(err)
   })
 
+  // flag not to spam curl with resume requests
+  var isPaused = false
+
   stream.on('error', function(err) {
     done(err)
 
     // make sure curl is not left in "waiting for data" state
     console.log('stream - evt - error - cancelling readfunc')
-    cancelRequested = true
-    curl.pause(CURLPAUSE_CONT) // resume curl
-  })
 
-  var isReadable = true // flag not to spam curl with resume requests
-  stream.on('readable', function() {
-    console.log('stream - evt - readable')
-    if (!isReadable) {
-      console.log('stream - evt - readable - readfunc was paused, resuming')
-      curl.pause(CURLPAUSE_CONT) // resume curl to let it ask for available data
-      isReadable = true
+    cancelRequested = true
+    if (isPaused) {
+      isPaused = false
+      curl.pause(CURLPAUSE_CONT)
     }
   })
-  var isEnded = false // stream has no method to get this state
+
+  stream.on('readable', function() {
+    console.log('stream - evt - readable')
+    if (isPaused) {
+      console.log('stream - evt - readable - readfunc was paused, resuming')
+      isPaused = false
+      // resume curl to let it ask for available data
+      curl.pause(CURLPAUSE_CONT)
+    }
+  })
+
+  // stream has no method to get this state
+  var isEnded = false
   stream.on('end', function() {
     console.log('stream - evt - ended')
     isEnded = true
+
+    // resume curl to let it see there is no more data, just in case it was paused
+    curl.pause(CURLPAUSE_CONT)
   })
 
   curl.setOpt(Curl.option.READFUNCTION, function(targetBuffer) {
     console.log('readfunction callback - start', {
       cancelRequested,
       isEnded,
-      isReadable,
+      isPaused,
     })
     if (cancelRequested) {
       console.log('readfunction callback - cancelling by request')
@@ -215,7 +227,7 @@ it('should upload data correctly using READFUNCTION callback option', function(d
         return 0
       }
       // stream buffer was drained and we need to pause curl while waiting for new data
-      isReadable = false
+      isPaused = true
       console.log('readfunction callback - pausing because stream was drained')
       return CURL_READFUNC_PAUSE
     }
