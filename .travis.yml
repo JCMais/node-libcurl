@@ -8,30 +8,25 @@ dist: trusty
 language: node_js
 node_js:
   - "8"
-  # - "10"
-  # - "11"
-# Being deprecated
-# sudo: false
+  - "10"
+  - "11"
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
       # Those are the defaults for trusty release on TravisCI
-      # - gcc-4.8
-      # - g++-4.8
-      - gcc-6
-      - g++-6
-      # Upgrade openssl
-      # - openssl
+      - gcc-4.8
+      - g++-4.8
+      # - gcc-6
+      # - g++-6
 matrix:
   fast_finish: true
   allow_failures:
     - node_js: "11"
 env:
   global:
-    - GCC_VERSION=6
-    # brew install gcc6?
+    - GCC_VERSION=4.8
     - DEBUG=node-libcurl
     - LIBSSH2_RELEASE=1.8.2
     - MACOSX_DEPLOYMENT_TARGET=10.12
