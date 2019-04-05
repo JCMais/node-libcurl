@@ -8,19 +8,25 @@ curr_dirname=$(dirname "$0")
 mkdir -p $build_folder
 mkdir -p $2/source
 
-$curr_dirname/download-and-unpack.sh \
-  https://github.com/libssh2/libssh2/releases/download/libssh2-$1/libssh2-$1.tar.gz $2
+if [ ! -d $2/source/$1 ]; then
+  $curr_dirname/download-and-unpack.sh \
+    https://github.com/libssh2/libssh2/releases/download/libssh2-$1/libssh2-$1.tar.gz $2
 
-mv $2/libssh2-$1 $2/source/$1
-cd $2/source/$1
-
-./buildconf
+  mv $2/libssh2-$1 $2/source/$1
+  cd $2/source/$1
+  
+  ./buildconf
+else
+  cd $2/source/$1
+  if [ -f ./configure ]; then
+    make distclean || true;
+  else
+    ./buildconf
+  fi
+fi
 
 # pthread below is only necessary for openssl 1.1.x from what I can tell
 #  however I see no harm on keeping in there for other versions
-
-# if rebuilding
-# make distclean
 
 # Debug
 # CFLAGS="-fPIC" LDFLAGS="-ldl -lpthread" ./configure \

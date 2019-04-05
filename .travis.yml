@@ -33,7 +33,7 @@ env:
     - secure: d64E8XbVGHuQ0kls1oVUF1y6pnj3iqZB34roKBHAFTyWBXReC1FWLb+qEShCJicUDkeK2At7vQUz7ohMn2mL/hVXiRbuSaYuDKFx8iDeei9mTgE+iy258mSovnNvXfG72EP5+LB+UOhgmTGe0qyTALOQ6ceCgjdscul3IGWE8lw=
   matrix:
     - LIBCURL_RELEASE=LATEST
-    - LIBCURL_RELEASE=7_43_0
+    - LIBCURL_RELEASE=7_50_0
 
 cache:
   directories:
