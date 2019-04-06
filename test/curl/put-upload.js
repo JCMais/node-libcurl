@@ -198,8 +198,8 @@ it('should abort upload with invalid fd', done => {
   curl.on('end', () => {
     done(
       new Error(
-        'Invalid file descriptor specified but upload was performed correctly.'
-      )
+        'Invalid file descriptor specified but upload was performed correctly.',
+      ),
     )
   })
 

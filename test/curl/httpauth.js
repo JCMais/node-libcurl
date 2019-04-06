@@ -25,7 +25,7 @@ const basic = auth.basic(
   },
   (usr, pass, callback) => {
     callback(usr === username && pass === password)
-  }
+  },
 )
 const digest = auth.digest(
   {
@@ -42,7 +42,7 @@ const digest = auth.digest(
     } else {
       callback()
     }
-  }
+  },
 )
 let curl = null
 

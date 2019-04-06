@@ -25,7 +25,7 @@ const serverHttps = https.createServer(
     key,
     cert,
   },
-  app
+  app,
 )
 const serverHttp2 = http2.createSecureServer({
   key,

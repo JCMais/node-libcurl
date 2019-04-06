@@ -151,7 +151,7 @@ describe('HTTPPOST', () => {
         'Invalid property value accepted. Invalid Args: ' +
           JSON.stringify(invalidArgs) +
           ', Args: ' +
-          JSON.stringify(args)
+          JSON.stringify(args),
       )
     }
   })
