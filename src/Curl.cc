@@ -241,6 +241,10 @@ namespace NodeLibcurl {
         { "AUTOREFERER", CURLOPT_AUTOREFERER },
         { "BUFFERSIZE", CURLOPT_BUFFERSIZE },
 
+    #if NODE_LIBCURL_VER_GE( 7, 62, 0 )
+        { "UPLOAD_BUFFERSIZE", CURLOPT_UPLOAD_BUFFERSIZE },
+    #endif
+
     #if NODE_LIBCURL_VER_GE( 7, 19, 1 )
         { "CERTINFO", CURLOPT_CERTINFO },
     #endif
