@@ -4,60 +4,56 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var serverObj = require('./../helper/server'),
-  Curl = require('../../lib/Curl');
+const serverObj = require('./../helper/server')
+const Curl = require('../../lib/Curl')
 
-var server = serverObj.server,
-  app = serverObj.app,
-  firstRun = true,
-  curl = {};
+const { app, host, port, server } = serverObj
 
-before(function(done) {
-  curl = new Curl();
+const url = `http://${host}:${port}/`
 
-  app.get('/', function(req, res) {
-    res.send('Hi');
-  });
+let firstRun = true
+let curl = null
 
-  server.listen(serverObj.port, serverObj.host, function() {
-    var url = server.address().address + ':' + server.address().port;
+before(done => {
+  curl = new Curl()
+  curl.setOpt('URL', url)
 
-    curl.setOpt('URL', url);
+  app.get('/', (req, res) => {
+    res.send('Hi')
+  })
 
-    done();
-  });
-});
+  server.listen(port, host, done)
+})
 
-after(function() {
-  curl.close();
-  server.close();
-  app._router.stack.pop();
-});
+after(() => {
+  curl.close()
+  server.close()
+  app._router.stack.pop()
+})
 
-it('should reset the curl handler', function(done) {
-  var endHandler = function() {
+it('should reset the curl handler', done => {
+  const endHandler = () => {
     if (!firstRun) {
-      done(new Error('Failed to reset.'));
-      return;
+      done(new Error('Failed to reset.'))
     }
 
-    firstRun = false;
+    firstRun = false
 
-    this.reset();
+    curl.reset()
 
-    curl.on('end', endHandler);
-    curl.on('error', errorHandler);
-    
+    curl.on('end', endHandler)
+    curl.on('error', errorHandler)
+
     //try to make another request
-    this.perform();
-  };
-  
-  var errorHandler = function(err, curlCode) {
+    curl.perform()
+  }
+
+  const errorHandler = (error, errorCode) => {
     //curlCode == 3 -> Invalid URL
-    done(curlCode === 3 ? undefined : err);
-  };
-  
-  curl.on('end', endHandler);
-  curl.on('error', errorHandler);
-  curl.perform();
-});
+    done(errorCode === 3 ? undefined : error)
+  }
+
+  curl.on('end', endHandler)
+  curl.on('error', errorHandler)
+  curl.perform()
+})

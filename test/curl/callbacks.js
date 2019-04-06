@@ -4,98 +4,102 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var serverObj = require('./../helper/server'),
-  Curl = require('../../lib/Curl');
+const serverObj = require('./../helper/server')
+const Curl = require('../../lib/Curl')
 
-var server = serverObj.server,
-  app = serverObj.app,
-  curl = new Curl(),
-  url;
+const { app, host, port, server } = serverObj
 
-beforeEach(function() {
-  curl = new Curl();
-  curl.setOpt('URL', url);
-});
+let curl = null
 
-afterEach(function() {
-  curl.close();
-});
+const url = `http://${host}:${port}/delayed`
 
-before(function(done) {
-  server.listen(serverObj.port, serverObj.host, function() {
-    url = server.address().address + ':' + server.address().port;
-    done();
-  });
+beforeEach(() => {
+  curl = new Curl()
+})
 
-  app.get('/delayed', function(req, res) {
-    var delayBetweenSends = 10;
-    var data = ['<html>', '<body>', '<h1>Hello, World!</h1>', '</body>', '</html>'];
-    function send() {
-      const item = data.shift();
+afterEach(() => {
+  curl.close()
+})
+
+before(done => {
+  server.listen(port, host, done)
+
+  app.get('/delayed', (req, res) => {
+    const delayBetweenSends = 10
+    const data = [
+      '<html>',
+      '<body>',
+      '<h1>Hello, World!</h1>',
+      '</body>',
+      '</html>',
+    ]
+    const send = () => {
+      const item = data.shift()
 
       if (!item) {
-        res.end();
-        return;
+        res.end()
+        return
       }
 
-      res.write(item);
-      setTimeout(send, delayBetweenSends);
+      res.write(item)
+      setTimeout(send, delayBetweenSends)
     }
 
-    send();
-  });
-});
+    send()
+  })
+})
 
-after(function() {
-  server.close();
-  app._router.stack.pop();
-});
+after(() => {
+  server.close()
+  app._router.stack.pop()
+})
 
 describe('progress', function() {
-  this.timeout(10000);
-  it('should work', function(done) {
-    let wasCalled = false;
-    curl.setOpt(Curl.option.NOPROGRESS, false);
-    curl.setProgressCallback(function(dltotal, dlnow, ultotal, ulnow) {
-      wasCalled = true;
-      dltotal.should.be.a.Number();
-      dlnow.should.be.a.Number();
-      ultotal.should.be.a.Number();
-      ulnow.should.be.a.Number();
-      return 0;
-    });
-    curl.setOpt('URL', url + '/delayed');
+  this.timeout(10000)
 
-    curl.on('end', function() {
-      wasCalled.should.be.true;
-      done();
-    });
+  it('should work', done => {
+    let wasCalled = false
 
-    curl.on('error', function(err) {
-      done(err);
-    });
+    curl.setOpt('URL', url)
+    curl.setOpt('NOPROGRESS', false)
 
-    curl.perform();
-  });
+    curl.setProgressCallback((dltotal, dlnow, ultotal, ulnow) => {
+      wasCalled = true
+      dltotal.should.be.a.Number()
+      dlnow.should.be.a.Number()
+      ultotal.should.be.a.Number()
+      ulnow.should.be.a.Number()
+      return 0
+    })
 
-  it('should not accept undefined return', function(done) {
-    curl.setOpt('URL', url + '/delayed');
-    curl.setOpt(Curl.option.NOPROGRESS, false);
+    curl.on('end', () => {
+      wasCalled.should.be.true
+      done()
+    })
 
-    curl.setProgressCallback(function(dltotal, dlnow) {
-      return dlnow >= 40 ? undefined : 0;
-    });
+    curl.on('error', done)
 
-    curl.on('end', function() {
-      done();
-    });
+    curl.perform()
+  })
 
-    curl.on('error', function(err) {
+  it('should not accept undefined return', done => {
+    curl.setOpt('URL', url)
+    curl.setOpt('NOPROGRESS', false)
+
+    curl.setProgressCallback((dltotal, dlnow) => {
+      return dlnow >= 40 ? undefined : 0
+    })
+
+    curl.on('end', () => {
+      done()
+    })
+
+    curl.on('error', error => {
       // eslint-disable-next-line no-undef
-      should(err).be.a.instanceOf(TypeError);
-      done();
-    });
+      should(error).be.a.instanceOf(TypeError)
+      done()
+    })
 
-    curl.perform();
-  });
-});
+    curl.perform()
+  })
+})

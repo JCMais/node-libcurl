@@ -4,143 +4,145 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var serverObj = require('./../helper/server'),
-  Curl = require('../../lib/Curl');
+const serverObj = require('./../helper/server')
+const Curl = require('../../lib/Curl')
 
-var server = serverObj.server,
-  app = serverObj.app,
-  curl = {},
-  url;
+const { app, host, port, server } = serverObj
 
-beforeEach(function() {
-  curl = new Curl();
-  curl.setOpt('URL', url);
-});
+const url = `http://${host}:${port}/`
 
-afterEach(function() {
-  curl.close();
-});
+let curl = null
 
-before(function(done) {
-  server.listen(serverObj.port, serverObj.host, function() {
-    url = server.address().address + ':' + server.address().port;
+beforeEach(() => {
+  curl = new Curl()
+  curl.setOpt('URL', url)
+})
 
-    done();
-  });
+afterEach(() => {
+  curl.close()
+})
 
-  app.get('/', function(req, res) {
-    res.send('Hello World!');
-  });
-});
+before(done => {
+  server.listen(port, host, done)
 
-after(function() {
-  server.close();
-  app._router.stack.pop();
-});
+  app.get('/', (req, res) => {
+    res.send('Hello World!')
+  })
+})
 
-it('should not accept invalid argument type', function() {
-  var optionsToTest = [['URL', 0], ['HTTPPOST', 0], ['POSTFIELDS', 0]];
+after(() => {
+  server.close()
+  app._router.stack.pop()
+})
 
-  try {
-    for (var i = 0; i < optionsToTest.length; i++) {
-      curl.setOpt.apply(curl, optionsToTest[i]);
+it('should accept Curl.option constants', () => {
+  curl.setOpt(Curl.option.URL, url)
+})
+
+it('should not accept invalid argument type', () => {
+  const optionsToTest = [['URL', 0], ['HTTPPOST', 0], ['POSTFIELDS', 0]]
+
+  let errorsCaught = 0
+
+  for (const optionTuple of optionsToTest) {
+    try {
+      curl.setOpt.apply(curl, optionTuple[i])
+    } catch (error) {
+      errorsCaught++
     }
-  } catch (err) {
-    return;
   }
 
-  throw Error('Invalid option was accepted.');
-});
+  if (errorsCaught !== optionsToTest.length)
+    throw Error('Invalid option was accepted.')
+})
 
-it('should not work with non-implemented options', function() {
-  (function() {
-    curl.setOpt(Curl.option.SSL_CTX_FUNCTION, 1);
-  }.should.throw(/^Unsupported/));
-});
+it('should not work with non-implemented options', () => {
+  ;(() => {
+    curl.setOpt(Curl.option.SSL_CTX_FUNCTION, 1)
+  }).should.throw(/^Unsupported/)
+})
 
-it('should restore default internal callbacks when setting WRITEFUNCTION and HEADERFUNCTION callback back to null', function(done) {
-  var shouldCallEvents = false,
-    lastCall = false,
-    headerEvtCalled = false,
-    dataEvtCalled = false;
+it('should restore default internal callbacks when setting WRITEFUNCTION and HEADERFUNCTION callback back to null', done => {
+  let shouldCallEvents = false
+  let lastCall = false
+  let headerEvtCalled = false
+  let dataEvtCalled = false
 
-  curl.setOpt('WRITEFUNCTION', function(buf) {
-    buf.should.be.instanceof(Buffer);
-    return buf.length;
-  });
+  curl.setOpt('WRITEFUNCTION', buffer => {
+    buffer.should.be.instanceof(Buffer)
+    return buffer.length
+  })
 
-  curl.setOpt('HEADERFUNCTION', function(buf) {
-    buf.should.be.instanceof(Buffer);
-    return buf.length;
-  });
+  curl.setOpt('HEADERFUNCTION', buffer => {
+    buffer.should.be.instanceof(Buffer)
+    return buffer.length
+  })
 
-  curl.on('data', function() {
-    shouldCallEvents.should.be.true();
-    dataEvtCalled = true;
-  });
+  curl.on('data', () => {
+    shouldCallEvents.should.be.true()
+    dataEvtCalled = true
+  })
 
-  curl.on('header', function() {
-    shouldCallEvents.should.be.true();
-    headerEvtCalled = true;
-  });
+  curl.on('header', () => {
+    shouldCallEvents.should.be.true()
+    headerEvtCalled = true
+  })
 
-  curl.on('end', function() {
-    curl.setOpt('WRITEFUNCTION', null);
-    curl.setOpt('HEADERFUNCTION', null);
+  curl.on('end', () => {
+    curl.setOpt('WRITEFUNCTION', null)
+    curl.setOpt('HEADERFUNCTION', null)
 
     if (!lastCall) {
-      lastCall = true;
-      shouldCallEvents = true;
-      curl.perform();
-      return;
+      lastCall = true
+      shouldCallEvents = true
+      curl.perform()
+      return
     }
 
-    dataEvtCalled.should.be.true();
-    headerEvtCalled.should.be.true();
+    dataEvtCalled.should.be.true()
+    headerEvtCalled.should.be.true()
 
-    done();
-  });
+    done()
+  })
 
-  curl.on('error', function(err) {
-    done(err);
-  });
+  curl.on('error', done)
 
-  curl.perform();
-});
+  curl.perform()
+})
 
-describe('HTTPPOST', function() {
-  it('should not accept invalid arrays', function() {
+describe('HTTPPOST', () => {
+  it('should not accept invalid arrays', () => {
     try {
-      curl.setOpt('HTTPPOST', [1, 2, {}]);
-    } catch (err) {
-      return;
+      curl.setOpt('HTTPPOST', [1, 2, {}])
+    } catch (error) {
+      return
     }
 
-    throw Error('Invalid array accepted.');
-  });
+    throw Error('Invalid array accepted.')
+  })
 
-  it('should not accept invalid property names', function() {
+  it('should not accept invalid property names', () => {
     try {
-      curl.setOpt('HTTPPOST', [{ dummy: 'property' }]);
-    } catch (err) {
-      return;
+      curl.setOpt('HTTPPOST', [{ dummy: 'property' }])
+    } catch (error) {
+      return
     }
 
-    throw Error('Invalid property name accepted.');
-  });
+    throw Error('Invalid property name accepted.')
+  })
 
-  it('should not accept invalid property value', function() {
-    var args = [{}, [], 1, null, false, undefined],
-      invalidArgs = [],
-      len = args.length;
+  it('should not accept invalid property value', () => {
+    const args = [{}, [], 1, null, false, undefined]
+    let invalidArgs = []
+    let len = args.length
 
     while (--len) {
-      var arg = args.pop();
+      const arg = args.pop()
 
       try {
-        curl.setOpt('HTTPPOST', [{ name: arg }]);
-      } catch (err) {
-        invalidArgs.push(arg === null ? 'null' : typeof arg);
+        curl.setOpt('HTTPPOST', [{ name: arg }])
+      } catch (error) {
+        invalidArgs = [...invalidArgs, arg === null ? 'null' : typeof arg]
       }
     }
 
@@ -150,7 +152,7 @@ describe('HTTPPOST', function() {
           JSON.stringify(invalidArgs) +
           ', Args: ' +
           JSON.stringify(args)
-      );
+      )
     }
-  });
-});
+  })
+})

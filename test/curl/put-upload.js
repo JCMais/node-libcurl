@@ -4,41 +4,42 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var serverObj = require('./../helper/server'),
-  Curl = require('../../lib/Curl'),
-  path = require('path'),
-  fs = require('fs'),
-  crypto = require('crypto')
+const path = require('path')
+const fs = require('fs')
+const crypto = require('crypto')
 
-var server = serverObj.server,
-  app = serverObj.app,
-  curl = new Curl(),
-  fileSize = 10 * 1024, //10Kb
-  fileName = path.resolve(__dirname, 'upload.test'),
-  fileHash = '',
-  uploadLocation = '',
-  url = ''
+const serverObj = require('./../helper/server')
+const Curl = require('../../lib/Curl')
 
-function hashOfFile(file, cb) {
-  var fd = fs.createReadStream(file),
-    hash = crypto.createHash('sha1')
+const { app, host, port, server } = serverObj
+
+const url = `http://${host}:${port}`
+
+const fileSize = 10 * 1024 //10K
+const fileName = path.resolve(__dirname, 'upload.test')
+
+let fileHash = ''
+let uploadLocation = ''
+let curl = null
+
+const hashOfFile = (file, cb) => {
+  const fd = fs.createReadStream(file)
+  const hash = crypto.createHash('sha1')
 
   hash.setEncoding('hex')
 
-  fd.on('end', function() {
+  fd.on('end', () => {
     hash.end()
 
     cb(null, hash.read())
   })
 
-  fd.on('error', function(error) {
-    cb(error)
-  })
+  fd.on('error', cb)
 
   fd.pipe(hash)
 }
 
-beforeEach(function(done) {
+beforeEach(done => {
   curl = new Curl()
   curl.setOpt(Curl.option.URL, url + '/upload/upload-result.test')
   curl.setOpt(Curl.option.HTTPHEADER, [
@@ -50,13 +51,13 @@ beforeEach(function(done) {
 
   //get a hash of given file so we can assert later
   // that the file sent is equals to the one we created.
-  hashOfFile(fileName, function(error, hash) {
+  hashOfFile(fileName, (error, hash) => {
     fileHash = hash
     done(error)
   })
 })
 
-afterEach(function() {
+afterEach(() => {
   curl.close()
 
   fs.unlinkSync(fileName)
@@ -65,21 +66,17 @@ afterEach(function() {
   }
 })
 
-before(function(done) {
-  server.listen(serverObj.port, serverObj.host, function() {
-    url = server.address().address + ':' + server.address().port
+before(done => {
+  server.listen(port, host, done)
 
-    done()
-  })
-
-  app.put('/upload/:filename', function(req, res, next) {
+  app.put('/upload/:filename', (req, res, next) => {
     uploadLocation = path.resolve(__dirname, req.params['filename'])
 
-    var fd = fs.openSync(uploadLocation, 'w+')
+    const fd = fs.openSync(uploadLocation, 'w+')
 
     fs.writeSync(fd, req.body, 0, req.body.length, 0)
     fs.closeSync(fd)
-    hashOfFile(uploadLocation, function(error, hash) {
+    hashOfFile(uploadLocation, (error, hash) => {
       if (error) {
         res.status(500).send(error.message)
       } else {
@@ -89,7 +86,7 @@ before(function(done) {
     })
   })
 
-  app.use(function(error, req, res, next) {
+  app.use((error, req, res, next) => {
     if (error.type !== 'request.aborted') {
       res.status(500).send(error.message)
     } else {
@@ -98,20 +95,20 @@ before(function(done) {
   })
 })
 
-after(function() {
+after(() => {
   server.close()
 
   app._router.stack.pop()
   app._router.stack.pop()
 })
 
-it('should upload data correctly using put', function(done) {
-  var fd = fs.openSync(fileName, 'r+')
+it('should upload data correctly using put', done => {
+  const fd = fs.openSync(fileName, 'r+')
 
-  curl.setOpt(Curl.option.UPLOAD, 1)
-  curl.setOpt(Curl.option.READDATA, fd)
+  curl.setOpt('UPLOAD', 1)
+  curl.setOpt('READDATA', fd)
 
-  curl.on('end', function(statusCode, body) {
+  curl.on('end', (statusCode, body) => {
     statusCode.should.be.equal(200)
     body.should.be.equal(fileHash)
 
@@ -119,51 +116,39 @@ it('should upload data correctly using put', function(done) {
     done()
   })
 
-  curl.on('error', function(err) {
+  curl.on('error', error => {
     fs.closeSync(fd)
-    done(err)
+    done(error)
   })
 
   curl.perform()
 })
 
-it('should upload data correctly using READFUNCTION callback option', function(done) {
-  var CURL_READFUNC_PAUSE = 0x10000001
-  var CURL_READFUNC_ABORT = 0x10000000
-  var CURLPAUSE_CONT = 0
+it('should upload data correctly using READFUNCTION callback option', done => {
+  const CURL_READFUNC_PAUSE = 0x10000001
+  const CURL_READFUNC_ABORT = 0x10000000
+  const CURLPAUSE_CONT = 0
 
-  var stream = fs.createReadStream(fileName)
-  var cancelRequested = false
+  const stream = fs.createReadStream(fileName)
+
+  let cancelRequested = false
+  let isPaused = false
+  let isEnded = false
 
   curl.setOpt(Curl.option.UPLOAD, true)
 
-  curl.on('end', function(statusCode, body) {
+  curl.on('end', (statusCode, body) => {
     statusCode.should.be.equal(200)
     body.should.be.equal(fileHash)
 
     done()
   })
 
-  curl.on('error', function(err) {
-    done(err)
-  })
+  curl.on('error', done)
 
-  // flag not to spam curl with resume requests
-  var isPaused = false
+  stream.on('error', done)
 
-  stream.on('error', function(err) {
-    done(err)
-
-    cancelRequested = true
-
-    // make sure curl is not left in "waiting for data" state
-    if (isPaused) {
-      isPaused = false
-      curl.pause(CURLPAUSE_CONT)
-    }
-  })
-
-  stream.on('readable', function() {
+  stream.on('readable', () => {
     // resume curl to let it ask for available data
     if (isPaused) {
       isPaused = false
@@ -171,9 +156,7 @@ it('should upload data correctly using READFUNCTION callback option', function(d
     }
   })
 
-  // stream has no method to get this state
-  var isEnded = false
-  stream.on('end', function() {
+  stream.on('end', () => {
     isEnded = true
 
     // resume curl to let it see there is no more data, just in case it was paused
@@ -183,18 +166,19 @@ it('should upload data correctly using READFUNCTION callback option', function(d
     }
   })
 
-  curl.setOpt(Curl.option.READFUNCTION, function(targetBuffer) {
+  curl.setOpt('READFUNCTION', targetBuffer => {
     if (cancelRequested) {
       return CURL_READFUNC_ABORT
     }
 
     // stream returns null if it has < requestedBytes available
-    var readBuffer = stream.read(100) || stream.read()
+    const readBuffer = stream.read(100) || stream.read()
 
     if (readBuffer === null) {
       if (isEnded) {
         return 0
       }
+
       // stream buffer was drained and we need to pause curl while waiting for new data
       isPaused = true
       return CURL_READFUNC_PAUSE
@@ -207,11 +191,11 @@ it('should upload data correctly using READFUNCTION callback option', function(d
   curl.perform()
 })
 
-it('should abort upload with invalid fd', function(done) {
-  curl.setOpt(Curl.option.UPLOAD, 1)
-  curl.setOpt(Curl.option.READDATA, -1)
+it('should abort upload with invalid fd', done => {
+  curl.setOpt('UPLOAD', 1)
+  curl.setOpt('READDATA', -1)
 
-  curl.on('end', function() {
+  curl.on('end', () => {
     done(
       new Error(
         'Invalid file descriptor specified but upload was performed correctly.'
@@ -219,9 +203,9 @@ it('should abort upload with invalid fd', function(done) {
     )
   })
 
-  curl.on('error', function(err, errCode) {
+  curl.on('error', (error, errorCode) => {
     //[Error: Operation was aborted by an application callback]
-    errCode.should.be.equal(42)
+    errorCode.should.be.equal(42)
 
     done()
   })

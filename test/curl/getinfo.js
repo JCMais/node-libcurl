@@ -4,78 +4,71 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var serverObj = require('./../helper/server'),
-  Curl = require('../../lib/Curl');
+const serverObj = require('./../helper/server')
+const Curl = require('../../lib/Curl')
 
-var server = serverObj.server,
-  app = serverObj.app,
-  curl = {},
-  url;
+const { app, host, port, server } = serverObj
 
-beforeEach(function() {
-  curl = new Curl();
-  curl.setOpt('URL', url);
-});
+const url = `http://${host}:${port}/`
 
-afterEach(function() {
-  curl.close();
-});
+let curl = null
 
-before(function(done) {
-  server.listen(serverObj.port, serverObj.host, function() {
-    url = server.address().address + ':' + server.address().port;
+beforeEach(() => {
+  curl = new Curl()
+  curl.setOpt('URL', url)
+})
 
-    done();
-  });
+afterEach(() => {
+  curl.close()
+})
 
-  app.get('/', function(req, res) {
-    res.send('Hello World!');
-  });
-});
+before(done => {
+  server.listen(port, host, done)
 
-after(function() {
-  app._router.stack.pop();
-  server.close();
-});
+  app.get('/', (req, res) => {
+    res.send('Hello World!')
+  })
+})
 
-it('should not work with non-implemented infos', function(done) {
-  curl.on('end', function(status) {
+after(() => {
+  app._router.stack.pop()
+  server.close()
+})
+
+it('should not work with non-implemented infos', done => {
+  curl.on('end', status => {
     if (status !== 200) {
-      throw Error('Invalid status code: ' + status);
+      throw Error('Invalid status code: ' + status)
     }
 
-    (function() {
-      curl.getInfo(Curl.info.PRIVATE);
-    }.should.throw(/^Unsupported/));
+    ;(() => {
+      curl.getInfo(Curl.info.PRIVATE)
+    }).should.throw(/^Unsupported/)
 
-    done();
-  });
+    done()
+  })
 
-  curl.on('error', function(err) {
-    done(err);
-  });
+  curl.on('error', done)
 
-  curl.perform();
-});
+  curl.perform()
+})
 
-it('should get all infos', function(done) {
-  curl.on('end', function(status) {
+it('should get all infos', done => {
+  curl.on('end', status => {
     if (status !== 200) {
-      throw Error('Invalid status code: ' + status);
+      throw Error('Invalid status code: ' + status)
     }
 
-    for (var infoId in Curl.info) {
+    for (const infoId in Curl.info) {
       if (Curl.info.hasOwnProperty(infoId) && infoId !== 'debug') {
-        curl.getInfo(infoId);
+        curl.getInfo(infoId)
       }
     }
 
-    done();
-  });
+    done()
+  })
 
-  curl.on('error', function(err) {
-    done(err);
-  });
+  curl.on('error', done)
 
-  curl.perform();
-});
+  curl.perform()
+})

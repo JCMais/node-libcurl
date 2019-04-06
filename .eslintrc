@@ -1,47 +1,47 @@
 {
-  "rules": {
-    "semi": [
-      2,
-      "always"
-    ],
-    // check
-    "valid-jsdoc": [
-      0,
-      {
-        "requireParamDescription": false,
-        "requireReturnDescription": false,
-        "requireReturn": false
-      }
-    ],
-    "no-bitwise": 0,
-    //code style
-    "quotes": [2, "single", { "allowTemplateLiterals": true }],
-    "brace-style": [2, "1tbs", { "allowSingleLine": true }],
-    "camelcase"  : 2,
-    "comma-spacing": 2,
-    "comma-style": 2,
-    "consistent-this": [1, "me"],
-    "linebreak-style": 2,
-    "max-nested-callbacks": [2, 3],
-    "new-cap": 2,
-    "new-parens": 2,
-    "no-array-constructor": 2,
-    "no-unused-vars": [2, { "ignoreRestSiblings": true }],
-    "no-lonely-if": 2,
-    "no-extra-boolean-cast": 0,
-    "no-mixed-spaces-and-tabs": 2,
-    "object-curly-spacing": [1, "always"],
-    "no-nested-ternary": 2,
-    "no-new-object": 2,
-    "func-call-spacing": 2,
-    "no-trailing-spaces": [2, { "skipBlankLines": true }],
-    "no-unneeded-ternary": 2,
-    "keyword-spacing": 2,
-    "space-in-parens": 2
-  },
+  // "rules": {
+  //   "semi": [
+  //     2,
+  //     ""
+  //   ],
+  //   // check
+  //   "valid-jsdoc": [
+  //     0,
+  //     {
+  //       "requireParamDescription": false,
+  //       "requireReturnDescription": false,
+  //       "requireReturn": false
+  //     }
+  //   ],
+  //   "no-bitwise": 0,
+  //   //code style
+  //   "quotes": [2, "single", { "allowTemplateLiterals": true }],
+  //   "brace-style": [2, "1tbs", { "allowSingleLine": true }],
+  //   "camelcase"  : 2,
+  //   "comma-spacing": 2,
+  //   "comma-style": 2,
+  //   "consistent-this": [1, "me"],
+  //   "linebreak-style": 2,
+  //   "max-nested-callbacks": [2, 3],
+  //   "new-cap": 2,
+  //   "new-parens": 2,
+  //   "no-array-constructor": 2,
+  //   "no-unused-vars": [2, { "ignoreRestSiblings": true }],
+  //   "no-lonely-if": 2,
+  //   "no-extra-boolean-cast": 0,
+  //   "no-mixed-spaces-and-tabs": 2,
+  //   "object-curly-spacing": [1, "always"],
+  //   "no-nested-ternary": 2,
+  //   "no-new-object": 2,
+  //   "func-call-spacing": 2,
+  //   "no-trailing-spaces": [2, { "skipBlankLines": true }],
+  //   "no-unneeded-ternary": 2,
+  //   "keyword-spacing": 2,
+  //   "space-in-parens": 2
+  // },
   "env": {
     "node": true,
     "es6": true
   },
-  "extends": "eslint:recommended"
+  "extends": ["plugin:prettier/recommended"]
 }

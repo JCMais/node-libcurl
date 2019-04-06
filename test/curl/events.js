@@ -4,155 +4,150 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var serverObj = require('./../helper/server'),
-  Curl = require('../../lib/Curl');
+const serverObj = require('./../helper/server')
+const Curl = require('../../lib/Curl')
 
-var server = serverObj.server,
-  app = serverObj.app,
-  url = '',
-  timeout = 0;
+const { app, host, port, server } = serverObj
 
-var curl;
+let curl = null
+let timeout = null
 
-beforeEach(function() {
-  curl = new Curl();
-  curl.setOpt('URL', url);
-});
+beforeEach(() => {
+  curl = new Curl()
+  curl.setOpt('URL', `http://${host}:${port}`)
+})
 
-afterEach(function() {
-  curl.close();
-});
+afterEach(() => {
+  curl.close()
+})
 
-before(function(done) {
-  app.all('/', function(req, res) {
+before(done => {
+  app.all('/', (req, res) => {
     if (req.body.errReq) {
-      res.status(500);
-      res.end();
+      res.status(500)
+      res.end()
     } else {
-      res.send('Hello World!');
+      res.send('Hello World!')
     }
 
-    timeout = setTimeout(function() {
-      throw Error('No action taken.');
-    }, 1000);
-  });
+    timeout = setTimeout(() => {
+      throw Error('No action taken.')
+    }, 1000)
+  })
 
-  server.listen(serverObj.port, serverObj.host, function() {
-    url = server.address().address + ':' + server.address().port;
+  server.listen(port, host, done)
+})
 
-    done();
-  });
-});
+after(() => {
+  app._router.stack.pop()
+  server.close()
+})
 
-after(function() {
-  app._router.stack.pop();
-  server.close();
-});
+it('should emit "end" event when the connection ends without errors.', done => {
+  curl.on('end', () => {
+    clearTimeout(timeout)
 
-it('should emit "end" event when the connection ends without errors.', function(done) {
-  curl.on('end', function() {
-    clearTimeout(timeout);
+    done()
+  })
 
-    done();
-  });
+  curl.on('error', error => {
+    clearTimeout(timeout)
 
-  curl.on('error', function(err) {
-    clearTimeout(timeout);
+    done(error)
+  })
 
-    done(err);
-  });
+  curl.perform()
+})
 
-  curl.perform();
-});
+it('should emit "error" event when the connection fails', done => {
+  curl.setOpt('POSTFIELDS', 'errReq=true')
+  curl.setOpt('FAILONERROR', true)
 
-it('should emit "error" event when the connection fails', function(done) {
-  curl.setOpt('POSTFIELDS', 'errReq=true');
-  curl.setOpt('FAILONERROR', true);
+  curl.on('end', () => {
+    clearTimeout(timeout)
+    done(Error('end event was called, but the connection failed.'))
+  })
 
-  curl.on('end', function() {
-    clearTimeout(timeout);
+  curl.on('error', (error, errorCode) => {
+    error.should.be.instanceof(Error)
+    errorCode.should.be.of
+      .type('number')
+      .and.equal(Curl.code.CURLE_HTTP_RETURNED_ERROR)
 
-    done(Error('end event was called, but the connection failed.'));
-  });
+    clearTimeout(timeout)
 
-  curl.on('error', function(err, errCode) {
-    err.should.be.instanceof(Error);
-    errCode.should.be.of.type('number').and.equal(Curl.code.CURLE_HTTP_RETURNED_ERROR);
+    done()
+  })
 
-    clearTimeout(timeout);
+  curl.perform()
+})
 
-    done();
-  });
+it('should emit "error" when the connection is aborted in the progress cb', done => {
+  curl.setProgressCallback(() => {
+    return 1
+  })
 
-  curl.perform();
-});
+  curl.setOpt('NOPROGRESS', false)
 
-it('should emit "error" when the connection is aborted in the progress cb', function(done) {
-  curl.setProgressCallback(function() {
-    return 1;
-  });
+  curl.on('end', () => {
+    clearTimeout(timeout)
 
-  curl.setOpt('NOPROGRESS', false);
+    done(Error('end event was called, but the connection was aborted.'))
+  })
 
-  curl.on('end', function() {
-    clearTimeout(timeout);
+  curl.on('error', error => {
+    error.should.be.instanceof(Error)
 
-    done(Error('end event was called, but the connection was aborted.'));
-  });
+    clearTimeout(timeout)
 
-  curl.on('error', function(err) {
-    err.should.be.instanceof(Error);
+    done()
+  })
 
-    clearTimeout(timeout);
+  curl.perform()
+})
 
-    done();
-  });
+it('should emit "error" when the connection is aborted in the header cb', done => {
+  curl.onHeader = () => {
+    return -1
+  }
 
-  curl.perform();
-});
+  curl.on('end', () => {
+    clearTimeout(timeout)
 
-it('should emit "error" when the connection is aborted in the header cb', function(done) {
-  curl.onHeader = function() {
-    return -1;
-  };
+    done(Error('end event was called, but the connection was aborted.'))
+  })
 
-  curl.on('end', function() {
-    clearTimeout(timeout);
+  curl.on('error', (error, errorCode) => {
+    error.should.be.instanceof(Error)
+    errorCode.should.be.of.type('number').and.equal(Curl.code.CURLE_WRITE_ERROR)
 
-    done(Error('end event was called, but the connection was aborted.'));
-  });
+    clearTimeout(timeout)
 
-  curl.on('error', function(err, errCode) {
-    err.should.be.instanceof(Error);
-    errCode.should.be.of.type('number').and.equal(Curl.code.CURLE_WRITE_ERROR);
+    done()
+  })
 
-    clearTimeout(timeout);
+  curl.perform()
+})
 
-    done();
-  });
+it('should emit "error" when the connection is aborted in the data cb', done => {
+  curl.onData = () => {
+    return -1
+  }
 
-  curl.perform();
-});
+  curl.on('end', () => {
+    clearTimeout(timeout)
 
-it('should emit "error" when the connection is aborted in the data cb', function(done) {
-  curl.onData = function() {
-    return -1;
-  };
+    done(Error('end event was called, but the connection was aborted.'))
+  })
 
-  curl.on('end', function() {
-    clearTimeout(timeout);
+  curl.on('error', (error, errorCode) => {
+    error.should.be.instanceof(Error)
+    errorCode.should.be.of.type('number').and.equal(Curl.code.CURLE_WRITE_ERROR)
 
-    done(Error('end event was called, but the connection was aborted.'));
-  });
+    clearTimeout(timeout)
 
-  curl.on('error', function(err, errCode) {
-    err.should.be.instanceof(Error);
-    errCode.should.be.of.type('number').and.equal(Curl.code.CURLE_WRITE_ERROR);
+    done()
+  })
 
-    clearTimeout(timeout);
-
-    done();
-  });
-
-  curl.perform();
-});
+  curl.perform()
+})

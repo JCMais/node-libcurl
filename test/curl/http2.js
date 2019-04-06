@@ -7,12 +7,12 @@
 const serverObj = require('./../helper/server')
 const Curl = require('../../lib/Curl')
 
-const { serverHttp2 } = serverObj
+const { host, portHttp2, serverHttp2 } = serverObj
 
 let session = null
 
-before(function(done) {
-  serverHttp2.on('error', err => console.error(err))
+before(done => {
+  serverHttp2.on('error', error => console.error(error))
   serverHttp2.on('session', sess => {
     session = sess
   })
@@ -24,19 +24,19 @@ before(function(done) {
     stream.end('<h1>Hello World</h1>')
   })
 
-  serverHttp2.listen(serverObj.portHttp2, serverObj.host, function() {
+  serverHttp2.listen(portHttp2, host, () => {
     done()
   })
 })
 
-after(function() {
+after(() => {
   serverHttp2.close()
 })
 
-it('should work with https2 site', function(done) {
+it('should work with https2 site', done => {
   const curl = new Curl()
 
-  curl.setOpt('URL', `https://${serverObj.host}:${serverObj.portHttp2}/`)
+  curl.setOpt('URL', `https://${host}:${portHttp2}/`)
   curl.setOpt('HTTP_VERSION', Curl.http.VERSION_2)
   curl.setOpt('SSL_VERIFYPEER', false)
 

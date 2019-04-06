@@ -4,65 +4,64 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var querystring = require('querystring'),
-  serverObj = require('./../helper/server'),
-  Curl = require('../../lib/Curl'),
-  server = serverObj.server,
-  app = serverObj.app,
-  postData = {
-    'input-name': 'This is input-name value.',
-    'input-name2': 'This is input-name2 value',
-  },
-  curl = {};
+const querystring = require('querystring')
 
-beforeEach(function(done) {
-  curl = new Curl();
+const serverObj = require('./../helper/server')
+const Curl = require('../../lib/Curl')
 
-  server.listen(serverObj.port, serverObj.host, function() {
-    var url = server.address().address + ':' + server.address().port;
+const { app, host, port, server } = serverObj
 
-    curl.setOpt('URL', url);
-    done();
-  });
-});
+const url = `http://${host}:${port}/`
 
-afterEach(function() {
-  curl.close();
-  server.close();
-});
+const postData = {
+  'input-name': 'This is input-name value.',
+  'input-name2': 'This is input-name2 value',
+}
 
-before(function() {
-  app.post('/', function(req, res) {
-    res.send(JSON.stringify(req.body));
-  });
-});
+let curl = null
 
-after(function() {
-  app._router.stack.pop();
-});
+beforeEach(() => {
+  curl = new Curl()
+  curl.setOpt('URL', url)
+})
 
-it('should post the correct data', function(done) {
-  curl.setOpt('POSTFIELDS', querystring.stringify(postData));
+afterEach(() => {
+  curl.close()
+  server.close()
+})
 
-  curl.on('end', function(status, data) {
+before(done => {
+  server.listen(port, host, done)
+
+  app.post('/', (req, res) => {
+    res.send(JSON.stringify(req.body))
+  })
+})
+
+after(() => {
+  app._router.stack.pop()
+})
+
+it('should post the correct data', done => {
+  curl.setOpt('POSTFIELDS', querystring.stringify(postData))
+
+  curl.on('end', (status, data) => {
     if (status !== 200) {
-      throw Error('Invalid status code: ' + status);
+      throw Error('Invalid status code: ' + status)
     }
 
-    data = JSON.parse(data);
+    const parsedData = JSON.parse(data)
 
-    for (var field in data) {
-      if (data.hasOwnProperty(field)) {
-        data[field].should.be.equal(postData[field]);
+    for (const field in parsedData) {
+      if (parsedData.hasOwnProperty(field)) {
+        parsedData[field].should.be.equal(postData[field])
       }
     }
 
-    done();
-  });
+    done()
+  })
 
-  curl.on('error', function(err) {
-    done(err);
-  });
+  curl.on('error', done)
 
-  curl.perform();
-});
+  curl.perform()
+})

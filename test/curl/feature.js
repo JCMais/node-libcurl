@@ -4,104 +4,103 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var serverObj = require('./../helper/server'),
-  Curl = require('../../lib/Curl');
+const serverObj = require('./../helper/server')
+const Curl = require('../../lib/Curl')
 
-var server = serverObj.server,
-  app = serverObj.app,
-  headerLength = 0,
-  responseData = 'Ok',
-  responseLength = responseData.length,
-  curl = {};
+const { app, host, port, server } = serverObj
 
-beforeEach(function(done) {
-  curl = new Curl();
+const responseData = 'Ok'
+const responseLength = responseData.length
 
-  server.listen(serverObj.port, serverObj.host, function() {
-    var url = server.address().address + ':' + server.address().port;
+const url = `http://${host}:${port}/`
 
-    curl.setOpt('URL', url);
-    done();
-  });
-});
+let curl = null
+let headerLength = null
 
-afterEach(function() {
-  curl.close();
-  server.close();
-});
+beforeEach(() => {
+  curl = new Curl()
+  curl.setOpt('URL', url)
+})
 
-before(function() {
-  app.get('/', function(req, res) {
-    res.send(responseData);
+afterEach(() => {
+  curl.close()
+})
 
-    headerLength = res._header.length;
-  });
-});
+before(done => {
+  server.listen(port, host, done)
 
-after(function() {
-  app._router.stack.pop();
-});
+  app.get('/', (req, res) => {
+    res.send(responseData)
 
-it('should not store data when NO_DATA_STORAGE is set', function(done) {
-  curl.enable(Curl.feature.NO_DATA_STORAGE);
+    headerLength = res._header.length
+  })
+})
 
-  curl.on('error', function(err) {
-    done(err);
-  });
+after(() => {
+  server.close()
+  app._router.stack.pop()
+})
 
-  curl.on('end', function(status, data, headers) {
-    data.should.be.an.instanceOf(Buffer).and.have.property('length', 0);
-    headers.should.be.an.instanceOf(Array).and.have.property('length', 1);
-    done();
-  });
+it('should not store data when NO_DATA_STORAGE is set', done => {
+  curl.enable(Curl.feature.NO_DATA_STORAGE)
 
-  curl.perform();
-});
+  curl.on('end', (status, data, headers) => {
+    data.should.be.an.instanceOf(Buffer).and.have.property('length', 0)
+    headers.should.be.an.instanceOf(Array).and.have.property('length', 1)
+    done()
+  })
 
-it('should not store headers when NO_HEADER_STORAGE is set', function(done) {
-  curl.enable(Curl.feature.NO_HEADER_STORAGE);
+  curl.on('error', done)
 
-  curl.on('error', function(err) {
-    done(err);
-  });
+  curl.perform()
+})
 
-  curl.on('end', function(status, data, headers) {
-    data.should.be.an.instanceOf(String).and.have.property('length', responseLength);
-    headers.should.be.instanceOf(Buffer).and.have.property('length', 0);
-    done();
-  });
+it('should not store headers when NO_HEADER_STORAGE is set', done => {
+  curl.enable(Curl.feature.NO_HEADER_STORAGE)
 
-  curl.perform();
-});
+  curl.on('end', (status, data, headers) => {
+    data.should.be.an
+      .instanceOf(String)
+      .and.have.property('length', responseLength)
+    headers.should.be.instanceOf(Buffer).and.have.property('length', 0)
+    done()
+  })
 
-it('should not parse data when NO_DATA_PARSING is set', function(done) {
-  curl.enable(Curl.feature.NO_DATA_PARSING);
+  curl.on('error', done)
 
-  curl.on('error', function(err) {
-    done(err);
-  });
+  curl.perform()
+})
 
-  curl.on('end', function(status, data, headers) {
-    data.should.be.an.instanceOf(Buffer).and.have.property('length', responseLength);
-    headers.should.be.an.instanceOf(Array).and.have.property('length', 1);
-    done();
-  });
+it('should not parse data when NO_DATA_PARSING is set', done => {
+  curl.enable(Curl.feature.NO_DATA_PARSING)
 
-  curl.perform();
-});
+  curl.on('end', (status, data, headers) => {
+    data.should.be.an
+      .instanceOf(Buffer)
+      .and.have.property('length', responseLength)
+    headers.should.be.an.instanceOf(Array).and.have.property('length', 1)
+    done()
+  })
 
-it('should not parse headers when NO_HEADER_PARSING is set', function(done) {
-  curl.enable(Curl.feature.NO_HEADER_PARSING);
+  curl.on('error', done)
 
-  curl.on('error', function(err) {
-    done(err);
-  });
+  curl.perform()
+})
 
-  curl.on('end', function(status, data, headers) {
-    data.should.be.an.instanceOf(String).and.have.property('length', responseLength);
-    headers.should.be.an.instanceOf(Buffer).and.have.property('length', headerLength);
-    done();
-  });
+it('should not parse headers when NO_HEADER_PARSING is set', done => {
+  curl.enable(Curl.feature.NO_HEADER_PARSING)
 
-  curl.perform();
-});
+  curl.on('end', (status, data, headers) => {
+    data.should.be.an
+      .instanceOf(String)
+      .and.have.property('length', responseLength)
+    headers.should.be.an
+      .instanceOf(Buffer)
+      .and.have.property('length', headerLength)
+    done()
+  })
+
+  curl.on('error', done)
+
+  curl.perform()
+})

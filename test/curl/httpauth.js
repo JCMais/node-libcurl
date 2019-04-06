@@ -4,77 +4,79 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var auth = require('http-auth'),
-  crypto = require('crypto'),
-  serverObj = require('./../helper/server'),
-  Curl = require('../../lib/Curl')
+const crypto = require('crypto')
 
-var server = serverObj.server,
-  app = serverObj.app,
-  username = 'user',
-  password = 'pass',
-  realmBasic = 'basic',
-  realmDigest = 'digest',
-  basic = auth.basic(
-    {
-      realm: realmBasic,
-    },
-    function(usr, pass, callback) {
-      callback(usr === username && pass === password)
+const auth = require('http-auth')
+
+const serverObj = require('./../helper/server')
+const Curl = require('../../lib/Curl')
+
+const { app, host, port, server } = serverObj
+
+const url = `http://${host}:${port}/`
+
+const username = 'user'
+const password = 'pass'
+const realmBasic = 'basic'
+const realmDigest = 'digest'
+const basic = auth.basic(
+  {
+    realm: realmBasic,
+  },
+  (usr, pass, callback) => {
+    callback(usr === username && pass === password)
+  }
+)
+const digest = auth.digest(
+  {
+    realm: realmDigest,
+  },
+  (usr, callback) => {
+    const hash = crypto.createHash('md5')
+
+    if (usr === username) {
+      hash.update([username, realmDigest, password].join(':'))
+      const hashDigest = hash.digest('hex')
+
+      callback(hashDigest)
+    } else {
+      callback()
     }
-  ),
-  digest = auth.digest(
-    {
-      realm: realmDigest,
-    },
-    function(usr, callback) {
-      var hash = crypto.createHash('md5')
+  }
+)
+let curl = null
 
-      if (usr === username) {
-        hash.update([username, realmDigest, password].join(':'))
-        const hashDigest = hash.digest('hex')
-
-        callback(hashDigest)
-      } else {
-        callback()
-      }
-    }
-  ),
-  curl = {}
-
-beforeEach(function() {
+beforeEach(() => {
   curl = new Curl()
-  curl.setOpt('URL', `http://${serverObj.host}:${serverObj.port}/`)
+  curl.setOpt('URL', url)
 })
 
-afterEach(function() {
+afterEach(() => {
   curl.close()
 
   app._router.stack.pop()
   app._router.stack.pop()
 })
 
-before(function(done) {
-  server.listen(serverObj.port, serverObj.host, function() {
-    done()
-  })
+before(done => {
+  server.listen(port, host, done)
 })
 
-after(function() {
+after(() => {
   server.close()
 })
 
-it('should authenticate using basic auth', function(done) {
+it('should authenticate using basic auth', done => {
   app.use(auth.connect(basic))
-  app.get('/', function(req, res) {
+  app.get('/', (req, res) => {
     res.send(req.user)
   })
 
   curl.setOpt('HTTPAUTH', Curl.auth.BASIC)
-  curl.setOpt(Curl.option.USERNAME, username)
-  curl.setOpt(Curl.option.PASSWORD, password)
+  curl.setOpt('USERNAME', username)
+  curl.setOpt('PASSWORD', password)
 
-  curl.on('end', function(status, data) {
+  curl.on('end', (status, data) => {
     if (status !== 200) {
       throw Error('Invalid status code: ' + status)
     }
@@ -89,31 +91,26 @@ it('should authenticate using basic auth', function(done) {
   curl.perform()
 })
 
-it('should authenticate using digest', function(done) {
+it('should authenticate using digest', done => {
   //Currently, there is a bug with libcurl > 7.40 when using digest auth
   // on Windows, the realm is not populated from the Auth header.
   //  So we need to use the workaround below to make it work.
-  var user = username
+  let user = username
 
   if (process.platform === 'win32' && Curl.VERSION_NUM >= 0x072800) {
     user = realmDigest + '/' + username
   }
 
   app.use(auth.connect(digest))
-  app.get('/', function(req, res) {
+  app.get('/', (req, res) => {
     res.send(req.user)
   })
 
-  // curl.setOpt('URL', 'http://httpbin.org/digest-auth/auth/jcm/123')
   curl.setOpt('HTTPAUTH', Curl.auth.DIGEST)
-  curl.setOpt(Curl.option.USERNAME, user)
-  curl.setOpt(Curl.option.PASSWORD, password)
-  // curl.setOpt(Curl.option.USERNAME, 'jcm')
-  // curl.setOpt(Curl.option.PASSWORD, '123')
+  curl.setOpt('USERNAME', user)
+  curl.setOpt('PASSWORD', password)
 
-  // curl.setOpt(Curl.option.VERBOSE, 1)
-
-  curl.on('end', function(status, data) {
+  curl.on('end', (status, data) => {
     if (status !== 200) {
       throw Error('Invalid status code: ' + status)
     }
@@ -128,17 +125,17 @@ it('should authenticate using digest', function(done) {
   curl.perform()
 })
 
-it('should not authenticate using basic', function(done) {
+it('should not authenticate using basic', done => {
   app.use(auth.connect(basic))
-  app.get('/', function(req, res) {
+  app.get('/', (req, res) => {
     res.send(req.user)
   })
 
   curl.setOpt('HTTPAUTH', Curl.auth.ANYSAFE)
-  curl.setOpt(Curl.option.USERNAME, username)
-  curl.setOpt(Curl.option.PASSWORD, password)
+  curl.setOpt('USERNAME', username)
+  curl.setOpt('PASSWORD', password)
 
-  curl.on('end', function(status) {
+  curl.on('end', status => {
     status.should.be.equal(401)
 
     done()
