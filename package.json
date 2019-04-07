@@ -25,7 +25,7 @@
     "docs": "jsdoc2md lib/*.js > api.md",
     "postinstall": "node scripts/postinstall",
     "pregyp": "node-pre-gyp",
-    "prettier": "prettier --write --single-quote true --trailing-comma es5 --print-width 120",
+    "prettier": "prettier --write",
     "prettier:all": "yarn prettier lib/**/*.js tools/**/*.js scripts/**/*.js test/**/*.js examples/**/*.js",
     "lint": "node_modules/.bin/eslint . --max-warnings=0"
   },
@@ -50,7 +50,7 @@
   "devDependencies": {
     "body-parser": "^1.18.3",
     "cookie-parser": "^1.4.3",
-    "eslint": "^4.19.1",
+    "eslint": "^5.16.0",
     "eslint-config-prettier": "^4.1.0",
     "eslint-plugin-prettier": "^3.0.1",
     "express": "^4.16.3",
@@ -63,7 +63,7 @@
     "mocha": "^5.2.0",
     "multiparty": "^4.2.0",
     "octonode": "^0.9.3",
-    "prettier": "1.14.2",
+    "prettier": "1.16.4",
     "progress": "^2.0.0",
     "should": "^13.2.3"
   },
