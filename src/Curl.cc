@@ -1071,7 +1071,7 @@ namespace NodeLibcurl {
         }
         else { //int
 
-            optionId = searchFor->ToInteger()->Int32Value();
+            optionId = Nan::To<int32_t>(searchFor).FromJust();
 
         }
 
@@ -1191,7 +1191,7 @@ namespace NodeLibcurl {
     {
         Nan::HandleScope scope;
 
-        long flags = info[0]->IsUndefined() ? static_cast<long>( info[0]->Int32Value() ) : CURL_GLOBAL_ALL;
+        long flags = info[0]->IsUndefined() ? static_cast<long>( Nan::To<int32_t>(info[0]).FromJust() ) : CURL_GLOBAL_ALL;
 
         curl_version_info_data *version = curl_version_info( CURLVERSION_NOW );
         isLibcurlBuiltWithThreadedResolver = ( version->features & CURL_VERSION_ASYNCHDNS ) == CURL_VERSION_ASYNCHDNS;

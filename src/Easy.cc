@@ -330,7 +330,7 @@ namespace NodeLibcurl {
             }
             else {
 
-                returnValue = returnValueCallback.ToLocalChecked()->Int32Value();
+                returnValue = Nan::To<int32_t>(returnValueCallback.ToLocalChecked()).FromJust();
             }
 
             char *data = node::Buffer::Data( buf );
@@ -422,7 +422,7 @@ namespace NodeLibcurl {
                 }
                 else {
 
-                    returnValue = returnValueCallback.ToLocalChecked()->Int32Value();
+                    returnValue = Nan::To<int32_t>(returnValueCallback.ToLocalChecked()).FromJust();
                 }
 
             // otherwise we can't seek directly
@@ -473,7 +473,7 @@ namespace NodeLibcurl {
         }
         else {
 
-            retVal = Nan::CallAsFunction( cbOnData->ToObject(), this->handle(), argc, argv );
+            retVal = Nan::CallAsFunction( Nan::To<v8::Object>(cbOnData).ToLocalChecked(), this->handle(), argc, argv );
         }
 
         size_t ret = n;
@@ -484,7 +484,7 @@ namespace NodeLibcurl {
         }
         else {
 
-            ret = retVal.ToLocalChecked()->Uint32Value();
+            ret = Nan::To<uint32_t>(retVal.ToLocalChecked()).FromJust();
         }
 
         return ret;
@@ -523,7 +523,7 @@ namespace NodeLibcurl {
         }
         else {
 
-            retVal = Nan::CallAsFunction( cbOnHeader->ToObject(), this->handle(), argc, argv );
+            retVal = Nan::CallAsFunction( Nan::To<v8::Object>(cbOnHeader).ToLocalChecked(), this->handle(), argc, argv );
         }
 
         size_t ret = n;
@@ -534,7 +534,7 @@ namespace NodeLibcurl {
         }
         else {
 
-            ret = retVal.ToLocalChecked()->Uint32Value();
+            ret = Nan::To<uint32_t>(retVal.ToLocalChecked()).FromJust();
         }
 
         return ret;
@@ -628,7 +628,7 @@ namespace NodeLibcurl {
         }
         else {
 
-            returnValue = returnValueCallback.ToLocalChecked()->Int32Value();
+            returnValue = Nan::To<int32_t>(returnValueCallback.ToLocalChecked()).FromJust();
         }
 
         return returnValue;
@@ -668,7 +668,7 @@ namespace NodeLibcurl {
         }
         else {
 
-            returnValue = returnValueCallback.ToLocalChecked()->Int32Value();
+            returnValue = Nan::To<int32_t>(returnValueCallback.ToLocalChecked()).FromJust();
         }
 
         return returnValue;
@@ -716,7 +716,7 @@ namespace NodeLibcurl {
         }
         else {
 
-            returnValue = returnValueCallback.ToLocalChecked()->Int32Value();
+            returnValue = Nan::To<int32_t>(returnValueCallback.ToLocalChecked()).FromJust();
         }
 
         return returnValue;
@@ -764,7 +764,7 @@ namespace NodeLibcurl {
         }
         else {
 
-            returnValue = returnValueCallback.ToLocalChecked()->Int32Value();
+            returnValue = Nan::To<int32_t>(returnValueCallback.ToLocalChecked()).FromJust();
         }
 
         return returnValue;
@@ -822,7 +822,7 @@ namespace NodeLibcurl {
         }
         else {
 
-            returnValue = returnValueCallback.ToLocalChecked()->Int32Value();
+            returnValue = Nan::To<int32_t>(returnValueCallback.ToLocalChecked()).FromJust();
         }
 
         if ( returnValue ) {
@@ -888,7 +888,7 @@ namespace NodeLibcurl {
         }
         else {
 
-            returnValue = returnValueCallback.ToLocalChecked()->Int32Value();
+            returnValue = Nan::To<int32_t>(returnValueCallback.ToLocalChecked()).FromJust();
         }
 
         if ( returnValue ) {
@@ -954,7 +954,7 @@ namespace NodeLibcurl {
                 return;
             }
 
-            Easy *orig = Nan::ObjectWrap::Unwrap<Easy>( info[0]->ToObject() );
+            Easy *orig = Nan::ObjectWrap::Unwrap<Easy>( Nan::To<v8::Object>(info[0]).ToLocalChecked() );
 
             obj = new Easy( orig );
 
@@ -1278,15 +1278,15 @@ namespace NodeLibcurl {
                 case CURLOPT_MAX_SEND_SPEED_LARGE:
                 case CURLOPT_POSTFIELDSIZE_LARGE:
                 case CURLOPT_RESUME_FROM_LARGE:
-                    setOptRetCode = curl_easy_setopt( obj->ch, static_cast<CURLoption>( optionId ), static_cast<curl_off_t>( value->NumberValue() ) );
+                    setOptRetCode = curl_easy_setopt( obj->ch, static_cast<CURLoption>( optionId ), static_cast<curl_off_t>( Nan::To<double>(value).FromJust() ) );
                     break;
                 //special case with READDATA, since we need to store the file descriptor and not overwrite the READDATA already set in the handle.
                 case CURLOPT_READDATA:
-                    obj->readDataFileDescriptor = value->Int32Value();
+                    obj->readDataFileDescriptor = Nan::To<int32_t>(value).FromJust();
                     setOptRetCode = CURLE_OK;
                     break;
                 default:
-                    setOptRetCode = curl_easy_setopt( obj->ch, static_cast<CURLoption>( optionId ), static_cast<long>( value->Int32Value() ) );
+                    setOptRetCode = curl_easy_setopt( obj->ch, static_cast<CURLoption>( optionId ), static_cast<long>( Nan::To<int32_t>(value).FromJust() ) );
                     break;
             }
 
@@ -1749,7 +1749,7 @@ namespace NodeLibcurl {
             return;
         }
 
-        uint32_t bitmask = info[0]->Uint32Value();
+        uint32_t bitmask = Nan::To<uint32_t>(info[0]).FromJust();
 
         CURLcode code = curl_easy_pause( obj->ch, static_cast<int>( bitmask ) );
 
@@ -1907,7 +1907,7 @@ namespace NodeLibcurl {
             return;
         }
 
-        const char * errorMsg = curl_easy_strerror( static_cast<CURLcode>( errCode->Int32Value() ) );
+        const char * errorMsg = curl_easy_strerror( static_cast<CURLcode>( Nan::To<int32_t>(errCode).FromJust() ) );
 
         v8::Local<v8::String> ret = Nan::New( errorMsg ).ToLocalChecked();
 

@@ -393,7 +393,7 @@ namespace NodeLibcurl {
         } //check if option is integer, and the value is correct
         else if ( ( optionId = IsInsideCurlConstantStruct( curlMultiOptionInteger, opt ) ) ) {
 
-            int32_t val = value->Int32Value();
+            int32_t val = Nan::To<int32_t>(value).FromJust();
 
             //If not an integer, get the boolean value of it.
             if ( !value->IsInt32() ) {
@@ -565,7 +565,7 @@ namespace NodeLibcurl {
             return;
         }
 
-        const char * errorMsg = curl_multi_strerror( static_cast<CURLMcode>( errCode->Int32Value() ) );
+        const char * errorMsg = curl_multi_strerror( static_cast<CURLMcode>( Nan::To<int32_t>(errCode).FromJust() ) );
 
         v8::Local<v8::String> ret = Nan::New( errorMsg ).ToLocalChecked();
 

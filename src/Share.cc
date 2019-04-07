@@ -106,7 +106,7 @@ namespace NodeLibcurl {
 
         if ( opt->IsInt32() ) {
 
-            optionId = opt->Int32Value();
+            optionId = Nan::To<int32_t>(opt).FromJust();
         }
         else if ( opt->IsString() ) {
 
@@ -122,7 +122,7 @@ namespace NodeLibcurl {
             }
         }
 
-        setOptRetCode = curl_share_setopt( obj->sh, static_cast<CURLSHoption>( optionId ), value->Int32Value() );
+        setOptRetCode = curl_share_setopt( obj->sh, static_cast<CURLSHoption>( optionId ), Nan::To<int32_t>(value).FromJust() );
 
         info.GetReturnValue().Set( setOptRetCode );
     }
@@ -156,7 +156,7 @@ namespace NodeLibcurl {
             return;
         }
 
-        const char * errorMsg = curl_share_strerror( static_cast<CURLSHcode>( errCode->Int32Value() ) );
+        const char * errorMsg = curl_share_strerror( static_cast<CURLSHcode>( Nan::To<int32_t>(errCode).FromJust() ) );
 
         v8::Local<v8::String> ret = Nan::New( errorMsg ).ToLocalChecked();
 
