@@ -292,8 +292,9 @@ namespace NodeLibcurl {
         }
 
         v8::Local<v8::Value> argv[] = { err, easyArg, errCode };
+        const int argc = 3;
 
-        this->cbOnMessage->Call( this->handle(), 3, argv );
+        Nan::Call( *(this->cbOnMessage), obj->handle(), argc, argv );
     }
 
     // Add Curl constructor to the module exports
@@ -435,8 +436,7 @@ namespace NodeLibcurl {
         }
         else {
 
-            v8::Local<v8::Function> callback = arg.As<v8::Function>();
-            obj->cbOnMessage.reset( new Nan::Callback( callback ) );
+            obj->cbOnMessage.reset( new Nan::Callback( arg.As<v8::Function>() ) );
         }
 
         info.GetReturnValue().Set( info.This() );
