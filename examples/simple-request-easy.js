@@ -8,37 +8,37 @@
 /**
  * Example showing how one could do a simple request using the Easy handle.
  */
-var Easy = require('../lib/Easy'),
-  Curl = require('../lib/Curl'),
-  url = process.argv[2] || 'http://www.google.com',
-  ret,
-  ch;
+const Easy = require('../lib/Easy')
+const Curl = require('../lib/Curl')
 
-ch = new Easy();
+const url = process.argv[2] || 'http://www.google.com'
 
-ch.setOpt(Curl.option.URL, url);
-ch.setOpt(Curl.option.NOPROGRESS, false);
+const ch = new Easy()
 
-ch.setOpt(Curl.option.XFERINFOFUNCTION, function(dltotal, dlnow, ultotal, ulnow) {
-  console.log('PROGRESS', dltotal, dlnow, ultotal, ulnow);
-});
+ch.setOpt(Curl.option.URL, url)
+ch.setOpt(Curl.option.NOPROGRESS, false)
 
-ch.setOpt(Curl.option.HEADERFUNCTION, function(buf, size, nmemb) {
-  console.log('HEADERFUNCTION: ');
-  console.log(arguments);
+ch.setOpt(Curl.option.XFERINFOFUNCTION, (dltotal, dlnow, ultotal, ulnow) => {
+  console.log('PROGRESS', dltotal, dlnow, ultotal, ulnow)
+  return 0
+})
 
-  return size * nmemb;
-});
+ch.setOpt(Curl.option.HEADERFUNCTION, (buf, size, nmemb) => {
+  console.log('HEADERFUNCTION: ')
+  console.log(arguments)
+
+  return size * nmemb
+})
 
 ch.setOpt(Curl.option.WRITEFUNCTION, function(buf, size, nmemb) {
-  console.log('WRITEFUNCTION: ');
-  console.log(arguments);
+  console.log('WRITEFUNCTION: ')
+  console.log(arguments)
 
-  return size * nmemb;
-});
+  return size * nmemb
+})
 
-ret = ch.perform();
+const ret = ch.perform()
 
-ch.close();
+ch.close()
 
-console.log(ret, ret === Curl.code.CURLE_OK, Easy.strError(ret));
+console.log(ret, ret === Curl.code.CURLE_OK, Easy.strError(ret))

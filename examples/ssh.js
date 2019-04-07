@@ -8,25 +8,24 @@
 /**
  * Example showing how one could connect to one ssh server using sftp
  */
-var Easy = require('../lib/Easy'),
-  Curl = require('../lib/Curl'),
-  host = process.argv[2] || 'sftp://user:pass@host',
-  ch,
-  ret;
+const Easy = require('../lib/Easy')
+const Curl = require('../lib/Curl')
 
-ch = new Easy();
+const host = process.argv[2] || 'sftp://user:pass@host'
 
-ch.setOpt(Curl.option.URL, host);
-ch.setOpt(Curl.option.VERBOSE, true);
-ch.setOpt(Curl.option.SSH_AUTH_TYPES, Curl.ssh_auth.PASSWORD);
+const ch = new Easy()
 
-ch.setOpt(Curl.option.WRITEFUNCTION, function(buf, size, nmemb) {
-  console.log(buf.toString('utf8'));
-  return size * nmemb;
-});
+ch.setOpt(Curl.option.URL, host)
+ch.setOpt(Curl.option.VERBOSE, true)
+ch.setOpt(Curl.option.SSH_AUTH_TYPES, Curl.ssh_auth.PASSWORD)
 
-ret = ch.perform();
+ch.setOpt(Curl.option.WRITEFUNCTION, (buf, size, nmemb) => {
+  console.log(buf.toString('utf8'))
+  return size * nmemb
+})
 
-ch.close();
+const ret = ch.perform()
 
-console.log(ret, ret === Curl.code.CURLE_OK, Easy.strError(ret));
+ch.close()
+
+console.log(ret, ret === Curl.code.CURLE_OK, Easy.strError(ret))

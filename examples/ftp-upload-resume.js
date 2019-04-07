@@ -10,66 +10,64 @@
  * How to run:
  *  node ftp-upload.js ftp://example-of-ftp-host.com username password /some/local/file.ext /some/remote/file.ext 0-100
  */
-var Curl = require('../lib/Curl'),
-  fs = require('fs');
+const fs = require('fs')
+const Curl = require('../lib/Curl')
 
-var curl = new Curl(),
-  url = process.argv[2].replace(/\/$/, '') + '/',
-  username = process.argv[3],
-  password = process.argv[4],
-  localFile = process.argv[5],
-  remoteFile = process.argv[6],
-  percentage = +process.argv[7] / 100,
-  fd,
-  fileStat;
+const curl = new Curl()
+const url = process.argv[2].replace(/\/$/, '') + '/'
+const username = process.argv[3]
+const password = process.argv[4]
+const localFile = process.argv[5]
+const remoteFile = process.argv[6]
+const percentage = +process.argv[7] / 100
 
-fd = fs.openSync(localFile, 'r');
+const fd = fs.openSync(localFile, 'r')
 
-fileStat = fs.fstatSync(fd);
+const fileStat = fs.fstatSync(fd)
 
 // enable verbose mode
-curl.setOpt(Curl.option.VERBOSE, true);
+curl.setOpt(Curl.option.VERBOSE, true)
 // specify target, username and password
-curl.setOpt(Curl.option.URL, url + remoteFile);
-curl.setOpt(Curl.option.USERNAME, username);
-curl.setOpt(Curl.option.PASSWORD, password);
+curl.setOpt(Curl.option.URL, url + remoteFile)
+curl.setOpt(Curl.option.USERNAME, username)
+curl.setOpt(Curl.option.PASSWORD, password)
 // enable uploading
-curl.setOpt(Curl.option.UPLOAD, true);
+curl.setOpt(Curl.option.UPLOAD, true)
 // now specify which file to upload, in this case
 //  we are using a file descriptor given by fs.openSync
-curl.setOpt(Curl.option.READDATA, fd);
+curl.setOpt(Curl.option.READDATA, fd)
 // Set the size of the file to upload (optional).
 //  You must the *_LARGE option if the file is greater than 2GB.
-curl.setOpt(Curl.option.INFILESIZE_LARGE, fileStat.size);
+curl.setOpt(Curl.option.INFILESIZE_LARGE, fileStat.size)
 
 // enable raw mode
-curl.enable(Curl.feature.RAW);
+curl.enable(Curl.feature.RAW)
 
 // tell curl to figure out the remote file size by itself
-curl.setOpt(Curl.option.RESUME_FROM, -1);
+curl.setOpt(Curl.option.RESUME_FROM, -1)
 
 // (ab)use the progress callback to stop the upload after the given percentage
-curl.setOpt(Curl.option.NOPROGRESS, false);
-curl.setProgressCallback(function(dltotal, dlnow, ultotal, ulnow) {
+curl.setOpt(Curl.option.NOPROGRESS, false)
+curl.setProgressCallback((dltotal, dlnow, ultotal, ulnow) => {
   if (ultotal === fileStat.size) {
     if (ulnow > fileStat.size * percentage) {
-      return 1;
+      return 1
     }
   }
 
-  return 0;
-});
+  return 0
+})
 
-curl.perform();
+curl.perform()
 
 curl.on('end', function() {
-  curl.close();
-  fs.closeSync(fd);
-});
+  curl.close()
+  fs.closeSync(fd)
+})
 
-curl.on('error', function(err) {
-  console.log(err);
+curl.on('error', function(error, errorCode) {
+  console.log(error, errorCode)
 
-  curl.close();
-  fs.closeSync(fd);
-});
+  curl.close()
+  fs.closeSync(fd)
+})

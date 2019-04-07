@@ -8,24 +8,24 @@
 /**
  * Example that shows all information you can get from a single request.
  */
-var Curl = require('../lib/Curl');
+const Curl = require('../lib/Curl')
 
-var curl = new Curl(),
-  url = 'http://www.google.com';
+const curl = new Curl()
+const url = 'http://www.google.com'
 
-curl.setOpt(Curl.option.URL, url);
-curl.setOpt(Curl.option.FOLLOWLOCATION, true);
-curl.setOpt(Curl.option.COOKIEFILE, ''); //enable cookies
-curl.perform();
+curl.setOpt(Curl.option.URL, url)
+curl.setOpt(Curl.option.FOLLOWLOCATION, true)
+curl.setOpt(Curl.option.COOKIEFILE, '')
+curl.perform()
 
-curl.on('end', function() {
-  for (var infoName in Curl.info) {
+curl.on('end', () => {
+  for (const infoName in Curl.info) {
     if (Curl.info.hasOwnProperty(infoName) && infoName !== 'debug') {
-      console.info(infoName, ': ', this.getInfo(infoName));
+      console.info(infoName, ': ', curl.getInfo(infoName))
     }
   }
 
-  this.close();
-});
+  curl.close()
+})
 
-curl.on('error', curl.close.bind(curl));
+curl.on('error', curl.close.bind(curl))

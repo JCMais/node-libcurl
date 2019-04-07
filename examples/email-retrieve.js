@@ -9,35 +9,36 @@
  * Example showing how to retrieve emails through IMAP/SSL using node-libcurl.
  * Based on https://curl.haxx.se/libcurl/c/imap-ssl.html
  */
-var Curl = require('../lib/Curl'),
-  path = require('path');
+const path = require('path')
 
-var curl = new Curl(),
-  // This will fetch message 1 from the user's inbox. IMAPS is generally bound to port 993
-  url = 'imaps://sub.domain.tld:993/INBOX/;UID=1',
-  certfile = path.join(__dirname, 'cacert.pem');
+const Curl = require('../lib/Curl')
 
-curl.setOpt(Curl.option.USERNAME, 'username');
-curl.setOpt(Curl.option.PASSWORD, 'password');
+const curl = new Curl()
+// This will fetch message 1 from the user's inbox. IMAPS is generally bound to port 993
+const url = 'imaps://sub.domain.tld:993/INBOX/;UID=1'
+const certfile = path.join(__dirname, 'cacert.pem')
 
-curl.setOpt(Curl.option.URL, url);
+curl.setOpt(Curl.option.USERNAME, 'username')
+curl.setOpt(Curl.option.PASSWORD, 'password')
+
+curl.setOpt(Curl.option.URL, url)
 
 //enabling VERBOSE mode so we can get more details on what is going on.
-curl.setOpt(Curl.option.VERBOSE, true);
+curl.setOpt(Curl.option.VERBOSE, true)
 
-curl.setOpt(Curl.option.USE_SSL, Curl.usessl.ALL);
-curl.setOpt(Curl.option.CAINFO, certfile);
+curl.setOpt(Curl.option.USE_SSL, Curl.usessl.ALL)
+curl.setOpt(Curl.option.CAINFO, certfile)
 //This is not safe, but you probably will need it if you are using a self signed certificate.
 //curl.setOpt( Curl.option.SSL_VERIFYPEER, false );
 
 curl.on('end', function(statusCode, body) {
-  console.log(body);
-  this.close();
-});
+  console.log(body)
+  this.close()
+})
 
-curl.on('error', function(err) {
-  console.log(err);
-  this.close();
-});
+curl.on('error', function(error, errorCode) {
+  console.log(error, errorCode)
+  this.close()
+})
 
-curl.perform();
+curl.perform()
