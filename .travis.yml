@@ -154,6 +154,8 @@ install:
   - cat ./binding.gyp
   # npm_config_debug="all" npm_config_loglevel="silly"
   - npm_config_build_from_source="true" npm_config_curl_config_bin="$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin/curl-config" npm_config_curl_static_build="true" yarn install --frozen-lockfile
+  - ls -al ./node_modules/.bin
+  - ls -al ./node_modules/mocha/bin
   - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
       otool -D ./lib/binding/node_libcurl.node;
     else
