@@ -60,7 +60,7 @@
     "jsdoc": "^3.5.5",
     "jsdoc-to-markdown": "^4.0.1",
     "lint-staged": "^8.1.5",
-    "mocha": "^6.1.0",
+    "mocha": "^6.1.1",
     "multiparty": "^4.2.1",
     "octonode": "^0.9.5",
     "prettier": "^1.16.4",
