@@ -61,7 +61,7 @@ exec('git rev-parse --show-toplevel', execConfig, function(err, stdout) {
   //  path.relative will return an empty string if both paths are equal
   if (!err && path.relative(execConfig.cwd, stdout.trim()) === '') {
     replaceTokensOnFiles(
-      path.resolve(__dirname, '..', 'deps', 'curl-for-windows')
+      path.resolve(__dirname, '..', 'deps', 'curl-for-windows'),
     )
     process.stdout.write('deps/' + depsGypTarget)
   } else {
@@ -78,7 +78,7 @@ function retrieveWinDeps() {
     console.error(
       'File: ',
       fileWithDepsTag,
-      ' not found, and no NODE_LIBCURL_WINDEPS_TAG environment variable found.'
+      ' not found, and no NODE_LIBCURL_WINDEPS_TAG environment variable found.',
     )
     cleanupAndExit(1)
   }
@@ -91,7 +91,7 @@ function retrieveWinDeps() {
         .replace(/\n|\s/g, '')
 
   exec('git clone --branch ' + depsTag + ' ' + depsRepo, execConfig, function(
-    err
+    err,
   ) {
     if (err) {
       if (
@@ -123,7 +123,7 @@ function retrieveWinDeps() {
 
           // Grab gyp config files and replace <(library) with static_library
           replaceTokensOnFiles(
-            path.resolve(__dirname, '..', 'curl-for-windows')
+            path.resolve(__dirname, '..', 'curl-for-windows'),
           )
 
           // remove git folder
@@ -135,7 +135,7 @@ function retrieveWinDeps() {
 
             process.stdout.write(depsGypTarget)
           })
-        }
+        },
       )
     }
   })
@@ -145,6 +145,7 @@ function replaceTokensOnFiles(dir) {
   const filesToCheck = [
     'libssh2.gyp',
     'openssl/openssl.gyp',
+    'nghttp2/nghttp2.gyp',
     'zlib.gyp',
     'curl.gyp',
   ]
@@ -166,7 +167,7 @@ function replaceTokensOnFiles(dir) {
       replaceOnFile(
         filePath,
         patternReplacementPair.pattern,
-        patternReplacementPair.replacement
+        patternReplacementPair.replacement,
       )
     }
   }

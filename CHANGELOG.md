@@ -10,20 +10,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Dropped support for Node.js 4 and 6
 - The minimum libcurl version being tested is now 7.50.0, which itself is almost 3 years old.
    The addon will still try to be compilable with old versions up to 7_32_0, but there are no guarantees.
-- Curl.reset now correctly resets their instance (#141)
+- `Curl.reset` now correctly resets their instance (#141)
 ### Fixed
 - Fix SigAbort caused by calling v8 AsFunction on null value at Easy::SetOpt
 - Fix SegFault during gargage collection after process.exit (#165)
 ### Added
-- add missing CURLOPT_FTP_FILEMETHOD (#148)
+- Add missing CURLOPT_FTP_FILEMETHOD (#148)
 - Errors thrown inside callbacks are correctly caught / passed forward (if using multi interface)
 - Added **experimental** `curl.<http-verb>()` async api
 ### Changed
-- added the curl handle that emitted the event as the last param passed to the evt, can be useful if using general anonymous functions as callback.
-- fix condition for custom handler for Curl.option.HEADERFUNCTION (#142)
-- mac libs should be linked against @rpath (#145)
-- internal: code has been moved to the future, it was stuck in 2015
-### Removed
+- Bumped libcurl version used on Windows to 7.64.1, with nghttp2 support
+- Added the curl handle that emitted the event as the last param passed to the evt, can be useful if using general anonymous functions as callback.
+- Fix condition for custom handler for Curl.option.HEADERFUNCTION (#142)
+- macOS libs should be linked against @rpath (#145)
+- Internally the code has been refactored and put back into the future, it was stuck in 2015
 
 ## [1.3.3]
 ### Added
