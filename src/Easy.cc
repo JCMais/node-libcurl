@@ -686,9 +686,10 @@ namespace NodeLibcurl {
         assert( it != obj->callbacks.end() && "DEBUG callback not set." );
 
         const int argc = 2;
+        v8::Local<v8::Object> buf = Nan::CopyBuffer( data, static_cast<uint32_t>( size ) ).ToLocalChecked();
         v8::Local<v8::Value> argv[] = {
             Nan::New<v8::Integer>( type ),
-            Nan::New<v8::String>( data, static_cast<int>( size ) ).ToLocalChecked()
+            buf,
         };
 
         int32_t returnValue = 1;

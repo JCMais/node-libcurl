@@ -18,27 +18,29 @@ const EOL = process.platform === 'win32' ? '\r\n' : '\n'
 const debugCallback = (infoType, content) => {
   let text = ''
 
+  const contentString = content.toString('utf8')
+
   switch (infoType) {
     case infoTypes.TEXT:
-      text = content
+      text = contentString
       break
     case infoTypes.DATA_IN:
-      text = '-- RECEIVING DATA: ' + EOL + content
+      text = '-- RECEIVING DATA: ' + EOL + contentString
       break
     case infoTypes.DATA_OUT:
-      text = '-- SENDING DATA: ' + EOL + content
+      text = '-- SENDING DATA: ' + EOL + contentString
       break
     case infoTypes.HEADER_IN:
-      text = '-- RECEIVING HEADER: ' + EOL + content
+      text = '-- RECEIVING HEADER: ' + EOL + contentString
       break
     case infoTypes.HEADER_OUT:
-      text = '-- SENDING HEADER: ' + EOL + content
+      text = '-- SENDING HEADER: ' + EOL + contentString
       break
     case infoTypes.SSL_DATA_IN:
-      text = '-- RECEIVING SSL DATA: ' + EOL + content
+      text = '-- RECEIVING SSL DATA: ' + EOL + contentString
       break
     case infoTypes.SSL_DATA_OUT:
-      text = '-- SENDING SSL DATA: ' + EOL + content
+      text = '-- SENDING SSL DATA: ' + EOL + contentString
       break
   }
 
