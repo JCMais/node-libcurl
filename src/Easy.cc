@@ -1669,9 +1669,9 @@ namespace NodeLibcurl {
         size_t n = 0;
         CURLcode curlRet = curl_easy_send( obj->ch, bufContent, bufLength, &n );
 
-        v8::Local<v8::Array> ret = Nan::New<v8::Array>();
-        Nan::Set( ret, 0, Nan::New( static_cast<int32_t>( curlRet ) ) );
-        Nan::Set( ret, 1, Nan::New( static_cast<int32_t>( n ) ) );
+        v8::Local<v8::Object> ret = Nan::New<v8::Object>();
+        Nan::Set( ret, Nan::New( "code" ).ToLocalChecked(), Nan::New( static_cast<int32_t>( curlRet ) ) );
+        Nan::Set( ret, Nan::New( "bytesSent" ).ToLocalChecked(), Nan::New( static_cast<int32_t>( n ) ) );
 
         info.GetReturnValue().Set( ret );
     }
@@ -1709,9 +1709,9 @@ namespace NodeLibcurl {
         size_t n = 0;
         CURLcode curlRet = curl_easy_recv( obj->ch, bufContent, bufLength, &n );
 
-        v8::Local<v8::Array> ret = Nan::New<v8::Array>();
-        Nan::Set( ret, 0, Nan::New( static_cast<int32_t>( curlRet ) ) );
-        Nan::Set( ret, 1, Nan::New( static_cast<int32_t>( n ) ) );
+        v8::Local<v8::Object> ret = Nan::New<v8::Object>();
+        Nan::Set( ret, Nan::New( "code" ).ToLocalChecked(), Nan::New( static_cast<int32_t>( curlRet ) ) );
+        Nan::Set( ret, Nan::New( "bytesReceived" ).ToLocalChecked(), Nan::New( static_cast<int32_t>( n ) ) );
 
         info.GetReturnValue().Set( ret );
     }

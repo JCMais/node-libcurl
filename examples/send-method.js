@@ -40,31 +40,28 @@ easy.onSocketEvent((error, events) => {
   // Make sure the socket is writable, and, that we have not sent the request already.
   if (isWritable && !wasSent) {
     console.log('Sending request.')
-    const ret = easy.send(send)
+    const { code, bytesSent } = easy.send(send)
 
-    // ret is an array, with [0] being returnCode, and [1] the number of bytes sent.
-
-    // just lets make sure the returnCode is correct and that all the data was sent.
-    if (ret[0] !== Curl.code.CURLE_OK || ret[1] !== send.length) {
+    // just lets make sure the return code is correct and that all the data was sent.
+    if (code !== Curl.code.CURLE_OK || bytesSent !== send.length) {
       throw Error('Something went wrong.')
     }
 
-    console.log('Sent ' + ret[1] + ' bytes.')
+    console.log(`Sent ${bytesSent} bytes.`)
 
     wasSent = true
 
     // Here we must check if the socket is readable, and that we have sent the data already.
   } else if (isReadable && wasSent) {
     console.log('Reading request response.')
-    ret = easy.recv(recv)
+    const { code, bytesReceived } = easy.recv(recv)
+    console.log(`Received ${bytesReceived} bytes.`)
 
-    //same than above, but [1] now is the number of bytes we have read.
-
-    if (ret[0] !== Curl.code.CURLE_OK) {
-      throw Error(Easy.strError(ret[0]))
+    if (code !== Curl.code.CURLE_OK) {
+      throw Error(Easy.strError(code))
     }
 
-    console.log(recv.toString('utf8', 0, ret[1]))
+    console.log(recv.toString('utf8', 0, bytesReceived))
 
     //we don't need to monitor for events anymore, so let's just stop the socket polling
     easy.unmonitorSocketEvents()
