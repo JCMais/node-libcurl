@@ -1572,15 +1572,19 @@ namespace NodeLibcurl {
         }
         else if ( ( infoId = IsInsideCurlConstantStruct( curlInfoSocket, infoVal ) ) ) {
 
-            curl_socket_t sock;
-            code = curl_easy_getinfo( obj->ch, static_cast<CURLINFO>( infoId ), &sock );
+#if NODE_LIBCURL_VER_GE( 7, 45, 0 )
+            curl_socket_t socket;
+#else
+            long socket;
+#endif
+            code = curl_easy_getinfo( obj->ch, static_cast<CURLINFO>( infoId ), &socket );
 
             if ( code == CURLE_OK ) {
 
                 // curl_socket_t is of type SOCKET on Windows,
                 //  casting it to int32_t can be dangerous, only if Microsoft ever decides
                 //  to change the underlying architecture behind it.
-                retVal = Nan::New<v8::Integer>( static_cast<int32_t>( sock ) );
+                retVal = Nan::New<v8::Integer>( static_cast<int32_t>( socket ) );
             }
 
         //Linked list
