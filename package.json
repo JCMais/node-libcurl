@@ -18,16 +18,22 @@
   "bugs": {
     "url": "https://github.com/JCMais/node-libcurl/issues"
   },
-  "main": "./index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
-    "test": "mocha test --reporter spec --timeout 60000",
-    "docs": "jsdoc2md lib/*.js > api.md",
     "postinstall": "node scripts/postinstall",
+    "prepublishOnly": "yarn lint && yarn test && yarn build",
+    "build:dist": "tsc",
+    "clean:build": "rimraf build",
+    "clean:dist": "rimraf dist",
+    "clean": "yarn clean:build && yarn clean:dist",
+    "docs": "jsdoc2md lib/*.js > api.md",
+    "lint": "tslint -p . -c tslint.json",
     "pregyp": "node-pre-gyp",
-    "prettier": "prettier --write",
     "prettier:all": "yarn prettier lib/**/*.js tools/**/*.js scripts/**/*.js test/**/*.js examples/**/*.js",
-    "lint": "node_modules/.bin/eslint . --max-warnings=0"
+    "prettier": "prettier --write",
+    "test": "mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000"
   },
   "binary": {
     "module_name": "node_libcurl",
@@ -45,10 +51,18 @@
     "node-gyp": "3.8.0",
     "node-pre-gyp": "0.12.0",
     "npmlog": "4.1.2",
-    "osenv": "0.1.5"
+    "osenv": "0.1.5",
+    "tslib": "^1.9.3"
   },
   "devDependencies": {
+    "@types/body-parser": "^1.17.0",
+    "@types/cookie-parser": "^1.4.1",
+    "@types/express": "^4.16.1",
+    "@types/mocha": "^5.2.6",
+    "@types/node": "^11.13.2",
+    "@types/should": "^13.0.0",
     "body-parser": "^1.18.3",
+    "cheerio": "^1.0.0-rc.3",
     "cookie-parser": "^1.4.4",
     "eslint": "^5.16.0",
     "eslint-config-prettier": "^4.1.0",
@@ -56,16 +70,19 @@
     "express": "^4.16.4",
     "http-auth": "^3.2.3",
     "husky": "^1.3.1",
-    "ink-docstrap": "^1.3.2",
-    "jsdoc": "^3.5.5",
-    "jsdoc-to-markdown": "^4.0.1",
     "lint-staged": "^8.1.5",
-    "mocha": "^6.1.1",
+    "mocha": "^6.1.2",
     "multiparty": "^4.2.1",
     "octonode": "^0.9.5",
     "prettier": "^1.16.4",
     "progress": "^2.0.3",
-    "should": "^13.2.3"
+    "rimraf": "^2.6.3",
+    "should": "^13.2.3",
+    "ts-node": "^8.0.3",
+    "tslint": "^5.15.0",
+    "tslint-config-airbnb": "^5.11.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.4.2"
   },
   "lint-staged": {
     "*.js": [

@@ -1,4 +1,3 @@
-lib/generated-stubs/*.js
 debug/
-docs/
+lib/
 deps/

@@ -1,0 +1,6 @@
+{
+  "extends": ["tslint-config-airbnb", "tslint-config-prettier"],
+  "linterOptions": {
+    "exclude": ["lib/generated/*.ts"]
+  }
+}
