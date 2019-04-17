@@ -20,131 +20,7 @@ namespace NodeLibcurl {
     ssize_t addonAllocatedMemory = 0;
     bool isLibcurlBuiltWithThreadedResolver = true;
 
-    const std::vector<CurlConstant> curlConstAuth = {
-        { "ANY", CURLAUTH_ANY },
-        { "ANYSAFE", CURLAUTH_ANYSAFE },
-        { "BASIC", CURLAUTH_BASIC },
-        { "DIGEST", CURLAUTH_DIGEST },
-
-    #if NODE_LIBCURL_VER_GE( 7, 19, 3 )
-        { "DIGEST_IE", CURLAUTH_DIGEST_IE },
-    #endif
-
-        { "GSSNEGOTIATE", CURLAUTH_GSSNEGOTIATE },
-
-    #if NODE_LIBCURL_VER_GE( 7, 38, 0 )
-        { "NEGOTIATE", CURLAUTH_NEGOTIATE },
-    #endif
-
-        { "NONE", CURLAUTH_NONE },
-        { "NTLM", CURLAUTH_NTLM },
-
-    #if NODE_LIBCURL_VER_GE( 7, 22, 0 )
-        { "NTLM_WB", CURLAUTH_NTLM_WB },
-    #endif
-
-    #if NODE_LIBCURL_VER_GE( 7, 21, 3 )
-        { "ONLY", CURLAUTH_ONLY },
-    #endif
-    };
-
-#if NODE_LIBCURL_VER_GE( 7, 19, 4 )
-    const std::vector<CurlConstant> curlConstProtocol = {
-        { "ALL", CURLPROTO_ALL },
-        { "DICT", CURLPROTO_DICT },
-        { "FTP", CURLPROTO_FTP },
-        { "FTPS", CURLPROTO_FTPS },
-
-    #if NODE_LIBCURL_VER_GE( 7, 21, 2 )
-        { "GOPHER", CURLPROTO_GOPHER },
-    #endif
-
-        { "HTTP", CURLPROTO_HTTP },
-        { "HTTPS", CURLPROTO_HTTPS },
-
-    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
-        { "IMAP", CURLPROTO_IMAP },
-        { "IMAPS", CURLPROTO_IMAPS },
-    #endif
-
-        { "LDAP", CURLPROTO_LDAP },
-        { "LDAPS", CURLPROTO_LDAPS },
-
-    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
-        { "POP3", CURLPROTO_POP3 },
-        { "POP3S", CURLPROTO_POP3S },
-    #endif
-
-    #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
-        { "RTMP", CURLPROTO_RTMP },
-        { "RTMPE", CURLPROTO_RTMPE },
-        { "RTMPS", CURLPROTO_RTMPS },
-        { "RTMPT", CURLPROTO_RTMPT },
-        { "RTMPTE", CURLPROTO_RTMPTE },
-        { "RTMPTS", CURLPROTO_RTMPTS },
-    #endif
-
-    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
-        { "RTSP", CURLPROTO_RTSP },
-    #endif
-
-        { "SCP", CURLPROTO_SCP },
-        { "SFTP", CURLPROTO_SFTP },
-
-    #if NODE_LIBCURL_VER_GE( 7, 40, 0 )
-        { "SMB", CURLPROTO_SMB },
-        { "SMBS", CURLPROTO_SMBS },
-    #endif
-
-    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
-        { "SMTP", CURLPROTO_SMTP },
-        { "SMTPS", CURLPROTO_SMTPS },
-    #endif
-
-        { "TELNET", CURLPROTO_TELNET },
-        { "TFTP", CURLPROTO_TFTP },
-    };
-#endif
-
-    const std::vector<CurlConstant> curlConstPause = {
-        { "ALL", CURLPAUSE_ALL },
-        { "CONT", CURLPAUSE_CONT },
-        { "RECV", CURLPAUSE_RECV },
-        { "RECV_CONT", CURLPAUSE_RECV_CONT },
-        { "SEND", CURLPAUSE_SEND },
-        { "SEND_CONT", CURLPAUSE_SEND_CONT },
-    };
-
-    const std::vector<CurlConstant> curlConstHttp = {
-        { "VERSION_1_0", CURL_HTTP_VERSION_1_0 },
-        { "VERSION_1_1", CURL_HTTP_VERSION_1_1 },
-
-    #if NODE_LIBCURL_VER_GE( 7, 33, 0 )
-        { "VERSION_2_0", CURL_HTTP_VERSION_2_0 },
-    #endif
-
-    #if NODE_LIBCURL_VER_GE( 7, 43, 0 )
-        { "VERSION_2", CURL_HTTP_VERSION_2 },
-    #endif
-
-    #if NODE_LIBCURL_VER_GE( 7, 47, 0 )
-        { "VERSION_2TLS", CURL_HTTP_VERSION_2TLS },
-    #endif
-
-    #if NODE_LIBCURL_VER_GE( 7, 49, 0 )
-        { "VERSION_2_PRIOR_KNOWLEDGE", CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE },
-    #endif
-
-        { "VERSION_NONE", CURL_HTTP_VERSION_NONE },
-    };
-
-#if NODE_LIBCURL_VER_GE( 7, 37, 0 )
-    const std::vector<CurlConstant> curlConstHeader = {
-        { "UNIFIED", CURLHEADER_UNIFIED },
-        { "SEPARATE", CURLHEADER_SEPARATE },
-    };
-#endif
-
+    // This should be kept in sync with the options on scripts/utils/curlOptionsBlacklist.js
     const std::vector<CurlConstant> curlOptionNotImplemented = {
         // Options that are complex to add support for.
         { "SSL_CTX_FUNCTION", CURLOPT_SSL_CTX_FUNCTION },
@@ -622,6 +498,8 @@ namespace NodeLibcurl {
     const std::vector<CurlConstant> curlOptionSpecific = {
         { "SHARE", CURLOPT_SHARE }
     };
+
+    // This should be kept in sync with the options on scripts/utils/multiOptionsBlacklist.js
     const std::vector<CurlConstant> curlMultiOptionNotImplemented = {
         // Used internally.
         { "SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION },
@@ -771,173 +649,6 @@ namespace NodeLibcurl {
         { "COOKIELIST", CURLINFO_COOKIELIST },
     };
 
-    const std::vector<CurlConstant> curlCode = {
-    #if NODE_LIBCURL_VER_GE( 7, 32, 1 )
-        { "CURLM_ADDED_ALREADY", CURLM_ADDED_ALREADY },
-    #endif
-        { "CURLM_BAD_EASY_HANDLE", CURLM_BAD_EASY_HANDLE },
-        { "CURLM_BAD_HANDLE", CURLM_BAD_HANDLE },
-        { "CURLM_BAD_SOCKET", CURLM_BAD_SOCKET },
-        { "CURLM_INTERNAL_ERROR", CURLM_INTERNAL_ERROR },
-        { "CURLM_OK", CURLM_OK },
-        { "CURLM_OUT_OF_MEMORY", CURLM_OUT_OF_MEMORY },
-        { "CURLM_UNKNOWN_OPTION", CURLM_UNKNOWN_OPTION },
-        { "CURLE_ABORTED_BY_CALLBACK", CURLE_ABORTED_BY_CALLBACK },
-    #if NODE_LIBCURL_VER_GE( 7, 18, 2 )
-        { "CURLE_AGAIN", CURLE_AGAIN },
-    #endif
-        { "CURLE_ALREADY_COMPLETE", CURLE_ALREADY_COMPLETE },
-        { "CURLE_BAD_CALLING_ORDER", CURLE_BAD_CALLING_ORDER },
-        { "CURLE_BAD_CONTENT_ENCODING", CURLE_BAD_CONTENT_ENCODING },
-        { "CURLE_BAD_DOWNLOAD_RESUME", CURLE_BAD_DOWNLOAD_RESUME },
-        { "CURLE_BAD_FUNCTION_ARGUMENT", CURLE_BAD_FUNCTION_ARGUMENT },
-        { "CURLE_BAD_PASSWORD_ENTERED", CURLE_BAD_PASSWORD_ENTERED },
-    #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
-        { "CURLE_CHUNK_FAILED", CURLE_CHUNK_FAILED },
-    #endif
-        { "CURLE_CONV_FAILED", CURLE_CONV_FAILED },
-        { "CURLE_CONV_REQD", CURLE_CONV_REQD },
-        { "CURLE_COULDNT_CONNECT", CURLE_COULDNT_CONNECT },
-        { "CURLE_COULDNT_RESOLVE_HOST", CURLE_COULDNT_RESOLVE_HOST },
-        { "CURLE_COULDNT_RESOLVE_PROXY", CURLE_COULDNT_RESOLVE_PROXY },
-        { "CURLE_FAILED_INIT", CURLE_FAILED_INIT },
-        { "CURLE_FILESIZE_EXCEEDED", CURLE_FILESIZE_EXCEEDED },
-        { "CURLE_FILE_COULDNT_READ_FILE", CURLE_FILE_COULDNT_READ_FILE },
-    #if NODE_LIBCURL_VER_GE( 7, 24, 0 )
-        { "CURLE_FTP_ACCEPT_FAILED", CURLE_FTP_ACCEPT_FAILED },
-        { "CURLE_FTP_ACCEPT_TIMEOUT", CURLE_FTP_ACCEPT_TIMEOUT },
-    #endif
-        { "CURLE_FTP_ACCESS_DENIED", CURLE_FTP_ACCESS_DENIED },
-        { "CURLE_FTP_BAD_DOWNLOAD_RESUME", CURLE_FTP_BAD_DOWNLOAD_RESUME },
-    #if NODE_LIBCURL_VER_GE( 7, 21, 0 )
-        { "CURLE_FTP_BAD_FILE_LIST", CURLE_FTP_BAD_FILE_LIST },
-    #endif
-        { "CURLE_FTP_CANT_GET_HOST", CURLE_FTP_CANT_GET_HOST },
-        { "CURLE_FTP_CANT_RECONNECT", CURLE_FTP_CANT_RECONNECT },
-        { "CURLE_FTP_COULDNT_GET_SIZE", CURLE_FTP_COULDNT_GET_SIZE },
-        { "CURLE_FTP_COULDNT_RETR_FILE", CURLE_FTP_COULDNT_RETR_FILE },
-        { "CURLE_FTP_COULDNT_SET_ASCII", CURLE_FTP_COULDNT_SET_ASCII },
-        { "CURLE_FTP_COULDNT_SET_BINARY", CURLE_FTP_COULDNT_SET_BINARY },
-        { "CURLE_FTP_COULDNT_SET_TYPE", CURLE_FTP_COULDNT_SET_TYPE },
-        { "CURLE_FTP_COULDNT_STOR_FILE", CURLE_FTP_COULDNT_STOR_FILE },
-        { "CURLE_FTP_COULDNT_USE_REST", CURLE_FTP_COULDNT_USE_REST },
-        { "CURLE_FTP_PARTIAL_FILE", CURLE_FTP_PARTIAL_FILE },
-        { "CURLE_FTP_PORT_FAILED", CURLE_FTP_PORT_FAILED },
-    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
-        { "CURLE_FTP_PRET_FAILED", CURLE_FTP_PRET_FAILED },
-    #endif
-        { "CURLE_FTP_QUOTE_ERROR", CURLE_FTP_QUOTE_ERROR },
-        { "CURLE_FTP_SSL_FAILED", CURLE_FTP_SSL_FAILED },
-        { "CURLE_FTP_USER_PASSWORD_INCORRECT", CURLE_FTP_USER_PASSWORD_INCORRECT },
-        { "CURLE_FTP_WEIRD_227_FORMAT", CURLE_FTP_WEIRD_227_FORMAT },
-        { "CURLE_FTP_WEIRD_PASS_REPLY", CURLE_FTP_WEIRD_PASS_REPLY },
-        { "CURLE_FTP_WEIRD_PASV_REPLY", CURLE_FTP_WEIRD_PASV_REPLY },
-        { "CURLE_FTP_WEIRD_SERVER_REPLY", CURLE_FTP_WEIRD_SERVER_REPLY },
-        { "CURLE_FTP_WEIRD_USER_REPLY", CURLE_FTP_WEIRD_USER_REPLY },
-        { "CURLE_FTP_WRITE_ERROR", CURLE_FTP_WRITE_ERROR },
-        { "CURLE_FUNCTION_NOT_FOUND", CURLE_FUNCTION_NOT_FOUND },
-        { "CURLE_GOT_NOTHING", CURLE_GOT_NOTHING },
-    #if NODE_LIBCURL_VER_GE( 7, 38, 0 )
-        { "CURLE_HTTP2", CURLE_HTTP2 },
-    #endif
-        { "CURLE_HTTP_NOT_FOUND", CURLE_HTTP_NOT_FOUND },
-        { "CURLE_HTTP_PORT_FAILED", CURLE_HTTP_PORT_FAILED },
-        { "CURLE_HTTP_POST_ERROR", CURLE_HTTP_POST_ERROR },
-        { "CURLE_HTTP_RANGE_ERROR", CURLE_HTTP_RANGE_ERROR },
-        { "CURLE_HTTP_RETURNED_ERROR", CURLE_HTTP_RETURNED_ERROR },
-        { "CURLE_INTERFACE_FAILED", CURLE_INTERFACE_FAILED },
-        { "CURLE_LDAP_CANNOT_BIND", CURLE_LDAP_CANNOT_BIND },
-        { "CURLE_LDAP_INVALID_URL", CURLE_LDAP_INVALID_URL },
-        { "CURLE_LDAP_SEARCH_FAILED", CURLE_LDAP_SEARCH_FAILED },
-        { "CURLE_LIBRARY_NOT_FOUND", CURLE_LIBRARY_NOT_FOUND },
-        { "CURLE_LOGIN_DENIED", CURLE_LOGIN_DENIED },
-        { "CURLE_MALFORMAT_USER", CURLE_MALFORMAT_USER },
-    #if NODE_LIBCURL_VER_GE( 7, 21, 5 )
-        { "CURLE_NOT_BUILT_IN", CURLE_NOT_BUILT_IN },
-    #endif
-    #if NODE_LIBCURL_VER_GE( 7, 30, 0 )
-        { "CURLE_NO_CONNECTION_AVAILABLE", CURLE_NO_CONNECTION_AVAILABLE },
-    #endif
-        { "CURLE_OK", CURLE_OK },
-        { "CURLE_OPERATION_TIMEDOUT", CURLE_OPERATION_TIMEDOUT },
-        { "CURLE_OPERATION_TIMEOUTED", CURLE_OPERATION_TIMEOUTED },
-        { "CURLE_OUT_OF_MEMORY", CURLE_OUT_OF_MEMORY },
-        { "CURLE_PARTIAL_FILE", CURLE_PARTIAL_FILE },
-        { "CURLE_PEER_FAILED_VERIFICATION", CURLE_PEER_FAILED_VERIFICATION },
-        { "CURLE_QUOTE_ERROR", CURLE_QUOTE_ERROR },
-        { "CURLE_RANGE_ERROR", CURLE_RANGE_ERROR },
-        { "CURLE_READ_ERROR", CURLE_READ_ERROR },
-        { "CURLE_RECV_ERROR", CURLE_RECV_ERROR },
-        { "CURLE_REMOTE_ACCESS_DENIED", CURLE_REMOTE_ACCESS_DENIED },
-        { "CURLE_REMOTE_DISK_FULL", CURLE_REMOTE_DISK_FULL },
-        { "CURLE_REMOTE_FILE_EXISTS", CURLE_REMOTE_FILE_EXISTS },
-        { "CURLE_REMOTE_FILE_NOT_FOUND", CURLE_REMOTE_FILE_NOT_FOUND },
-    #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
-        { "CURLE_RTSP_CSEQ_ERROR", CURLE_RTSP_CSEQ_ERROR },
-        { "CURLE_RTSP_SESSION_ERROR", CURLE_RTSP_SESSION_ERROR },
-    #endif
-        { "CURLE_SEND_ERROR", CURLE_SEND_ERROR },
-        { "CURLE_SEND_FAIL_REWIND", CURLE_SEND_FAIL_REWIND },
-        { "CURLE_SHARE_IN_USE", CURLE_SHARE_IN_USE },
-        { "CURLE_SSH", CURLE_SSH },
-        { "CURLE_SSL_CACERT", CURLE_SSL_CACERT },
-        { "CURLE_SSL_CACERT_BADFILE", CURLE_SSL_CACERT_BADFILE },
-        { "CURLE_SSL_CERTPROBLEM", CURLE_SSL_CERTPROBLEM },
-        { "CURLE_SSL_CIPHER", CURLE_SSL_CIPHER },
-        { "CURLE_SSL_CONNECT_ERROR", CURLE_SSL_CONNECT_ERROR },
-    #if NODE_LIBCURL_VER_GE( 7, 19, 0 )
-        { "CURLE_SSL_CRL_BADFILE", CURLE_SSL_CRL_BADFILE },
-    #endif
-        { "CURLE_SSL_ENGINE_INITFAILED", CURLE_SSL_ENGINE_INITFAILED },
-        { "CURLE_SSL_ENGINE_NOTFOUND", CURLE_SSL_ENGINE_NOTFOUND },
-        { "CURLE_SSL_ENGINE_SETFAILED", CURLE_SSL_ENGINE_SETFAILED },
-    #if NODE_LIBCURL_VER_GE( 7, 41, 0 )
-        { "CURLE_SSL_INVALIDCERTSTATUS", CURLE_SSL_INVALIDCERTSTATUS },
-    #endif
-    #if NODE_LIBCURL_VER_GE( 7, 19, 0 )
-        { "CURLE_SSL_ISSUER_ERROR", CURLE_SSL_ISSUER_ERROR },
-    #endif
-        { "CURLE_SSL_PEER_CERTIFICATE", CURLE_SSL_PEER_CERTIFICATE },
-
-    #if NODE_LIBCURL_VER_GE( 7, 39, 0 )
-        { "CURLE_SSL_PINNEDPUBKEYNOTMATCH", CURLE_SSL_PINNEDPUBKEYNOTMATCH },
-    #endif
-
-        { "CURLE_SSL_SHUTDOWN_FAILED", CURLE_SSL_SHUTDOWN_FAILED },
-        { "CURLE_TELNET_OPTION_SYNTAX", CURLE_TELNET_OPTION_SYNTAX },
-        { "CURLE_TFTP_DISKFULL", CURLE_TFTP_DISKFULL },
-        { "CURLE_TFTP_EXISTS", CURLE_TFTP_EXISTS },
-        { "CURLE_TFTP_ILLEGAL", CURLE_TFTP_ILLEGAL },
-        { "CURLE_TFTP_NOSUCHUSER", CURLE_TFTP_NOSUCHUSER },
-        { "CURLE_TFTP_NOTFOUND", CURLE_TFTP_NOTFOUND },
-        { "CURLE_TFTP_PERM", CURLE_TFTP_PERM },
-        { "CURLE_TFTP_UNKNOWNID", CURLE_TFTP_UNKNOWNID },
-        { "CURLE_TOO_MANY_REDIRECTS", CURLE_TOO_MANY_REDIRECTS },
-
-    #if NODE_LIBCURL_VER_GE( 7, 21, 5 )
-        { "CURLE_UNKNOWN_OPTION", CURLE_UNKNOWN_OPTION },
-    #endif
-
-        { "CURLE_UNKNOWN_TELNET_OPTION", CURLE_UNKNOWN_TELNET_OPTION },
-        { "CURLE_UNSUPPORTED_PROTOCOL", CURLE_UNSUPPORTED_PROTOCOL },
-        { "CURLE_UPLOAD_FAILED", CURLE_UPLOAD_FAILED },
-        { "CURLE_URL_MALFORMAT", CURLE_URL_MALFORMAT },
-        { "CURLE_URL_MALFORMAT_USER", CURLE_URL_MALFORMAT_USER },
-        { "CURLE_USE_SSL_FAILED", CURLE_USE_SSL_FAILED },
-    #if NODE_LIBCURL_VER_GE( 7, 51, 0 )
-        { "CURLE_WEIRD_SERVER_REPLY", CURLE_WEIRD_SERVER_REPLY },
-    #endif
-        { "CURLE_WRITE_ERROR", CURLE_WRITE_ERROR },
-        { "CURLSHE_BAD_OPTION", CURLSHE_BAD_OPTION },
-        { "CURLSHE_INVALID", CURLSHE_INVALID },
-        { "CURLSHE_IN_USE", CURLSHE_IN_USE },
-        { "CURLSHE_NOMEM", CURLSHE_NOMEM },
-    #if NODE_LIBCURL_VER_GE( 7, 23, 0 )
-        { "CURLSHE_NOT_BUILT_IN", CURLSHE_NOT_BUILT_IN },
-    #endif
-        { "CURLSHE_OK", CURLSHE_OK },
-    };
-
     static void ExportConstants( v8::Local<v8::Object> obj, const std::vector<NodeLibcurl::CurlConstant> &optionGroup, v8::PropertyAttribute attributes )
     {
         Nan::HandleScope scope;
@@ -981,61 +692,17 @@ namespace NodeLibcurl {
         ExportConstants( infosObj, curlInfoSocket, attributes );
         ExportConstants( infosObj, curlInfoLinkedList, attributes );
 
-        // export pause consts
-        v8::Local<v8::Object> pauseObj = Nan::New<v8::Object>();
-        ExportConstants( pauseObj, curlConstPause, attributes );
-
-        // export auth consts
-        v8::Local<v8::Object> authObj = Nan::New<v8::Object>();
-        ExportConstants( authObj, curlConstAuth, attributes );
-
-        // export HTTP consts
-        v8::Local<v8::Object> httpObj = Nan::New<v8::Object>();
-        ExportConstants( httpObj, curlConstHttp, attributes );
-
-#if NODE_LIBCURL_VER_GE( 7, 19, 4 )
-        // export proto consts
-        v8::Local<v8::Object> protocolsObj = Nan::New<v8::Object>();
-        ExportConstants( protocolsObj, curlConstProtocol, attributes );
-#endif
-
-#if NODE_LIBCURL_VER_GE( 7, 37, 0 )
-        //export header consts
-        v8::Local<v8::Object> headerObj = Nan::New<v8::Object>();
-        ExportConstants( headerObj, curlConstHeader, attributes );
-#endif
         // export Curl codes
         v8::Local<v8::Object> multiObj = Nan::New<v8::Object>();
         ExportConstants( multiObj, curlMultiOptionNotImplemented, attributesDontEnum );
         ExportConstants( multiObj, curlMultiOptionInteger, attributes );
         ExportConstants( multiObj, curlMultiOptionStringArray, attributes );
 
-        // export Curl codes
-        v8::Local<v8::Object> codesObj = Nan::New<v8::Object>();
-        ExportConstants( codesObj, curlCode, attributes );
-
         // static members
         Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "option" ).ToLocalChecked(), optionsObj, attributes );
         Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "info" ).ToLocalChecked(), infosObj, attributes );
 
-        // add WRITEFUNC to the pause obj
-        Nan::DefineOwnProperty( pauseObj, Nan::New<v8::String>( "WRITEFUNC" ).ToLocalChecked(), Nan::New<v8::Uint32>( CURL_WRITEFUNC_PAUSE ), attributes );
-        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "pause" ).ToLocalChecked(), pauseObj, attributes );
-
-        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "auth" ).ToLocalChecked(), authObj, attributes );
-        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "http" ).ToLocalChecked(), httpObj, attributes );
-
-#if NODE_LIBCURL_VER_GE( 7, 19, 4 )
-        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "protocol" ).ToLocalChecked(), protocolsObj, attributes );
-#endif
-
-#if NODE_LIBCURL_VER_GE( 7, 37, 0 )
-        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "header" ).ToLocalChecked(), headerObj, attributes );
-#endif
-
         Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "multi" ).ToLocalChecked(), multiObj, attributes );
-
-        Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "code" ).ToLocalChecked(), codesObj, attributes );
 
         Nan::SetMethod( obj, "globalInit", GlobalInit );
         Nan::SetMethod( obj, "globalCleanup", GlobalCleanup );

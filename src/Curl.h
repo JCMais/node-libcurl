@@ -50,12 +50,6 @@ namespace NodeLibcurl {
     template<typename T>
     using deleted_unique_ptr = std::unique_ptr<T, std::function<void( T* )>>;
 
-    extern const std::vector<CurlConstant> curlConstAuth;
-    extern const std::vector<CurlConstant> curlConstProtocol;
-    extern const std::vector<CurlConstant> curlConstPause;
-    extern const std::vector<CurlConstant> curlConstHttp;
-    extern const std::vector<CurlConstant> curlConstHeader;
-
     extern const std::vector<CurlConstant> curlOptionNotImplemented;
     extern const std::vector<CurlConstant> curlOptionInteger;
     extern const std::vector<CurlConstant> curlOptionString;
@@ -74,8 +68,6 @@ namespace NodeLibcurl {
     extern const std::vector<CurlConstant> curlMultiOptionNotImplemented;
     extern const std::vector<CurlConstant> curlMultiOptionInteger;
     extern const std::vector<CurlConstant> curlMultiOptionStringArray;
-
-    extern const std::vector<CurlConstant> curlCode;
 
     // export Curl to js
     NODE_LIBCURL_MODULE_INIT( Initialize );
