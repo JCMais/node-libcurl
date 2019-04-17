@@ -4,30 +4,30 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-const http = require('http')
-const https = require('https')
-const http2 = require('http2')
-const fs = require('fs')
-const path = require('path')
+import http from 'http'
+import https from 'https'
+import http2 from 'http2'
+import fs from 'fs'
+import path from 'path'
 
-const express = require('express')
-const bodyParser = require('body-parser')
-const cookiesParser = require('cookie-parser')
+import express from 'express'
+import bodyParser from 'body-parser'
+import cookiesParser from 'cookie-parser'
 
 const file = path.resolve.bind(this, __dirname)
 const key = fs.readFileSync(file('./ssl/cert.key'))
 const cert = fs.readFileSync(file('./ssl/cert.pem'))
 
-const app = express()
-const serverHttp = http.createServer(app)
-const serverHttps = https.createServer(
+export const app = express()
+export const server = http.createServer(app)
+export const serverHttps = https.createServer(
   {
     key,
     cert,
   },
   app,
 )
-const serverHttp2 = http2.createSecureServer({
+export const serverHttp2 = http2.createSecureServer({
   key,
   cert,
 })
@@ -39,13 +39,7 @@ app
 
 app.disable('etag')
 
-module.exports = {
-  server: serverHttp,
-  serverHttps,
-  serverHttp2,
-  app: app,
-  port: 3000,
-  portHttps: 3443,
-  portHttp2: 3333,
-  host: 'localhost',
-}
+export const port = 3000
+export const portHttps = 3443
+export const portHttp2 = 3333
+export const host = 'localhost'
