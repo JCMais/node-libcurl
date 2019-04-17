@@ -54,7 +54,6 @@ curl.setOpt('URL', 'www.google.com');
 curl.setOpt('FOLLOWLOCATION', true);
 
 curl.on('end', function (statusCode, data, headers) {
-  
   console.info(statusCode);
   console.info('---');
   console.info(data.length);
@@ -90,7 +89,7 @@ For more examples check the [examples folder](examples).
 
 ## API
 
-Check the [API Docs](api.md)
+The code provides Typescript type definitions, which should document most of the API.
 
 Almost all [CURL options](https://curl.haxx.se/libcurl/c/curl_easy_setopt.html) are supported, if you pass one that is not, an error will be thrown.
 
@@ -172,7 +171,7 @@ On macOS you must have:
 - macOS >= 10.12 (Sierra)
 - xcode >= 7
 
-###Building on Windows
+### Building on Windows
 
 If installing using a prebuilt binary you only need to have the [visual c++ 2017 runtime library](https://visualstudio.microsoft.com/downloads/#microsoft-visual-c-redistributable-for-visual-studio-2017).
 
@@ -230,17 +229,4 @@ dist_url = https://atom.io/download/atom-shell
 
 ## Contributing
 
-We are using [`yarn`](https://yarnpkg.com/) on this project.
-
-If on Windows, run:
-```sh
-$ node tools/update-deps.js
-```
-Install the node modules:
-```sh
-$ yarn install
-```
-Build node-libcurl:
-```sh
-$ yarn pregyp rebuild
-```
+Read [CONTRIBUTING.md](./CONTRIBUTING.md)

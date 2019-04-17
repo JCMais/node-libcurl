@@ -33,7 +33,8 @@
     "pregyp": "node-pre-gyp",
     "prettier:all": "yarn prettier lib/**/*.js tools/**/*.js scripts/**/*.js test/**/*.js examples/**/*.js",
     "prettier": "prettier --write",
-    "test": "mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000"
+    "test": "mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
+    "test:watch": "yarn test --watch --watch-extensions ts"
   },
   "binary": {
     "module_name": "node_libcurl",
@@ -59,6 +60,7 @@
     "@types/cookie-parser": "^1.4.1",
     "@types/express": "^4.16.1",
     "@types/mocha": "^5.2.6",
+    "@types/multiparty": "^0.0.32",
     "@types/node": "^11.13.2",
     "@types/should": "^13.0.0",
     "body-parser": "^1.18.3",
@@ -88,6 +90,11 @@
     "*.js": [
       "yarn prettier",
       "yarn eslint --fix",
+      "git add"
+    ],
+    "*.ts": [
+      "yarn prettier",
+      "yarn tslint --fix",
       "git add"
     ]
   },
