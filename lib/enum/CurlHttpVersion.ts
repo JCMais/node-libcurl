@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) Jonathan Cardoso Machado. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 // https://github.com/curl/curl/blob/e1be825453/include/curl/curl.h#L1964
 /**
  * Object with constants to be used with the `HTTP_VERSION` option.

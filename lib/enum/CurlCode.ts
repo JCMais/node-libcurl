@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) Jonathan Cardoso Machado. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 // https://github.com/curl/curl/blob/7e35eb7729/include/curl/multi.h#L61
 export enum CurlMultiCode {
   CURLM_CALL_MULTI_PERFORM = -1 /* please call curl_multi_perform() or

@@ -22,7 +22,7 @@ import {
 import { Easy } from './Easy'
 import { Multi } from './Multi'
 import { CurlFeature } from './enum/CurlFeature'
-import { CurlCode } from './codes'
+import { CurlCode } from './enum/CurlCode'
 import { mergeChunks } from './mergeChunks'
 import { parseHeaders, HeaderInfo } from './parseHeaders'
 import {
