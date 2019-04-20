@@ -54,12 +54,13 @@ describe('setOpt()', () => {
         // @ts-ignore
         curl.setOpt.apply(curl, optionTuple)
       } catch (error) {
-        errorsCaught++
+        errorsCaught += 1
       }
     }
 
-    if (errorsCaught !== optionsToTest.length)
+    if (errorsCaught !== optionsToTest.length) {
       throw Error('Invalid option was accepted.')
+    }
   })
 
   it('should not work with non-implemented options', () => {
@@ -148,17 +149,15 @@ describe('setOpt()', () => {
           // @ts-ignore
           curl.setOpt('HTTPPOST', [{ name: arg }])
         } catch (error) {
-          console.log(error)
           invalidArgs = [...invalidArgs, arg === null ? 'null' : typeof arg]
         }
       }
 
       if (invalidArgs.length !== args.length) {
         throw Error(
-          'Invalid property value accepted. Invalid Args: ' +
-            JSON.stringify(invalidArgs) +
-            ', Args: ' +
-            JSON.stringify(args),
+          `Invalid property value accepted. Invalid Args: ${JSON.stringify(
+            invalidArgs,
+          )}, Args: ${JSON.stringify(args)}`,
         )
       }
     })
