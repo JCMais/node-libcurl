@@ -37,10 +37,7 @@ cache:
   directories:
     - $HOME/.node-gyp
     - $HOME/.npm
-    - $NGHTTP2_BUILD_FOLDER
-    - $OPENSSL_BUILD_FOLDER
-    - $ZLIB_BUILD_FOLDER
-    - $LIBCURL_BUILD_FOLDER
+    - $HOME/deps
   yarn: true
 
 git:
@@ -65,5 +62,5 @@ before_install:
   - yarn --version
   - node --version
 install:
-  - GIT_TAG=$TRAVIS_TAG GIT_COMMIT=$TRAVIS_COMMIT . ./scripts/ci/build.sh
+  - GIT_TAG=$TRAVIS_TAG GIT_COMMIT=$TRAVIS_COMMIT ./scripts/ci/build.sh
 script: true
