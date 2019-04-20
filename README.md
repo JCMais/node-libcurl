@@ -1,5 +1,4 @@
-# node-libcurl
-
+# node-libcurl<!-- omit in toc -->
 [![NPM version][npm-image]][npm-url]
 [![node][node-image]][node-url]
 [![license][license-image]][license-url]
@@ -27,14 +26,30 @@
 [Libcurl](https://github.com/bagder/curl) bindings for Node.js.
 _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-curl)._
 
+- [Quick Start](#quick-start)
+  - [Install](#install)
+  - [Simple Request - Async / Await](#simple-request---async--await)
+  - [Simple Request](#simple-request)
+  - [MultiPart Upload / HttpPost libcurl Option](#multipart-upload--httppost-libcurl-option)
+- [API](#api)
+- [Detailed Installation](#detailed-installation)
+  - [Important Notes on Prebuilt Binaries / Direct Installation](#important-notes-on-prebuilt-binaries--direct-installation)
+    - [Missing Packages](#missing-packages)
+  - [Building on Linux](#building-on-linux)
+  - [Building on macOS](#building-on-macos)
+  - [Building on Windows](#building-on-windows)
+  - [nw.js (aka node-webkit)](#nwjs-aka-node-webkit)
+  - [electron (aka atom-shell)](#electron-aka-atom-shell)
+- [Contributing](#contributing)
+
 ## Quick Start
 
 ### Install
-```sh
+```shell
 npm i node-libcurl --save
 ```
 or
-```sh
+```shell
 yarn add node-libcurl
 ```
 ### Simple Request - Async / Await
@@ -85,7 +100,7 @@ curl.on('end', close);
 curl.on('error', close);
 ```
 
-For more examples check the [examples folder](examples).
+For more examples check the [examples folder](./examples).
 
 ## API
 
