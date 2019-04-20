@@ -23,7 +23,7 @@
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
     "postinstall": "node scripts/postinstall",
-    "prepublishOnly": "yarn lint && yarn test && yarn build",
+    "preversion": "yarn lint && yarn build:dist",
     "build:dist": "tsc",
     "clean:build": "rimraf build",
     "clean:dist": "rimraf dist",
@@ -76,6 +76,7 @@
     "lint-staged": "^8.1.5",
     "mocha": "^6.1.2",
     "multiparty": "^4.2.1",
+    "np": "^5.0.0",
     "octonode": "^0.9.5",
     "prettier": "^1.16.4",
     "progress": "^2.0.3",

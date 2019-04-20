@@ -77,3 +77,12 @@ llnode -- /path/to/bin/node --abort_on_uncaught_exception script.js
 
 
 More information go to https://github.com/nodejs/llnode
+
+### Publishing New Releases
+
+We are using [`np`](https://github.com/sindresorhus/np) for releases.
+
+For prereleases, use something like:
+```shell
+$ yarn np 2.0.0-alpha.1 --tag=next
+```
