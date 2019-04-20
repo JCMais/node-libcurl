@@ -18,8 +18,6 @@ addons:
       # Those are the defaults for trusty release on TravisCI
       - gcc-4.8
       - g++-4.8
-      # - gcc-6
-      # - g++-6
 matrix:
   fast_finish: true
   allow_failures:
@@ -54,19 +52,11 @@ before_install:
       export CXX="g++-${GCC_VERSION}";
       export LINK="gcc-${GCC_VERSION}";
       export LINKXX="g++-${GCC_VERSION}";
+    elif [[ $TRAVIS_OS_NAME == "osx" ]]; then
+      export CCFLAGS="-mmacosx-version-min=10.12";
+      export CXXFLAGS="-mmacosx-version-min=10.12";
+      export LDFLAGS="-mmacosx-version-min=10.12";
     fi
-  # Update openssl on osx, and add it to the Path
-  # When configuring openssl should we call ths directly?
-  # PKG_CONFIG_PATH=/opt/OpenSSL/lib/pkgconfig ./configure --with-ssl
-  # - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-  #     brew update;
-  #     brew reinstall -s libtool;
-  #     brew install openssl;
-  #     brew outdated openssl || brew upgrade openssl;
-  #     brew link --force openssl;
-  #     export PATH=/usr/local/opt/openssl/bin:${PATH};
-  #     export PKG_CONFIG_PATH=/usr/local/opt/openssl/lib/pkgconfig;
-  #   fi
   - export PATH=$HOME/bin:$PATH
   - yarn --version
   - node --version

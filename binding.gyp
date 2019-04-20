@@ -111,27 +111,17 @@
               # pretty sure cflags adds that
               'defines': [
                 'CURL_STATICLIB',
-                'NODE_LIBCURL_INSIDE_A',
               ],
               'conditions': [
                 ['curl_libraries==""', {
-                  'defines': [
-                      'NODE_LIBCURL_INSIDE_A1',
-                  ],
                   'libraries': [
                     '<!@(<(curl_config_bin) --static-libs)',
                   ],
                 }]
               ],
             }, { # do not use static linking - default
-              'defines': [
-                'NODE_LIBCURL_INSIDE_B',
-              ],
               'conditions': [
                 ['curl_libraries==""', {
-                  'defines': [
-                      'NODE_LIBCURL_INSIDE_B1',
-                  ],
                   'libraries': [
                     '-Wl,-rpath <!(<(curl_config_bin) --prefix)/lib',
                     '<!@(<(curl_config_bin) --libs)',
