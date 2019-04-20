@@ -43,7 +43,7 @@ orbs:
           ####
           # Restore caches
           ###
-          - run: echo "$NGHTTP2_RELEASE - $OPENSSL_RELEASE - $ZLIB_RELEASE - $LIBSSH2_RELEASE - LIBCURL_RELEASE" > _libs_versions
+          - run: echo "$NGHTTP2_RELEASE - $OPENSSL_RELEASE - $ZLIB_RELEASE - $LIBSSH2_RELEASE - $LIBCURL_RELEASE" > _libs_versions
           - restore_cache:
               key: v1-deps-libs-{{ checksum "_libs_versions" }}
           ####
