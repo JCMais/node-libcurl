@@ -1,19 +1,26 @@
 #!/bin/bash
 # This must be run from the root of the repo, and the following variables must be available:
 #  GIT_COMMIT
-#  GIT_BRANCH
+#  GIT_TAG
 # In case it's needed to use the vars declared here, this should be sourced on the current shell
 #  . ./scripts/ci/build.sh
 set -euvo pipefail
+
+FORCE_REBUILD=false
+if [[ ! -z "$GIT_TAG" ]]; then
+  FORCE_REBUILD=true
+fi
+
+export FORCE_REBUILD=$FORCE_REBUILD
 
 ###################
 # Build nghttp2
 ###################
 # nghttp2 version must match Node.js one
-NGHTTP2_RELEASE=$(node -e "console.log(process.versions.nghttp2)")
+NGHTTP2_RELEASE=${NGHTTP2_RELEASE:-$(node -e "console.log(process.versions.nghttp2)")}
 NGHTTP2_DEST_FOLDER=$HOME/deps/nghttp2
 echo "Building nghttp2 v$NGHTTP2_RELEASE"
-./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER >/dev/null
+./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER
 export NGHTTP2_BUILD_FOLDER=$NGHTTP2_DEST_FOLDER/build/$NGHTTP2_RELEASE
 ls -al $NGHTTP2_BUILD_FOLDER/lib
 
@@ -21,7 +28,7 @@ ls -al $NGHTTP2_BUILD_FOLDER/lib
 # Build OpenSSL
 ###################
 # OpenSSL version must match Node.js one
-OPENSSL_RELEASE=$(node -e "console.log(process.versions.openssl.replace(/\./g, '_'))")
+OPENSSL_RELEASE=${OPENSSL_RELEASE:-$(node -e "console.log(process.versions.openssl)")}
 OPENSSL_DEST_FOLDER=$HOME/deps/openssl
 
 # We must pass KERNEL_BITS=64 on macOS to make sure a x86_64 lib is built, the default is to build an i386 one
@@ -47,7 +54,7 @@ unset KERNEL_BITS
 # Build zlib
 ###################
 # Zlib version must match Node.js one
-ZLIB_RELEASE=$(node -e "console.log(process.versions.zlib)")
+ZLIB_RELEASE=${ZLIB_RELEASE:-$(node -e "console.log(process.versions.zlib)")}
 ZLIB_DEST_FOLDER=$HOME/deps/zlib
 echo "Building zlib v$ZLIB_RELEASE"
 ./scripts/ci/build-zlib.sh $ZLIB_RELEASE $ZLIB_DEST_FOLDER
@@ -57,7 +64,7 @@ ls -al $ZLIB_BUILD_FOLDER/lib
 ###################
 # Build libssh2
 ###################
-LIBSSH2_RELEASE=1.8.2
+LIBSSH2_RELEASE=${LIBSSH2_RELEASE:-1.8.2}
 LIBSSH2_DEST_FOLDER=$HOME/deps/libssh2
 echo "Building libssh2 v$LIBSSH2_RELEASE"
 ./scripts/ci/build-libssh2.sh $LIBSSH2_RELEASE $LIBSSH2_DEST_FOLDER
@@ -67,7 +74,10 @@ ls -al $LIBSSH2_BUILD_FOLDER/lib
 ###################
 # Build libcurl
 ###################
-LIBCURL_RELEASE=$(./scripts/ci/get-latest-libcurl-version.sh)
+LIBCURL_RELEASE=${LIBCURL_RELEASE:-LATEST}
+if [[ $LIBCURL_RELEASE == "LATEST" ]]; then
+  LIBCURL_RELEASE=$(./scripts/ci/get-latest-libcurl-version.sh)
+fi
 LIBCURL_DEST_FOLDER=$HOME/deps/libcurl
 echo "Building libcurl v$LIBCURL_RELEASE"
 ./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER
@@ -85,7 +95,7 @@ curl-config --cflags
 
 PUBLISH_BINARY=false
 COMMIT_MESSAGE=$(git show -s --format=%B $GIT_COMMIT | tr -d '\n')
-if [[ $GIT_BRANCH == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
+if [[ $GIT_TAG == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
   PUBLISH_BINARY=true;
 fi
 

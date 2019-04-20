@@ -8,6 +8,14 @@ curr_dirname=$(dirname "$0")
 mkdir -p $build_folder
 mkdir -p $2/source
 
+FORCE_REBUILD=${FORCE_REBUILD:-}
+
+# @TODO We are explicitly checking the static lib
+if [[ -f $build_folder/lib/libssh2.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUILD != "true" ]]; then
+  echo "Skipping rebuild of libssh2 because lib file already exists"
+  exit 0
+fi
+
 if [ ! -d $2/source/$1 ]; then
   $curr_dirname/download-and-unpack.sh \
     https://github.com/libssh2/libssh2/releases/download/libssh2-$1/libssh2-$1.tar.gz $2

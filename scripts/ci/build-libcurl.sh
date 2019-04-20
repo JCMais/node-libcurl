@@ -10,6 +10,14 @@ sort_cmd=sort
 mkdir -p $build_folder
 mkdir -p $2/source
 
+FORCE_REBUILD=${FORCE_REBUILD:-}
+
+# @TODO We are explicitly checking the static lib
+if [[ -f $build_folder/lib/libcurl.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUILD != "true" ]]; then
+  echo "Skipping rebuild of libcurl because lib file already exists"
+  exit 0
+fi
+
 # On macOS we need gsort from coreutils, can be installed with: brew install coreutils
 if [ "$(uname)" == "Darwin" ]; then
   if ! command -v gsort &>/dev/null; then
@@ -20,7 +28,7 @@ if [ "$(uname)" == "Darwin" ]; then
   sort_cmd=gsort
 fi
 
-version_with_dots=$(echo $1 | sed 's/\_/./g')
+version_with_dashes=$(echo $1 | sed 's/\./_/g')
 
 echo "Preparing release for libcurl $1"
 
@@ -29,7 +37,7 @@ echo "Preparing release for libcurl $1"
 #  needs to be changed to something like: https://github.com/curl/curl/archive/curl-7_53_1.tar.gz
 # And as it is just a source tarball, we must also create the ./configure script
 is_less_than_7_54_1=0
-(printf '%s\n%s' "$version_with_dots" "7.53.1" | $sort_cmd -CV) || is_less_than_7_54_1=$?
+(printf '%s\n%s' "$1" "7.53.1" | $sort_cmd -CV) || is_less_than_7_54_1=$?
 
 LIBS=""
 if [ "$is_less_than_7_54_1" == "0" ]; then
@@ -42,12 +50,12 @@ fi
 
 if [ ! -d $2/source/$1 ]; then
   if [ "$is_less_than_7_54_1" == "0" ]; then
-    echo "Using source tarball instead of release"
+    echo "Using source tarball instead of release because this libcurl version does not have releases"
     $curr_dirname/download-and-unpack.sh \
-      https://github.com/curl/curl/archive/curl-$1.tar.gz \
+      https://github.com/curl/curl/archive/curl-$version_with_dashes.tar.gz \
       $2
 
-    mv $2/curl-curl-$1 $2/source/$1
+    mv $2/curl-curl-$version_with_dashes $2/source/$1
     cd $2/source/$1
 
 
@@ -56,10 +64,10 @@ if [ ! -d $2/source/$1 ]; then
     echo "Using release tarball"
 
     $curr_dirname/download-and-unpack.sh \
-      https://github.com/curl/curl/releases/download/curl-$1/curl-$version_with_dots.tar.gz \
+      https://github.com/curl/curl/releases/download/curl-$version_with_dashes/curl-$1.tar.gz \
       $2
 
-    mv $2/curl-$version_with_dots $2/source/$1
+    mv $2/curl-$1 $2/source/$1
     cd $2/source/$1
   fi
 else

@@ -8,10 +8,20 @@ curr_dirname=$(dirname "$0")
 mkdir -p $build_folder
 mkdir -p $2/source
 
-if [ ! -d $2/source/$1 ]; then
-  $curr_dirname/download-and-unpack.sh https://github.com/openssl/openssl/archive/OpenSSL_$1.tar.gz $2
+FORCE_REBUILD=${FORCE_REBUILD:-}
 
-  mv $2/openssl-OpenSSL_$1 $2/source/$1
+# @TODO We are explicitly checking the static lib
+if [[ -f $build_folder/lib/libcrypto.a && -f $build_folder/lib/libssl.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUILD != "true" ]]; then
+  echo "Skipping rebuild of openssl because lib files already exists"
+  exit 0
+fi
+
+version_with_dashes=$(echo $1 | sed 's/\./_/g')
+
+if [ ! -d $2/source/$1 ]; then
+  $curr_dirname/download-and-unpack.sh https://github.com/openssl/openssl/archive/OpenSSL_$version_with_dashes.tar.gz $2
+
+  mv $2/openssl-OpenSSL_$version_with_dashes $2/source/$1
   cd $2/source/$1
 else
   cd $2/source/$1
