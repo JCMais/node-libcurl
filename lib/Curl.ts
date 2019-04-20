@@ -567,7 +567,7 @@ interface Curl {
    */
   setOpt(
     option: 'FNMATCH_FUNCTION',
-    value: ((pattern: string, string: string) => number) | null,
+    value: ((pattern: string, value: string) => number) | null,
   ): this
   /**
    * Use `Curl.option` for predefined constants.
@@ -583,7 +583,7 @@ interface Curl {
    *
    * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
-  setOpt(option: 'SHARE', value: never | null): this
+  setOpt(option: 'SHARE', value: Share | null): this
   /**
    * Use `Curl.option` for predefined constants.
    *

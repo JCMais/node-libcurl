@@ -40,6 +40,7 @@ const run = async () => {
     variableName: 'CurlOption',
     filePath: curlOptionsFilePath,
     shouldGenerateCamelCaseMap: true,
+    extraHeaderText: 'import { Share } from "../Share"',
   })
 
   const allowedCurlInfos = await retrieveConstantList({
@@ -123,7 +124,7 @@ const run = async () => {
   createSetOptOverloads(curlClassFilePath, 'this')
 
   execSync(
-    `yarn prettier ${curlOptionsFilePath} ${curlInfoFilePath} ${easyBindingFilePath} ${curlClassFilePath}`,
+    `yarn prettier ${curlOptionsFilePath} ${curlInfoFilePath} ${multiOptionFilePath} ${easyBindingFilePath} ${curlClassFilePath}`,
   )
 }
 

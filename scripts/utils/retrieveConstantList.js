@@ -1,6 +1,6 @@
 const cheerio = require('cheerio')
 
-const curl = require('../../lib/curlFn')
+const { curl } = require('../../dist')
 
 const {
   convertCurlConstantToCamelCase,

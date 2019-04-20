@@ -37,7 +37,7 @@ const optionKindValueMap = {
   /* @TODO Add type definitions, they are on Curl.info.debug */
   DEBUGFUNCTION: '((type: number, data: Buffer) => void)',
   /* @TODO Add type definitions, they are on Curl.fnmatchfunc */
-  FNMATCH_FUNCTION: '((pattern: string, string: string) => number)',
+  FNMATCH_FUNCTION: '((pattern: string, value: string) => number)',
   HTTPPOST: 'HttpPostField[]',
   /* @TODO Add CURL_SEEKFUNC_* type definitions */
   SEEKFUNCTION: '((offset: number, origin: number) => number)',
