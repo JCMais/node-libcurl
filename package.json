@@ -39,6 +39,7 @@
   "binary": {
     "module_name": "node_libcurl",
     "module_path": "./lib/binding/",
+    "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}-{libc}.tar.gz",
     "host": "https://github.com/JCMais/node-libcurl/releases/download",
     "remote_path": "./v{version}/"
   },
