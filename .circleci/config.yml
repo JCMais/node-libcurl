@@ -47,6 +47,8 @@ orbs:
           #     greeting_name: <<parameters.greeting_name>>
           - node/install:
               version: <<parameters.node-version>>
+          # node/install above install nodejs to /usr/local/bin/nodejs
+          - run: ln -s /usr/local/bin/nodejs /usr/local/bin/node
           - node/install-yarn
           - run: GIT_BRANCH=$CIRCLE_TAG GIT_COMMIT=$CIRCLE_SHA1 ./scripts/ci/build-alpine.sh
     # commands:
