@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 git ls-remote --tags https://github.com/curl/curl.git \
   | awk '{print $2}' \

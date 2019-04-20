@@ -48,12 +48,19 @@ module.exports = function install() {
     return Promise.resolve()
   }
 
-  return exec('node "' + path.join(rootPath, 'lib/Curl.js"'))
+  const distIndexPath = path.resolve(rootPath, 'dist', 'index.js')
+  const distIndexExists = fs.existsSync(distIndexPath)
+  const executable = distIndexExists ? 'node' : 'yarn ts-node'
+  const file = distIndexExists
+    ? distIndexPath
+    : path.resolve(rootPath, 'lib', 'index.ts')
+
+  return exec(`${executable} "${file}"`)
     .catch(function(e) {
       if (~e.toString().indexOf('Module version mismatch')) {
         log.warn('node-libcurl was built for a different version of node.')
         log.warn(
-          'If you are building node-libcurl for electron/nwjs you can ignore this warning.'
+          'If you are building node-libcurl for electron/nwjs you can ignore this warning.',
         )
       } else {
         throw e

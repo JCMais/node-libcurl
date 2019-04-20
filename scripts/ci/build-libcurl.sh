@@ -1,6 +1,6 @@
 #!/bin/bash
 # <release> <dest_folder>
-set -eu
+set -euo pipefail
 
 build_folder=$2/build/$1
 curr_dirname=$(dirname "$0")
