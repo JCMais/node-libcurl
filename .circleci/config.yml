@@ -1,0 +1,135 @@
+version: 2.1
+
+executors:
+  main:
+    parameters:
+      libcurl-version:
+        type: string
+    environment:
+      LIBCURL_RELEASE: << parameters.libcurl-version >>
+      LIBSSH2_RELEASE: "1.8.2"
+    # docker:
+    #   - image: circleci/ruby:<<parameters.version>>
+    docker:
+      - image: jonathancardoso/alpine-ci
+
+orbs:
+  build-addon-alpine-and-publish:
+    orbs:
+      # https://circleci.com/orbs/registry/orb/circleci/node
+      node: circleci/node@1.0.1
+      # We could instead base it directly on an alpine image
+      # But we would need to install extra packages
+      # alpine-nodejs:
+      #   parameters:
+      #     version:
+      #       type: string
+      #       default: "10"
+      #   docker:
+      #     - image: node:<<parameters.version>>-alpine
+    jobs:
+      build-addon:
+        # parameters:
+        #   greeting_name:
+        #     description: # a helpful description
+        #     type: string
+        #     default: olleh
+        # https://circleci.com/docs/2.0/reusing-config/#parameter-syntax
+        parameters:
+          node-version:
+            description: Version of Node.js
+            type: string
+          e:
+            type: executor
+        executor: << parameters.e >>
+        steps:
+          # - my_inline_command:
+          #     greeting_name: <<parameters.greeting_name>>
+          - node/install:
+              version: <<parameters.node-version>>
+          - node/install-yarn
+          - run: GIT_BRANCH=$CIRCLE_TAG GIT_COMMIT=$CIRCLE_SHA1 ./scripts/ci/build-alpine.sh
+    # commands:
+    #   my_inline_command:
+    #     parameters:
+    #       greeting_name:
+    #         type: string
+    #     steps:
+    #       - run: echo "hello <<parameters.greeting_name>>, from the inline command"
+
+# Great docs
+# https://circleci.com/docs/2.0/reusing-config/#getting-started-with-config-reuse
+
+workflows:
+  build-test-deploy:
+    jobs:
+      ####
+      # Node 8
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-node-8-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          node-version: "8"
+          e:
+            name: main
+            libcurl-version: "LATEST"
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-node-8-libcurl-old
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          node-version: "8"
+          e:
+            name: main
+            libcurl-version: "7_50_0"
+      ####
+      # Node 10
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-node-10-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          node-version: "10"
+          e:
+            name: main
+            libcurl-version: "LATEST"
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-node-10-libcurl-old
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          node-version: "10"
+          e:
+            name: main
+            libcurl-version: "7_50_0"
+      ####
+      # Node 11
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-node-11-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          node-version: "11"
+          e:
+            name: main
+            libcurl-version: "LATEST"
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-node-11-libcurl-old
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          node-version: "11"
+          e:
+            name: main
+            libcurl-version: "7_50_0"
+
