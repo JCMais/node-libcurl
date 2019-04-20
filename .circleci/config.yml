@@ -11,7 +11,7 @@ executors:
     # docker:
     #   - image: circleci/ruby:<<parameters.version>>
     docker:
-      - image: jonathancardoso/alpine-ci:de3a24f82443e8fc4fe41f28b5aa268d940cbd57
+      - image: jonathancardoso/alpine-ci
 
 orbs:
   build-addon-alpine-and-publish:

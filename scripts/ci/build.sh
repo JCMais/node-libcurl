@@ -33,7 +33,10 @@ params=()
 if [[ -f /etc/alpine-release ]]; then
     params+=(no-async)
 fi
-./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER "${params[@]}"
+# Weird concatenation of the array with itself is needed
+#  because on bash <= 4, using [@] to access an array with 0 elements
+#  gives an error with set -o pipefail
+./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER ${params+"${params[@]}"}
 export OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build/$OPENSSL_RELEASE
 ls -al $OPENSSL_BUILD_FOLDER/lib
 unset KERNEL_BITS
