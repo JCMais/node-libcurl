@@ -35,6 +35,7 @@ orbs:
             type: executor
         executor: << parameters.e >>
         steps:
+          - checkout
           - run: ln -s /usr/local/bin/node<<parameters.node-version>> /usr/local/bin/node
           - run: GIT_BRANCH=$CIRCLE_TAG GIT_COMMIT=$CIRCLE_SHA1 ./scripts/ci/build-alpine.sh
 
