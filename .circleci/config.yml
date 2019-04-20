@@ -36,6 +36,7 @@ orbs:
         executor: << parameters.e >>
         steps:
           - checkout
+          - run: apk --no-cache add m4
           - run: ln -s /usr/local/bin/node<<parameters.node-version>> /usr/local/bin/node
           - run: GIT_BRANCH=$CIRCLE_TAG GIT_COMMIT=$CIRCLE_SHA1 ./scripts/ci/build.sh
 
