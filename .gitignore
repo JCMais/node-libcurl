@@ -9,6 +9,9 @@ debug
 .vscode/
 test/curl/upload.png
 
+# coverage
+.nyc_output/
+
 # build
 dist
 build

@@ -5,11 +5,11 @@
 .travis.yml
 .gitmodules
 .vscode/
+.nyc_output/
 appveyor.yml
-jsdoc.json
 build/
 deps/
-docs/
 lib/binding/
 debug/
+examples/
 *.tgz
