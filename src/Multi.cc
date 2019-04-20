@@ -393,13 +393,14 @@ namespace NodeLibcurl {
         } //check if option is integer, and the value is correct
         else if ( ( optionId = IsInsideCurlConstantStruct( curlMultiOptionInteger, opt ) ) ) {
 
-            int32_t val = Nan::To<int32_t>(value).FromJust();
-
-            //If not an integer, get the boolean value of it.
+            //If not an integer, throw error
             if ( !value->IsInt32() ) {
 
-                val = value->BooleanValue();
+                Nan::ThrowTypeError( "Option value must be an integer." );
+                return;
             }
+
+            int32_t val = Nan::To<int32_t>(value).FromJust();
 
             setOptRetCode = curl_multi_setopt( obj->mh, static_cast<CURLMoption>( optionId ), val );
         }
