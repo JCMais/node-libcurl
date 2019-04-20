@@ -66,6 +66,5 @@ before_install:
   - node --version
 install:
   - GIT_TAG=$TRAVIS_TAG GIT_COMMIT=$TRAVIS_COMMIT . ./scripts/ci/build.sh
-  - set +u
   - cat /home/travis/.travis/functions
 script: true
