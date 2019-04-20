@@ -72,7 +72,7 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-          node-version: "8"
+          node-version: "8.16.0"
           e:
             name: main
             libcurl-version: "LATEST"
@@ -82,7 +82,7 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-          node-version: "8"
+          node-version: "8.16.0"
           e:
             name: main
             libcurl-version: "7_50_0"
@@ -95,7 +95,7 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-          node-version: "10"
+          node-version: "10.15.3"
           e:
             name: main
             libcurl-version: "LATEST"
@@ -105,7 +105,7 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-          node-version: "10"
+          node-version: "10.15.3"
           e:
             name: main
             libcurl-version: "7_50_0"
@@ -118,7 +118,7 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-          node-version: "11"
+          node-version: "11.14.0"
           e:
             name: main
             libcurl-version: "LATEST"
@@ -128,7 +128,7 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-          node-version: "11"
+          node-version: "11.14.0"
           e:
             name: main
             libcurl-version: "7_50_0"

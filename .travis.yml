@@ -70,5 +70,5 @@ before_install:
   - export PATH=$HOME/bin:$PATH
   - yarn --version
   - node --version
-install: GIT_BRANCH=$TRAVIS_BRANCH GIT_COMMIT_SHA1=$TRAVIS_COMMIT ./scripts/ci/build.sh
+install: GIT_BRANCH=$TRAVIS_BRANCH GIT_COMMIT=$TRAVIS_COMMIT ./scripts/ci/build.sh
 script: true
