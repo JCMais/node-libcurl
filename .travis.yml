@@ -31,12 +31,16 @@ env:
     - secure: d64E8XbVGHuQ0kls1oVUF1y6pnj3iqZB34roKBHAFTyWBXReC1FWLb+qEShCJicUDkeK2At7vQUz7ohMn2mL/hVXiRbuSaYuDKFx8iDeei9mTgE+iy258mSovnNvXfG72EP5+LB+UOhgmTGe0qyTALOQ6ceCgjdscul3IGWE8lw=
   matrix:
     - LIBCURL_RELEASE=LATEST
-    - LIBCURL_RELEASE=7_50_0
+    - LIBCURL_RELEASE=7.50.0
 
 cache:
   directories:
     - $HOME/.node-gyp
     - $HOME/.npm
+    - $NGHTTP2_BUILD_FOLDER
+    - $OPENSSL_BUILD_FOLDER
+    - $ZLIB_BUILD_FOLDER
+    - $LIBCURL_BUILD_FOLDER
   yarn: true
 
 git:
@@ -60,5 +64,5 @@ before_install:
   - export PATH=$HOME/bin:$PATH
   - yarn --version
   - node --version
-install: GIT_BRANCH=$TRAVIS_BRANCH GIT_COMMIT=$TRAVIS_COMMIT ./scripts/ci/build.sh
+install: GIT_TAG=$TRAVIS_TAG GIT_COMMIT=$TRAVIS_COMMIT . ./scripts/ci/build.sh
 script: true

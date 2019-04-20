@@ -2,28 +2,11 @@ version: 2.1
 
 executors:
   main:
-    parameters:
-      libcurl-version:
-        type: string
-    environment:
-      LIBCURL_RELEASE: << parameters.libcurl-version >>
-      LIBSSH2_RELEASE: "1.8.2"
-    # docker:
-    #   - image: circleci/ruby:<<parameters.version>>
     docker:
       - image: jonathancardoso/alpine-ci
 
 orbs:
   build-addon-alpine-and-publish:
-    # We could instead base it directly on an alpine image
-    # But we would need to install extra packages
-    # alpine-nodejs:
-    #   parameters:
-    #     version:
-    #       type: string
-    #       default: "10"
-    #   docker:
-    #     - image: node:<<parameters.version>>-alpine
     jobs:
       build-addon:
         # https://circleci.com/docs/2.0/reusing-config/#parameter-syntax
@@ -33,11 +16,51 @@ orbs:
             type: string
           e:
             type: executor
+          nghttp2-version:
+            type: string
+          openssl-version:
+            type: string
+          libz-version:
+            type: string
+            default: "1.2.11"
+          libssh2-version:
+            type: string
+            default: "1.8.2"
+          libcurl-version:
+            type: string
         executor: << parameters.e >>
         steps:
           - checkout
           - run: ln -s /usr/local/bin/node<<parameters.node-version>> /usr/local/bin/node
-          - run: GIT_BRANCH=$CIRCLE_TAG GIT_COMMIT=$CIRCLE_SHA1 ./scripts/ci/build.sh
+          - run:
+              name: Setup Environment Variables
+              command: |
+                echo 'export NGHTTP2_RELEASE="<< parameters.nghttp2-version >>"' >> $BASH_ENV
+                echo 'export OPENSSL_RELEASE="<< parameters.openssl-version >>"' >> $BASH_ENV
+                echo 'export ZLIB_RELEASE="<< parameters.libz-version >>"' >> $BASH_ENV
+                echo 'export LIBSSH2_RELEASE="<< parameters.libssh2-version >>"' >> $BASH_ENV
+                echo 'export LIBCURL_RELEASE="<< parameters.libcurl-version >>"' >> $BASH_ENV
+          ####
+          # Restore caches
+          ###
+          - run: echo "$NGHTTP2_RELEASE - $OPENSSL_RELEASE - $ZLIB_RELEASE - $LIBSSH2_RELEASE - LIBCURL_RELEASE" > _libs_versions
+          - restore_cache:
+              key: v1-deps-libs-{{ checksum "_libs_versions" }}
+          ####
+          # Build
+          ####
+          - run: GIT_TAG=$CIRCLE_TAG GIT_COMMIT=$CIRCLE_SHA1 ./scripts/ci/build.sh
+          ####
+          # Cache
+          ####
+          - save_cache:
+              key: v1-deps-libs-{{ checksum "_libs_versions" }}
+              paths:
+                - ~/deps/nghttp2/build/<< parameters.nghttp2-version >>
+                - ~/deps/openssl/build/<< parameters.openssl-version >>
+                - ~/deps/libz/build/<< parameters.libz-version >>
+                - ~/deps/libssh2/build/<< parameters.libssh2-version >>
+                - ~/deps/libcurl/build/<< parameters.libcurl-version >>
 
 # Great docs
 # https://circleci.com/docs/2.0/reusing-config/#getting-started-with-config-reuse
@@ -55,9 +78,11 @@ workflows:
             tags:
               only: /^v.*/
           node-version: "8"
+          libcurl-version: "7.64.1"
+          nghttp2-version: "1.33.0"
+          openssl-version: "1.0.2r"
           e:
             name: main
-            libcurl-version: "LATEST"
       - build-addon-alpine-and-publish/build-addon:
           name: build-addon-node-8-libcurl-old
           context: general
@@ -65,9 +90,11 @@ workflows:
             tags:
               only: /^v.*/
           node-version: "8"
+          libcurl-version: "7.50.0"
+          nghttp2-version: "1.33.0"
+          openssl-version: "1.0.2r"
           e:
             name: main
-            libcurl-version: "7_50_0"
       ####
       # Node 10
       ####
@@ -78,9 +105,11 @@ workflows:
             tags:
               only: /^v.*/
           node-version: "10"
+          libcurl-version: "7.64.1"
+          nghttp2-version: "1.34.0"
+          openssl-version: "1.1.0j"
           e:
             name: main
-            libcurl-version: "LATEST"
       - build-addon-alpine-and-publish/build-addon:
           name: build-addon-node-10-libcurl-old
           context: general
@@ -88,9 +117,11 @@ workflows:
             tags:
               only: /^v.*/
           node-version: "10"
+          libcurl-version: "7.50.0"
+          nghttp2-version: "1.34.0"
+          openssl-version: "1.1.0j"
           e:
             name: main
-            libcurl-version: "7_50_0"
       ####
       # Node 11
       ####
@@ -101,9 +132,11 @@ workflows:
             tags:
               only: /^v.*/
           node-version: "11"
+          libcurl-version: "7.64.1"
+          nghttp2-version: "1.37.0"
+          openssl-version: "1.1.1b"
           e:
             name: main
-            libcurl-version: "LATEST"
       - build-addon-alpine-and-publish/build-addon:
           name: build-addon-node-11-libcurl-old
           context: general
@@ -111,7 +144,9 @@ workflows:
             tags:
               only: /^v.*/
           node-version: "11"
+          libcurl-version: "7.50.0"
+          nghttp2-version: "1.37.0"
+          openssl-version: "1.1.1b"
           e:
             name: main
-            libcurl-version: "7_50_0"
 
