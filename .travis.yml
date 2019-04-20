@@ -64,5 +64,7 @@ before_install:
   - export PATH=$HOME/bin:$PATH
   - yarn --version
   - node --version
-install: GIT_TAG=$TRAVIS_TAG GIT_COMMIT=$TRAVIS_COMMIT . ./scripts/ci/build.sh
+install:
+  - GIT_TAG=$TRAVIS_TAG GIT_COMMIT=$TRAVIS_COMMIT . ./scripts/ci/build.sh
+  - cat /home/travis/.travis/functions
 script: true
