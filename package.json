@@ -103,6 +103,9 @@
   "engines": {
     "node": ">= 8"
   },
+  "np": {
+    "cleanup": false
+  },
   "husky": {
     "hooks": {
       "commitmsg": "commitlint -e $HUSKY_GIT_PARAMS",
