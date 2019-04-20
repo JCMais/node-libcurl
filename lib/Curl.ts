@@ -21,6 +21,7 @@ import {
 
 import { Easy } from './Easy'
 import { Multi } from './Multi'
+import { Share } from './Share'
 import { CurlFeature } from './enum/CurlFeature'
 import { CurlCode } from './enum/CurlCode'
 import { mergeChunks } from './mergeChunks'
