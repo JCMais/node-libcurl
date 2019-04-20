@@ -77,28 +77,6 @@ multiHandle.onMessage((error, handle, errorCode) => {
   }
 })
 
-declare interface Curl {
-  on(event: 'data', listener: (chunk: Buffer, curlInstance: Curl) => void): this
-  on(
-    event: 'header',
-    listener: (chunk: Buffer, curlInstance: Curl) => void,
-  ): this
-  on(
-    event: 'error',
-    listener: (error: Error, errorCode: CurlCode, curlInstance: Curl) => void,
-  ): this
-  on(
-    event: 'end',
-    listener: (
-      status: number,
-      data: string | Buffer,
-      headers: Buffer | HeaderInfo[],
-      curlInstance: Curl,
-    ) => void,
-  ): this
-  on(event: string, listener: Function): this
-}
-
 /**
  * Wrapper class around one easy handle providing a better interface
  */
@@ -503,8 +481,27 @@ class Curl extends EventEmitter {
     this.handle.close()
   }
 }
-
 interface Curl {
+  on(event: 'data', listener: (chunk: Buffer, curlInstance: Curl) => void): this
+  on(
+    event: 'header',
+    listener: (chunk: Buffer, curlInstance: Curl) => void,
+  ): this
+  on(
+    event: 'error',
+    listener: (error: Error, errorCode: CurlCode, curlInstance: Curl) => void,
+  ): this
+  on(
+    event: 'end',
+    listener: (
+      status: number,
+      data: string | Buffer,
+      headers: Buffer | HeaderInfo[],
+      curlInstance: Curl,
+    ) => void,
+  ): this
+  on(event: string, listener: Function): this
+
   // START AUTOMATICALLY GENERATED CODE - DO NOT EDIT
   /**
    * Use `Curl.option` for predefined constants.
