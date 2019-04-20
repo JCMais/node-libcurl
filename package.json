@@ -96,7 +96,7 @@
     ],
     "*.ts": [
       "yarn prettier",
-      "yarn tslint --fix",
+      "yarn lint --fix",
       "git add"
     ]
   },
