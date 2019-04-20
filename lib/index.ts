@@ -37,3 +37,16 @@ export * from './enum/CurlSslVersion'
 export * from './enum/CurlTimeCond'
 export * from './enum/CurlUseSsl'
 export * from './enum/SocketState'
+
+// types that can be helpful for library consumer
+
+export { HeaderInfo } from './parseHeaders'
+export { CurlInfo, CurlInfoName } from './generated/CurlInfo'
+export {
+  CurlOption,
+  CurlOptionName,
+  CurlOptionValueType,
+} from './generated/CurlOption'
+export { MultiOption, MultiOptionName } from './generated/MultiOption'
+
+export { FileInfo, HttpPostField } from './types'

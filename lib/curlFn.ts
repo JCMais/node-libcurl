@@ -60,14 +60,27 @@ const methods = [
 
 type HttpMethod = (typeof methods)[number]
 
-type HttpMethodCalls = {
-  [K in HttpMethod]: (
-    url: string,
-    options: CurlOptionValueType,
-  ) => Promise<CurlFnPromise>
+interface CurlFnHttpMethodCall {
+  /**
+   * **EXPERIMENTAL** This API can change between minor releases
+   *
+   * Async wrapper around the Curl class.
+   *
+   * The `curl.<field>` being used will be the HTTP verb sent.
+   */
+  (url: string, options?: CurlOptionValueType): Promise<CurlFnPromise>
 }
+
+type HttpMethodCalls = { [K in HttpMethod]: CurlFnHttpMethodCall }
 export interface CurlFn extends HttpMethodCalls {
-  (url: string, options: CurlOptionValueType): Promise<CurlFnPromise>
+  /**
+   * **EXPERIMENTAL** This API can change between minor releases
+   *
+   * Async wrapper around the Curl class
+   * It's also possible to request using a specific http verb
+   *  directly by using `curl.<http-verb>(url)`
+   */
+  (url: string, options?: CurlOptionValueType): Promise<CurlFnPromise>
   create: () => CurlFn
 }
 
