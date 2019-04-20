@@ -118,7 +118,7 @@ yarn test
 
 # If we are here, it means the addon worked
 # Check if we need to publish the binaries
-if [[ $PUBLISH_BINARY == true && $LIBCURL_RELEASE == $LATEST_LIBCURL_RELEASE]]; then
+if [[ $PUBLISH_BINARY == true && $LIBCURL_RELEASE == $LATEST_LIBCURL_RELEASE ]]; then
   yarn pregyp package testpackage --verbose
   node scripts/module-packaging.js --publish "$(yarn pregyp reveal staged_tarball --silent)"
 fi
