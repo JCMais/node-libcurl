@@ -135,4 +135,4 @@ fi
 # Clean everything
 yarn pregyp clean
 
-set +u
+set +uv

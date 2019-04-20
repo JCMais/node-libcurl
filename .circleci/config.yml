@@ -20,7 +20,7 @@ orbs:
             type: string
           openssl-version:
             type: string
-          libz-version:
+          zlib-version:
             type: string
             default: "1.2.11"
           libssh2-version:
@@ -37,7 +37,7 @@ orbs:
               command: |
                 echo 'export NGHTTP2_RELEASE="<< parameters.nghttp2-version >>"' >> $BASH_ENV
                 echo 'export OPENSSL_RELEASE="<< parameters.openssl-version >>"' >> $BASH_ENV
-                echo 'export ZLIB_RELEASE="<< parameters.libz-version >>"' >> $BASH_ENV
+                echo 'export ZLIB_RELEASE="<< parameters.zlib-version >>"' >> $BASH_ENV
                 echo 'export LIBSSH2_RELEASE="<< parameters.libssh2-version >>"' >> $BASH_ENV
                 echo 'export LIBCURL_RELEASE="<< parameters.libcurl-version >>"' >> $BASH_ENV
           ####
@@ -45,7 +45,7 @@ orbs:
           ###
           - run: echo "$NGHTTP2_RELEASE - $OPENSSL_RELEASE - $ZLIB_RELEASE - $LIBSSH2_RELEASE - $LIBCURL_RELEASE" > _libs_versions
           - restore_cache:
-              key: v1-deps-libs-{{ checksum "_libs_versions" }}
+              key: v1-node<<parameters.node-version>>-deps-libs-{{ checksum "_libs_versions" }}
           ####
           # Build
           ####
@@ -54,11 +54,11 @@ orbs:
           # Cache
           ####
           - save_cache:
-              key: v1-deps-libs-{{ checksum "_libs_versions" }}
+              key: v1-node<<parameters.node-version>>-deps-libs-{{ checksum "_libs_versions" }}
               paths:
                 - ~/deps/nghttp2/build/<< parameters.nghttp2-version >>
                 - ~/deps/openssl/build/<< parameters.openssl-version >>
-                - ~/deps/libz/build/<< parameters.libz-version >>
+                - ~/deps/zlib/build/<< parameters.zlib-version >>
                 - ~/deps/libssh2/build/<< parameters.libssh2-version >>
                 - ~/deps/libcurl/build/<< parameters.libcurl-version >>
 
