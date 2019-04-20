@@ -43,9 +43,6 @@
     "host": "https://github.com/JCMais/node-libcurl/releases/download",
     "remote_path": "./v{version}/"
   },
-  "bundledDependencies": [
-    "node-pre-gyp"
-  ],
   "dependencies": {
     "debug": "3.1.0",
     "fs-extra": "7.0.1",
