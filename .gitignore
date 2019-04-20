@@ -11,6 +11,7 @@ test/curl/upload.png
 
 # coverage
 .nyc_output/
+coverage/
 
 # build
 dist

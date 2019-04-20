@@ -6,6 +6,7 @@
 .gitmodules
 .vscode/
 .nyc_output/
+coverage/
 appveyor.yml
 build/
 deps/
