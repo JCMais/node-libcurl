@@ -74,7 +74,8 @@ ls -al $LIBSSH2_BUILD_FOLDER/lib
 ###################
 # Build libcurl
 ###################
-LIBCURL_RELEASE=${LIBCURL_RELEASE:-LATEST}
+LIBCURL_ORIGINAL_RELEASE=${LIBCURL_RELEASE:-LATEST}
+LIBCURL_RELEASE=$LIBCURL_ORIGINAL_RELEASE
 if [[ $LIBCURL_RELEASE == "LATEST" ]]; then
   LIBCURL_RELEASE=$(./scripts/ci/get-latest-libcurl-version.sh)
 fi
@@ -116,7 +117,7 @@ yarn test
 
 # If we are here, it means the addon worked
 # Check if we need to publish the binaries
-if [[ $PUBLISH_BINARY == true && $LIBCURL_VERSION_TAG == LATEST ]]; then
+if [[ $PUBLISH_BINARY == true && $LIBCURL_ORIGINAL_RELEASE == LATEST ]]; then
   yarn pregyp package testpackage --verbose
   node scripts/module-packaging.js --publish "$(yarn pregyp reveal staged_tarball --silent)"
 fi
