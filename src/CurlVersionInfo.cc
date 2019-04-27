@@ -36,21 +36,37 @@ namespace NodeLibcurl
         {"Largefile",      CURL_VERSION_LARGEFILE},
         {"SSPI",           CURL_VERSION_SSPI},
         {"GSS-API",        CURL_VERSION_GSSAPI},
+#if NODE_LIBCURL_VER_GE( 7, 40, 0 )
         {"Kerberos",       CURL_VERSION_KERBEROS5},
+#else
+        {"Kerberos",       CURL_VERSION_KERBEROS4},
+#endif
         {"SPNEGO",         CURL_VERSION_SPNEGO},
         {"NTLM",           CURL_VERSION_NTLM},
         {"NTLM_WB",        CURL_VERSION_NTLM_WB},
         {"SSL",            CURL_VERSION_SSL},
         {"libz",           CURL_VERSION_LIBZ},
+#if NODE_LIBCURL_VER_GE( 7, 57, 0 )
         {"brotli",         CURL_VERSION_BROTLI},
+#endif
         {"CharConv",       CURL_VERSION_CONV},
         {"TLS-SRP",        CURL_VERSION_TLSAUTH_SRP},
         {"HTTP2",          CURL_VERSION_HTTP2},
+#if NODE_LIBCURL_VER_GE( 7, 40, 0 )
         {"UnixSockets",    CURL_VERSION_UNIX_SOCKETS},
+#endif
+#if NODE_LIBCURL_VER_GE( 7, 52, 0 )
         {"HTTPS-proxy",    CURL_VERSION_HTTPS_PROXY},
+#endif
+#if NODE_LIBCURL_VER_GE( 7, 56, 0 )
         {"MultiSSL",       CURL_VERSION_MULTI_SSL},
+#endif
+#if NODE_LIBCURL_VER_GE( 7, 47, 0 )
         {"PSL",            CURL_VERSION_PSL},
+#endif
+#if NODE_LIBCURL_VER_GE( 7, 64, 1 )
         {"alt-svc",        CURL_VERSION_ALTSVC},
+#endif
     };
 
     const curl_version_info_data *CurlVersionInfo::versionInfo = curl_version_info(CURLVERSION_NOW);

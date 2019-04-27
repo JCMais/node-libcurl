@@ -95,7 +95,7 @@ else
 fi
 
 # Debug
-# ./configure \
+# LDFLAGS=$LDFLAGS LIBS=$LIBS ./configure \
 #     --with-libidn2=$LIBIDN2_BUILD_FOLDER \
 #     --with-libssh2=$LIBSSH2_BUILD_FOLDER \
 #     --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
@@ -115,7 +115,7 @@ fi
 # Release - Static
 # It may be needed to pass PKG_CONFIG_PATH here, it should point to:
 # openssl/build/$ver/lib/pkgconfig
-LIBS=$LIBS ./configure \
+LDFLAGS=$LDFLAGS LIBS=$LIBS ./configure \
     --with-libidn2=$LIBIDN2_BUILD_FOLDER \
     --with-libssh2=$LIBSSH2_BUILD_FOLDER \
     --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
@@ -132,7 +132,7 @@ LIBS=$LIBS ./configure \
     --prefix=$build_folder "${@:3}"
     
 # Release - Both
-# ./configure \
+# LDFLAGS=$LDFLAGS LIBS=$LIBS ./configure \
 #   --with-libidn2=$LIBIDN2_BUILD_FOLDER \
 #   --with-libssh2=$LIBSSH2_BUILD_FOLDER \
 #   --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
