@@ -77,7 +77,7 @@ namespace NodeLibcurl
         SetObjPropertyToNullOrValue(obj, "versionNumber", versionInfo->version_num);
 
         SetObjPropertyToNullOrValue(obj, "sslVersion", versionInfo->ssl_version);
-        SetObjPropertyToNullOrValue(obj, "sslVersionNum", versionInfo->ssl_version_num);
+        SetObjPropertyToNullOrValue(obj, "sslVersionNum", 0);
         SetObjPropertyToNullOrValue(obj, "libzVersion", versionInfo->libz_version);
         SetObjPropertyToNullOrValue(obj, "aresVersion", versionInfo->ares);
         SetObjPropertyToNullOrValue(obj, "aresVersionNumber", versionInfo->ares_num);
