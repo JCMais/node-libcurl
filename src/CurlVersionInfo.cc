@@ -17,6 +17,11 @@ namespace NodeLibcurl
             Nan::Set(obj, Nan::New(key).ToLocalChecked(), Nan::New(value));
         }
 
+        template <> void SetObjPropertyToNullOrValue<v8::Local<v8::Primitive>>(v8::Local<v8::Object> obj, std::string key, v8::Local<v8::Primitive> value)
+        {
+            Nan::Set(obj, Nan::New(key).ToLocalChecked(), value);
+        };
+
         template <> void SetObjPropertyToNullOrValue<const char *>(v8::Local<v8::Object> obj, std::string key, const char* value)
         {
             if (value == nullptr) {
@@ -105,7 +110,7 @@ namespace NodeLibcurl
         SetObjPropertyToNullOrValue(obj, "brotliVersion", versionInfo->brotli_version);
 #else
         SetObjPropertyToNullOrValue(obj, "brotliVersionNumber", 0);
-        SetObjPropertyToNullOrValue(obj, "brotliVersion", NULL);
+        SetObjPropertyToNullOrValue(obj, "brotliVersion", Nan::Null());
 #endif
 
         Nan::Set( target, Nan::New("CurlVersionInfo").ToLocalChecked(), obj );
