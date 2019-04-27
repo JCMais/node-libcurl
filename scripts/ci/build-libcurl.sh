@@ -64,7 +64,7 @@ if [ "$is_less_than_7_53_0" == "0" ]; then
 fi
 
 if [ ! -d $2/source/$1 ]; then
-  if [ "$is_less_than_7_54_0" == "0" ]; then
+  if [ "$is_less_than_7_54_0" == "1" ]; then
     echo "Using source tarball instead of release because this libcurl version does not have releases"
     $curr_dirname/download-and-unpack.sh \
       https://github.com/curl/curl/archive/curl-$version_with_dashes.tar.gz \
