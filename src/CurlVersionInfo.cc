@@ -100,8 +100,13 @@ namespace NodeLibcurl
         SetObjPropertyToNullOrValue(obj, "libidnVersion", versionInfo->libidn);
         SetObjPropertyToNullOrValue(obj, "iconvVersionNumber", versionInfo->iconv_ver_num);
         SetObjPropertyToNullOrValue(obj, "libsshVersion", versionInfo->libssh_version);
+#if NODE_LIBCURL_VER_GE( 7, 57, 0 )
         SetObjPropertyToNullOrValue(obj, "brotliVersionNumber", versionInfo->brotli_ver_num);
         SetObjPropertyToNullOrValue(obj, "brotliVersion", versionInfo->brotli_version);
+#else
+        SetObjPropertyToNullOrValue(obj, "brotliVersionNumber", 0);
+        SetObjPropertyToNullOrValue(obj, "brotliVersion", NULL);
+#endif
 
         Nan::Set( target, Nan::New("CurlVersionInfo").ToLocalChecked(), obj );
     }
