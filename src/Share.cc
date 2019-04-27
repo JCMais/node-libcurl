@@ -6,11 +6,8 @@
  */
 
 #include <iostream>
-#include <cstdlib>
-#include <cstring>
 
 #include "Share.h"
-#include "Curl.h"
 
 // 464 was allocated on Win64
 //  Value too small to bother letting v8 know about it
@@ -46,7 +43,7 @@ namespace NodeLibcurl {
         this->isOpen = false;
     }
 
-    NODE_LIBCURL_MODULE_INIT( Share::Initialize )
+    NAN_MODULE_INIT( Share::Initialize )
     {
         Nan::HandleScope scope;
 
@@ -64,7 +61,7 @@ namespace NodeLibcurl {
 
         Share::constructor.Reset( tmpl );
 
-        Nan::Set( exports, Nan::New( "Share" ).ToLocalChecked(), tmpl->GetFunction() );
+        Nan::Set( target, Nan::New( "Share" ).ToLocalChecked(), tmpl->GetFunction() );
     }
 
     NAN_METHOD( Share::New )

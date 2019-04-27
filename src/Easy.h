@@ -14,18 +14,11 @@
 
 #include <node.h>
 #include <nan.h>
-
 #include <curl/curl.h>
-
-#include "Curl.h"
-#include "CurlHttpPost.h"
-#include "macros.h"
-
-using Nan::ObjectWrap;
 
 namespace NodeLibcurl {
 
-    class Easy: public ObjectWrap {
+    class Easy: public Nan::ObjectWrap {
 
         class ToFree;
 
@@ -95,7 +88,7 @@ namespace NodeLibcurl {
         static uint32_t currentOpenedHandles;
 
         // export Easy to js
-        static NODE_LIBCURL_MODULE_INIT( Initialize );
+        static NAN_MODULE_INIT( Initialize );
 
         // js available methods
         static NAN_METHOD( New );

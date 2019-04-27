@@ -5,7 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 #include <iostream>
+
 #include "Multi.h"
+#include "Easy.h"
 
 //85233 was allocated on Win64
 #define MEMORY_PER_HANDLE 60000
@@ -153,15 +155,18 @@ namespace NodeLibcurl {
 
         Multi::CurlSocketContext *ctx = static_cast<Multi::CurlSocketContext*>( handle->data );
 
-        //Before version 7.20.0: If you receive CURLM_CALL_MULTI_PERFORM, this basically means that you should call curl_multi_socket_action again
-        // before you wait for more actions on libcurl's sockets.
-        // You don't have to do it immediately, but the return code means that libcurl
-        //  may have more data available to return or that there may be more data to send off before it is "satisfied".
-        do {
+        // Check comment on node_libcurl.cc
+        SETLOCALE_WRAPPER(
+            //Before version 7.20.0: If you receive CURLM_CALL_MULTI_PERFORM, this basically means that you should call curl_multi_socket_action again
+            // before you wait for more actions on libcurl's sockets.
+            // You don't have to do it immediately, but the return code means that libcurl
+            //  may have more data available to return or that there may be more data to send off before it is "satisfied".
+            do {
 
-            code = curl_multi_socket_action( ctx->multi->mh, ctx->sockfd, flags, &ctx->multi->runningHandles );
+                code = curl_multi_socket_action( ctx->multi->mh, ctx->sockfd, flags, &ctx->multi->runningHandles );
 
-        } while ( code == CURLM_CALL_MULTI_PERFORM );
+            } while ( code == CURLM_CALL_MULTI_PERFORM );
+        );
 
         if ( code != CURLM_OK ) {
 
@@ -181,7 +186,10 @@ namespace NodeLibcurl {
     {
         Multi *obj = static_cast<Multi*>( timer->data );
 
-        CURLMcode code = curl_multi_socket_action( obj->mh, CURL_SOCKET_TIMEOUT, 0, &obj->runningHandles );
+        // Check comment on node_libcurl.cc
+        SETLOCALE_WRAPPER(
+            CURLMcode code = curl_multi_socket_action( obj->mh, CURL_SOCKET_TIMEOUT, 0, &obj->runningHandles );
+        );
 
         if ( code != CURLM_OK ) {
 
@@ -298,7 +306,7 @@ namespace NodeLibcurl {
     }
 
     // Add Curl constructor to the module exports
-    NODE_LIBCURL_MODULE_INIT( Multi::Initialize )
+    NAN_MODULE_INIT( Multi::Initialize )
     {
         Nan::HandleScope scope;
 
@@ -320,7 +328,7 @@ namespace NodeLibcurl {
 
         Multi::constructor.Reset( tmpl );
 
-        Nan::Set( exports, Nan::New( "Multi" ).ToLocalChecked(), tmpl->GetFunction() );
+        Nan::Set( target, Nan::New( "Multi" ).ToLocalChecked(), tmpl->GetFunction() );
     }
 
     NAN_METHOD( Multi::New )
@@ -470,8 +478,10 @@ namespace NodeLibcurl {
                 Nan::ThrowError( "Cannot add an Easy handle that is closed." );
                 return;
             }
-
-            CURLMcode code = curl_multi_add_handle( obj->mh, easy->ch );
+            // Check comment on node_libcurl.cc
+            SETLOCALE_WRAPPER(
+                CURLMcode code = curl_multi_add_handle( obj->mh, easy->ch );
+            );
 
             if ( code != CURLM_OK ) {
 

@@ -17,13 +17,10 @@
 #include "macros.h"
 #include "make_unique.h"
 #include "Curl.h"
-#include "Easy.h"
-
-using Nan::ObjectWrap;
 
 namespace NodeLibcurl {
 
-    class Multi: public ObjectWrap {
+    class Multi: public Nan::ObjectWrap {
 
         // instance methods
         Multi();
@@ -64,7 +61,7 @@ namespace NodeLibcurl {
         static Nan::Persistent<v8::FunctionTemplate> constructor;
 
         // export Multi to js
-        static NODE_LIBCURL_MODULE_INIT( Initialize );
+        static NAN_MODULE_INIT( Initialize );
 
         // js available Methods
         static NAN_METHOD( New );

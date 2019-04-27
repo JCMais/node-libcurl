@@ -8,22 +8,14 @@
 #ifndef NODELIBCURL_SHARE_H
 #define NODELIBCURL_SHARE_H
 
-#include <string>
-#include <unordered_map>
-
 #include <node.h>
 #include <nan.h>
 
 #include <curl/curl.h>
 
-#include "Curl.h"
-#include "macros.h"
-
-using Nan::ObjectWrap;
-
 namespace NodeLibcurl {
 
-    class Share: public ObjectWrap {
+    class Share: public Nan::ObjectWrap {
         
         Share();
 
@@ -45,7 +37,7 @@ namespace NodeLibcurl {
         bool isOpen;
 
         // export Easy to js
-        static NODE_LIBCURL_MODULE_INIT( Initialize );
+        static NAN_MODULE_INIT( Initialize );
 
         // js available methods
         static NAN_METHOD( New );

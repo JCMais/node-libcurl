@@ -12,8 +12,8 @@
 #include <cstring>
 #include <cstdlib>
 
+#include "CurlHttpPost.h"
 #include "Easy.h"
-
 
 namespace NodeLibcurl {
 
@@ -665,7 +665,7 @@ namespace NodeLibcurl {
     }
 
     // Add Curl constructor to the module exports
-    NODE_LIBCURL_MODULE_INIT( Initialize )
+    NAN_MODULE_INIT( Initialize )
     {
         Nan::HandleScope scope;
 
@@ -701,7 +701,6 @@ namespace NodeLibcurl {
         // static members
         Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "option" ).ToLocalChecked(), optionsObj, attributes );
         Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "info" ).ToLocalChecked(), infosObj, attributes );
-
         Nan::DefineOwnProperty( obj, Nan::New<v8::String>( "multi" ).ToLocalChecked(), multiObj, attributes );
 
         Nan::SetMethod( obj, "globalInit", GlobalInit );
@@ -710,7 +709,7 @@ namespace NodeLibcurl {
         Nan::SetMethod( obj, "getCount",   GetCount );
         Nan::SetAccessor( obj, Nan::New( "VERSION_NUM" ).ToLocalChecked(), GetterVersionNum, 0, v8::Local<v8::Value>(), v8::DEFAULT, attributes );
 
-        Nan::Set( exports, Nan::New( "Curl" ).ToLocalChecked(), obj );
+        Nan::Set( target, Nan::New( "Curl" ).ToLocalChecked(), obj );
     }
 
     int32_t IsInsideCurlConstantStruct( const std::vector<CurlConstant> &curlConstants, const v8::Local<v8::Value> &searchFor )

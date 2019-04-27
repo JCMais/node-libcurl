@@ -13,6 +13,8 @@
 #include <sstream>
 
 #include "Easy.h"
+#include "Curl.h"
+#include "CurlHttpPost.h"
 #include "Share.h"
 
 #include "make_unique.h"
@@ -899,7 +901,7 @@ namespace NodeLibcurl {
         return returnValue;
     }
 
-    NODE_LIBCURL_MODULE_INIT( Easy::Initialize )
+    NAN_MODULE_INIT( Easy::Initialize )
     {
         Nan::HandleScope scope;
 
@@ -934,7 +936,7 @@ namespace NodeLibcurl {
         Easy::onDataCbSymbol.Reset(   Nan::New( "onData" ).ToLocalChecked() );
         Easy::onHeaderCbSymbol.Reset( Nan::New( "onHeader" ).ToLocalChecked() );
 
-        Nan::Set( exports, Nan::New( "Easy" ).ToLocalChecked(), tmpl->GetFunction() );
+        Nan::Set( target, Nan::New( "Easy" ).ToLocalChecked(), tmpl->GetFunction() );
     }
 
     NAN_METHOD( Easy::New )
@@ -1729,7 +1731,9 @@ namespace NodeLibcurl {
             return;
         }
 
-        CURLcode code = curl_easy_perform( obj->ch );
+        SETLOCALE_WRAPPER(
+            CURLcode code = curl_easy_perform( obj->ch );
+        );
 
         v8::Local<v8::Integer> ret = Nan::New<v8::Integer>( static_cast<int32_t>( code ) );
 
