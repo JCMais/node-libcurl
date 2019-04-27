@@ -10,6 +10,7 @@
     'curl_libraries%': '',
     'curl_static_build%': 'false',
     'curl_config_bin%': '<(module_root_dir)/tools/curl-config.js',
+    'node_libcurl_no_setlocale%': 'false',
   },
   'targets': [
     {
@@ -21,12 +22,18 @@
         'src/Share.cc',
         'src/Multi.cc',
         'src/Curl.cc',
-        'src/CurlHttpPost.cc'
+        'src/CurlHttpPost.cc',
+        'src/CurlVersionInfo.cc',
       ],
       'include_dirs' : [
         "<!(node -e \"require('nan')\")",
       ],
       'conditions': [
+        ['node_libcurl_no_setlocale=="true"', {
+          'defines' : [
+            'NODE_LIBCURL_NO_SETLOCALE'
+          ]
+        }],
         ['curl_include_dirs!=""', {
           'include_dirs': ['<@(curl_include_dirs)']
         }],
