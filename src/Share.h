@@ -8,42 +8,39 @@
 #ifndef NODELIBCURL_SHARE_H
 #define NODELIBCURL_SHARE_H
 
-#include <node.h>
-#include <nan.h>
-
 #include <curl/curl.h>
+#include <nan.h>
+#include <node.h>
 
 namespace NodeLibcurl {
 
-    class Share: public Nan::ObjectWrap {
-        
-        Share();
+class Share : public Nan::ObjectWrap {
+  Share();
 
-        Share( const Share &that );
-        Share& operator=( const Share &that );
+  Share(const Share& that);
+  Share& operator=(const Share& that);
 
-        ~Share();
+  ~Share();
 
-        // instance methods
-        void Dispose();
+  // instance methods
+  void Dispose();
 
-    public:
+ public:
+  // js object constructor template
+  static Nan::Persistent<v8::FunctionTemplate> constructor;
 
-        // js object constructor template
-        static Nan::Persistent<v8::FunctionTemplate> constructor;
+  // members
+  CURLSH* sh;
+  bool isOpen;
 
-        // members
-        CURLSH *sh;
-        bool isOpen;
+  // export Easy to js
+  static NAN_MODULE_INIT(Initialize);
 
-        // export Easy to js
-        static NAN_MODULE_INIT( Initialize );
-
-        // js available methods
-        static NAN_METHOD( New );
-        static NAN_METHOD( SetOpt );
-        static NAN_METHOD( Close );
-        static NAN_METHOD( StrError );
-    };
-}
+  // js available methods
+  static NAN_METHOD(New);
+  static NAN_METHOD(SetOpt);
+  static NAN_METHOD(Close);
+  static NAN_METHOD(StrError);
+};
+}  // namespace NodeLibcurl
 #endif

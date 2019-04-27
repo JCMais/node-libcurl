@@ -7,38 +7,36 @@
 #ifndef NODELIBCURL_CURLVERSIONINFO_H
 #define NODELIBCURL_CURLVERSIONINFO_H
 
-#include <node.h>
-#include <nan.h>
-#include <curl/curl.h>
-
 #include "Curl.h"
+
+#include <curl/curl.h>
+#include <nan.h>
+#include <node.h>
 
 namespace NodeLibcurl {
 
-    class CurlVersionInfo {
-        // instance methods
-        CurlVersionInfo();
-        ~CurlVersionInfo();
+class CurlVersionInfo {
+  // instance methods
+  CurlVersionInfo();
+  ~CurlVersionInfo();
 
-        CurlVersionInfo( const CurlVersionInfo &that );
-        CurlVersionInfo& operator=( const CurlVersionInfo &that );
+  CurlVersionInfo(const CurlVersionInfo& that);
+  CurlVersionInfo& operator=(const CurlVersionInfo& that);
 
-        struct feature
-        {
-            const char *name;
-            int bitmask;
-        };
+  struct feature {
+    const char* name;
+    int bitmask;
+  };
 
-        static const std::vector<feature> features;
+  static const std::vector<feature> features;
 
-        static const curl_version_info_data *versionInfo;
+  static const curl_version_info_data* versionInfo;
 
-    public:
+ public:
+  static NAN_MODULE_INIT(Initialize);
 
-        static NAN_MODULE_INIT( Initialize );
-
-        static NAN_GETTER( GetterProtocols );
-        static NAN_GETTER( GetterFeatures );
-    };
-}
+  static NAN_GETTER(GetterProtocols);
+  static NAN_GETTER(GetterFeatures);
+};
+}  // namespace NodeLibcurl
 #endif
