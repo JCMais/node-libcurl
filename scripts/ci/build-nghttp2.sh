@@ -26,22 +26,23 @@ else
   make distclean || true;
 fi
 
+CFLAGS=${CFLAGS:-}
 
 # Debug
-# ./configure \
+# CFLAGS="$CFLAGS -fPIC" ./configure \
 #   --prefix=$build_folder \
 #   --enable-lib-only \
 #   --disable-shared \
 #   --enable-debug
 
 # Release - Static
-CFLAGS="-fPIC" ./configure \
+CFLAGS="$CFLAGS -fPIC" ./configure \
   --prefix=$build_folder \
   --enable-lib-only \
   --disable-shared
 
 # Release - Both
-# ./configure \
+# CFLAGS="$CFLAGS -fPIC" ./configure \
 #   --prefix=$build_folder \
 #   --enable-lib-only
 

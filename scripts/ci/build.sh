@@ -13,6 +13,36 @@ fi
 
 export FORCE_REBUILD=$FORCE_REBUILD
 
+if [ "$(uname)" == "Darwin" ]; then
+  export MACOSX_DEPLOYMENT_TARGET=10.12
+  export CFLAGS="-mmacosx-version-min=10.12"
+  export CCFLAGS="-mmacosx-version-min=10.12"
+  export CXXFLAGS="-mmacosx-version-min=10.12"
+  export LDFLAGS="-mmacosx-version-min=10.12"
+fi
+
+# Those two, libunistring and libidn2, are only necessary if building libcurl >= 7.53
+# However we are going to build then anyway, they are not that slow to build.
+
+###################
+# Build libunistring
+###################
+LIBUNISTRING_RELEASE=${LIBUNISTRING_RELEASE:-0.9.10}
+LIBUNISTRING_DEST_FOLDER=$HOME/deps/libunistring
+echo "Building libunistring v$LIBUNISTRING_RELEASE"
+./scripts/ci/build-libunistring.sh $LIBUNISTRING_RELEASE $LIBUNISTRING_DEST_FOLDER
+export LIBUNISTRING_BUILD_FOLDER=$LIBUNISTRING_DEST_FOLDER/build/$LIBUNISTRING_RELEASE
+ls -al $LIBUNISTRING_BUILD_FOLDER/lib
+
+###################
+# Build libidn2
+###################
+LIBIDN2_RELEASE=${LIBIDN2_RELEASE:-2.1.1}
+LIBIDN2_DEST_FOLDER=$HOME/deps/libidn2
+./scripts/ci/build-libidn2.sh $LIBIDN2_RELEASE $LIBIDN2_DEST_FOLDER
+export LIBIDN2_BUILD_FOLDER=$LIBIDN2_DEST_FOLDER/build/$LIBIDN2_RELEASE
+ls -al $LIBIDN2_BUILD_FOLDER/lib
+
 ###################
 # Build nghttp2
 ###################

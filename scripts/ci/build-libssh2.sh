@@ -33,6 +33,8 @@ else
   fi
 fi
 
+CFLAGS=${CFLAGS:-}
+
 # pthread below is only necessary for openssl 1.1.x from what I can tell
 #  however I see no harm on keeping in there for other versions
 
@@ -47,7 +49,7 @@ fi
 #   --prefix=$build_folder
 
 # Release - Static
-CFLAGS="-fPIC" LDFLAGS="-ldl -lpthread" ./configure \
+CFLAGS="$CFLAGS -fPIC" LDFLAGS="-ldl -lpthread" ./configure \
   --with-openssl \
   --with-libssl-prefix=$OPENSSL_BUILD_FOLDER \
   --with-libz \

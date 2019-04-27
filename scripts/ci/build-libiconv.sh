@@ -11,15 +11,15 @@ mkdir -p $2/source
 FORCE_REBUILD=${FORCE_REBUILD:-}
 
 # @TODO We are explicitly checking the static lib
-if [[ -f $build_folder/lib/libz.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUILD != "true" ]]; then
-  echo "Skipping rebuild of zlib because lib file already exists"
+if [[ -f $build_folder/lib/libiconv.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUILD != "true" ]]; then
+  echo "Skipping rebuild of libiconv because lib file already exists"
   exit 0
 fi
 
 if [ ! -d $2/source/$1 ]; then
-  $curr_dirname/download-and-unpack.sh https://github.com/madler/zlib/archive/v$1.tar.gz $2
+  $curr_dirname/download-and-unpack.sh https://ftp.gnu.org/gnu/libiconv/libiconv-$1.tar.gz $2
 
-  mv $2/zlib-$1 $2/source/$1
+  mv $2/libiconv-$1 $2/source/$1
   cd $2/source/$1
 else
   cd $2/source/$1
@@ -29,10 +29,12 @@ fi
 CFLAGS=${CFLAGS:-}
 
 # Debug
-# CFLAGS="$CFLAGS -fPIC" ./configure --prefix=$build_folder --static --debug
+# CFLAGS="$CFLAGS -fPIC" ./configure --prefix=$build_folder --disable-shared--debug
 
 # Release - Static
-CFLAGS="$CFLAGS -fPIC" ./configure --prefix=$build_folder --static
+CFLAGS="$CFLAGS -fPIC" ./configure \
+  --prefix=$build_folder \
+  --disable-shared
 
 # Release - Both
 # CFLAGS="$CFLAGS -fPIC" ./configure --prefix=$build_folder

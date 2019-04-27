@@ -32,24 +32,39 @@ version_with_dashes=$(echo $1 | sed 's/\./_/g')
 
 echo "Preparing release for libcurl $1"
 
+LIBS=${LIBS:-}
+LDFLAGS=${LDFLAGS:-}
+
 # libcurl only started having proper releases only with 7.54
 # Up to 7.53.1 only source tarballs were available, so the url
 #  needs to be changed to something like: https://github.com/curl/curl/archive/curl-7_53_1.tar.gz
 # And as it is just a source tarball, we must also create the ./configure script
-is_less_than_7_54_1=0
-(printf '%s\n%s' "$1" "7.53.1" | $sort_cmd -CV) || is_less_than_7_54_1=$?
+is_less_than_7_54_0=0
+(printf '%s\n%s' "7.54.0" "$1" | $sort_cmd -CV) || is_less_than_7_54_0=$?
 
-LIBS=""
+#   https://github.com/curl/curl/pull/1427#issuecomment-295783852
+# The detection for ldl was broken for libcurl < 7.54.1
+# pthread is only needed if using OpenSSL >= 1.1.0, however we are just addind it anyway as required
+# no harm done
+is_less_than_7_54_1=0
+(printf '%s\n%s' "7.54.1" "$1" | $sort_cmd -CV) || is_less_than_7_54_1=$?
+
 if [ "$is_less_than_7_54_1" == "0" ]; then
-  # https://github.com/curl/curl/pull/1427#issuecomment-295783852
-  # The detection was broken for libcurl < 7.54.1, which in fact matches this condition here!
-  # pthread is needed if using OpenSSL >= 1.1.0, however we are just addind it anyway as required
-  # no harm done
-  LIBS="-ldl -lpthread"
+  LIBS="$LIBS -ldl -lpthread"
+fi
+
+# --with-libidn2 was added on 7.53.0
+# So this script only adds libidn2 for versions >= that one.
+is_less_than_7_53_0=0
+(printf '%s\n%s' "7.53.0" "$1" | $sort_cmd -CV) || is_less_than_7_53_0=$?
+# @TODO Will need to add libiconv here if we start building it too
+if [ "$is_less_than_7_53_0" == "0" ]; then
+  LIBS="$LIBS -lunistring"
+  LDFLAGS="$LDFLAGS -L${LIBUNISTRING_BUILD_FOLDER}/lib"
 fi
 
 if [ ! -d $2/source/$1 ]; then
-  if [ "$is_less_than_7_54_1" == "0" ]; then
+  if [ "$is_less_than_7_54_0" == "0" ]; then
     echo "Using source tarball instead of release because this libcurl version does not have releases"
     $curr_dirname/download-and-unpack.sh \
       https://github.com/curl/curl/archive/curl-$version_with_dashes.tar.gz \
@@ -81,39 +96,48 @@ fi
 
 # Debug
 # ./configure \
+#     --with-libidn2=$LIBIDN2_BUILD_FOLDER \
+#     --with-libssh2=$LIBSSH2_BUILD_FOLDER \
 #     --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
 #     --with-ssl=$OPENSSL_BUILD_FOLDER \
-#     --with-libssh2=$LIBSSH2_BUILD_FOLDER \
 #     --with-zlib=$ZLIB_BUILD_FOLDER \
+#     --without-nss \
+#     --without-libpsl \
+#     --without-libmetalink \
+#     --without-librtmp \
+#     --without-libidn \
+#     --disable-ldap \
+#     --disable-ldaps \
 #     --disable-shared \
 #     --enable-debug \
-#     --prefix=$build_folder
+#     --prefix=$build_folder "${@:3}"
 
 # Release - Static
 # It may be needed to pass PKG_CONFIG_PATH here, it should point to:
 # openssl/build/$ver/lib/pkgconfig
 LIBS=$LIBS ./configure \
-    --with-ssl=$OPENSSL_BUILD_FOLDER \
-    --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
+    --with-libidn2=$LIBIDN2_BUILD_FOLDER \
     --with-libssh2=$LIBSSH2_BUILD_FOLDER \
+    --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
+    --with-ssl=$OPENSSL_BUILD_FOLDER \
     --with-zlib=$ZLIB_BUILD_FOLDER \
     --without-nss \
     --without-libpsl \
     --without-libmetalink \
     --without-librtmp \
     --without-libidn \
-    --without-libidn2 \
     --disable-ldap \
     --disable-ldaps \
     --disable-shared \
-    --prefix=$build_folder
+    --prefix=$build_folder "${@:3}"
     
 # Release - Both
 # ./configure \
+#   --with-libidn2=$LIBIDN2_BUILD_FOLDER \
+#   --with-libssh2=$LIBSSH2_BUILD_FOLDER \
 #   --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
 #   --with-ssl=$OPENSSL_BUILD_FOLDER \
-#   --with-libssh2=$LIBSSH2_BUILD_FOLDER \
 #   --with-zlib=$ZLIB_BUILD_FOLDER \
-#   --prefix=$build_folder
+#   --prefix=$build_folder "${@:3}"
 
 make && make install
