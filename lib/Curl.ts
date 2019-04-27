@@ -44,7 +44,7 @@ const bindingPath = binary.find(
 const bindings: NodeLibcurlNativeBinding = require(bindingPath)
 
 // tslint:disable-next-line
-const { Curl: _Curl } = bindings
+const { Curl: _Curl, CurlVersionInfo } = bindings
 
 if (
   !process.env.NODE_LIBCURL_DISABLE_GLOBAL_INIT_CALL ||
@@ -103,6 +103,13 @@ class Curl extends EventEmitter {
    *  and the version of the libraries that libcurl was built with.
    */
   static getVersion = _Curl.getVersion
+
+  /**
+   * Returns an object with a representation of the current libcurl version and their features/protocols.
+   *
+   * This is basically [curl_version_info()](https://curl.haxx.se/libcurl/c/curl_version_info.html)
+   */
+  static getVersionInfo = () => CurlVersionInfo
 
   /**
    * Returns the number of handles currently open in the internal multi handle being used.
