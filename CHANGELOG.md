@@ -58,6 +58,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Using `curl_socket_t` without libcurl version guard on Easy::GetInfo 
 ### Added
 - Add missing `CURLOPT_FTP_FILEMETHOD` (#148)
+- Add `Curl.getVersionInfo()` which returns an object that represents the struct returned from `curl_version_info()`
+  See their type definition for details: [`./lib/types/CurlVersionInfoNativeBinding.ts`](./lib/types/CurlVersionInfoNativeBinding.ts)
 - Errors thrown inside callbacks are correctly caught / passed forward (if using multi interface)
 - Added **experimental** `curl.<http-verb>()` async api  
   This API can change between minor releases.

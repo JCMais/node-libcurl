@@ -18,6 +18,20 @@ The addon lib code is written in Typescript, while the addon itself is written i
 
 Folders [`./scripts`](./scripts) and [`./tools`](./tools) contain scripts in Javascript, those are used mostly during installation and on CI.
 
+### C/C++
+#### Code Style
+C/C++ code is written following Google style guide (with some minor changes), and [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html) can/should be used to automatically format the code. There is already a `.clang-format` on the repository.
+
+#### Linting
+`cpplint` is used to lint C/C++ code
+
+### Typescript / Javascript
+#### Code Style
+TS/JS code should be formatted using prettier
+
+#### Linting
+`ts-lint` is used to lint TS code, while JS code is using `eslint`.
+
 ### Setup
 
 If on Windows, first you will need to grab the deps:
