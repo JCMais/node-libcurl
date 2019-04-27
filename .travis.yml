@@ -25,9 +25,6 @@ matrix:
 env:
   global:
     - GCC_VERSION=4.8
-    - DEBUG=node-libcurl
-    - LIBSSH2_RELEASE=1.8.2
-    - MACOSX_DEPLOYMENT_TARGET=10.12
     - secure: d64E8XbVGHuQ0kls1oVUF1y6pnj3iqZB34roKBHAFTyWBXReC1FWLb+qEShCJicUDkeK2At7vQUz7ohMn2mL/hVXiRbuSaYuDKFx8iDeei9mTgE+iy258mSovnNvXfG72EP5+LB+UOhgmTGe0qyTALOQ6ceCgjdscul3IGWE8lw=
   matrix:
     - LIBCURL_RELEASE=LATEST
@@ -53,10 +50,6 @@ before_install:
       export CXX="g++-${GCC_VERSION}";
       export LINK="gcc-${GCC_VERSION}";
       export LINKXX="g++-${GCC_VERSION}";
-    elif [[ $TRAVIS_OS_NAME == "osx" ]]; then
-      export CCFLAGS="-mmacosx-version-min=10.12";
-      export CXXFLAGS="-mmacosx-version-min=10.12";
-      export LDFLAGS="-mmacosx-version-min=10.12";
     fi
   - export PATH=$HOME/bin:$PATH
   - yarn --version

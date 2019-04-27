@@ -16,6 +16,17 @@ orbs:
             type: string
           e:
             type: executor
+          libcurl-version:
+            type: string
+          libidn2-version:
+            type: string
+            default: "2.1.1"
+          libssh2-version:
+            type: string
+            default: "1.8.2"
+          libunistring-version:
+            type: string
+            default: "0.9.10"
           nghttp2-version:
             type: string
           openssl-version:
@@ -23,11 +34,6 @@ orbs:
           zlib-version:
             type: string
             default: "1.2.11"
-          libssh2-version:
-            type: string
-            default: "1.8.2"
-          libcurl-version:
-            type: string
         executor: << parameters.e >>
         steps:
           - checkout
@@ -35,15 +41,17 @@ orbs:
           - run:
               name: Setup Environment Variables
               command: |
+                echo 'export LIBCURL_RELEASE="<< parameters.libcurl-version >>"' >> $BASH_ENV
+                echo 'export LIBIDN2_RELEASE="<< parameters.libidn2-version >>"' >> $BASH_ENV
+                echo 'export LIBSSH2_RELEASE="<< parameters.libssh2-version >>"' >> $BASH_ENV
+                echo 'export LIBUNISTRING_RELEASE="<< parameters.libunistring-version >>"' >> $BASH_ENV
                 echo 'export NGHTTP2_RELEASE="<< parameters.nghttp2-version >>"' >> $BASH_ENV
                 echo 'export OPENSSL_RELEASE="<< parameters.openssl-version >>"' >> $BASH_ENV
                 echo 'export ZLIB_RELEASE="<< parameters.zlib-version >>"' >> $BASH_ENV
-                echo 'export LIBSSH2_RELEASE="<< parameters.libssh2-version >>"' >> $BASH_ENV
-                echo 'export LIBCURL_RELEASE="<< parameters.libcurl-version >>"' >> $BASH_ENV
           ####
           # Restore caches
           ###
-          - run: echo "$NGHTTP2_RELEASE - $OPENSSL_RELEASE - $ZLIB_RELEASE - $LIBSSH2_RELEASE - $LIBCURL_RELEASE" > _libs_versions
+          - run: echo "$LIBCURL_RELEASE - $LIBIDN2_RELEASE - $LIBSSH2_RELEASE - $LIBUNISTRING_RELEASE - $NGHTTP2_RELEASE - $OPENSSL_RELEASE - $ZLIB_RELEASE" > _libs_versions
           - restore_cache:
               key: v1-node<<parameters.node-version>>-deps-libs-{{ checksum "_libs_versions" }}
           ####
@@ -56,11 +64,13 @@ orbs:
           - save_cache:
               key: v1-node<<parameters.node-version>>-deps-libs-{{ checksum "_libs_versions" }}
               paths:
+                - ~/deps/libcurl/build/<< parameters.libcurl-version >>
+                - ~/deps/libssh2/build/<< parameters.libssh2-version >>
+                - ~/deps/libidn2/build/<< parameters.libidn2-version >>
+                - ~/deps/libunistring/build/<< parameters.libunistring-version >>
                 - ~/deps/nghttp2/build/<< parameters.nghttp2-version >>
                 - ~/deps/openssl/build/<< parameters.openssl-version >>
                 - ~/deps/zlib/build/<< parameters.zlib-version >>
-                - ~/deps/libssh2/build/<< parameters.libssh2-version >>
-                - ~/deps/libcurl/build/<< parameters.libcurl-version >>
 
 # Great docs
 # https://circleci.com/docs/2.0/reusing-config/#getting-started-with-config-reuse
