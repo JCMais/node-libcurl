@@ -1,0 +1,21 @@
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+# We'll use defaults from the Google style
+BasedOnStyle: Google
+
+ColumnLimit: 100
+
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+# or Merge would be better?
+IncludeBlocks: Regroup
+IncludeCategories:
+- Regex: '^\"'
+  Priority: 1000
+- Regex: '^<(node|nan|curl/)'
+  Priority: 2000
+- Regex: '^<.*/.*'
+  Priority: 4000
+- Regex: '^<[^/]*>'
+  Priority: 5000
