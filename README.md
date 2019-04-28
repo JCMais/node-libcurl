@@ -37,6 +37,7 @@ _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-
     - [Missing Packages](#missing-packages)
   - [Building on Linux](#building-on-linux)
   - [Building on macOS](#building-on-macos)
+    - [Xcode >= 10 | macOS Mojave](#xcode--10--macos-mojave)
   - [Building on Windows](#building-on-windows)
   - [nw.js (aka node-webkit)](#nwjs-aka-node-webkit)
   - [electron (aka atom-shell)](#electron-aka-atom-shell)
@@ -184,7 +185,37 @@ In case you want some examples check the CI [`.travis.yml`](./.travis.yml) file 
 
 On macOS you must have:
 - macOS >= 10.12 (Sierra)
-- xcode >= 7
+- Xcode Command Line Tools
+
+You can check if you have Xcode Command Line Tools be running:
+```sh
+xcode-select -p
+```
+
+It should return their path, in case it returns nothing, you must install it by running:
+```sh
+xcode-select --install
+```
+
+#### Xcode >= 10 | macOS Mojave
+In case you have errors installing the addon from source, and you are using macOS Mojave, check if the error you are receiving is the following one:
+```
+  CXX(target) Release/obj.target/node_libcurl/src/node_libcurl.o
+  clang: error: no such file or directory: '/usr/include'
+```
+
+If that is the case, it's because newer versions of the Command Line Tools do not add the `/usr/include` folder by default. Check [Xcode 10 release notes](https://developer.apple.com/documentation/xcode_release_notes/xcode_10_release_notes#3035624) for details.
+
+To fix this you need to install the separated package for the headers file:
+```
+open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg
+```
+To ignore the UI and install directly from the command line, use:
+```
+sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
+```
+
+After that you can try to install `node-libcurl` again.
 
 ### Building on Windows
 
