@@ -39,7 +39,7 @@
 #define NODE_LIBCURL_VER_GE(MAJ, MIN, PAT) \
   (LIBCURL_VERSION_NUM >= NODE_LIBCURL_MAKE_VERSION(MAJ, MIN, PAT))
 
-#if defined(NODE_LIBCURL_NO_SETLOCALE) && !defined(_WIN32)
+#if !defined(NODE_LIBCURL_NO_SETLOCALE) && !defined(_WIN32)
 #define SETLOCALE_WRAPPER(code)                         \
   std::string localeOriginal = setlocale(LC_ALL, NULL); \
   bool hasLocaleChanged = false;                        \

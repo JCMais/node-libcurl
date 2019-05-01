@@ -21,7 +21,14 @@ if [ "$(uname)" == "Darwin" ]; then
   export LDFLAGS="-mmacosx-version-min=10.12"
 fi
 
-# Those two, libunistring and libidn2, are only necessary if building libcurl >= 7.53
+HAS_GSS_API=${HAS_GSS_API:-1}
+# can be heimdal or kerberos
+# heimdal is the default because the generated addon is smaller
+# addon built with heimdal ~= 2,20 mb
+# addon built with kerberos ~= 3,73 mb
+GSS_LIBRARY=${GSS_LIBRARY:-heimdal}
+
+# The following two, libunistring and libidn2, are only necessary if building libcurl >= 7.53
 # However we are going to build then anyway, they are not that slow to build.
 
 ###################
@@ -62,23 +69,64 @@ OPENSSL_RELEASE=${OPENSSL_RELEASE:-$(node -e "console.log(process.versions.opens
 OPENSSL_DEST_FOLDER=$HOME/deps/openssl
 
 # We must pass KERNEL_BITS=64 on macOS to make sure a x86_64 lib is built, the default is to build an i386 one
-# if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-if [[ "$OSTYPE" == "darwin"* ]]; then
+if [ "$(uname)" == "Darwin" ]; then
   export KERNEL_BITS=64
 fi
 # no-async is required on alpine
-params=()
+openssl_params=()
 if [[ -f /etc/alpine-release ]]; then
-    params+=(no-async)
+    openssl_params+=(no-async)
 fi
 echo "Building openssl v$OPENSSL_RELEASE"
 # Weird concatenation of the array with itself is needed
 #  because on bash <= 4, using [@] to access an array with 0 elements
 #  gives an error with set -o pipefail
-./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER ${params+"${params[@]}"}
+./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER ${openssl_params+"${openssl_params[@]}"}
 export OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build/$OPENSSL_RELEASE
 ls -al $OPENSSL_BUILD_FOLDER/lib
 unset KERNEL_BITS
+
+###################
+# Build GSS API Lib
+###################
+
+if [ "$HAS_GSS_API" == "1" ]; then
+
+  if [ "$GSS_LIBRARY" == "kerberos" ]; then
+
+    ###################
+    # Build MIT Kerberos
+    ###################
+    KERBEROS_RELEASE=${KERBEROS_RELEASE:-1.17}
+    KERBEROS_DEST_FOLDER=$HOME/deps/kerberos
+    echo "Building kerberos v$KERBEROS_RELEASE"
+    ./scripts/ci/build-kerberos.sh $KERBEROS_RELEASE $KERBEROS_DEST_FOLDER
+    export KERBEROS_BUILD_FOLDER=$KERBEROS_DEST_FOLDER/build/$KERBEROS_RELEASE
+    ls -al $KERBEROS_BUILD_FOLDER/lib
+
+  elif [ "$GSS_LIBRARY" == "heimdal" ]; then
+
+    ###################
+    # Build ncurses (dep of heimdal)
+    ###################
+    NCURSES_RELEASE=${NCURSES_RELEASE:-6.1}
+    NCURSES_DEST_FOLDER=$HOME/deps/ncurses
+    echo "Building ncurses v$NCURSES_RELEASE"
+    ./scripts/ci/build-ncurses.sh $NCURSES_RELEASE $NCURSES_DEST_FOLDER
+    export NCURSES_BUILD_FOLDER=$NCURSES_DEST_FOLDER/build/$NCURSES_RELEASE
+    ls -al $NCURSES_BUILD_FOLDER/lib
+
+    ###################
+    # Build heimdal
+    ###################
+    HEIMDAL_RELEASE=${HEIMDAL_RELEASE:-7.5.0}
+    HEIMDAL_DEST_FOLDER=$HOME/deps/heimdal
+    echo "Building heimdal v$HEIMDAL_RELEASE"
+    ./scripts/ci/build-heimdal.sh $HEIMDAL_RELEASE $HEIMDAL_DEST_FOLDER
+    export HEIMDAL_BUILD_FOLDER=$HEIMDAL_DEST_FOLDER/build/$HEIMDAL_RELEASE
+    ls -al $HEIMDAL_BUILD_FOLDER/lib
+  fi
+fi
 
 ###################
 # Build zlib
@@ -100,6 +148,16 @@ echo "Building libssh2 v$LIBSSH2_RELEASE"
 ./scripts/ci/build-libssh2.sh $LIBSSH2_RELEASE $LIBSSH2_DEST_FOLDER
 export LIBSSH2_BUILD_FOLDER=$LIBSSH2_DEST_FOLDER/build/$LIBSSH2_RELEASE
 ls -al $LIBSSH2_BUILD_FOLDER/lib
+
+###################
+# Build openldap
+###################
+OPENLDAP_RELEASE=${OPENLDAP_RELEASE:-2.4.47}
+OPENLDAP_DEST_FOLDER=$HOME/deps/openldap
+echo "Building openldap v$OPENLDAP_RELEASE"
+./scripts/ci/build-openldap.sh $OPENLDAP_RELEASE $OPENLDAP_DEST_FOLDER
+export OPENLDAP_BUILD_FOLDER=$OPENLDAP_DEST_FOLDER/build/$OPENLDAP_RELEASE
+ls -al $OPENLDAP_BUILD_FOLDER/lib
 
 ###################
 # Build libcurl
@@ -136,7 +194,7 @@ npm_config_build_from_source="true" npm_config_curl_config_bin="$LIBCURL_DEST_FO
 
 # Print addon deps for debugging
 # if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-if [[ "$OSTYPE" == "darwin"* ]]; then
+if [ "$(uname)" == "Darwin" ]; then
   otool -D ./lib/binding/node_libcurl.node || true
 else
   cat ./build/node_libcurl.target.mk || true

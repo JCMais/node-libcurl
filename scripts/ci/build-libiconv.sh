@@ -1,4 +1,5 @@
 #!/bin/bash
+# libiconv could be needed to build libunistring
 # <release> <dest_folder>
 set -euo pipefail
 

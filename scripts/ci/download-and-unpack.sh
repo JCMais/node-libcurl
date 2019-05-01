@@ -9,10 +9,6 @@ download_and_unpack() {
   wget -qO- $1 | tar xzf - -C $2
 }
 
-main() {
-  download_and_unpack "${@}"
-}
-
 if [ "${1}" != "--source-only" ]; then
-  main "${@}"
+  download_and_unpack "${@}"
 fi

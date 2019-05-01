@@ -33,9 +33,18 @@ fi
 #  no-asm -g3 -O0 -fno-omit-frame-pointer -fno-inline-functions "${@:3}"
 
 # Release - Static
-./config -fPIC --prefix=$build_folder --openssldir=$build_folder no-shared "${@:3}"
+./config \
+   -fPIC \
+   --prefix=$build_folder \
+   --openssldir=$build_folder \
+   no-shared "${@:3}"
 
 # Release - Both
-# ./config -fPIC --prefix=$build_folder --openssldir=$build_folder shared "${@:3}"
+# ./config \
+#    -Wl,-rpath=$build_folder/lib \
+#    -fPIC \
+#    --prefix=$build_folder \
+#    --openssldir=$build_folder \
+#    shared "${@:3}"
 
 make && make install_sw

@@ -32,8 +32,21 @@ version_with_dashes=$(echo $1 | sed 's/\./_/g')
 
 echo "Preparing release for libcurl $1"
 
+# Libs build folders
+LIBIDN2_BUILD_FOLDER=${LIBIDN2_BUILD_FOLDER:-}
+LIBUNISTRING_BUILD_FOLDER=${LIBUNISTRING_BUILD_FOLDER:-}
+KERBEROS_BUILD_FOLDER=${KERBEROS_BUILD_FOLDER:-}
+HEIMDAL_BUILD_FOLDER=${HEIMDAL_BUILD_FOLDER:-}
+OPENLDAP_BUILD_FOLDER=${OPENLDAP_BUILD_FOLDER:-}
+LIBSSH2_BUILD_FOLDER=${LIBSSH2_BUILD_FOLDER:-}
+NGHTTP2_BUILD_FOLDER=${NGHTTP2_BUILD_FOLDER:-}
+OPENSSL_BUILD_FOLDER=${OPENSSL_BUILD_FOLDER:-}
+ZLIB_BUILD_FOLDER=${ZLIB_BUILD_FOLDER:-}
+
 LIBS=${LIBS:-}
+CPPFLAGS=${CPPFLAGS:-}
 LDFLAGS=${LDFLAGS:-}
+libcurl_args=()
 
 # libcurl only started having proper releases only with 7.54
 # Up to 7.53.1 only source tarballs were available, so the url
@@ -41,27 +54,6 @@ LDFLAGS=${LDFLAGS:-}
 # And as it is just a source tarball, we must also create the ./configure script
 is_less_than_7_54_0=0
 (printf '%s\n%s' "7.54.0" "$1" | $sort_cmd -CV) || is_less_than_7_54_0=$?
-
-#   https://github.com/curl/curl/pull/1427#issuecomment-295783852
-# The detection for ldl was broken for libcurl < 7.54.1
-# pthread is only needed if using OpenSSL >= 1.1.0, however we are just addind it anyway as required
-# no harm done
-is_less_than_7_54_1=0
-(printf '%s\n%s' "7.54.1" "$1" | $sort_cmd -CV) || is_less_than_7_54_1=$?
-
-if [ "$is_less_than_7_54_1" == "0" ]; then
-  LIBS="$LIBS -ldl -lpthread"
-fi
-
-# --with-libidn2 was added on 7.53.0
-# So this script only adds libidn2 for versions >= that one.
-is_less_than_7_53_0=0
-(printf '%s\n%s' "7.53.0" "$1" | $sort_cmd -CV) || is_less_than_7_53_0=$?
-# @TODO Will need to add libiconv here if we start building it too
-if [ "$is_less_than_7_53_0" == "0" ]; then
-  LIBS="$LIBS -lunistring"
-  LDFLAGS="$LDFLAGS -L${LIBUNISTRING_BUILD_FOLDER}/lib"
-fi
 
 if [ ! -d $2/source/$1 ]; then
   if [ "$is_less_than_7_54_0" == "1" ]; then
@@ -94,50 +86,129 @@ else
   fi
 fi
 
+#   https://github.com/curl/curl/pull/1427#issuecomment-295783852
+# The detection for ldl was broken for libcurl < 7.54.1
+# pthread is only needed if using OpenSSL >= 1.1.0, however we are just addind it anyway as required
+# no harm done
+is_less_than_7_54_1=0
+(printf '%s\n%s' "7.54.1" "$1" | $sort_cmd -CV) || is_less_than_7_54_1=$?
+
+if [ "$is_less_than_7_54_1" == "0" ]; then
+  LIBS="$LIBS -ldl -lpthread"
+fi
+
+# --with-libidn2 was added on 7.53.0
+# So this script only adds libidn2 for versions >= that one.
+is_less_than_7_53_0=0
+(printf '%s\n%s' "7.53.0" "$1" | $sort_cmd -CV) || is_less_than_7_53_0=$?
+# @TODO Will need to add libiconv here if we start building it too
+if [ "$is_less_than_7_53_0" == "0" ]; then
+  if [[ ! -z $LIBIDN2_BUILD_FOLDER && ! -z $LIBUNISTRING_BUILD_FOLDER ]]; then
+    LIBS="$LIBS -lunistring"
+    LDFLAGS="$LDFLAGS -L$LIBUNISTRING_BUILD_FOLDER/lib"
+    libcurl_args+=("--with-libidn2=$LIBIDN2_BUILD_FOLDER")
+  else
+    libcurl_args+=("--without-libidn2")
+  fi
+fi
+
+# The rpath below are probably not needed, since we are only building static libs
+
+
+
+######
+# gss-api
+#####
+if [ ! -z "$KERBEROS_BUILD_FOLDER" ]; then
+
+  libcurl_args+=("--with-gssapi=$KERBEROS_BUILD_FOLDER")
+
+  # Those are needed for static build of kerberos
+  # libcurl only links against -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err
+  LIBS="-lkrb5support -lresolv $LIBS"
+elif [ ! -z "$HEIMDAL_BUILD_FOLDER" ]; then
+
+  libcurl_args+=("--with-gssapi=$HEIMDAL_BUILD_FOLDER")
+
+  # missing link against those
+  # `krb5-config --libs gssapi` (the tool libcurl uses to retrieve the deps) does not add them
+  LIBS="-lkrb5 -lhcrypto -lhx509 -lasn1 -lheimbase -lcom_err $LIBS"
+
+else
+  libcurl_args+=("--without-gssapi")
+fi
+
+######
+# ldap
+#####
+if [ ! -z "$OPENLDAP_BUILD_FOLDER" ]; then
+  CPPFLAGS="$CPPFLAGS -I$OPENLDAP_BUILD_FOLDER/include"
+  LDFLAGS="$LDFLAGS -L$OPENLDAP_BUILD_FOLDER/lib -Wl,-rpath,$OPENLDAP_BUILD_FOLDER/lib"
+
+  libcurl_args+=("--enable-ldap")
+  libcurl_args+=("--enable-ldaps")
+else
+  libcurl_args+=("--disable-ldap")
+  libcurl_args+=("--disable-ldaps")
+fi
+
+#####
+# libssh2
+####
+if [ ! -z "$LIBSSH2_BUILD_FOLDER" ]; then
+  libcurl_args+=("--with-libssh2=$LIBSSH2_BUILD_FOLDER")
+else
+  libcurl_args+=("--without-libssh2")
+fi
+
+#####
+# nghttp2
+####
+if [ ! -z "$NGHTTP2_BUILD_FOLDER" ]; then
+  libcurl_args+=("--with-nghttp2=$NGHTTP2_BUILD_FOLDER")
+else
+  libcurl_args+=("--without-nghttp2")
+fi
+
+#####
+# ssl
+####
+if [ ! -z "$OPENSSL_BUILD_FOLDER" ]; then
+  libcurl_args+=("--with-ssl=$OPENSSL_BUILD_FOLDER")
+else
+  libcurl_args+=("--without-ssl")
+fi
+
+#####
+# zlib
+####
+if [ ! -z "$ZLIB_BUILD_FOLDER" ]; then
+  libcurl_args+=("--with-zlib=$ZLIB_BUILD_FOLDER")
+else
+  libcurl_args+=("--without-zlib")
+fi
+
+export LIBS=$LIBS
+export CPPFLAGS=$CPPFLAGS
+export LDFLAGS=$LDFLAGS
+
 # Debug
-# LDFLAGS=$LDFLAGS LIBS=$LIBS ./configure \
-#     --with-libidn2=$LIBIDN2_BUILD_FOLDER \
-#     --with-libssh2=$LIBSSH2_BUILD_FOLDER \
-#     --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
-#     --with-ssl=$OPENSSL_BUILD_FOLDER \
-#     --with-zlib=$ZLIB_BUILD_FOLDER \
-#     --without-nss \
-#     --without-libpsl \
-#     --without-libmetalink \
-#     --without-librtmp \
-#     --without-libidn \
-#     --disable-ldap \
-#     --disable-ldaps \
-#     --disable-shared \
 #     --enable-debug \
-#     --prefix=$build_folder "${@:3}"
 
 # Release - Static
-# It may be needed to pass PKG_CONFIG_PATH here, it should point to:
-# openssl/build/$ver/lib/pkgconfig
-LDFLAGS=$LDFLAGS LIBS=$LIBS ./configure \
-    --with-libidn2=$LIBIDN2_BUILD_FOLDER \
-    --with-libssh2=$LIBSSH2_BUILD_FOLDER \
-    --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
-    --with-ssl=$OPENSSL_BUILD_FOLDER \
-    --with-zlib=$ZLIB_BUILD_FOLDER \
+./configure \
     --without-nss \
     --without-libpsl \
     --without-libmetalink \
     --without-librtmp \
     --without-libidn \
-    --disable-ldap \
-    --disable-ldaps \
+    --disable-manual \
     --disable-shared \
-    --prefix=$build_folder "${@:3}"
+    --prefix=$build_folder \
+    "${libcurl_args[@]}" \
+    "${@:3}"
     
 # Release - Both
-# LDFLAGS=$LDFLAGS LIBS=$LIBS ./configure \
-#   --with-libidn2=$LIBIDN2_BUILD_FOLDER \
-#   --with-libssh2=$LIBSSH2_BUILD_FOLDER \
-#   --with-nghttp2=$NGHTTP2_BUILD_FOLDER \
-#   --with-ssl=$OPENSSL_BUILD_FOLDER \
-#   --with-zlib=$ZLIB_BUILD_FOLDER \
-#   --prefix=$build_folder "${@:3}"
+
 
 make && make install

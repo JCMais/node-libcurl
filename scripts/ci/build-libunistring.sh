@@ -1,4 +1,5 @@
 #!/bin/bash
+# libunistring is needed to build libidn2
 # <release> <dest_folder>
 set -euo pipefail
 
