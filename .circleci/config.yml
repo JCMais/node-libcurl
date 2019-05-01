@@ -16,6 +16,9 @@ orbs:
             type: string
           e:
             type: executor
+          heimdal-version:
+            type: string
+            default: "7.5.0"
           libcurl-version:
             type: string
           libidn2-version:
@@ -29,6 +32,12 @@ orbs:
             default: "0.9.10"
           nghttp2-version:
             type: string
+            default: "6.1"
+          nghttp2-version:
+            type: string
+          openldap-version:
+            type: string
+            default: "2.4.47"
           openssl-version:
             type: string
           zlib-version:
@@ -41,17 +50,32 @@ orbs:
           - run:
               name: Setup Environment Variables
               command: |
+                echo 'export HEIMDAL_RELEASE="<< parameters.heimdal-version >>"' >> $BASH_ENV
                 echo 'export LIBCURL_RELEASE="<< parameters.libcurl-version >>"' >> $BASH_ENV
                 echo 'export LIBIDN2_RELEASE="<< parameters.libidn2-version >>"' >> $BASH_ENV
                 echo 'export LIBSSH2_RELEASE="<< parameters.libssh2-version >>"' >> $BASH_ENV
                 echo 'export LIBUNISTRING_RELEASE="<< parameters.libunistring-version >>"' >> $BASH_ENV
+                echo 'export NCURSES_RELEASE="<< parameters.ncurses-version >>"' >> $BASH_ENV
                 echo 'export NGHTTP2_RELEASE="<< parameters.nghttp2-version >>"' >> $BASH_ENV
+                echo 'export OPENLDAP_RELEASE="<< parameters.openldap-version >>"' >> $BASH_ENV
                 echo 'export OPENSSL_RELEASE="<< parameters.openssl-version >>"' >> $BASH_ENV
                 echo 'export ZLIB_RELEASE="<< parameters.zlib-version >>"' >> $BASH_ENV
           ####
           # Restore caches
           ###
-          - run: echo "$LIBCURL_RELEASE - $LIBIDN2_RELEASE - $LIBSSH2_RELEASE - $LIBUNISTRING_RELEASE - $NGHTTP2_RELEASE - $OPENSSL_RELEASE - $ZLIB_RELEASE" > _libs_versions
+          - run:
+              name: Create cache key file
+              command: |
+                echo "$HEIMDAL_RELEASE" >> _libs_versions
+                echo "$LIBCURL_RELEASE" >> _libs_versions
+                echo "$LIBIDN2_RELEASE" >> _libs_versions
+                echo "$LIBSSH2_RELEASE" >> _libs_versions
+                echo "$LIBUNISTRING_RELEASE" >> _libs_versions
+                echo "$NCURSES_RELEASE" >> _libs_versions
+                echo "$NGHTTP2_RELEASE" >> _libs_versions
+                echo "$OPENLDAP_RELEASE" >> _libs_versions
+                echo "$OPENSSL_RELEASE" >> _libs_versions
+                echo "$ZLIB_RELEASE" >> _libs_versions
           - restore_cache:
               key: v1-node<<parameters.node-version>>-deps-libs-{{ checksum "_libs_versions" }}
           ####
@@ -64,11 +88,14 @@ orbs:
           - save_cache:
               key: v1-node<<parameters.node-version>>-deps-libs-{{ checksum "_libs_versions" }}
               paths:
+                - ~/deps/heimdal/build/<< parameters.heimdal-version >>
                 - ~/deps/libcurl/build/<< parameters.libcurl-version >>
                 - ~/deps/libssh2/build/<< parameters.libssh2-version >>
                 - ~/deps/libidn2/build/<< parameters.libidn2-version >>
                 - ~/deps/libunistring/build/<< parameters.libunistring-version >>
+                - ~/deps/ncurses/build/<< parameters.ncurses-version >>
                 - ~/deps/nghttp2/build/<< parameters.nghttp2-version >>
+                - ~/deps/openldap/build/<< parameters.openldap-version >>
                 - ~/deps/openssl/build/<< parameters.openssl-version >>
                 - ~/deps/zlib/build/<< parameters.zlib-version >>
 
@@ -133,29 +160,29 @@ workflows:
           e:
             name: main
       ####
-      # Node 11
+      # Node 12
       ####
       - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-node-11-libcurl-latest
+          name: build-addon-node-12-libcurl-latest
           context: general
           filters:
             tags:
               only: /^v.*/
-          node-version: "11"
+          node-version: "12"
           libcurl-version: "7.64.1"
-          nghttp2-version: "1.37.0"
+          nghttp2-version: "1.38.0"
           openssl-version: "1.1.1b"
           e:
             name: main
       - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-node-11-libcurl-old
+          name: build-addon-node-12-libcurl-old
           context: general
           filters:
             tags:
               only: /^v.*/
-          node-version: "11"
+          node-version: "12"
           libcurl-version: "7.50.0"
-          nghttp2-version: "1.37.0"
+          nghttp2-version: "1.38.0"
           openssl-version: "1.1.1b"
           e:
             name: main
