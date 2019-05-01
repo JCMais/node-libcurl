@@ -30,7 +30,7 @@ orbs:
           libunistring-version:
             type: string
             default: "0.9.10"
-          nghttp2-version:
+          ncurses-version:
             type: string
             default: "6.1"
           nghttp2-version:
