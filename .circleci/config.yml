@@ -78,7 +78,7 @@ orbs:
                 echo "$ZLIB_RELEASE" >> _libs_versions
           - restore_cache:
               key: v1-node<<parameters.node-version>>-deps-libs-{{ checksum "_libs_versions" }}
-          - run: apk add ncurses texinfo flex bison
+          - run: apk add ncurses texinfo flex bison	build-base
           ####
           # Build
           ####
