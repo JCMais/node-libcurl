@@ -996,7 +996,7 @@ NAN_METHOD(Easy::SetOpt) {
 
         v8::Local<v8::Object> postData = v8::Local<v8::Object>::Cast(rows->Get(i));
 
-        const v8::Local<v8::Array> props = postData->GetPropertyNames();
+        const v8::Local<v8::Array> props = Nan::GetPropertyNames(postData).ToLocalChecked();
         const uint32_t postDataLength = props->Length();
 
         bool hasFile = false;
