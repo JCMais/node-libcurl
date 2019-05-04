@@ -38,6 +38,9 @@ export LDFLAGS="$LDFLAGS -L$NCURSES_BUILD_FOLDER/lib -Wl,-rpath,$NCURSES_BUILD_F
 
 # Debug
 
+# Probably needed for alpine:
+# --with-libedit=/usr \
+# --with-sqlite3=/usr \
 # Release - Static
 ./configure \
   --without-berkeley-db \

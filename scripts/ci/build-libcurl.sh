@@ -134,8 +134,7 @@ elif [ ! -z "$HEIMDAL_BUILD_FOLDER" ]; then
   # `krb5-config --libs gssapi` (the tool libcurl uses to retrieve the deps) does not add them
   CPPFLAGS="$CPPFLAGS -I$HEIMDAL_BUILD_FOLDER/include"
   LDFLAGS="$LDFLAGS -L$HEIMDAL_BUILD_FOLDER/lib -Wl,-rpath,$HEIMDAL_BUILD_FOLDER/lib"
-  LIBS="-lkrb5 -lhcrypto -lhx509 -lasn1 -lheimbase -lcom_err $LIBS"
-
+  LIBS="-lkrb5 -lhx509 -lasn1 -lhcrypto -lheimsqlite -lheimntlm -lheimbase -lroken -lwind -lcom_err $LIBS"
 else
   libcurl_args+=("--without-gssapi")
 fi
