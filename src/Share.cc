@@ -57,7 +57,7 @@ NAN_MODULE_INIT(Share::Initialize) {
 
   Share::constructor.Reset(tmpl);
 
-  Nan::Set(target, Nan::New("Share").ToLocalChecked(), tmpl->GetFunction());
+  Nan::Set(target, Nan::New("Share").ToLocalChecked(), Nan::GetFunction(tmpl).ToLocalChecked());
 }
 
 NAN_METHOD(Share::New) {

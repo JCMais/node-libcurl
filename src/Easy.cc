@@ -880,7 +880,7 @@ NAN_MODULE_INIT(Easy::Initialize) {
   Easy::onDataCbSymbol.Reset(Nan::New("onData").ToLocalChecked());
   Easy::onHeaderCbSymbol.Reset(Nan::New("onHeader").ToLocalChecked());
 
-  Nan::Set(target, Nan::New("Easy").ToLocalChecked(), tmpl->GetFunction());
+  Nan::Set(target, Nan::New("Easy").ToLocalChecked(), Nan::GetFunction(tmpl).ToLocalChecked());
 }
 
 NAN_METHOD(Easy::New) {
@@ -1657,7 +1657,7 @@ NAN_METHOD(Easy::DupHandle) {
   // create a new js object using this one as the argument for the constructor.
   const int argc = 1;
   v8::Local<v8::Value> argv[argc] = {info.This()};
-  v8::Local<v8::Function> cons = Nan::New(Easy::constructor)->GetFunction();
+  v8::Local<v8::Function> cons = Nan::GetFunction(Nan::New(Easy::constructor)).ToLocalChecked();
 
   v8::Local<v8::Object> newInstance = Nan::NewInstance(cons, argc, argv).ToLocalChecked();
 

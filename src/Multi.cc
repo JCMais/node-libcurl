@@ -125,13 +125,16 @@ int Multi::HandleTimeout(CURLM* multi,
                          void* userp) {
   Multi* obj = static_cast<Multi*>(userp);
 
-  uv_timer_stop(obj->timeout.get());
+  int uvStop = uv_timer_stop(obj->timeout.get());
 
-  if (timeoutMs > 0) {
-    uv_timer_start(obj->timeout.get(), Multi::OnTimeout, timeoutMs, 0);
-  } else {
-    // should we call one last time? (if timeoutMS == -1)
-    UV_CALL_TIMER_CB(Multi::OnTimeout, obj->timeout.get(), 0);
+  if (uvStop < 0) {
+    return uvStop;
+  }
+
+  // we should not call libcurl functions directly from this callback
+  //  see https://github.com/curl/curl/issues/3537
+  if (timeoutMs >= 0) {
+    return uv_timer_start(obj->timeout.get(), Multi::OnTimeout, timeoutMs, 0);
   }
 
   return 0;
@@ -317,7 +320,7 @@ NAN_MODULE_INIT(Multi::Initialize) {
 
   Multi::constructor.Reset(tmpl);
 
-  Nan::Set(target, Nan::New("Multi").ToLocalChecked(), tmpl->GetFunction());
+  Nan::Set(target, Nan::New("Multi").ToLocalChecked(), Nan::GetFunction(tmpl).ToLocalChecked());
 }
 
 NAN_METHOD(Multi::New) {
