@@ -36,11 +36,16 @@ export CPPFLAGS="$CPPFLAGS -I$NCURSES_BUILD_FOLDER/include"
 # rpath is probably not needed here, since we are building only static, but leaving it here for reference
 export LDFLAGS="$LDFLAGS -L$NCURSES_BUILD_FOLDER/lib -Wl,-rpath,$NCURSES_BUILD_FOLDER/lib"
 
+extra_params=()
+if [[ -f /etc/alpine-release ]]; then
+    extra_params+=(
+      "--with-libedit=/usr"
+      "--with-sqlite3=/usr"
+    )
+fi
+
 # Debug
 
-# Probably needed for alpine:
-# --with-libedit=/usr \
-# --with-sqlite3=/usr \
 # Release - Static
 ./configure \
   --without-berkeley-db \
@@ -52,7 +57,8 @@ export LDFLAGS="$LDFLAGS -L$NCURSES_BUILD_FOLDER/lib -Wl,-rpath,$NCURSES_BUILD_F
   --disable-otp \
   --disable-shared \
   --disable-heimdal-documentation \
-  --prefix=$build_folder
+  --prefix=$build_folder \
+  "${extra_params[@]}"
 
 # Release - Both 
 
