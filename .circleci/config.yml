@@ -19,9 +19,6 @@ orbs:
           brotli-version:
             type: string
             default: "1.0.7"
-          # heimdal-version:
-          #   type: string
-          #   default: "7.5.0"
           libcurl-version:
             type: string
           libidn2-version:
@@ -54,7 +51,6 @@ orbs:
               name: Setup Environment Variables
               command: |
                 echo 'export BROTLI_RELEASE="<< parameters.brotli-version >>"' >> $BASH_ENV
-                # echo 'export HEIMDAL_RELEASE="<< parameters.heimdal-version >>"' >> $BASH_ENV
                 echo 'export LIBCURL_RELEASE="<< parameters.libcurl-version >>"' >> $BASH_ENV
                 echo 'export LIBIDN2_RELEASE="<< parameters.libidn2-version >>"' >> $BASH_ENV
                 echo 'export LIBSSH2_RELEASE="<< parameters.libssh2-version >>"' >> $BASH_ENV
@@ -71,7 +67,6 @@ orbs:
               name: Create cache key file
               command: |
                 echo "$BROTLI_RELEASE" >> _libs_versions
-                # echo "$HEIMDAL_RELEASE" >> _libs_versions
                 echo "$LIBCURL_RELEASE" >> _libs_versions
                 echo "$LIBIDN2_RELEASE" >> _libs_versions
                 echo "$LIBSSH2_RELEASE" >> _libs_versions
@@ -95,7 +90,6 @@ orbs:
               key: v1-node<<parameters.node-version>>-deps-libs-{{ checksum "_libs_versions" }}
               paths:
                 - ~/deps/brotli/build/<< parameters.brotli-version >>
-                # - ~/deps/heimdal/build/<< parameters.heimdal-version >>
                 - ~/deps/libcurl/build/<< parameters.libcurl-version >>
                 - ~/deps/libssh2/build/<< parameters.libssh2-version >>
                 - ~/deps/libidn2/build/<< parameters.libidn2-version >>
