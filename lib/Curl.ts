@@ -112,6 +112,24 @@ class Curl extends EventEmitter {
   static getVersionInfo = () => CurlVersionInfo
 
   /**
+   * Returns a string that looks like the one returned by
+   * ```
+   * curl -V
+   * ```
+   */
+  static getVersionInfoString = () => {
+    const version = Curl.getVersion()
+    const protocols = CurlVersionInfo.protocols.join(', ')
+    const features = CurlVersionInfo.features.join(', ')
+
+    return [
+      `Version: ${version}`,
+      `Protocols: ${protocols}`,
+      `Features: ${features}`,
+    ].join('\n')
+  }
+
+  /**
    * Returns the number of handles currently open in the internal multi handle being used.
    */
   static getCount = multiHandle.getCount
