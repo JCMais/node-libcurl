@@ -118,7 +118,14 @@ The latest version of this package has prebuilt binaries (thanks to [node-pre-gy
 * Mac OS X 64 bits
 * Windows 32 and 64 bits
 
-Just running ``npm install node-libcurl`` should install a prebuilt binary and no compilation will be needed.
+Just installing via `yarn add node-libcurl` or `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed.
+
+The prebuilt binary is statically built with the following library versions, features and protocols:
+```
+Version: libcurl/7.64.1 OpenSSL/1.1.0j zlib/1.2.11 brotli/1.0.7 libidn2/2.1.1 libssh2/1.8.2 nghttp2/1.34.0
+Features: AsynchDNS, IDN, IPv6, Largefile, GSS-API, Kerberos, SPNEGO, NTLM, NTLM_WB, SSL, libz, brotli, TLS-SRP, HTTP2, UnixSockets, HTTPS-proxy
+Protocols: dict, file, ftp, ftps, gopher, http, https, imap, imaps, ldap, ldaps, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp
+```
 
 If there is no prebuilt binary available that matches your system, or if the installation fails, then you will need an environment capable of compilling Node.js addons, which means [python 2.7](https://www.python.org/download/releases/2.7) installed and an updated C++ compiler able to compile C++11.
 
@@ -136,9 +143,9 @@ npm_config_build_from_source=true yarn add node-libcurl
 
 > Those notes are not important when building on Windows
 
-The prebuilt binaries are statically linked with `libssh2`, `nghttp2`, `OpenSSL` and `zlib`.
+The prebuilt binaries are statically linked with `brotli`, `kerberos`, `libidn2`, `libssh2`, `openLDAP`, `OpenSSL` `nghttp2` and `zlib`.
 
-The `nghttp2`, `OpenSSL` and `zlib` versions **must** match the version Node.js uses, this is necessary to avoid any possible issues by mixing library symbols of different versions, since Node.js also exports some of the symbols of their deps.
+The `brotli`, `nghttp2`, `OpenSSL` and `zlib` versions **must** match the version Node.js uses, this is necessary to avoid any possible issues by mixing library symbols of different versions, since Node.js also exports some of the symbols of their deps.
 
 In case you are building the addon yourself with the libraries mentioned above, you must make sure their version is ABI compatible with the one Node.js uses, otherwise you are probably going to hit a Segmentation Fault.
 
@@ -163,7 +170,7 @@ And if you don't want to use `curl-config`, you can pass two extra variables to 
 
 #### Missing Packages
 
-The statically linked version currently does not have support for IDN, LDAP or RTMP.
+The statically linked version currently does not have support for `RTMP`, `Metalink`, `PSL` and `Alt-svc`.
 
 ### Building on Linux
 
