@@ -40,8 +40,28 @@ export LDFLAGS="$LDFLAGS -L$OPENSSL_BUILD_FOLDER/lib -Wl,-rpath,$OPENSSL_BUILD_F
 #  however I see no harm on keeping in there for other versions
 export LIBS="$LIBS -ldl -lpthread"
 
-# Debug
-# @TODO add
+# We cannot build Kerberos on macOS directly because of duplicated symbols in dbutil:
+# duplicate symbol _master_keyblock in:
+#     kdb5_util.o
+#     ../../lib/libkadm5srv_mit.a(server_kdb.o)
+# ld: 1 duplicate symbol for architecture x86_64
+# So we are going to first build dynamically and then after statically
+if [ "$(uname)" == "Darwin" ]; then
+  echo "on macOS: building shared version of Kerberos first"
+  ./configure \
+    --without-krb5-config \
+    --without-ldap \
+    --without-libedit \
+    --without-lmdb \
+    --without-system-verto \
+    --without-tcl \
+    --with-crypto-impl=openssl \
+    --with-pkinit-crypto-impl=openssl \
+    --with-tls-impl=openssl \
+    --enable-pkinit \
+    --prefix=$build_folder
+  make && make install
+fi
 
 # Release - Static
 ./configure \
@@ -59,7 +79,10 @@ export LIBS="$LIBS -ldl -lpthread"
   --enable-pkinit \
   --prefix=$build_folder
 
-# Release - Both
-# @TODO add
-
 make && make install
+
+# Remove created shared libs on macOS
+if [ "$(uname)" == "Darwin" ]; then
+  echo "removing shared libraries created solely to build the static one"
+  rm -rf $build_folder/lib/*.dylib
+fi

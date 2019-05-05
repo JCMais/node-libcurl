@@ -26,7 +26,7 @@ HAS_GSS_API=${HAS_GSS_API:-1}
 # heimdal is the default because the generated addon is smaller
 # addon built with heimdal ~= 2,20 mb
 # addon built with kerberos ~= 3,73 mb
-GSS_LIBRARY=${GSS_LIBRARY:-heimdal}
+GSS_LIBRARY=${GSS_LIBRARY:-kerberos}
 
 # The following two, libunistring and libidn2, are only necessary if building libcurl >= 7.53
 # However we are going to build then anyway, they are not that slow to build.
@@ -129,6 +129,20 @@ if [ "$HAS_GSS_API" == "1" ]; then
 fi
 
 ###################
+# Build brotli
+###################
+# Brotli version must match Node.js one
+# But brotli only started being shipped with Node 12
+BROTLI_NODEJS=$(node -e "console.log(process.versions.brotli || '')")
+BROTLI_DEFAULT_RELEASE=${BROTLI_NODEJS:-1.0.7}
+BROTLI_RELEASE=${BROTLI_RELEASE:-$BROTLI_DEFAULT_RELEASE}
+BROTLI_DEST_FOLDER=$HOME/deps/brotli
+echo "Building brotli v$BROTLI_RELEASE"
+./scripts/ci/build-brotli.sh $BROTLI_RELEASE $BROTLI_DEST_FOLDER
+export BROTLI_BUILD_FOLDER=$BROTLI_DEST_FOLDER/build/$BROTLI_RELEASE
+ls -al $BROTLI_BUILD_FOLDER/lib
+
+###################
 # Build zlib
 ###################
 # Zlib version must match Node.js one
@@ -170,7 +184,7 @@ if [[ $LIBCURL_RELEASE == "LATEST" ]]; then
 fi
 LIBCURL_DEST_FOLDER=$HOME/deps/libcurl
 echo "Building libcurl v$LIBCURL_RELEASE"
-./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER || (cat $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log && exit 1)
+./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER #|| (cat $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log && exit 1)
 export LIBCURL_BUILD_FOLDER=$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE
 ls -al $LIBCURL_BUILD_FOLDER/lib
 export PATH=$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin:$PATH
@@ -194,8 +208,9 @@ npm_config_build_from_source="true" npm_config_curl_config_bin="$LIBCURL_DEST_FO
 
 # Print addon deps for debugging
 # if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+ls -alh ./lib/binding/
 if [ "$(uname)" == "Darwin" ]; then
-  otool -D ./lib/binding/node_libcurl.node || true
+  otool -L ./lib/binding/node_libcurl.node || true
 else
   cat ./build/node_libcurl.target.mk || true
   readelf -d ./lib/binding/node_libcurl.node || true

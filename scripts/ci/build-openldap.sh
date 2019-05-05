@@ -43,6 +43,8 @@ export LIBS="$LIBS -ldl -lpthread"
 
 # Release - Static
 ./configure \
+  --without-cyrus-sasl \
+  --without-fetch \
   --with-tls=openssl \
   --with-pic=yes \
   --with-threads \

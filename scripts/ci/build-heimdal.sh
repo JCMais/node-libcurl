@@ -38,10 +38,9 @@ export LDFLAGS="$LDFLAGS -L$NCURSES_BUILD_FOLDER/lib -Wl,-rpath,$NCURSES_BUILD_F
 
 extra_params=()
 if [[ -f /etc/alpine-release ]]; then
-    extra_params+=(
-      "--with-libedit=/usr"
-      "--with-sqlite3=/usr"
-    )
+  extra_params+=(
+    "--with-libedit=/usr"
+  )
 fi
 
 # Debug
@@ -58,7 +57,7 @@ fi
   --disable-shared \
   --disable-heimdal-documentation \
   --prefix=$build_folder \
-  "${extra_params[@]}"
+  ${extra_params[@]+"${extra_params[@]}"}
 
 # Release - Both 
 
