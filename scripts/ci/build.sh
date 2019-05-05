@@ -21,7 +21,9 @@ if [ "$(uname)" == "Darwin" ]; then
   export LDFLAGS="-mmacosx-version-min=10.12"
 fi
 
-HAS_GSS_API=${HAS_GSS_API:-1}
+# Disabled by default
+# Reason for that can be found on the README.md
+HAS_GSS_API=${HAS_GSS_API:-0}
 # can be heimdal or kerberos
 # heimdal is the default because the generated addon is smaller
 # addon built with heimdal ~= 2,20 mb

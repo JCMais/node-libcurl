@@ -123,7 +123,7 @@ Just installing via `yarn add node-libcurl` or `npm install node-libcurl` should
 The prebuilt binary is statically built with the following library versions, features and protocols:
 ```
 Version: libcurl/7.64.1 OpenSSL/1.1.0j zlib/1.2.11 brotli/1.0.7 libidn2/2.1.1 libssh2/1.8.2 nghttp2/1.34.0
-Features: AsynchDNS, IDN, IPv6, Largefile, GSS-API, Kerberos, SPNEGO, NTLM, NTLM_WB, SSL, libz, brotli, TLS-SRP, HTTP2, UnixSockets, HTTPS-proxy
+Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, NTLM_WB, SSL, libz, brotli, TLS-SRP, HTTP2, UnixSockets, HTTPS-proxy
 Protocols: dict, file, ftp, ftps, gopher, http, https, imap, imaps, ldap, ldaps, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp
 ```
 
@@ -170,7 +170,11 @@ And if you don't want to use `curl-config`, you can pass two extra variables to 
 
 #### Missing Packages
 
-The statically linked version currently does not have support for `RTMP`, `Metalink`, `PSL` and `Alt-svc`.
+The statically linked version currently does not have support for `GSS-API`, `SPNEGO`, `KERBEROS`, `RTMP`, `Metalink`, `PSL` and `Alt-svc`.
+
+The scripts to build Kerberos exists on the `./scripts/ci` folder, but it was removed for two reasons:
+- If built with Heimdal, the addon becomes too big
+- If built with MIT Kerberos, the addon would be bound to their licensing terms.
 
 ### Building on Linux
 
