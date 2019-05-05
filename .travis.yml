@@ -1,8 +1,8 @@
 os:
   - linux
   - osx
-# macos version
-osx_image: xcode7.3
+# macos version - this is the current
+osx_image: xcode9.4
 # linux dist
 dist: trusty
 language: node_js
