@@ -4,13 +4,12 @@ executors:
   ubuntu:
     docker:
       - image: circleci/buildpack-deps:jessie-node-browsers
+  main:
+    docker:
+      - image: jonathancardoso/alpine-ci
 
 orbs:
   build-addon-alpine-and-publish:
-    executors:
-      main:
-        docker:
-          - image: jonathancardoso/alpine-ci
     jobs:
       build-addon:
         # https://circleci.com/docs/2.0/reusing-config/#parameter-syntax
