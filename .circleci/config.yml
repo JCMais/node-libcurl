@@ -55,7 +55,8 @@ orbs:
         executor: << parameters.e >>
         steps:
           - checkout
-          - run: [ -f /usr/local/bin/node<<parameters.node-version>> ] && ln -s /usr/local/bin/node<<parameters.node-version>> /usr/local/bin/node || true
+          - run: |
+              [ -f /usr/local/bin/node<<parameters.node-version>> ] && ln -s /usr/local/bin/node<<parameters.node-version>> /usr/local/bin/node || true
           - run:
               name: Setup Environment Variables
               command: |
