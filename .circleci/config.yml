@@ -1,12 +1,16 @@
 version: 2.1
 
 executors:
-  main:
+  ubuntu:
     docker:
-      - image: jonathancardoso/alpine-ci
+      - image: circleci/buildpack-deps:jessie-node-browsers
 
 orbs:
   build-addon-alpine-and-publish:
+    executors:
+      main:
+        docker:
+          - image: jonathancardoso/alpine-ci
     jobs:
       build-addon:
         # https://circleci.com/docs/2.0/reusing-config/#parameter-syntax
@@ -14,8 +18,13 @@ orbs:
           node-version:
             description: Version of Node.js
             type: string
+          electron-version:
+            description: Version of Node.js
+            default: ""
+            type: string
           e:
             type: executor
+            default: main
           brotli-version:
             type: string
             default: "1.0.7"
@@ -46,10 +55,11 @@ orbs:
         executor: << parameters.e >>
         steps:
           - checkout
-          - run: ln -s /usr/local/bin/node<<parameters.node-version>> /usr/local/bin/node
+          - run: [ -f /usr/local/bin/node<<parameters.node-version>> ] && ln -s /usr/local/bin/node<<parameters.node-version>> /usr/local/bin/node || true
           - run:
               name: Setup Environment Variables
               command: |
+                echo 'export ELECTRON_VERSION="<< parameters.electron-version >>"' >> $BASH_ENV
                 echo 'export BROTLI_RELEASE="<< parameters.brotli-version >>"' >> $BASH_ENV
                 echo 'export LIBCURL_RELEASE="<< parameters.libcurl-version >>"' >> $BASH_ENV
                 echo 'export LIBIDN2_RELEASE="<< parameters.libidn2-version >>"' >> $BASH_ENV
@@ -77,8 +87,7 @@ orbs:
                 echo "$OPENSSL_RELEASE" >> _libs_versions
                 echo "$ZLIB_RELEASE" >> _libs_versions
           - restore_cache:
-              key: v1-node<<parameters.node-version>>-deps-libs-{{ checksum "_libs_versions" }}
-          - run: apk add cmake ncurses ncurses-dev texinfo flex bison build-base libedit-dev mdocml-soelim
+              key: v1-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-deps-libs-{{ checksum "_libs_versions" }}
           ####
           # Build
           ####
@@ -87,7 +96,7 @@ orbs:
           # Cache
           ####
           - save_cache:
-              key: v1-node<<parameters.node-version>>-deps-libs-{{ checksum "_libs_versions" }}
+              key: v1-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-deps-libs-{{ checksum "_libs_versions" }}
               paths:
                 - ~/deps/brotli/build/<< parameters.brotli-version >>
                 - ~/deps/libcurl/build/<< parameters.libcurl-version >>
@@ -187,4 +196,52 @@ workflows:
           openssl-version: "1.1.1b"
           e:
             name: main
+      ####
+      # Electron v5
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-electron-v5-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          node-version: "12"
+          electron-version: "5.0.1"
+          libcurl-version: "7.64.1"
+          nghttp2-version: "1.38.0"
+          openssl-version: "1.1.1b"
+          e:
+            name: ubuntu
+      ####
+      # Electron v4
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-electron-v4-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          node-version: "12"
+          electron-version: "4.2.0"
+          libcurl-version: "7.64.1"
+          nghttp2-version: "1.38.0"
+          openssl-version: "1.1.1b"
+          e:
+            name: ubuntu
+      ####
+      # Electron v3
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-electron-v3-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          node-version: "12"
+          electron-version: "3.1.9"
+          libcurl-version: "7.64.1"
+          nghttp2-version: "1.38.0"
+          openssl-version: "1.1.1b"
+          e:
+            name: ubuntu
 

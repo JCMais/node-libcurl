@@ -186,7 +186,7 @@ if [[ $LIBCURL_RELEASE == "LATEST" ]]; then
 fi
 LIBCURL_DEST_FOLDER=$HOME/deps/libcurl
 echo "Building libcurl v$LIBCURL_RELEASE"
-./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER #|| (cat $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log && exit 1)
+./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER || (cat $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log && exit 1)
 export LIBCURL_BUILD_FOLDER=$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE
 ls -al $LIBCURL_BUILD_FOLDER/lib
 export PATH=$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin:$PATH
@@ -205,8 +205,28 @@ if [[ $GIT_TAG == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[
   PUBLISH_BINARY=true;
 fi
 
+if [ -n "$ELECTRON_VERSION" ]; then
+  runtime='electron'
+  dist_url='https://atom.io/download/electron'
+  target="$ELECTRON_VERSION"
+
+  yarn add --dev electron@${ELECTRON_VERSION}
+else
+  runtime='node'
+  dist_url='https://nodejs.org/dist'
+  target=`node -v`
+fi
+
 # Build Addon
-npm_config_build_from_source="true" npm_config_curl_config_bin="$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin/curl-config" npm_config_curl_static_build="true" yarn install --frozen-lockfile
+export npm_config_curl_config_bin="$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin/curl-config"
+export npm_config_curl_static_build="true"
+export npm_config_build_from_source="true"
+export npm_config_runtime="$runtime"
+export npm_config_dist_url="$dist_url"
+export npm_config_target="$target"
+export npm_config_target_arch="x64"
+
+yarn install --frozen-lockfile
 
 # Print addon deps for debugging
 # if [[ $TRAVIS_OS_NAME == "osx" ]]; then
@@ -219,7 +239,11 @@ else
   ldd ./lib/binding/node_libcurl.node || true
 fi
 
-yarn test
+if [ -n "$ELECTRON_VERSION" ]; then
+  yarn test:electron
+else
+  yarn test
+fi
 
 # If we are here, it means the addon worked
 # Check if we need to publish the binaries

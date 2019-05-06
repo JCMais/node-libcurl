@@ -1,0 +1,10 @@
+.circleci/
+.idea/
+.nyc_output/
+.vscode/
+build/
+debug/
+deps/
+dist/
+lib/binding/node_libcurl.node
+node_modules/
