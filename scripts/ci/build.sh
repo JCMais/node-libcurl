@@ -186,7 +186,9 @@ if [[ $LIBCURL_RELEASE == "LATEST" ]]; then
 fi
 LIBCURL_DEST_FOLDER=$HOME/deps/libcurl
 echo "Building libcurl v$LIBCURL_RELEASE"
-./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER || (cat $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log && exit 1)
+./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER || (echo "libcurl failed build log:" && cat $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log && exit 1)
+echo "libcurl successful build log:"
+$LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log
 export LIBCURL_BUILD_FOLDER=$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE
 ls -al $LIBCURL_BUILD_FOLDER/lib
 export PATH=$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin:$PATH
