@@ -6,6 +6,10 @@
 #  . ./scripts/ci/build.sh
 set -euvo pipefail
 
+curr_dirname=$(dirname "$0")
+
+. $curr_dirname/utils/gsort.sh
+
 FORCE_REBUILD=false
 if [[ ! -z "$GIT_TAG" ]]; then
   FORCE_REBUILD=true
@@ -20,6 +24,12 @@ if [ "$(uname)" == "Darwin" ]; then
   export CXXFLAGS="-mmacosx-version-min=10.12"
   export LDFLAGS="-mmacosx-version-min=10.12"
 fi
+
+function cat_slower() {
+  # hacky way to slow down the output of cat
+  CI=${CI:-}
+  [ "$CI" == "true" ] && (cat $1 | perl -pe 'select undef,undef,undef,.01') || true
+}
 
 # Disabled by default
 # Reason for that can be found on the README.md
@@ -39,7 +49,7 @@ GSS_LIBRARY=${GSS_LIBRARY:-kerberos}
 LIBUNISTRING_RELEASE=${LIBUNISTRING_RELEASE:-0.9.10}
 LIBUNISTRING_DEST_FOLDER=$HOME/deps/libunistring
 echo "Building libunistring v$LIBUNISTRING_RELEASE"
-./scripts/ci/build-libunistring.sh $LIBUNISTRING_RELEASE $LIBUNISTRING_DEST_FOLDER
+./scripts/ci/build-libunistring.sh $LIBUNISTRING_RELEASE $LIBUNISTRING_DEST_FOLDER >/dev/null 2>&1
 export LIBUNISTRING_BUILD_FOLDER=$LIBUNISTRING_DEST_FOLDER/build/$LIBUNISTRING_RELEASE
 ls -al $LIBUNISTRING_BUILD_FOLDER/lib
 
@@ -48,20 +58,9 @@ ls -al $LIBUNISTRING_BUILD_FOLDER/lib
 ###################
 LIBIDN2_RELEASE=${LIBIDN2_RELEASE:-2.1.1}
 LIBIDN2_DEST_FOLDER=$HOME/deps/libidn2
-./scripts/ci/build-libidn2.sh $LIBIDN2_RELEASE $LIBIDN2_DEST_FOLDER
+./scripts/ci/build-libidn2.sh $LIBIDN2_RELEASE $LIBIDN2_DEST_FOLDER >/dev/null 2>&1
 export LIBIDN2_BUILD_FOLDER=$LIBIDN2_DEST_FOLDER/build/$LIBIDN2_RELEASE
 ls -al $LIBIDN2_BUILD_FOLDER/lib
-
-###################
-# Build nghttp2
-###################
-# nghttp2 version must match Node.js one
-NGHTTP2_RELEASE=${NGHTTP2_RELEASE:-$(node -e "console.log(process.versions.nghttp2)")}
-NGHTTP2_DEST_FOLDER=$HOME/deps/nghttp2
-echo "Building nghttp2 v$NGHTTP2_RELEASE"
-./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER
-export NGHTTP2_BUILD_FOLDER=$NGHTTP2_DEST_FOLDER/build/$NGHTTP2_RELEASE
-ls -al $NGHTTP2_BUILD_FOLDER/lib
 
 ###################
 # Build OpenSSL
@@ -83,10 +82,21 @@ echo "Building openssl v$OPENSSL_RELEASE"
 # Weird concatenation of the array with itself is needed
 #  because on bash <= 4, using [@] to access an array with 0 elements
 #  gives an error with set -o pipefail
-./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER ${openssl_params+"${openssl_params[@]}"}
+./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER ${openssl_params+"${openssl_params[@]}"} >/dev/null 2>&1
 export OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build/$OPENSSL_RELEASE
 ls -al $OPENSSL_BUILD_FOLDER/lib
 unset KERNEL_BITS
+
+###################
+# Build nghttp2
+###################
+# nghttp2 version must match Node.js one
+NGHTTP2_RELEASE=${NGHTTP2_RELEASE:-$(node -e "console.log(process.versions.nghttp2)")}
+NGHTTP2_DEST_FOLDER=$HOME/deps/nghttp2
+echo "Building nghttp2 v$NGHTTP2_RELEASE"
+./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER
+export NGHTTP2_BUILD_FOLDER=$NGHTTP2_DEST_FOLDER/build/$NGHTTP2_RELEASE
+ls -al $NGHTTP2_BUILD_FOLDER/lib
 
 ###################
 # Build GSS API Lib
@@ -186,9 +196,10 @@ if [[ $LIBCURL_RELEASE == "LATEST" ]]; then
 fi
 LIBCURL_DEST_FOLDER=$HOME/deps/libcurl
 echo "Building libcurl v$LIBCURL_RELEASE"
-./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER || (echo "libcurl failed build log:" && cat $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log && exit 1)
+./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER || (echo "libcurl failed build log:" && cat_slower $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log && exit 1)
 echo "libcurl successful build log:"
-cat $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log
+cat_slower $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log
+
 export LIBCURL_BUILD_FOLDER=$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE
 ls -al $LIBCURL_BUILD_FOLDER/lib
 export PATH=$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin:$PATH
@@ -201,22 +212,63 @@ curl-config --static-libs
 curl-config --prefix
 curl-config --cflags
 
-PUBLISH_BINARY=false
-COMMIT_MESSAGE=$(git show -s --format=%B $GIT_COMMIT | tr -d '\n')
-if [[ $GIT_TAG == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
-  PUBLISH_BINARY=true;
+if [ -z "$PUBLISH_BINARY" ]; then
+  PUBLISH_BINARY=false
+  COMMIT_MESSAGE=$(git show -s --format=%B $GIT_COMMIT | tr -d '\n')
+  if [[ $GIT_TAG == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
+    PUBLISH_BINARY=true;
+  fi
 fi
+
+ELECTRON_VERSION=${ELECTRON_VERSION:-}
+
+# Configure Yarn cache
+mkdir -p ~/.cache/yarn
+yarn config set cache-folder ~/.cache/yarn
+
+run_tests_electron=false
+has_display=$(xdpyinfo -display $DISPLAY >/dev/null 2>&1 && echo "true" || echo "false")
 
 if [ -n "$ELECTRON_VERSION" ]; then
   runtime='electron'
   dist_url='https://atom.io/download/electron'
   target="$ELECTRON_VERSION"
+  
+  is_electron_lt_5=1
+  (printf '%s\n%s' "5.0.0" "$ELECTRON_VERSION" | $gsort -CV) || is_electron_lt_5=$?
 
-  yarn add --dev electron@${ELECTRON_VERSION}
+  # if it's lower, we can run tests against it
+  # we cannot run tests against version 5 because it has issues:
+  # https://github.com/electron/electron/issues/17972
+  if [[ $is_electron_lt_5 -eq 1 && $has_display == "true" ]]; then
+    run_tests_electron=true
+
+    yarn global add electron@${ELECTRON_VERSION}
+  fi
+
+  # A possible solution to the above issue is the following,
+  #  but it kinda does not work because it requires running docker with --privileged flag
+  # yarn_global_dir=$(yarn global dir)
+
+  # # Below is to fix the following error:
+  # # [19233:0507/005247.965078:FATAL:setuid_sandbox_host.cc(157)] The SUID sandbox helper binary was found, but is not 
+  # #  configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that 
+  # # /home/circleci/node-libcurl/node_modules/electron/dist/chrome-sandbox is owned by root and has mode 4755.
+  # if [[ -x "$(command -v sudo)" && "$EUID" -ne 0 && -f $yarn_global_dir/node_modules/electron/dist/chrome-sandbox ]]; then
+  #   echo "Changing owner of chrome-sandbox"
+  #   sudo chown root $yarn_global_dir/node_modules/electron/dist/chrome-sandbox
+  #   sudo chmod 4755 $yarn_global_dir/node_modules/electron/dist/chrome-sandbox
+  # fi
+elif [ -n "$NWJS_VERSION" ]; then
+  runtime='node-webkit'
+  dist_url=''
+  target="$NWJS_VERSION"
+
+  yarn global add nw-gyp
 else
-  runtime='node'
-  dist_url='https://nodejs.org/dist'
-  target=`node -v`
+  runtime=''
+  dist_url=''
+  target=''
 fi
 
 target=`echo $target | sed 's/^v//'`
@@ -244,7 +296,9 @@ else
 fi
 
 if [ -n "$ELECTRON_VERSION" ]; then
-  yarn test:electron
+  [ $run_tests_electron == "true" ] && yarn test:electron || echo "Tests for this version of electron were disabled"
+elif [ -n "$NWJS_VERSION"]; then
+  echo "No tests available for node-webkit (nw.js)"
 else
   yarn test
 fi

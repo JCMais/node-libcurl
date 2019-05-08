@@ -21,29 +21,30 @@ if [ ! -d $2/source/$1 ]; then
 
   mv $2/nghttp2-$1 $2/source/$1
   cd $2/source/$1
+
+  if [ -n "$RECONFIGURE_NGHTTP2" ]; then
+    autoreconf -i -I /usr/share/aclocal/
+    automake
+    autoconf
+  fi
 else
   cd $2/source/$1
   make distclean || true;
 fi
 
 CFLAGS=${CFLAGS:-}
+export CFLAGS="$CFLAGS -fPIC"
 
-# Debug
-# CFLAGS="$CFLAGS -fPIC" ./configure \
-#   --prefix=$build_folder \
-#   --enable-lib-only \
-#   --disable-shared \
-#   --enable-debug
+if [ -n "$OPENSSL_BUILD_FOLDER" ]; then
+  export OPENSSL_CFLAGS="-I$OPENSSL_BUILD_FOLDER/include"
+  export OPENSSL_LIBS="-I$OPENSSL_BUILD_FOLDER/lib -lssl -lcrypto -ldl -lpthread"
+fi
 
 # Release - Static
-CFLAGS="$CFLAGS -fPIC" ./configure \
+./configure \
   --prefix=$build_folder \
   --enable-lib-only \
+  --without-libxml2 \
   --disable-shared
-
-# Release - Both
-# CFLAGS="$CFLAGS -fPIC" ./configure \
-#   --prefix=$build_folder \
-#   --enable-lib-only
 
 make && make install

@@ -7,7 +7,7 @@ set -euo pipefail
 build_folder=$2/build/$1
 curr_dirname=$(dirname "$0")
 
-sort_cmd=sort
+. $curr_dirname/utils/gsort.sh
 
 mkdir -p $build_folder
 mkdir -p $2/source
@@ -18,18 +18,6 @@ FORCE_REBUILD=${FORCE_REBUILD:-}
 if [[ -f $build_folder/lib/libcurl.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUILD != "true" ]]; then
   echo "Skipping rebuild of libcurl because lib file already exists"
   exit 0
-fi
-
-# On macOS we need gsort from coreutils, can be installed with: brew install coreutils
-if [ "$(uname)" == "Darwin" ]; then
-  if ! command -v gsort &>/dev/null; then
-    (>&2 echo "Could not find a gnu sort compatible binary, we need it to compare libcurl version")
-    (>&2 echo "You can get them by installing the coreutils package:")
-    (>&2 echo "brew install coreutils")
-    exit 1
-  fi
-
-  sort_cmd=gsort
 fi
 
 version_with_dashes=$(echo $1 | sed 's/\./_/g')
@@ -57,7 +45,7 @@ libcurl_args=()
 #  needs to be changed to something like: https://github.com/curl/curl/archive/curl-7_53_1.tar.gz
 # And as it is just a source tarball, we must also create the ./configure script
 is_less_than_7_54_0=0
-(printf '%s\n%s' "7.54.0" "$1" | $sort_cmd -CV) || is_less_than_7_54_0=$?
+(printf '%s\n%s' "7.54.0" "$1" | $gsort -CV) || is_less_than_7_54_0=$?
 
 if [ ! -d $2/source/$1 ]; then
   if [ "$is_less_than_7_54_0" == "1" ]; then
@@ -95,7 +83,7 @@ fi
 # pthread is only needed if using OpenSSL >= 1.1.0, however we are just addind it anyway as required
 # no harm done
 is_less_than_7_54_1=0
-(printf '%s\n%s' "7.54.1" "$1" | $sort_cmd -CV) || is_less_than_7_54_1=$?
+(printf '%s\n%s' "7.54.1" "$1" | $gsort -CV) || is_less_than_7_54_1=$?
 
 if [ "$is_less_than_7_54_1" == "0" ]; then
   LIBS="$LIBS -ldl -lpthread"
@@ -104,7 +92,7 @@ fi
 # --with-libidn2 was added on 7.53.0
 # So this script only adds libidn2 for versions >= that one.
 is_less_than_7_53_0=0
-(printf '%s\n%s' "7.53.0" "$1" | $sort_cmd -CV) || is_less_than_7_53_0=$?
+(printf '%s\n%s' "7.53.0" "$1" | $gsort -CV) || is_less_than_7_53_0=$?
 # @TODO Will need to add libiconv here if we start building it too
 if [ "$is_less_than_7_53_0" == "0" ]; then
   if [[ ! -z $LIBIDN2_BUILD_FOLDER && ! -z $LIBUNISTRING_BUILD_FOLDER ]]; then
