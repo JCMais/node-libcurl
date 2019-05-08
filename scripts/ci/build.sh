@@ -28,7 +28,9 @@ fi
 function cat_slower() {
   # hacky way to slow down the output of cat
   CI=${CI:-}
-  [ "$CI" == "true" ] && (cat $1 | perl -pe 'select undef,undef,undef,0.0033333333') || true
+  # the grep is to ignore lines starting with |
+  # which for config.log files are the source used to test something
+  [ "$CI" == "true" ] && (cat $1 | grep "^[^|]" | perl -pe 'select undef,undef,undef,0.0033333333') || true
 }
 
 # Disabled by default
@@ -212,7 +214,10 @@ curl-config --static-libs
 curl-config --prefix
 curl-config --cflags
 
+# Some vars we will need below
+DISPLAY=${DISPLAY:-}
 PUBLISH_BINARY=${PUBLISH_BINARY:-}
+ELECTRON_VERSION=${ELECTRON_VERSION:-}
 
 if [ -z "$PUBLISH_BINARY" ]; then
   PUBLISH_BINARY=false
@@ -222,7 +227,6 @@ if [ -z "$PUBLISH_BINARY" ]; then
   fi
 fi
 
-ELECTRON_VERSION=${ELECTRON_VERSION:-}
 
 # Configure Yarn cache
 mkdir -p ~/.cache/yarn
