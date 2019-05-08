@@ -34,8 +34,8 @@ cache:
   directories:
     - $HOME/.node-gyp
     - $HOME/.npm
+    - $HOME/.cache/yarn
     - $HOME/deps
-  yarn: true
 
 git:
   depth: 10
