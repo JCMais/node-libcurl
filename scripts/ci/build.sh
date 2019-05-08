@@ -28,7 +28,7 @@ fi
 function cat_slower() {
   # hacky way to slow down the output of cat
   CI=${CI:-}
-  [ "$CI" == "true" ] && (cat $1 | perl -pe 'select undef,undef,undef,.01') || true
+  [ "$CI" == "true" ] && (cat $1 | perl -pe 'select undef,undef,undef,0.0033333333') || true
 }
 
 # Disabled by default
@@ -211,6 +211,8 @@ curl-config --libs
 curl-config --static-libs
 curl-config --prefix
 curl-config --cflags
+
+PUBLISH_BINARY=${PUBLISH_BINARY:-}
 
 if [ -z "$PUBLISH_BINARY" ]; then
   PUBLISH_BINARY=false
