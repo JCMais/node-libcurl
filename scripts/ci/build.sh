@@ -218,6 +218,7 @@ curl-config --cflags
 DISPLAY=${DISPLAY:-}
 PUBLISH_BINARY=${PUBLISH_BINARY:-}
 ELECTRON_VERSION=${ELECTRON_VERSION:-}
+NWJS_VERSION=${NWJS_VERSION:-}
 
 if [ -z "$PUBLISH_BINARY" ]; then
   PUBLISH_BINARY=false
@@ -226,7 +227,6 @@ if [ -z "$PUBLISH_BINARY" ]; then
     PUBLISH_BINARY=true;
   fi
 fi
-
 
 # Configure Yarn cache
 mkdir -p ~/.cache/yarn
