@@ -9,6 +9,7 @@ mkdir -p $build_folder
 mkdir -p $2/source
 
 FORCE_REBUILD=${FORCE_REBUILD:-}
+RECONFIGURE_NGHTTP2=${RECONFIGURE_NGHTTP2:-}
 
 # @TODO We are explicitly checking the static lib
 if [[ -f $build_folder/lib/libnghttp2.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUILD != "true" ]]; then
