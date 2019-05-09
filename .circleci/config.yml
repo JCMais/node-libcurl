@@ -206,33 +206,33 @@ workflows:
           openssl-version: "1.1.0j"
           e:
             name: alpine
-      # ####
-      # # Node 12
-      # ####
-      # - build-addon-alpine-and-publish/build-addon:
-      #     name: build-addon-node-12-libcurl-latest
-      #     context: general
-      #     filters:
-      #       tags:
-      #         only: /^v.*/
-      #     node-version: "12"
-      #     libcurl-version: "7.64.1"
-      #     nghttp2-version: "1.38.0"
-      #     openssl-version: "1.1.1b"
-      #     e:
-      #       name: alpine
-      # - build-addon-alpine-and-publish/build-addon:
-      #     name: build-addon-node-12-libcurl-old
-      #     context: general
-      #     filters:
-      #       tags:
-      #         only: /^v.*/
-      #     node-version: "12"
-      #     libcurl-version: "7.50.0"
-      #     nghttp2-version: "1.38.0"
-      #     openssl-version: "1.1.1b"
-      #     e:
-      #       name: alpine
+      ####
+      # Node 12
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-node-12-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          node-version: "12"
+          libcurl-version: "7.64.1"
+          nghttp2-version: "1.38.0"
+          openssl-version: "1.1.1b"
+          e:
+            name: alpine
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-node-12-libcurl-old
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          node-version: "12"
+          libcurl-version: "7.50.0"
+          nghttp2-version: "1.38.0"
+          openssl-version: "1.1.1b"
+          e:
+            name: alpine
       # ####
       # # Electron v5
       # ####
