@@ -133,6 +133,8 @@ orbs:
                 - ~/.electron
                 - ~/.cache/electron
                 - ~/.cache/yarn
+                - ~/.node-gyp
+                - ~/.nw-gyp
                 - ~/deps/brotli/build/<<parameters.brotli-version>>
                 - ~/deps/libcurl/build/<<parameters.libcurl-version>>
                 - ~/deps/libssh2/build/<<parameters.libssh2-version>>

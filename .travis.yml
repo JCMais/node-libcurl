@@ -33,6 +33,7 @@ env:
 cache:
   directories:
     - $HOME/.node-gyp
+    - $HOME/.nw-gyp
     - $HOME/.npm
     - $HOME/.cache/yarn
     - $HOME/deps
