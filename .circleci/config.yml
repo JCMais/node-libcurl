@@ -17,7 +17,7 @@ executors:
       - image: jonathancardoso/debian-ci
     environment:
       RECONFIGURE_NGHTTP2: "true"
-      BASH_ENV: "~/.bashrc"
+      BASH_ENV: "/home/circleci/.bashrc"
   alpine:
     docker:
       - image: jonathancardoso/alpine-ci
