@@ -233,21 +233,21 @@ workflows:
           openssl-version: "1.1.1b"
           e:
             name: alpine
-      # ####
-      # # Electron v5
-      # ####
-      # - build-addon-alpine-and-publish/build-addon:
-      #     name: build-addon-electron-v5-libcurl-latest
-      #     context: general
-      #     filters:
-      #       tags:
-      #         only: /^v.*/
-      #     electron-version: "5.0.1"
-      #     libcurl-version: "7.64.1"
-      #     nghttp2-version: "1.38.0"
-      #     openssl-version: "1.1.1b"
-      #     e:
-      #       name: debian
+      ####
+      # Electron v5
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-electron-v5-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          electron-version: "5.0.1"
+          libcurl-version: "7.64.1"
+          nghttp2-version: "1.38.0"
+          openssl-version: "1.1.1b"
+          e:
+            name: debian
       # ####
       # # Electron v4
       # ####
