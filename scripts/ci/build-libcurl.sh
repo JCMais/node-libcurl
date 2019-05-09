@@ -85,7 +85,7 @@ fi
 is_less_than_7_54_1=0
 (printf '%s\n%s' "7.54.1" "$1" | $gsort -CV) || is_less_than_7_54_1=$?
 
-if [ "$is_less_than_7_54_1" == "0" ]; then
+if [ "$is_less_than_7_54_1" == "1" ]; then
   LIBS="$LIBS -ldl -lpthread"
 fi
 
@@ -170,6 +170,9 @@ fi
 # ldap
 #####
 if [ ! -z "$OPENLDAP_BUILD_FOLDER" ]; then
+  # Only libcurl >= 7.64.1 has the check for ldap built with OpenSSL, so if we ever start building openldap with SSL
+  # We will also need to add ldl and lcrypto here as lib
+  # https://github.com/curl/curl/commit/66637b4d8fbc52aa1b57845cf45c7ccc7a95880f
   CPPFLAGS="$CPPFLAGS -I$OPENLDAP_BUILD_FOLDER/include"
   LDFLAGS="$LDFLAGS -L$OPENLDAP_BUILD_FOLDER/lib -Wl,-rpath,$OPENLDAP_BUILD_FOLDER/lib"
 

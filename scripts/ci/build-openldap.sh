@@ -31,28 +31,23 @@ CPPFLAGS=${CPPFLAGS:-}
 LDFLAGS=${LDFLAGS:-}
 LIBS=${LIBS:-}
 
-export CPPFLAGS="$CPPFLAGS -I$OPENSSL_BUILD_FOLDER/include"
-# rpath is probably not needed here, since we are building only static, but leaving it here for reference
-export LDFLAGS="$LDFLAGS -L$OPENSSL_BUILD_FOLDER/lib -Wl,-rpath,$OPENSSL_BUILD_FOLDER/lib"
-# pthread below is only necessary for openssl 1.1.x from what I can tell
-#  however I see no harm on keeping in there for other versions
-export LIBS="$LIBS -ldl -lpthread"
-
-# Debug
-# @TODO add
+# if we ever add --with-tls=openssl again
+# export CPPFLAGS="$CPPFLAGS -I$OPENSSL_BUILD_FOLDER/include"
+# # rpath is probably not needed here, since we are building only static, but leaving it here for reference
+# export LDFLAGS="$LDFLAGS -L$OPENSSL_BUILD_FOLDER/lib -Wl,-rpath,$OPENSSL_BUILD_FOLDER/lib"
+# # pthread below is only necessary for openssl 1.1.x from what I can tell
+# #  however I see no harm on keeping in there for other versions
+# export LIBS="$LIBS -ldl -lpthread"
 
 # Release - Static
 ./configure \
   --without-cyrus-sasl \
   --without-fetch \
-  --with-tls=openssl \
+  --without-tls \
   --with-pic=yes \
   --with-threads \
   --disable-slapd \
   --disable-shared \
   --prefix=$build_folder
-
-# Release - Both
-# @TODO add
 
 make depend && make && make install
