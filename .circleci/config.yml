@@ -17,6 +17,7 @@ executors:
       - image: jonathancardoso/debian-ci
     environment:
       RECONFIGURE_NGHTTP2: "true"
+      BASH_ENV: "~/.bashrc"
   alpine:
     docker:
       - image: jonathancardoso/alpine-ci
