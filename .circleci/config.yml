@@ -283,33 +283,33 @@ workflows:
             name: debian
           # Just for reference
           # before-build: *install-deps
-      # ####
-      # # Nwjs 38.2
-      # ####
-      # - build-addon-alpine-and-publish/build-addon:
-      #     name: build-addon-nwjs-v0.38-libcurl-latest
-      #     context: general
-      #     filters:
-      #       tags:
-      #         only: /^v.*/
-      #     nwjs-version: "0.38.2"
-      #     libcurl-version: "7.64.1"
-      #     nghttp2-version: "1.38.0"
-      #     openssl-version: "1.1.1b"
-      #     e:
-      #       name: debian
-      # ####
-      # # Electron v4
-      # ####
-      # - build-addon-alpine-and-publish/build-addon:
-      #     name: build-addon-nwjs-v0.37-libcurl-latest
-      #     context: general
-      #     filters:
-      #       tags:
-      #         only: /^v.*/
-      #     nwjs-version: "0.37.4"
-      #     libcurl-version: "7.64.1"
-      #     nghttp2-version: "1.38.0"
-      #     openssl-version: "1.1.1b"
-      #     e:
-      #       name: debian
+      ####
+      # Nwjs v0.38
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-nwjs-v0.38-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          nwjs-version: "0.38.2"
+          libcurl-version: "7.64.1"
+          nghttp2-version: "1.38.0"
+          openssl-version: "1.1.1b"
+          e:
+            name: debian
+      ####
+      # Nw.js v0.37
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-nwjs-v0.37-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          nwjs-version: "0.37.4"
+          libcurl-version: "7.64.1"
+          nghttp2-version: "1.38.0"
+          openssl-version: "1.1.1b"
+          e:
+            name: debian
