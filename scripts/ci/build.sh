@@ -240,8 +240,10 @@ if [ -n "$ELECTRON_VERSION" ]; then
   dist_url='https://atom.io/download/electron'
   target="$ELECTRON_VERSION"
   
+  # enabled always temporarily
   is_electron_lt_5=1
-  (printf '%s\n%s' "5.0.0" "$ELECTRON_VERSION" | $gsort -CV) || is_electron_lt_5=$?
+  # is_electron_lt_5=0
+  # (printf '%s\n%s' "5.0.0" "$ELECTRON_VERSION" | $gsort -CV) || is_electron_lt_5=$?
 
   # if it's lower, we can run tests against it
   # we cannot run tests against version 5 because it has issues:

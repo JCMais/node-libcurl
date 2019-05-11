@@ -251,38 +251,38 @@ workflows:
           openssl-version: "1.1.1b"
           e:
             name: debian
-      # ####
-      # # Electron v4
-      # ####
-      # - build-addon-alpine-and-publish/build-addon:
-      #     name: build-addon-electron-v4-libcurl-latest
-      #     context: general
-      #     filters:
-      #       tags:
-      #         only: /^v.*/
-      #     electron-version: "4.2.0"
-      #     libcurl-version: "7.64.1"
-      #     nghttp2-version: "1.38.0"
-      #     openssl-version: "1.1.1b"
-      #     e:
-      #       name: debian
-      # ####
-      # # Electron v3
-      # ####
-      # - build-addon-alpine-and-publish/build-addon:
-      #     name: build-addon-electron-v3-libcurl-latest
-      #     context: general
-      #     filters:
-      #       tags:
-      #         only: /^v.*/
-      #     electron-version: "3.1.9"
-      #     libcurl-version: "7.64.1"
-      #     nghttp2-version: "1.38.0"
-      #     openssl-version: "1.1.1b"
-      #     e:
-      #       name: debian
-      #     # Just for reference
-      #     # before-build: *install-deps
+      ####
+      # Electron v4
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-electron-v4-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          electron-version: "4.2.0"
+          libcurl-version: "7.64.1"
+          nghttp2-version: "1.38.0"
+          openssl-version: "1.1.1b"
+          e:
+            name: debian
+      ####
+      # Electron v3
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-electron-v3-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          electron-version: "3.1.9"
+          libcurl-version: "7.64.1"
+          nghttp2-version: "1.38.0"
+          openssl-version: "1.1.1b"
+          e:
+            name: debian
+          # Just for reference
+          # before-build: *install-deps
       # ####
       # # Nwjs 38.2
       # ####
