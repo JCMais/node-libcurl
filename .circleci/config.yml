@@ -123,7 +123,9 @@ orbs:
           ####
           # Build
           ####
-          - run: GIT_TAG=$CIRCLE_TAG GIT_COMMIT=$CIRCLE_SHA1 ./scripts/ci/build.sh
+          - run:
+              command: GIT_TAG=$CIRCLE_TAG GIT_COMMIT=$CIRCLE_SHA1 ./scripts/ci/build.sh
+              no_output_timeout: 20m
           - steps: <<parameters.after-build>>
           ####
           # Cache
