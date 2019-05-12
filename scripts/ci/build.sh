@@ -26,11 +26,12 @@ if [ "$(uname)" == "Darwin" ]; then
 fi
 
 function cat_slower() {
-  # hacky way to slow down the output of cat
-  CI=${CI:-}
-  # the grep is to ignore lines starting with |
-  # which for config.log files are the source used to test something
-  [ "$CI" == "true" ] && (cat $1 | grep "^[^|]" | perl -pe 'select undef,undef,undef,0.0033333333') || true
+  # Disabled, only really interesting if we need to debug something
+  # # hacky way to slow down the output of cat
+  # CI=${CI:-}
+  # # the grep is to ignore lines starting with |
+  # # which for config.log files are the source used to test something
+  # [ "$CI" == "true" ] && (cat $1 | grep "^[^|]" | perl -pe 'select undef,undef,undef,0.0033333333') || true
 }
 
 # Disabled by default
