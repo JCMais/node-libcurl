@@ -305,7 +305,7 @@ fi
 
 if [ -n "$ELECTRON_VERSION" ]; then
   [ $run_tests_electron == "true" ] && yarn test:electron || echo "Tests for this version of electron were disabled"
-elif [ -n "$NWJS_VERSION"]; then
+elif [ -n "$NWJS_VERSION" ]; then
   echo "No tests available for node-webkit (nw.js)"
 else
   yarn test
