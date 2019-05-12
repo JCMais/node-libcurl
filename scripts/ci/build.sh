@@ -26,6 +26,7 @@ if [ "$(uname)" == "Darwin" ]; then
 fi
 
 function cat_slower() {
+  echo "cat_slower called"
   # Disabled, only really interesting if we need to debug something
   # # hacky way to slow down the output of cat
   # CI=${CI:-}
