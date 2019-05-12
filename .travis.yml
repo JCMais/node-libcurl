@@ -23,7 +23,16 @@ matrix:
   # allow_failures:
   #   - node_js: "11"
   include:
-    - env: LIBCURL_RELEASE=LATEST ELECTRON_VERSION=5.0.1
+    - os: osx
+      env: LIBCURL_RELEASE=LATEST ELECTRON_VERSION=5.0.1
+    - os: osx
+      env: LIBCURL_RELEASE=LATEST ELECTRON_VERSION=4.2.0
+    - os: osx
+      env: LIBCURL_RELEASE=LATEST ELECTRON_VERSION=3.1.9
+    - os: osx
+      env: LIBCURL_RELEASE=LATEST NWJS_VERSION=0.38.2
+    - os: osx
+      env: LIBCURL_RELEASE=LATEST NWJS_VERSION=0.37.4
 env:
   global:
     - GCC_VERSION=4.8
