@@ -112,13 +112,16 @@ Almost all [CURL options](https://curl.haxx.se/libcurl/c/curl_easy_setopt.html) 
 ## Detailed Installation
 
 The latest version of this package has prebuilt binaries (thanks to [node-pre-gyp](https://github.com/mapbox/node-pre-gyp/)) 
- available for the latest two (2) versions of Node.js on Active LTS (or Maintenance LTS, see https://github.com/nodejs/Release) 
- and for the following platforms:
+ available for:
+* node.js: Latest two versions on active LTS (see https://github.com/nodejs/Release)
+* electron v5, v4 and v3
+* nw.js (node-webkit): Latest version
+and on the following platforms:
 * Linux 64 bits
 * Mac OS X 64 bits
 * Windows 32 and 64 bits
 
-Just installing via `yarn add node-libcurl` or `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed.
+Just installing via `yarn add node-libcurl` or `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed. However if you trying to install on `nw.js` or `electron` you will need to pass addition arguments, check their corresponding section on building from source (you just don't need to pass the `build-from-source` arg).
 
 The prebuilt binary is statically built with the following library versions, features and protocols:
 ```
@@ -250,36 +253,40 @@ cinst nasm
 Currently there is no support to use other libcurl version than the one provided by the [curl-for-windows](https://github.com/JCMais/curl-for-windows) submodule (help is appreciated on adding this feature).
 
 ### nw.js (aka node-webkit)
-
-From nw.js documentation:
-
-> Starting from 0.13.0, native modules built by node-gyp or npm in upstream can be supported.
->
->  In Linux and OSX you can just load the native module directly. In windows you’ll need to replace the file
->  ``%APPDATA%\npm\node_modules\node-gyp\src\win_delay_load_hook.c`` with the one at [https://github.com/nwjs/nw.js/blob/nw13/tools/win_delay_load_hook.c](https://github.com/nwjs/nw.js/blob/nw13/tools/win_delay_load_hook.c)
-
-http://docs.nwjs.io/en/latest/For%20Users/Advanced/Use%20Native%20Node%20Modules/
-
-Since we require ``node-gyp`` as direct dependency, you probably will need to change that
-file directly in the ``node-gyp`` inside the ``node_modules`` folder of your project.
+For building from Source on `nw.js` you first need to make sure you have nw-gyp installed globally:
+`yarn global add nw-gyp` or `npm i -g nw-gyp`
+Then:
+> yarn
+```
+npm_config_build_from_source=true npm_config_runtime=node-webkit npm_config_target=0.38.2 npm_config_arch=x64 yarn add node-libcurl@next
+```
+> npm
+```bash
+npm install node-libcurl --build-from-source --runtime=node-webkit --target=0.38.2 --arch=x64 --save
+```
 
 ### electron (aka atom-shell)
 
 Currently there are no prebuilt binaries for electron, to install node-libcurl, do the following:
 
- ```sh
- npm install node-libcurl --runtime=electron --target=1.0.2 --disturl=https://atom.io/download/atom-shell --arch=x64 --save
- ```
- ``--target`` says you want to build for the electron version 0.34.1.
+> yarn
+```bash
+npm_config_build_from_source=true npm_config_runtime=electron npm_config_target=$(yarn --silent electron --version) npm_config_disturl=https://atom.io/download/atom-shell  npm_config_arch=x64 yarn add node-libcurl
+```
+> npm
+```bash
+npm install node-libcurl --build-from-source --runtime=electron --target=$(yarn --silent electron --version) --disturl=https://atom.io/download/atom-shell --arch=x64 --save
+```
 
- ``--arch`` says the module should be built for 64bit.
+`target`: specifies the version of Electron the addon should be built against, in our case, we are using the version of the locally installed one, or the global electron version.
+`arch`: specifies that we want to build a x64 version of addon, that can be ommited since the default is the arch of the system.
 
 ---
 
 You can put those args in a .npmrc file, like so:
 ```
 runtime = electron
-target = 1.0.2
+target = 5.0.1
 target_arch = x64
 dist_url = https://atom.io/download/atom-shell
 ```
