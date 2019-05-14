@@ -2,15 +2,28 @@
 # mostly copied from nan appveyor.yml
 os: Visual Studio 2017
 
+# Set build version format here instead of in the admin panel.
+version: '{build}'
+
 environment:
-  DEBUG: "node-libcurl"
+  DEBUG: 'node-libcurl'
   NODE_LIBCURL_GITHUB_TOKEN:
     secure: o8iCZIMbaOR5HKy9Q/ArQ6N+5LRepyRVYRtLTrxyCo2gCEXUp8xhUYjLMJmZgNu9
   matrix:
     # node.js
-    - nodejs_version: "8"
-    - nodejs_version: "10"
-    - nodejs_version: "12"
+    - nodejs_version: '8'
+    - nodejs_version: '10'
+    - nodejs_version: '12'
+    - nodejs_version: '12'
+      ELECTRON_VERSION: '5.0.1'
+    - nodejs_version: '12'
+      ELECTRON_VERSION: '4.2.0'
+    - nodejs_version: '12'
+      ELECTRON_VERSION: '3.1.9'
+    - nodejs_version: '12'
+      NWJS_VERSION: '0.38.2'
+    - nodejs_version: '12'
+      NWJS_VERSION: '0.37.4'
 
 # matrix:
 #   allow_failures:
@@ -23,6 +36,12 @@ platform:
 # git clone depth
 clone_depth: 5
 
+cache:
+  - '%USERPROFILE%\.electron'
+  - '%USERPROFILE%\.node-gyp'
+  - '%USERPROFILE%\.nw-gyp'
+  - '%LOCALAPPDATA%\Yarn\cache'
+
 # Install scripts. (runs after repo cloning)
 install:
   # Get nasm
@@ -32,7 +51,7 @@ install:
   # - curl -L -o nasminst.exe http://libgd.blob.core.windows.net/nasm/nasm-2.07-installer.exe
   # - start /wait nasminst.exe /S
   # - ps: $env:path="C:\Program Files (x86)\nasm;$($env:path)"
-  
+
   - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version) $env:Platform
   # Update npm for versions < 1
   - IF %nodejs_version% LSS 1 npm -g install npm
@@ -50,17 +69,50 @@ install:
   # Install the curl-for-windows dependencies.
   - git submodule update --init --recursive
   - python deps\curl-for-windows\configure.py
+  - ps: |
+      $ErrorActionPreference = "Stop";
+
+      $runtime = ""
+      $dist_url = ""
+      $target = ""
+
+      if ($null -ne $env:ELECTRON_VERSION) {
+        $runtime = "electron"
+        $dist_url = "https://atom.io/download/electron"
+        $target = $env:ELECTRON_VERSION
+
+        yarn global add electron@${env:ELECTRON_VERSION}
+
+      } elseif ($null -ne $env:NWJS_VERSION) {
+        $runtime = "node-webkit"
+        $target = $env:NWJS_VERSION
+      }
+
+      $env:npm_config_msvs_version      = "2017"
+      $env:npm_config_build_from_source = "true"
+      $env:npm_config_runtime           = $runtime
+      $env:npm_config_dist_url          = $dist_url
+      $env:npm_config_target            = $target
+
+      Write-Host $env:npm_config_msvs_version
+      Write-Host $env:npm_config_build_from_source
+      Write-Host $env:npm_config_runtime
+      Write-Host $env:npm_config_dist_url
+      Write-Host $env:npm_config_target
 
 build_script:
-  #- npm install --build-from-source --msvs_version=2015 --loglevel=http
-  # Let's use yarn
-  - set npm_config_build_from_source=true
-  - set npm_config_msvs_version=2017
   - yarn install --frozen-lockfile
+  - dumpbin /dependents ./lib/binding/node_libcurl.node
+
 # Post-install test scripts.
 test_script:
   # run tests
-  - yarn test
+  - ps: |
+      if ($null -ne $env:ELECTRON_VERSION) {
+        yarn test:electron
+      } else {
+        yarn test
+      }
 
 after_test:
   - IF "%PUBLISH_BINARY%" == "true" (node-pre-gyp package testpackage --verbose)
@@ -77,6 +129,3 @@ on_success:
 
 # Don't actually deploy.
 deploy: off
-
-# Set build version format here instead of in the admin panel.
-version: "{build}"
