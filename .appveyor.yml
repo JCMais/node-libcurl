@@ -11,19 +11,19 @@ environment:
     secure: o8iCZIMbaOR5HKy9Q/ArQ6N+5LRepyRVYRtLTrxyCo2gCEXUp8xhUYjLMJmZgNu9
   matrix:
     # node.js
-    - nodejs_version: '8'
-    - nodejs_version: '10'
-    - nodejs_version: '12'
+    # - nodejs_version: '8'
+    # - nodejs_version: '10'
+    # - nodejs_version: '12'
     - nodejs_version: '12'
       ELECTRON_VERSION: '5.0.1'
-    - nodejs_version: '12'
-      ELECTRON_VERSION: '4.2.0'
-    - nodejs_version: '12'
-      ELECTRON_VERSION: '3.1.9'
-    - nodejs_version: '12'
-      NWJS_VERSION: '0.38.2'
-    - nodejs_version: '12'
-      NWJS_VERSION: '0.37.4'
+    # - nodejs_version: '12'
+    #   ELECTRON_VERSION: '4.2.0'
+    # - nodejs_version: '12'
+    #   ELECTRON_VERSION: '3.1.9'
+    # - nodejs_version: '12'
+    #   NWJS_VERSION: '0.38.2'
+    # - nodejs_version: '12'
+    #   NWJS_VERSION: '0.37.4'
 
 # matrix:
 #   allow_failures:
@@ -110,6 +110,10 @@ test_script:
         yarn test:electron
       } else {
         yarn test
+      }
+
+      if ($LASTEXITCODE -eq 0) {
+        $host.SetShouldExit(0)
       }
 
 after_test:
