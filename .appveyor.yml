@@ -53,9 +53,6 @@ install:
   # - ps: $env:path="C:\Program Files (x86)\nasm;$($env:path)"
 
   - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version) $env:Platform
-  # Update npm for versions < 1
-  - IF %nodejs_version% LSS 1 npm -g install npm
-  - IF %nodejs_version% LSS 1 set PATH=%APPDATA%\npm;%PATH%
   - SET PATH=%cd%\node_modules\.bin\;%PATH%
   # Output useful info for debugging.
   - node --version
@@ -108,9 +105,9 @@ build_script:
   - cmd: |
       echo %PLATFORM%
       IF "%PLATFORM%" == "x64" (
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+        cmd /c "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
       ) ELSE (
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+        cmd /c "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
       )
       dumpbin /dependents ./lib/binding/node_libcurl.node
 
