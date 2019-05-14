@@ -70,7 +70,7 @@ install:
   - git submodule update --init --recursive
   - python deps\curl-for-windows\configure.py
   - ps: |
-      $ErrorActionPreference = "Stop";
+      # $ErrorActionPreference = "Stop"
 
       $runtime = ""
       $dist_url = ""
@@ -86,6 +86,8 @@ install:
       } elseif ($null -ne $env:NWJS_VERSION) {
         $runtime = "node-webkit"
         $target = $env:NWJS_VERSION
+
+        yarn global add nw-gyp
       }
 
       $env:npm_config_msvs_version      = "2017"
@@ -103,14 +105,14 @@ install:
 build_script:
   - yarn install --frozen-lockfile
   # Add visual studio tools to path
-  - ps: |
-      Write-Host $env:PLATFORM
-      if ($env:PLATFORM -eq "x86") {
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
-      } else {
+  - cmd: |
+      echo %PLATFORM%
+      IF "%PLATFORM%" == "x64" (
         call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
-      }
-  - dumpbin /dependents ./lib/binding/node_libcurl.node
+      ) ELSE (
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+      )
+      dumpbin /dependents ./lib/binding/node_libcurl.node
 
 # Post-install test scripts.
 test_script:
