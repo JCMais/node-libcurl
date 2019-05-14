@@ -16,14 +16,14 @@ environment:
     # - nodejs_version: '12'
     - nodejs_version: '12'
       ELECTRON_VERSION: '5.0.1'
-    # - nodejs_version: '12'
-    #   ELECTRON_VERSION: '4.2.0'
-    # - nodejs_version: '12'
-    #   ELECTRON_VERSION: '3.1.9'
-    # - nodejs_version: '12'
-    #   NWJS_VERSION: '0.38.2'
-    # - nodejs_version: '12'
-    #   NWJS_VERSION: '0.37.4'
+    - nodejs_version: '12'
+      ELECTRON_VERSION: '4.2.0'
+    - nodejs_version: '12'
+      ELECTRON_VERSION: '3.1.9'
+    - nodejs_version: '12'
+      NWJS_VERSION: '0.38.2'
+    - nodejs_version: '12'
+      NWJS_VERSION: '0.37.4'
 
 # matrix:
 #   allow_failures:
@@ -37,10 +37,10 @@ platform:
 clone_depth: 5
 
 cache:
-  - '%USERPROFILE%\.electron'
   - '%USERPROFILE%\.node-gyp'
   - '%USERPROFILE%\.nw-gyp'
   - '%LOCALAPPDATA%\Yarn\cache'
+  - '%LOCALAPPDATA%\electron\Cache'
 
 # Install scripts. (runs after repo cloning)
 install:
@@ -109,9 +109,19 @@ test_script:
       if ($null -ne $env:ELECTRON_VERSION) {
         yarn test:electron
       } else {
-        yarn test
+        if ($null -ne $env:NWJS_VERSION) {
+          Write-Host "No tests available for nw.js, skipping tests..."
+        } else {
+          yarn test
+        }
       }
 
+      # This is needed because powershell treats
+      #  output to stderr as errors
+      # See:
+      # https://stackoverflow.com/q/2095088/710693
+      # https://stackoverflow.com/a/12866669/710693
+      # https://stackoverflow.com/a/31451481/710693
       if ($LASTEXITCODE -eq 0) {
         $host.SetShouldExit(0)
       }
