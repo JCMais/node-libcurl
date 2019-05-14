@@ -101,15 +101,6 @@ install:
 
 build_script:
   - yarn install --frozen-lockfile
-  # Add visual studio tools to path
-  - cmd: |
-      echo %PLATFORM%
-      IF "%PLATFORM%" == "x64" (
-        cmd /c "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
-      ) ELSE (
-        cmd /c "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
-      )
-      dumpbin /dependents ./lib/binding/node_libcurl.node
 
 # Post-install test scripts.
 test_script:
