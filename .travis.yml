@@ -46,8 +46,11 @@ cache:
     - $HOME/.node-gyp
     - $HOME/.nw-gyp
     - $HOME/.npm
+    - $HOME/.cache/electron
     - $HOME/.cache/yarn
     - $HOME/deps
+    # macOS Electron cache
+    - $HOME/Library/Caches/electron
 
 git:
   depth: 10
