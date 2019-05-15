@@ -8,10 +8,16 @@ const osenv = require('osenv')
 
 const homeDir = osenv.home()
 
-const { version } = process
+let { version } = process
+let gypFolder = '.node-gyp'
+
+if (process.env.npm_config_runtime === 'node-webkit') {
+  version = process.env.npm_config_target
+  gypFolder = '.nw-gyp'
+}
 
 // node-gyp path from here: https://github.com/nodejs/node-gyp/blob/v3.8.0/bin/node-gyp.js#L31
-const gypDir = path.resolve(homeDir, '.node-gyp', version.replace('v', ''))
+const gypDir = path.resolve(homeDir, gypFolder, version.replace('v', ''))
 
 // reverting what we do on tools/retrieve-win-deps.js
 const opensslFolder = path.resolve(gypDir, 'include', 'node', 'openssl')
