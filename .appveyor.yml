@@ -14,16 +14,16 @@ environment:
     # - nodejs_version: '8'
     # - nodejs_version: '10'
     # - nodejs_version: '12'
-    - nodejs_version: '12'
-      ELECTRON_VERSION: '5.0.1'
-    - nodejs_version: '12'
-      ELECTRON_VERSION: '4.2.0'
-    - nodejs_version: '12'
-      ELECTRON_VERSION: '3.1.9'
+    # - nodejs_version: '12'
+    #   ELECTRON_VERSION: '5.0.1'
+    # - nodejs_version: '12'
+    #   ELECTRON_VERSION: '4.2.0'
+    # - nodejs_version: '12'
+    #   ELECTRON_VERSION: '3.1.9'
     - nodejs_version: '12'
       NWJS_VERSION: '0.38.2'
-    - nodejs_version: '12'
-      NWJS_VERSION: '0.37.4'
+    # - nodejs_version: '12'
+    #   NWJS_VERSION: '0.37.4'
 
 # matrix:
 #   allow_failures:
@@ -84,7 +84,13 @@ install:
         $runtime = "node-webkit"
         $target = $env:NWJS_VERSION
 
-        yarn global add nw-gyp
+        # https://github.com/nwjs/nw-gyp/issues/116
+        yarn global add nw-gyp@3.6.2
+        # patch tool for Windows
+        # https://stackoverflow.com/a/9485089/710693
+        pip install patch
+        # apply patch to nw-gyp fixing issue
+        python -m patch -d "$(yarn global dir)/node_modules/nw-gyp/src" ./scripts/ci/patches/win_delay_load_hook.cc.patch
       }
 
       $env:npm_config_msvs_version      = "2017"
