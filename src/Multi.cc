@@ -376,7 +376,7 @@ NAN_METHOD(Multi::SetOpt) {
       std::vector<char*> strings;
 
       for (uint32_t i = 0; i < arrayLength; ++i) {
-        strings.push_back(*Nan::Utf8String(array->Get(i)));
+        strings.push_back(*Nan::Utf8String(Nan::Get(array, i).ToLocalChecked()));
       }
 
       strings.push_back(NULL);

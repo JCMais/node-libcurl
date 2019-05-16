@@ -415,7 +415,8 @@ size_t Easy::OnData(char* data, size_t size, size_t nmemb) {
   size_t n = size * nmemb;
 
   CallbacksMap::iterator it = this->callbacks.find(CURLOPT_WRITEFUNCTION);
-  v8::Local<v8::Value> cbOnData = this->handle()->Get(Nan::New(Easy::onDataCbSymbol));
+  v8::Local<v8::Value> cbOnData =
+      Nan::Get(this->handle(), Nan::New(Easy::onDataCbSymbol)).ToLocalChecked();
 
   bool hasWriteCallback = (it != this->callbacks.end());
 
@@ -457,7 +458,8 @@ size_t Easy::OnHeader(char* data, size_t size, size_t nmemb) {
   size_t n = size * nmemb;
 
   CallbacksMap::iterator it = this->callbacks.find(CURLOPT_HEADERFUNCTION);
-  v8::Local<v8::Value> cbOnHeader = this->handle()->Get(Nan::New(Easy::onHeaderCbSymbol));
+  v8::Local<v8::Value> cbOnHeader =
+      Nan::Get(this->handle(), Nan::New(Easy::onHeaderCbSymbol)).ToLocalChecked();
 
   bool hasHeaderCallback = (it != this->callbacks.end());
 
@@ -989,12 +991,13 @@ NAN_METHOD(Easy::SetOpt) {
       // [{ key : val }]
       for (uint32_t i = 0, len = rows->Length(); i < len; ++i) {
         // not an array of objects
-        if (!rows->Get(i)->IsObject()) {
+        v8::Local<v8::Value> obj = Nan::Get(rows, i).ToLocalChecked();
+        if (!obj->IsObject()) {
           Nan::ThrowTypeError(invalidArrayMsg.c_str());
           return;
         }
 
-        v8::Local<v8::Object> postData = v8::Local<v8::Object>::Cast(rows->Get(i));
+        v8::Local<v8::Object> postData = v8::Local<v8::Object>::Cast(obj);
 
         const v8::Local<v8::Array> props = Nan::GetPropertyNames(postData).ToLocalChecked();
         const uint32_t postDataLength = props->Length();
@@ -1009,8 +1012,9 @@ NAN_METHOD(Easy::SetOpt) {
         for (uint32_t j = 0; j < postDataLength; ++j) {
           int32_t httpPostId = -1;
 
-          const v8::Local<v8::Value> postDataKey = props->Get(j);
-          const v8::Local<v8::Value> postDataValue = postData->Get(postDataKey);
+          const v8::Local<v8::Value> postDataKey = Nan::Get(props, j).ToLocalChecked();
+          const v8::Local<v8::Value> postDataValue =
+              Nan::Get(postData, postDataKey).ToLocalChecked();
 
           // convert postDataKey to httppost id
           Nan::Utf8String fieldName(postDataKey);
@@ -1066,19 +1070,22 @@ NAN_METHOD(Easy::SetOpt) {
           return;
         }
 
-        Nan::Utf8String fieldName(postData->Get(Nan::New<v8::String>("name").ToLocalChecked()));
+        Nan::Utf8String fieldName(
+            Nan::Get(postData, Nan::New<v8::String>("name").ToLocalChecked()).ToLocalChecked());
         CURLFORMcode curlFormCode;
 
         if (hasFile) {
-          Nan::Utf8String file(postData->Get(Nan::New<v8::String>("file").ToLocalChecked()));
+          Nan::Utf8String file(
+              Nan::Get(postData, Nan::New<v8::String>("file").ToLocalChecked()).ToLocalChecked());
 
           if (hasContentType) {
             Nan::Utf8String contentType(
-                postData->Get(Nan::New<v8::String>("type").ToLocalChecked()));
+                Nan::Get(postData, Nan::New<v8::String>("type").ToLocalChecked()).ToLocalChecked());
 
             if (hasNewFileName) {
               Nan::Utf8String fileName(
-                  postData->Get(Nan::New<v8::String>("filename").ToLocalChecked()));
+                  Nan::Get(postData, Nan::New<v8::String>("filename").ToLocalChecked())
+                      .ToLocalChecked());
               curlFormCode =
                   httpPost->AddFile(*fieldName, fieldName.length(), *file, *contentType, *fileName);
             } else {
@@ -1092,7 +1099,8 @@ NAN_METHOD(Easy::SetOpt) {
                                   // be set.
 
           Nan::Utf8String fieldValue(
-              postData->Get(Nan::New<v8::String>("contents").ToLocalChecked()));
+              Nan::Get(postData, Nan::New<v8::String>("contents").ToLocalChecked())
+                  .ToLocalChecked());
 
           curlFormCode =
               httpPost->AddField(*fieldName, fieldName.length(), *fieldValue, fieldValue.length());
@@ -1132,7 +1140,7 @@ NAN_METHOD(Easy::SetOpt) {
         v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(value);
 
         for (uint32_t i = 0, len = array->Length(); i < len; ++i) {
-          slist = curl_slist_append(slist, *Nan::Utf8String(array->Get(i)));
+          slist = curl_slist_append(slist, *Nan::Utf8String(Nan::Get(array, i).ToLocalChecked()));
         }
 
         setOptRetCode = curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), slist);
@@ -1455,7 +1463,7 @@ NAN_METHOD(Easy::GetInfo) {
 #if NODE_LIBCURL_VER_GE(7, 45, 0)
     curl_socket_t socket;
 #else
-    long socket;  // NOLINT(runtime/int)
+    long socket;              // NOLINT(runtime/int)
 #endif
     code = curl_easy_getinfo(obj->ch, static_cast<CURLINFO>(infoId), &socket);
 
