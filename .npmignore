@@ -4,13 +4,15 @@
 .idea
 .travis.yml
 .gitmodules
+.circleci/
 .vscode/
 .nyc_output/
 coverage/
-appveyor.yml
+.appveyor.yml
 build/
 deps/
 lib/binding/
 debug/
 examples/
+test/
 *.tgz
