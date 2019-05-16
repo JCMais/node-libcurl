@@ -74,7 +74,7 @@
     "lint-staged": "^8.1.5",
     "mocha": "^6.1.2",
     "multiparty": "^4.2.1",
-    "np": "^5.0.0",
+    "np": "^5.0.1",
     "octonode": "^0.9.5",
     "prettier": "^1.16.4",
     "progress": "^2.0.3",
