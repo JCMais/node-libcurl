@@ -37,6 +37,7 @@ platform:
 clone_depth: 5
 
 cache:
+  - build -> binding.gyp, LIBCURL_VERSION_WIN_DEPS
   - '%USERPROFILE%\.node-gyp'
   - '%USERPROFILE%\.nw-gyp'
   - '%LOCALAPPDATA%\Yarn\cache'
