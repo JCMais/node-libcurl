@@ -275,6 +275,13 @@ elif [ -n "$NWJS_VERSION" ]; then
   target="$NWJS_VERSION"
 
   yarn global add nw-gyp nw@$target
+
+  # On macOS node-pre-gyp uses node-webkit instead of nw, see:
+  # https://github.com/mapbox/node-pre-gyp/blob/d60bc992d20500e8ceb6fe3242df585a28c56413/lib/testbinary.js#L43
+  if [ "$(uname)" == "Darwin" ]; then
+    ln -s $(yarn global bin)/nw $(yarn global bin)/node-webkit
+  fi
+
 else
   runtime=''
   dist_url=''
