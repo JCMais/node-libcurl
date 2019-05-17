@@ -42,7 +42,6 @@ _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-
   - [Electron / NW.js](#electron--nwjs)
     - [NW.js (aka node-webkit)](#nwjs-aka-node-webkit)
     - [electron (aka atom-shell)](#electron-aka-atom-shell)
-- [Where `target` is the version of electron you are using, in our case, we are just using the version returned by the locally installed `electron` binary.](#where-target-is-the-version-of-electron-you-are-using-in-our-case-we-are-just-using-the-version-returned-by-the-locally-installed-electron-binary)
 - [Getting Help](#getting-help)
 - [Contributing](#contributing)
 - [Donations / Patreon](#donations--patreon)
@@ -283,7 +282,7 @@ npm_config_build_from_source=true npm_config_runtime=node-webkit npm_config_targ
 npm install node-libcurl --build-from-source --runtime=node-webkit --target=0.38.2 --save
 ```
 
-Where `target` is the current version of NW.js you are using
+where `target` is the current version of NW.js you are using
 
 #### electron (aka atom-shell)
 
@@ -298,7 +297,6 @@ npm install node-libcurl --build-from-source --runtime=electron --target=$(yarn 
 ```
 
 Where `target` is the version of electron you are using, in our case, we are just using the version returned by the locally installed `electron` binary.
----
 
 You can also put those args in a .npmrc file, like so:
 ```
