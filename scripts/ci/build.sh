@@ -274,7 +274,7 @@ elif [ -n "$NWJS_VERSION" ]; then
   dist_url=''
   target="$NWJS_VERSION"
 
-  yarn global add nw-gyp
+  yarn global add nw-gyp nw@$target
 else
   runtime=''
   dist_url=''

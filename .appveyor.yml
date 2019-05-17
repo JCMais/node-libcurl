@@ -87,6 +87,7 @@ install:
 
         # https://github.com/nwjs/nw-gyp/issues/116
         yarn global add nw-gyp@3.6.2
+        yarn global add nw@$target
         # patch tool for Windows
         # https://stackoverflow.com/a/9485089/710693
         pip install patch
