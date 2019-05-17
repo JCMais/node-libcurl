@@ -116,7 +116,8 @@ class Easy : public Nan::ObjectWrap {
   static size_t HeaderFunction(char* ptr, size_t size, size_t nmemb, void* userdata);
   static size_t WriteFunction(char* ptr, size_t size, size_t nmemb, void* userdata);
 
-  static long CbChunkBgn(curl_fileinfo* transferInfo, void* ptr, int remains);  // NOLINT(runtime/int)
+  static long CbChunkBgn(curl_fileinfo* transferInfo,  // NOLINT(runtime/int)
+                         void* ptr, int remains);
   static long CbChunkEnd(void* ptr);  // NOLINT(runtime/int)
   static int CbDebug(CURL* handle, curl_infotype type, char* data, size_t size, void* userptr);
   static int CbFnMatch(void* ptr, const char* pattern, const char* string);

@@ -52,8 +52,7 @@ class Multi : public Nan::ObjectWrap {
   deleted_unique_ptr<uv_timer_t> timeout;
 
   // static helper methods
-  static CurlSocketContext* CreateCurlSocketContext(curl_socket_t sockfd,
-                                                    Multi* multi);
+  static CurlSocketContext* CreateCurlSocketContext(curl_socket_t sockfd, Multi* multi);
   static void DestroyCurlSocketContext(CurlSocketContext* ctx);
 
  public:
@@ -74,8 +73,7 @@ class Multi : public Nan::ObjectWrap {
   static NAN_METHOD(StrError);
 
   // libcurl multi_setopt callbacks
-  static int HandleSocket(CURL* easy, curl_socket_t s, int action, void* userp,
-                          void* socketp);
+  static int HandleSocket(CURL* easy, curl_socket_t s, int action, void* userp, void* socketp);
   static int HandleTimeout(CURLM* multi, long timeoutMs, void* userp);  // NOLINT(runtime/int)
 
   // libuv events

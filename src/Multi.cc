@@ -19,11 +19,9 @@ Nan::Persistent<v8::FunctionTemplate> Multi::constructor;
 
 Multi::Multi() {
   // init uv timer to be used with HandleTimeout
-  this->timeout = deleted_unique_ptr<uv_timer_t>(
-      new uv_timer_t, [&](uv_timer_t* timerhandl) {
-        uv_close(reinterpret_cast<uv_handle_t*>(timerhandl),
-                 Multi::OnTimerClose);
-      });
+  this->timeout = deleted_unique_ptr<uv_timer_t>(new uv_timer_t, [&](uv_timer_t* timerhandl) {
+    uv_close(reinterpret_cast<uv_handle_t*>(timerhandl), Multi::OnTimerClose);
+  });
 
   int timerStatus = uv_timer_init(uv_default_loop(), this->timeout.get());
   assert(timerStatus == 0 && "Could not initialize libuv timer");
@@ -67,13 +65,12 @@ void Multi::Dispose() {
 // updates
 //  in the socket (file descriptor) status by doing none, one, or multiple calls
 //  to this function
-int Multi::HandleSocket(CURL* easy, curl_socket_t s, int action, void* userp,
-                        void* socketp) {
+int Multi::HandleSocket(CURL* easy, curl_socket_t s, int action, void* userp, void* socketp) {
   CurlSocketContext* ctx = nullptr;
   Multi* obj = static_cast<Multi*>(userp);
 
-  if (action == CURL_POLL_IN || action == CURL_POLL_OUT ||
-      action == CURL_POLL_INOUT || action == CURL_POLL_NONE) {
+  if (action == CURL_POLL_IN || action == CURL_POLL_OUT || action == CURL_POLL_INOUT ||
+      action == CURL_POLL_NONE) {
     // create ctx if it doesn't exists and assign it to the current socket,
     if (socketp) {
       ctx = static_cast<Multi::CurlSocketContext*>(socketp);
@@ -150,8 +147,7 @@ void Multi::OnSocket(uv_poll_t* handle, int status, int events) {
   if (events & UV_READABLE) flags |= CURL_CSELECT_IN;
   if (events & UV_WRITABLE) flags |= CURL_CSELECT_OUT;
 
-  Multi::CurlSocketContext* ctx =
-      static_cast<Multi::CurlSocketContext*>(handle->data);
+  Multi::CurlSocketContext* ctx = static_cast<Multi::CurlSocketContext*>(handle->data);
 
   // Check comment on node_libcurl.cc
   SETLOCALE_WRAPPER(
@@ -165,14 +161,13 @@ void Multi::OnSocket(uv_poll_t* handle, int status, int events) {
       do {
         code = curl_multi_socket_action(ctx->multi->mh, ctx->sockfd, flags,
                                         &ctx->multi->runningHandles);
-      } while (code ==
-               CURLM_CALL_MULTI_PERFORM););  // NOLINT(whitespace/newline)
+      } while (code == CURLM_CALL_MULTI_PERFORM););  // NOLINT(whitespace/newline)
 
   if (code != CURLM_OK) {
     std::string errorMsg;
 
-    errorMsg += std::string("curl_multi_socket_action failed. Reason: ") +
-                curl_multi_strerror(code);
+    errorMsg +=
+        std::string("curl_multi_socket_action failed. Reason: ") + curl_multi_strerror(code);
 
     Nan::ThrowError(errorMsg.c_str());
     return;
@@ -193,8 +188,8 @@ UV_TIMER_CB(Multi::OnTimeout) {
   if (code != CURLM_OK) {
     std::string errorMsg;
 
-    errorMsg += std::string("curl_multi_socket_action failed. Reason: ") +
-                curl_multi_strerror(code);
+    errorMsg +=
+        std::string("curl_multi_socket_action failed. Reason: ") + curl_multi_strerror(code);
 
     Nan::ThrowError(errorMsg.c_str());
     return;
@@ -219,14 +214,12 @@ void Multi::ProcessMessages() {
 }
 
 // Creates a Context to be used to store data between events
-Multi::CurlSocketContext* Multi::CreateCurlSocketContext(curl_socket_t sockfd,
-                                                         Multi* multi) {
+Multi::CurlSocketContext* Multi::CreateCurlSocketContext(curl_socket_t sockfd, Multi* multi) {
   int r;
   Multi::CurlSocketContext* ctx = NULL;
 
   ctx = static_cast<Multi::CurlSocketContext*>(malloc(sizeof(*ctx)));
-  assert(ctx &&
-         "Not enough memory to allocate a new Multi::CurlSocketContext.");
+  assert(ctx && "Not enough memory to allocate a new Multi::CurlSocketContext.");
 
   ctx->sockfd = sockfd;
   ctx->multi = multi;
@@ -252,8 +245,7 @@ void Multi::DestroyCurlSocketContext(Multi::CurlSocketContext* ctx) {
 }
 
 void Multi::OnSocketClose(uv_handle_t* handle) {
-  Multi::CurlSocketContext* ctx =
-      static_cast<Multi::CurlSocketContext*>(handle->data);
+  Multi::CurlSocketContext* ctx = static_cast<Multi::CurlSocketContext*>(handle->data);
   free(ctx);
 }
 
@@ -287,8 +279,7 @@ void Multi::CallOnMessageCallback(CURL* easy, CURLcode statusCode) {
   if (statusCode != CURLE_OK) {
     bool hasError = !obj->callbackError.IsEmpty();
 
-    err = hasError ? Nan::New(obj->callbackError)
-                   : Nan::Error(curl_easy_strerror(statusCode));
+    err = hasError ? Nan::New(obj->callbackError) : Nan::Error(curl_easy_strerror(statusCode));
   }
 
   v8::Local<v8::Value> argv[] = {err, easyArg, errCode};
@@ -302,8 +293,7 @@ NAN_MODULE_INIT(Multi::Initialize) {
   Nan::HandleScope scope;
 
   // Multi js "class" function template initialization
-  v8::Local<v8::FunctionTemplate> tmpl =
-      Nan::New<v8::FunctionTemplate>(Multi::New);
+  v8::Local<v8::FunctionTemplate> tmpl = Nan::New<v8::FunctionTemplate>(Multi::New);
   tmpl->SetClassName(Nan::New("Multi").ToLocalChecked());
   tmpl->InstanceTemplate()->SetInternalFieldCount(1);
 
@@ -353,17 +343,14 @@ NAN_METHOD(Multi::SetOpt) {
   int optionId;
 
   // array of strings option
-  if ((optionId =
-           IsInsideCurlConstantStruct(curlMultiOptionNotImplemented, opt))) {
+  if ((optionId = IsInsideCurlConstantStruct(curlMultiOptionNotImplemented, opt))) {
     Nan::ThrowError(
         "Unsupported option, probably because it's too complex to implement "
         "using javascript or unecessary when using javascript.");
     return;
-  } else if ((optionId = IsInsideCurlConstantStruct(curlMultiOptionStringArray,
-                                                    opt))) {
+  } else if ((optionId = IsInsideCurlConstantStruct(curlMultiOptionStringArray, opt))) {
     if (value->IsNull()) {
-      setOptRetCode =
-          curl_multi_setopt(obj->mh, static_cast<CURLMoption>(optionId), NULL);
+      setOptRetCode = curl_multi_setopt(obj->mh, static_cast<CURLMoption>(optionId), NULL);
 
     } else {
       if (!value->IsArray()) {
@@ -381,13 +368,11 @@ NAN_METHOD(Multi::SetOpt) {
 
       strings.push_back(NULL);
 
-      setOptRetCode = curl_multi_setopt(
-          obj->mh, static_cast<CURLMoption>(optionId), &strings[0]);
+      setOptRetCode = curl_multi_setopt(obj->mh, static_cast<CURLMoption>(optionId), &strings[0]);
     }
 
     // check if option is integer, and the value is correct
-  } else if ((optionId =
-                  IsInsideCurlConstantStruct(curlMultiOptionInteger, opt))) {
+  } else if ((optionId = IsInsideCurlConstantStruct(curlMultiOptionInteger, opt))) {
     // If not an integer, throw error
     if (!value->IsInt32()) {
       Nan::ThrowTypeError("Option value must be an integer.");
@@ -396,8 +381,7 @@ NAN_METHOD(Multi::SetOpt) {
 
     int32_t val = Nan::To<int32_t>(value).FromJust();
 
-    setOptRetCode =
-        curl_multi_setopt(obj->mh, static_cast<CURLMoption>(optionId), val);
+    setOptRetCode = curl_multi_setopt(obj->mh, static_cast<CURLMoption>(optionId), val);
   }
 
   info.GetReturnValue().Set(setOptRetCode);
@@ -447,10 +431,8 @@ NAN_METHOD(Multi::AddHandle) {
 
   v8::Local<v8::Value> handle = info[0];
 
-  if (!handle->IsObject() ||
-      !Nan::New(Easy::constructor)->HasInstance(handle)) {
-    Nan::ThrowError(
-        Nan::TypeError("Argument must be an instance of an Easy handle."));
+  if (!handle->IsObject() || !Nan::New(Easy::constructor)->HasInstance(handle)) {
+    Nan::ThrowError(Nan::TypeError("Argument must be an instance of an Easy handle."));
     return;
   } else {
     Easy* easy = Nan::ObjectWrap::Unwrap<Easy>(handle.As<v8::Object>());
@@ -464,8 +446,7 @@ NAN_METHOD(Multi::AddHandle) {
                           curl_multi_add_handle(obj->mh, easy->ch););  // NOLINT(whitespace/newline)
 
     if (code != CURLM_OK) {
-      Nan::ThrowError(
-          Nan::TypeError("Could not add easy handle to the multi handle."));
+      Nan::ThrowError(Nan::TypeError("Could not add easy handle to the multi handle."));
       return;
     }
 
@@ -490,10 +471,8 @@ NAN_METHOD(Multi::RemoveHandle) {
 
   v8::Local<v8::Value> handle = info[0];
 
-  if (!handle->IsObject() ||
-      !Nan::New(Easy::constructor)->HasInstance(handle)) {
-    Nan::ThrowError(
-        Nan::TypeError("Argument must be an instance of an Easy handle."));
+  if (!handle->IsObject() || !Nan::New(Easy::constructor)->HasInstance(handle)) {
+    Nan::ThrowError(Nan::TypeError("Argument must be an instance of an Easy handle."));
     return;
   } else {
     Easy* easy = Nan::ObjectWrap::Unwrap<Easy>(handle.As<v8::Object>());
@@ -501,8 +480,7 @@ NAN_METHOD(Multi::RemoveHandle) {
     CURLMcode code = curl_multi_remove_handle(obj->mh, easy->ch);
 
     if (code != CURLM_OK) {
-      Nan::ThrowError(
-          Nan::TypeError("Could not remove easy handle from multi handle."));
+      Nan::ThrowError(Nan::TypeError("Could not remove easy handle from multi handle."));
       return;
     }
 
@@ -520,8 +498,7 @@ NAN_METHOD(Multi::GetCount) {
 
   Multi* obj = Nan::ObjectWrap::Unwrap<Multi>(info.This());
 
-  v8::Local<v8::Uint32> ret =
-      Nan::New(static_cast<uint32_t>(obj->amountOfHandles));
+  v8::Local<v8::Uint32> ret = Nan::New(static_cast<uint32_t>(obj->amountOfHandles));
 
   info.GetReturnValue().Set(ret);
 }
@@ -549,8 +526,8 @@ NAN_METHOD(Multi::StrError) {
     return;
   }
 
-  const char* errorMsg = curl_multi_strerror(
-      static_cast<CURLMcode>(Nan::To<int32_t>(errCode).FromJust()));
+  const char* errorMsg =
+      curl_multi_strerror(static_cast<CURLMcode>(Nan::To<int32_t>(errCode).FromJust()));
 
   v8::Local<v8::String> ret = Nan::New(errorMsg).ToLocalChecked();
 

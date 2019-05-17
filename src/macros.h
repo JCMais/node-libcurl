@@ -34,8 +34,7 @@
 #endif
 
 // inspired from the LUA bindings.
-#define NODE_LIBCURL_MAKE_VERSION(MAJ, MIN, PAT) \
-  ((MAJ << 16) + (MIN << 8) + PAT)
+#define NODE_LIBCURL_MAKE_VERSION(MAJ, MIN, PAT) ((MAJ << 16) + (MIN << 8) + PAT)
 #define NODE_LIBCURL_VER_GE(MAJ, MIN, PAT) \
   (LIBCURL_VERSION_NUM >= NODE_LIBCURL_MAKE_VERSION(MAJ, MIN, PAT))
 

@@ -43,8 +43,7 @@ NAN_MODULE_INIT(Share::Initialize) {
   Nan::HandleScope scope;
 
   // Easy js "class" function template initialization
-  v8::Local<v8::FunctionTemplate> tmpl =
-      Nan::New<v8::FunctionTemplate>(Share::New);
+  v8::Local<v8::FunctionTemplate> tmpl = Nan::New<v8::FunctionTemplate>(Share::New);
   tmpl->SetClassName(Nan::New("Share").ToLocalChecked());
   tmpl->InstanceTemplate()->SetInternalFieldCount(1);
 
@@ -106,9 +105,8 @@ NAN_METHOD(Share::SetOpt) {
     }
   }
 
-  setOptRetCode =
-      curl_share_setopt(obj->sh, static_cast<CURLSHoption>(optionId),
-                        Nan::To<int32_t>(value).FromJust());
+  setOptRetCode = curl_share_setopt(obj->sh, static_cast<CURLSHoption>(optionId),
+                                    Nan::To<int32_t>(value).FromJust());
 
   info.GetReturnValue().Set(setOptRetCode);
 }
@@ -138,8 +136,8 @@ NAN_METHOD(Share::StrError) {
     return;
   }
 
-  const char* errorMsg = curl_share_strerror(
-      static_cast<CURLSHcode>(Nan::To<int32_t>(errCode).FromJust()));
+  const char* errorMsg =
+      curl_share_strerror(static_cast<CURLSHcode>(Nan::To<int32_t>(errCode).FromJust()));
 
   v8::Local<v8::String> ret = Nan::New(errorMsg).ToLocalChecked();
 
