@@ -379,6 +379,10 @@ const std::vector<CurlConstant> curlOptionString = {
     {"RANGE", CURLOPT_RANGE},
     {"REFERER", CURLOPT_REFERER},
 
+#if NODE_LIBCURL_VER_GE(7, 55, 0)
+    {"REQUEST_TARGET", CURLOPT_REQUEST_TARGET},
+#endif
+
 #if NODE_LIBCURL_VER_GE(7, 21, 3)
     {"RESOLVE", CURLOPT_RESOLVE},
 #endif

@@ -58,7 +58,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Using `curl_socket_t` without libcurl version guard on Easy::GetInfo
 ### Added
 - Support Node.js 12
-- Add missing `CURLOPT_FTP_FILEMETHOD` (#148)
+- Added missing options:
+  - `CURLOPT_REQUEST_TARGET`
+  - `CURLOPT_FTP_FILEMETHOD` ([#148](https://github.com/JCMais/node-libcurl/pull/148))
 - Add missing `CURLINFO_*_{DOWNLOAD,UPLOAD}_T` info fields
 - Add `Curl.getVersionInfo()` which returns an object that represents the struct returned from `curl_version_info()`
   See their type definition for details: [`./lib/types/CurlVersionInfoNativeBinding.ts`](./lib/types/CurlVersionInfoNativeBinding.ts)
