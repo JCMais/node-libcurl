@@ -153,6 +153,13 @@ export declare class EasyNativeBinding {
   perform(): CurlCode
 
   /**
+   * Perform any connection upkeep checks.
+   *
+   * Official libcurl documentation: [curl_easy_upkeep()](http://curl.haxx.se/libcurl/c/curl_easy_upkeep.html)
+   */
+  upkeep(): CurlCode
+
+  /**
    * Using this function, you can explicitly mark a running connection
    * to get paused, and you can unpause a connection that was previously paused.
    *

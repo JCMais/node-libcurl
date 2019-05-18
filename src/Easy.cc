@@ -860,6 +860,7 @@ NAN_MODULE_INIT(Easy::Initialize) {
   Nan::SetPrototypeMethod(tmpl, "send", Easy::Send);
   Nan::SetPrototypeMethod(tmpl, "recv", Easy::Recv);
   Nan::SetPrototypeMethod(tmpl, "perform", Easy::Perform);
+  Nan::SetPrototypeMethod(tmpl, "upkeep", Easy::Upkeep);
   Nan::SetPrototypeMethod(tmpl, "pause", Easy::Pause);
   Nan::SetPrototypeMethod(tmpl, "reset", Easy::Reset);
   Nan::SetPrototypeMethod(tmpl, "dupHandle", Easy::DupHandle);
@@ -1630,6 +1631,28 @@ NAN_METHOD(Easy::Perform) {
   }
 
   SETLOCALE_WRAPPER(CURLcode code = curl_easy_perform(obj->ch););
+
+  v8::Local<v8::Integer> ret = Nan::New<v8::Integer>(static_cast<int32_t>(code));
+
+  info.GetReturnValue().Set(ret);
+}
+
+NAN_METHOD(Easy::Upkeep) {
+  Nan::HandleScope scope;
+
+  Easy* obj = Nan::ObjectWrap::Unwrap<Easy>(info.This());
+
+  if (!obj->isOpen) {
+    Nan::ThrowError("Curl handle is closed.");
+    return;
+  }
+
+#if NODE_LIBCURL_VER_GE(7, 62, 0)
+  CURLcode code = curl_easy_upkeep(obj->ch);
+#else
+    Nan::ThrowError("The addon was built against a libcurl version that does not support upkeep. It requires libcurl >= 7.62");
+    return;
+#endif
 
   v8::Local<v8::Integer> ret = Nan::New<v8::Integer>(static_cast<int32_t>(code));
 

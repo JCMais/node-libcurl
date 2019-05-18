@@ -425,6 +425,19 @@ class Curl extends EventEmitter {
   }
 
   /**
+   * Perform any connection upkeep checks.
+   */
+  upkeep() {
+    const code = this.handle.upkeep()
+
+    if (code !== CurlCode.CURLE_OK) {
+      throw new Error(Easy.strError(code))
+    }
+
+    return this
+  }
+
+  /**
    * Using this function, you can explicitly mark a running connection to get paused, and you can unpause a connection that was previously paused.
    *
    * The bitmask argument is a set of bits that sets the new state of the connection.
