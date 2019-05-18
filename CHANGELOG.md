@@ -59,6 +59,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Support Node.js 12
 - Added missing options:
+  - `CURLOPT_DISALLOW_USERNAME_IN_URL`
   - `CURLOPT_DNS_SHUFFLE_ADDRESSES`
   - `CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS`
   - `CURLOPT_HAPROXYPROTOCOL`
