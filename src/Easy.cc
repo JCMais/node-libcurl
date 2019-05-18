@@ -1454,6 +1454,9 @@ NAN_METHOD(Easy::GetInfo) {
   } else if ((infoId = IsInsideCurlConstantStruct(curlInfoDouble, infoVal))) {
     switch (infoId) {
     // curl_off_t variants that were added on 7.55
+#if NODE_LIBCURL_VER_GE(7, 59, 0)
+      case CURLINFO_FILETIME_T:
+#endif
 #if NODE_LIBCURL_VER_GE(7, 55, 0)
       case CURLINFO_CONTENT_LENGTH_DOWNLOAD_T:
       case CURLINFO_CONTENT_LENGTH_UPLOAD_T:

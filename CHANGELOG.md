@@ -62,7 +62,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `CURLOPT_REQUEST_TARGET`
   - `CURLOPT_FTP_FILEMETHOD` ([#148](https://github.com/JCMais/node-libcurl/pull/148))
   - `CURLOPT_SSH_COMPRESSION`
-- Add missing `CURLINFO_*_{DOWNLOAD,UPLOAD}_T` info fields
+- Add missing info fields: 
+  - `CURLINFO_*_{DOWNLOAD,UPLOAD}_T`
+  - `CURLINFO_FILETIME_T`
 - Add `Curl.getVersionInfo()` which returns an object that represents the struct returned from `curl_version_info()`
   See their type definition for details: [`./lib/types/CurlVersionInfoNativeBinding.ts`](./lib/types/CurlVersionInfoNativeBinding.ts)
 - Errors thrown inside callbacks are correctly caught / passed forward (if using multi interface)
