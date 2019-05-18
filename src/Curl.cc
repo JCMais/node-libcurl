@@ -216,6 +216,10 @@ const std::vector<CurlConstant> curlOptionInteger = {
 
     {"SSH_AUTH_TYPES", CURLOPT_SSH_AUTH_TYPES},
 
+#if NODE_LIBCURL_VER_GE(7, 56, 0)
+    {"SSH_COMPRESSION", CURLOPT_SSH_COMPRESSION},
+#endif
+
 #if NODE_LIBCURL_VER_GE(7, 19, 4)
     {"SOCKS5_GSSAPI_NEC", CURLOPT_SOCKS5_GSSAPI_NEC},
 #endif
