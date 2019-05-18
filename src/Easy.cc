@@ -1452,7 +1452,22 @@ NAN_METHOD(Easy::GetInfo) {
 
     // Double
   } else if ((infoId = IsInsideCurlConstantStruct(curlInfoDouble, infoVal))) {
-    retVal = Easy::GetInfoTmpl<double, v8::Number>(obj, infoId);
+    switch (infoId) {
+    // curl_off_t variants that were added on 7.55
+#if NODE_LIBCURL_VER_GE(7, 55, 0)
+      case CURLINFO_CONTENT_LENGTH_DOWNLOAD_T:
+      case CURLINFO_CONTENT_LENGTH_UPLOAD_T:
+      case CURLINFO_SIZE_DOWNLOAD_T:
+      case CURLINFO_SIZE_UPLOAD_T:
+      case CURLINFO_SPEED_DOWNLOAD_T:
+      case CURLINFO_SPEED_UPLOAD_T:
+        retVal = Easy::GetInfoTmpl<curl_off_t, v8::Number>(obj, infoId);
+        break;
+#endif
+      default:
+        retVal = Easy::GetInfoTmpl<double, v8::Number>(obj, infoId);
+        break;
+    }
 
     // Integer
   } else if ((infoId = IsInsideCurlConstantStruct(curlInfoInteger, infoVal))) {
