@@ -138,6 +138,10 @@ const std::vector<CurlConstant> curlOptionInteger = {
     {"FTP_USE_PRET", CURLOPT_FTP_USE_PRET},
 #endif
 
+#if NODE_LIBCURL_VER_GE(7, 59, 0)
+    {"HAPPY_EYEBALLS_TIMEOUT_MS", CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS},
+#endif
+
     {"HEADER", CURLOPT_HEADER},
 
 #if NODE_LIBCURL_VER_GE(7, 37, 0)

@@ -59,6 +59,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Support Node.js 12
 - Added missing options:
+  - `CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS`
   - `CURLOPT_REQUEST_TARGET`
   - `CURLOPT_FTP_FILEMETHOD` ([#148](https://github.com/JCMais/node-libcurl/pull/148))
   - `CURLOPT_SSH_COMPRESSION`
