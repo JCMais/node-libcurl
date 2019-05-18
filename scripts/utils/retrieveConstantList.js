@@ -44,7 +44,7 @@ const retrieveConstantList = async ({ url, constantPrefix, blacklist }) => {
     })
     .get()
     .sort((a, b) => a.constantName.localeCompare(b.constantName))
-    .filter(item => !blacklist.includes(item.constantName))
+    .filter(item => !blacklist.includes(item.constantOriginal))
 }
 
 module.exports = {
