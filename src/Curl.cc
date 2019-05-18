@@ -151,6 +151,10 @@ const std::vector<CurlConstant> curlOptionInteger = {
     {"HAPPY_EYEBALLS_TIMEOUT_MS", CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS},
 #endif
 
+#if NODE_LIBCURL_VER_GE(7, 60, 0)
+    {"HAPROXYPROTOCOL", CURLOPT_HAPROXYPROTOCOL},
+#endif
+
     {"HEADER", CURLOPT_HEADER},
 
 #if NODE_LIBCURL_VER_GE(7, 37, 0)

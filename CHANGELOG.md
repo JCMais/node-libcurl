@@ -61,6 +61,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added missing options:
   - `CURLOPT_DNS_SHUFFLE_ADDRESSES`
   - `CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS`
+  - `CURLOPT_HAPROXYPROTOCOL`
   - `CURLOPT_REQUEST_TARGET`
   - `CURLOPT_FTP_FILEMETHOD` ([#148](https://github.com/JCMais/node-libcurl/pull/148))
   - `CURLOPT_SSH_COMPRESSION`
