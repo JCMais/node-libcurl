@@ -40,6 +40,7 @@ cache:
   - build -> binding.gyp, LIBCURL_VERSION_WIN_DEPS
   - '%USERPROFILE%\.node-gyp'
   - '%USERPROFILE%\.nw-gyp'
+  - '%USERPROFILE%\.nw'
   - '%LOCALAPPDATA%\Yarn\cache'
   - '%LOCALAPPDATA%\electron\Cache'
 
@@ -93,6 +94,31 @@ install:
         pip install patch
         # apply patch to nw-gyp fixing issue
         python -m patch -d "$(yarn global dir)/node_modules/nw-gyp/src" ./scripts/ci/patches/win_delay_load_hook.cc.patch
+      
+        $arch = if ($env:PLATFORM -eq "x86") { "ia32" } else { "x64" }
+
+        $rootFolder = "$env:USERPROFILE/.nw"
+        mkdir -Force $rootFolder
+
+        $nwName = "nwjs-v$target-win-$arch"
+        $outputFolder = "$env:USERPROFILE/.nw/$nwName"
+
+        if (![System.IO.File]::Exists("$outputFolder/nw.exe")) {
+          Write-Host "nw.exe not found on $outputFolder - Downloading it"
+          
+          $url = "https://dl.nwjs.io/v$target/$nwName.zip"
+          $output = "$rootFolder/$nwName.zip"
+
+          # https://blog.jourdant.me/post/3-ways-to-download-files-with-powershell
+          Import-Module BitsTransfer
+          Start-BitsTransfer -Source $url -Destination $output
+
+          Expand-Archive $output -DestinationPath $rootFolder
+
+          Remove-Item –path $output
+        }
+
+        $env:PATH = "$outputFolder;$env:PATH"
       }
 
       $env:npm_config_msvs_version      = "2017"
