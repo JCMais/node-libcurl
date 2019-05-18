@@ -123,6 +123,7 @@ class Easy : public Nan::ObjectWrap {
   static int CbDebug(CURL* handle, curl_infotype type, char* data, size_t size, void* userptr);
   static int CbFnMatch(void* ptr, const char* pattern, const char* string);
   static int CbProgress(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow);
+  static int CbTrailer(struct curl_slist ** list, void *userdata);
   static int CbXferinfo(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal,
                         curl_off_t ulnow);
 

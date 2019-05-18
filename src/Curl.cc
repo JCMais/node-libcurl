@@ -42,6 +42,11 @@ const std::vector<CurlConstant> curlOptionNotImplemented = {
     {"HEADERDATA", CURLOPT_HEADERDATA},
 
     // Options that are not necessary because javascript nature.
+#if NODE_LIBCURL_VER_GE(7, 63, 0)
+    // URL's can be easily parsed on JS
+    {"CURLU", CURLOPT_CURLU},
+#endif
+
     {"PRIVATE", CURLOPT_PRIVATE},
     {"PROGRESSDATA", CURLOPT_PROGRESSDATA},
 #if NODE_LIBCURL_VER_GE(7, 32, 0)
@@ -67,6 +72,10 @@ const std::vector<CurlConstant> curlOptionNotImplemented = {
     {"COPYPOSTFIELDS", CURLOPT_COPYPOSTFIELDS},
 #if NODE_LIBCURL_VER_GE(7, 19, 6)
     {"SSH_KEYDATA", CURLOPT_SSH_KEYDATA},
+#endif
+
+#if NODE_LIBCURL_VER_GE(7, 64, 0)
+    {"TRAILERDATA", CURLOPT_TRAILERDATA},
 #endif
 
 // Maybe?
@@ -162,6 +171,10 @@ const std::vector<CurlConstant> curlOptionInteger = {
     {"HEADEROPT", CURLOPT_HEADEROPT},
 #endif
 
+#if NODE_LIBCURL_VER_GE(7, 64, 0)
+    {"HTTP09_ALLOWED", CURLOPT_HTTP09_ALLOWED},
+#endif
+
     {"HTTPAUTH", CURLOPT_HTTPAUTH},
     {"HTTPGET", CURLOPT_HTTPGET},
     {"HTTPPROXYTUNNEL", CURLOPT_HTTPPROXYTUNNEL},
@@ -180,6 +193,11 @@ const std::vector<CurlConstant> curlOptionInteger = {
     {"LOCALPORTRANGE", CURLOPT_LOCALPORTRANGE},
     {"LOW_SPEED_LIMIT", CURLOPT_LOW_SPEED_LIMIT},
     {"LOW_SPEED_TIME", CURLOPT_LOW_SPEED_TIME},
+
+#if NODE_LIBCURL_VER_GE(7, 65, 0)
+    {"MAXAGE_CONN", CURLOPT_MAXAGE_CONN},
+#endif
+
     {"MAXCONNECTS", CURLOPT_MAXCONNECTS},
     {"MAXFILESIZE", CURLOPT_MAXFILESIZE},
     {"MAXREDIRS", CURLOPT_MAXREDIRS},
@@ -494,6 +512,10 @@ const std::vector<CurlConstant> curlOptionFunction = {
     {"PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION},
     {"READFUNCTION", CURLOPT_READFUNCTION},
     {"SEEKFUNCTION", CURLOPT_SEEKFUNCTION},
+
+#if NODE_LIBCURL_VER_GE(7, 64, 0)
+    {"TRAILERFUNCTION", CURLOPT_TRAILERFUNCTION},
+#endif
 
 #if NODE_LIBCURL_VER_GE(7, 32, 0)
     {"XFERINFOFUNCTION", CURLOPT_XFERINFOFUNCTION},

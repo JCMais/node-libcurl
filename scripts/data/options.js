@@ -19,6 +19,7 @@ const optionKindMap = {
     'DEBUGFUNCTION',
     'FNMATCH_FUNCTION',
     'SEEKFUNCTION',
+    'TRAILERFUNCTION',
     'SHARE',
     'HTTPPOST',
     // @TODO ADD OPTIONS WE HAVE ENUM FOR
@@ -39,6 +40,7 @@ const optionKindValueMap = {
   /* @TODO Add type definitions, they are on Curl.fnmatchfunc */
   FNMATCH_FUNCTION: '((pattern: string, value: string) => number)',
   HTTPPOST: 'HttpPostField[]',
+  TRAILERFUNCTION: '(() => string[] | false)',
   /* @TODO Add CURL_SEEKFUNC_* type definitions */
   SEEKFUNCTION: '((offset: number, origin: number) => number)',
   SHARE: 'Share',

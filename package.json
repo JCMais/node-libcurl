@@ -30,6 +30,7 @@
     "clean": "yarn clean:build && yarn clean:dist",
     "docs": "jsdoc2md lib/*.js > api.md",
     "lint": "tslint -p . -c tslint.json",
+    "lint:files": "tslint -c tslint.json",
     "pregyp": "node-pre-gyp",
     "prettier:all": "yarn prettier lib/**/*.js tools/**/*.js scripts/**/*.js test/**/*.js examples/**/*.js",
     "prettier": "prettier --write",
@@ -94,7 +95,7 @@
     ],
     "*.ts": [
       "yarn prettier",
-      "yarn lint --fix",
+      "yarn lint:files --fix",
       "git add"
     ]
   },

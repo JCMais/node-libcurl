@@ -781,6 +781,81 @@ int Easy::CbProgress(void* clientp, double dltotal, double dlnow, double ultotal
   return returnValue;
 }
 
+int Easy::CbTrailer(struct curl_slist** headerList, void* userdata) {
+#if NODE_LIBCURL_VER_GE(7, 64, 0)
+  Nan::HandleScope scope;
+
+  Easy* obj = static_cast<Easy*>(userdata);
+
+  assert(obj);
+
+  CallbacksMap::iterator it;
+
+  // make sure the callback was set
+  it = obj->callbacks.find(CURLOPT_TRAILERFUNCTION);
+  assert(it != obj->callbacks.end() && "Trailer callback not set.");
+
+  Nan::TryCatch tryCatch;
+  Nan::MaybeLocal<v8::Value> returnValueCb = Nan::Call(*(it->second.get()), obj->handle(), 0, NULL);
+
+  if (tryCatch.HasCaught()) {
+    if (obj->isInsideMultiHandle) {
+      obj->callbackError.Reset(tryCatch.Exception());
+    } else {
+      tryCatch.ReThrow();
+    }
+    return CURL_TRAILERFUNC_ABORT;
+  }
+
+  v8::Local<v8::Value> returnValueCbTypeError = Nan::TypeError(
+      "Return value from the Trailer callback must be an array of strings or false.");
+
+  bool isInvalid = returnValueCb.IsEmpty() || (!returnValueCb.ToLocalChecked()->IsArray() &&
+                                               !returnValueCb.ToLocalChecked()->IsFalse());
+
+  if (isInvalid) {
+    if (obj->isInsideMultiHandle) {
+      obj->callbackError.Reset(returnValueCbTypeError);
+    } else {
+      Nan::ThrowError(returnValueCbTypeError);
+      tryCatch.ReThrow();
+    }
+
+    return CURL_TRAILERFUNC_ABORT;
+  }
+
+  v8::Local<v8::Value> returnValueCbChecked = returnValueCb.ToLocalChecked();
+
+  if (returnValueCbChecked->IsFalse()) {
+    return CURL_TRAILERFUNC_ABORT;
+  }
+
+  v8::Local<v8::Array> rows = v8::Local<v8::Array>::Cast(returnValueCbChecked);
+
+  // [headerStr1, headerStr2]
+  for (uint32_t i = 0, len = rows->Length(); i < len; ++i) {
+    // not an array of objects
+    v8::Local<v8::Value> headerStrValue = Nan::Get(rows, i).ToLocalChecked();
+    if (!headerStrValue->IsString()) {
+      if (obj->isInsideMultiHandle) {
+        obj->callbackError.Reset(returnValueCbTypeError);
+      } else {
+        Nan::ThrowError(returnValueCbTypeError);
+        tryCatch.ReThrow();
+      }
+
+      return CURL_TRAILERFUNC_ABORT;
+    }
+
+    *headerList = curl_slist_append(*headerList, *Nan::Utf8String(headerStrValue));
+  }
+
+  return CURL_TRAILERFUNC_OK;
+#else
+  return 0
+#endif
+}
+
 int Easy::CbXferinfo(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal,
                      curl_off_t ulnow) {
   Nan::HandleScope scope;
@@ -1347,6 +1422,24 @@ NAN_METHOD(Easy::SetOpt) {
 
         break;
 
+#if NODE_LIBCURL_VER_GE(7, 64, 0)
+      case CURLOPT_TRAILERFUNCTION:
+
+        if (isNull) {
+          obj->callbacks.erase(CURLOPT_TRAILERFUNCTION);
+          curl_easy_setopt(obj->ch, CURLOPT_TRAILERDATA, NULL);
+          setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_TRAILERFUNCTION, NULL);
+        } else {
+          obj->callbacks[CURLOPT_TRAILERFUNCTION].reset(
+              new Nan::Callback(value.As<v8::Function>()));
+
+          curl_easy_setopt(obj->ch, CURLOPT_TRAILERDATA, obj);
+          setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_TRAILERFUNCTION, Easy::CbTrailer);
+        }
+
+        break;
+#endif
+
 #if NODE_LIBCURL_VER_GE(7, 32, 0)
       /* xferinfo was introduced in 7.32.0.
          New libcurls will prefer the new callback and instead use that one even
@@ -1454,7 +1547,7 @@ NAN_METHOD(Easy::GetInfo) {
     // Double
   } else if ((infoId = IsInsideCurlConstantStruct(curlInfoDouble, infoVal))) {
     switch (infoId) {
-    // curl_off_t variants that were added on 7.55
+      // curl_off_t variants that were added on 7.55
 #if NODE_LIBCURL_VER_GE(7, 59, 0)
       case CURLINFO_FILETIME_T:
 #endif
@@ -1650,8 +1743,10 @@ NAN_METHOD(Easy::Upkeep) {
 #if NODE_LIBCURL_VER_GE(7, 62, 0)
   CURLcode code = curl_easy_upkeep(obj->ch);
 #else
-    Nan::ThrowError("The addon was built against a libcurl version that does not support upkeep. It requires libcurl >= 7.62");
-    return;
+  Nan::ThrowError(
+      "The addon was built against a libcurl version that does not support upkeep. It requires "
+      "libcurl >= 7.62");
+  return;
 #endif
 
   v8::Local<v8::Integer> ret = Nan::New<v8::Integer>(static_cast<int32_t>(code));

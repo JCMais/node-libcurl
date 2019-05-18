@@ -107,6 +107,15 @@ export declare class EasyNativeBinding {
    *
    * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
+  setOpt(
+    option: 'TRAILERFUNCTION',
+    value: (() => string[] | false) | null,
+  ): CurlCode
+  /**
+   * Use `Curl.option` for predefined constants.
+   *
+   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
   setOpt(option: 'SHARE', value: Share | null): CurlCode
   /**
    * Use `Curl.option` for predefined constants.

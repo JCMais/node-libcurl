@@ -39,6 +39,7 @@ const curlOptionsBlacklist = [
   'CURLOPT_SEEKDATA',
   'CURLOPT_CHUNK_DATA',
   'CURLOPT_FNMATCH_DATA',
+  'CURLOPT_TRAILERDATA',
   // Options that are used internally
   'CURLOPT_WRITEDATA',
   'CURLOPT_HEADERDATA',

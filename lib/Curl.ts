@@ -129,6 +129,10 @@ class Curl extends EventEmitter {
     ].join('\n')
   }
 
+  static isVersionGreaterThan = (x: number, y: number, z: number = 0) => {
+    return _Curl.VERSION_NUM >= (x << 16) + (y << 8) + z
+  }
+
   /**
    * Returns the number of handles currently open in the internal multi handle being used.
    */
@@ -613,6 +617,15 @@ interface Curl {
   setOpt(
     option: 'SEEKFUNCTION',
     value: ((offset: number, origin: number) => number) | null,
+  ): this
+  /**
+   * Use `Curl.option` for predefined constants.
+   *
+   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(
+    option: 'TRAILERFUNCTION',
+    value: (() => string[] | false) | null,
   ): this
   /**
    * Use `Curl.option` for predefined constants.

@@ -65,6 +65,7 @@ describe('setOpt()', () => {
 
   it('should not work with non-implemented options', () => {
     ;(() => {
+      // @ts-ignore
       curl.setOpt(Curl.option.SSL_CTX_FUNCTION, 1)
     }).should.throw(/^Unsupported/)
   })
