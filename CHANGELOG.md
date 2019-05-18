@@ -61,6 +61,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added missing options:
   - `CURLOPT_DISALLOW_USERNAME_IN_URL`
   - `CURLOPT_DNS_SHUFFLE_ADDRESSES`
+  - `CURLOPT_DOH_URL`
   - `CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS`
   - `CURLOPT_HAPROXYPROTOCOL`
   - `CURLOPT_REQUEST_TARGET`

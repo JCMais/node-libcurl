@@ -346,6 +346,10 @@ const std::vector<CurlConstant> curlOptionString = {
     {"DNS_SERVERS", CURLOPT_DNS_SERVERS},
 #endif
 
+#if NODE_LIBCURL_VER_GE(7, 62, 0)
+    {"DOH_URL", CURLOPT_DOH_URL},
+#endif
+
     {"EGDSOCKET", CURLOPT_EGDSOCKET},
     {"ENCODING", CURLOPT_ENCODING},  // should use ACCEPT_ENCODING
     {"FTPPORT", CURLOPT_FTPPORT},
