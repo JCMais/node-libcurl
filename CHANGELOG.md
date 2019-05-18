@@ -68,6 +68,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `CURLOPT_TIMEVALUE_LARGE`
 - Add missing info fields: 
   - `CURLINFO_*_{DOWNLOAD,UPLOAD}_T`
+  - `CURLINFO_*_TIME_T`
   - `CURLINFO_FILETIME_T`
 - Add `Curl.getVersionInfo()` which returns an object that represents the struct returned from `curl_version_info()`
   See their type definition for details: [`./lib/types/CurlVersionInfoNativeBinding.ts`](./lib/types/CurlVersionInfoNativeBinding.ts)
