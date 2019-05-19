@@ -98,5 +98,5 @@ We are using [`np`](https://github.com/sindresorhus/np) for releases.
 
 For prereleases, use something like:
 ```shell
-$ yarn np 2.0.0-alpha.1 --tag=next
+$ npx np prerelease --any-branch --tag next
 ```
