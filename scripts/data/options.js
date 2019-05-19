@@ -50,8 +50,8 @@ const optionKindValueMap = {
 
   // enums
   GSSAPI_DELEGATION: 'CurlGssApi',
-  PROXY_SSL_OPT: 'CurlSslOpt',
-  SSL_OPT: 'CurlSslOpt',
+  PROXY_SSL_OPTIONS: 'CurlSslOpt',
+  SSL_OPTIONS: 'CurlSslOpt',
   _: 'string | number | boolean',
 }
 

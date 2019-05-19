@@ -136,7 +136,13 @@ export declare class EasyNativeBinding {
    *
    * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
-  setOpt(option: 'SSL_OPT', value: CurlSslOpt | null): CurlCode
+  setOpt(option: 'PROXY_SSL_OPTIONS', value: CurlSslOpt | null): CurlCode
+  /**
+   * Use `Curl.option` for predefined constants.
+   *
+   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'SSL_OPTIONS', value: CurlSslOpt | null): CurlCode
   /**
    * Use `Curl.option` for predefined constants.
    *
