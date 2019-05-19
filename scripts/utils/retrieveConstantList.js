@@ -1,13 +1,13 @@
 const cheerio = require('cheerio')
 
-const { curl } = require('../../dist')
+const { curly } = require('../../dist')
 
 const {
   convertCurlConstantToCamelCase,
 } = require('./convertCurlConstantToCamelCase')
 
 const retrieveConstantList = async ({ url, constantPrefix, blacklist }) => {
-  const { data } = await curl.get(url, {
+  const { data } = await curly.get(url, {
     SSL_VERIFYPEER: false,
   })
 

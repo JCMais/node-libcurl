@@ -8,7 +8,7 @@ export { Curl } from './Curl'
 export { Easy } from './Easy'
 export { Multi } from './Multi'
 export { Share } from './Share'
-export { curl } from './curlFn'
+export { curly } from './curly'
 
 // enums
 export * from './enum/CurlAuth'

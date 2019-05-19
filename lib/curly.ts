@@ -14,7 +14,7 @@ import { HeaderInfo } from './parseHeaders'
 
 import { Curl } from './Curl'
 
-export interface CurlFnPromise {
+export interface CurlyResult {
   data: string
   headers: HeaderInfo[]
   statusCode: number
@@ -60,7 +60,7 @@ const methods = [
 
 type HttpMethod = (typeof methods)[number]
 
-interface CurlFnHttpMethodCall {
+interface CurlyHttpMethodCall {
   /**
    * **EXPERIMENTAL** This API can change between minor releases
    *
@@ -68,11 +68,12 @@ interface CurlFnHttpMethodCall {
    *
    * The `curl.<field>` being used will be the HTTP verb sent.
    */
-  (url: string, options?: CurlOptionValueType): Promise<CurlFnPromise>
+  (url: string, options?: CurlOptionValueType): Promise<CurlyResult>
 }
 
-type HttpMethodCalls = { [K in HttpMethod]: CurlFnHttpMethodCall }
-export interface CurlFn extends HttpMethodCalls {
+type HttpMethodCalls = { [K in HttpMethod]: CurlyHttpMethodCall }
+
+export interface CurlyFunction extends HttpMethodCalls {
   /**
    * **EXPERIMENTAL** This API can change between minor releases
    *
@@ -80,15 +81,15 @@ export interface CurlFn extends HttpMethodCalls {
    * It's also possible to request using a specific http verb
    *  directly by using `curl.<http-verb>(url)`
    */
-  (url: string, options?: CurlOptionValueType): Promise<CurlFnPromise>
-  create: () => CurlFn
+  (url: string, options?: CurlOptionValueType): Promise<CurlyResult>
+  create: () => CurlyFunction
 }
 
-const create = (): CurlFn => {
+const create = (): CurlyFunction => {
   function curl(
     url: string,
     options: CurlOptionValueType = {},
-  ): Promise<CurlFnPromise> {
+  ): Promise<CurlyResult> {
     const curlHandle = new Curl()
 
     curlHandle.setOpt('URL', url)
@@ -151,4 +152,4 @@ const create = (): CurlFn => {
   return curl
 }
 
-export const curl = create()
+export const curly = create()

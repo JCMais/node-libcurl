@@ -40,7 +40,11 @@ const run = async () => {
     variableName: 'CurlOption',
     filePath: curlOptionsFilePath,
     shouldGenerateCamelCaseMap: true,
-    extraHeaderText: 'import { Share } from "../Share"',
+    extraHeaderText: `
+      import { CurlGssApi } from "../enum/CurlGssApi"
+      import { CurlSslOpt } from "../enum/CurlSslOpt"
+      import { Share } from "../Share"
+    `,
   })
 
   const allowedCurlInfos = await retrieveConstantList({

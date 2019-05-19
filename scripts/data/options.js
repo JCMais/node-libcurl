@@ -23,8 +23,9 @@ const optionKindMap = {
     'SHARE',
     'HTTPPOST',
     'GSSAPI_DELEGATION',
-    'SSL_OPT',
-    // @TODO ADD OPTIONS WE HAVE ENUM FOR
+    'PROXY_SSL_OPTIONS',
+    'SSL_OPTIONS',
+    // @TODO ADD REMAINING OPTIONS WE HAVE ENUM FOR
   ],
 }
 
@@ -49,6 +50,7 @@ const optionKindValueMap = {
 
   // enums
   GSSAPI_DELEGATION: 'CurlGssApi',
+  PROXY_SSL_OPT: 'CurlSslOpt',
   SSL_OPT: 'CurlSslOpt',
   _: 'string | number | boolean',
 }
