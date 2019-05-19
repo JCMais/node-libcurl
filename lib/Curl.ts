@@ -78,7 +78,8 @@ multiHandle.onMessage((error, handle, errorCode) => {
 })
 
 /**
- * Wrapper class around one easy handle providing a better interface
+ * Wrapper class around an Easy handle.
+ * It provides a more *nodejs-friendly* interface.
  */
 class Curl extends EventEmitter {
   /**
@@ -228,14 +229,6 @@ class Curl extends EventEmitter {
     return size * nmemb
   }
 
-  /**
-   * Same than {@link module:node-libcurl.Curl#_onData} but for the headers.
-   * @param {Buffer} chunk
-   * @returns {Number}
-   * @emits module:node-libcurl.Curl#event:header
-   *
-   * @private
-   */
   protected defaultHeaderFunction(chunk: Buffer, size: number, nmemb: number) {
     if (!(this.features & CurlFeature.NoHeaderStorage)) {
       this.headerChunks.push(chunk)
@@ -413,7 +406,7 @@ class Curl extends EventEmitter {
 
   /**
    * Add this instance to the processing queue.
-   * @throws This method should be called only one time per request,
+   * This method should be called only one time per request,
    *  otherwise it will throw an exception.
    */
   perform() {
@@ -523,6 +516,7 @@ class Curl extends EventEmitter {
     this.handle.close()
   }
 }
+
 interface Curl {
   on(event: 'data', listener: (chunk: Buffer, curlInstance: Curl) => void): this
   on(
@@ -650,9 +644,5 @@ interface Curl {
   ): this
   // END AUTOMATICALLY GENERATED CODE - DO NOT EDIT
 }
-
-const curl = new Curl()
-
-curl.on('data', () => {})
 
 export { Curl }

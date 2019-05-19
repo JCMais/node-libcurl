@@ -174,7 +174,7 @@ export declare class EasyNativeBinding {
    *
    * Use `Curl.pause` for predefined constants
    *
-   * Official libcurl documentation: [curl_easy_pause()]{@link http://curl.haxx.se/libcurl/c/curl_easy_pause.html}
+   * Official libcurl documentation: [curl_easy_pause()](http://curl.haxx.se/libcurl/c/curl_easy_pause.html)
    */
   pause(bitmask: CurlPause): CurlCode
 
