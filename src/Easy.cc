@@ -514,8 +514,11 @@ v8::Local<v8::Object> Easy::CreateV8ObjectFromCurlFileInfo(curl_fileinfo* fileIn
   v8::Local<v8::Integer> fileType = Nan::New(fileInfo->filetype);
   v8::Local<v8::Value> time = Nan::Null().As<v8::Value>();
 
-  if (fileInfo->time != 0) time = Nan::New<v8::Date>(static_cast<double>(fileInfo->time) * 1000).ToLocalChecked().As<v8::Value>();
-  
+  if (fileInfo->time != 0)
+    time = Nan::New<v8::Date>(static_cast<double>(fileInfo->time) * 1000)
+               .ToLocalChecked()
+               .As<v8::Value>();
+
   v8::Local<v8::Uint32> perm = Nan::New(fileInfo->perm);
   v8::Local<v8::Integer> uid = Nan::New(fileInfo->uid);
   v8::Local<v8::Integer> gid = Nan::New(fileInfo->gid);
