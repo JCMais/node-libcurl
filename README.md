@@ -61,9 +61,9 @@ yarn add node-libcurl
 > this API is experimental and is subject to changes without a major version bump
 
 ```javascript
-const { curl } = require('node-libcurl');
+const { curly } = require('node-libcurl');
 
-const { statusCode, data, headers } = await curl.get('http://www.google.com')
+const { statusCode, data, headers } = await curly.get('http://www.google.com')
 ```
 
 ### Simple Request
