@@ -15,4 +15,6 @@ lib/binding/
 debug/
 examples/
 test/
+docs/
+website/
 *.tgz

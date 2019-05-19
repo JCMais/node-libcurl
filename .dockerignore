@@ -8,3 +8,5 @@ deps/
 dist/
 lib/binding/node_libcurl.node
 node_modules/
+website/
+docs/

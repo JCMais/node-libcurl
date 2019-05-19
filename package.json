@@ -25,10 +25,11 @@
     "postinstall": "node scripts/postinstall",
     "preversion": "yarn lint && yarn build:dist",
     "build:dist": "tsc",
+    "ae": "api-extractor run --local --verbose",
     "clean:build": "rimraf build",
     "clean:dist": "rimraf dist",
     "clean": "yarn clean:build && yarn clean:dist",
-    "docs": "jsdoc2md lib/*.js > api.md",
+    "docs": "api-documenter markdown -i build/api-extractor -o docs",
     "lint": "tslint -p . -c tslint.json",
     "lint:files": "tslint -c tslint.json",
     "pregyp": "node-pre-gyp",
@@ -55,6 +56,8 @@
     "tslib": "^1.9.3"
   },
   "devDependencies": {
+    "@microsoft/api-documenter": "^7.2.0",
+    "@microsoft/api-extractor": "^7.1.5",
     "@types/body-parser": "^1.17.0",
     "@types/cookie-parser": "^1.4.1",
     "@types/express": "^4.16.1",
