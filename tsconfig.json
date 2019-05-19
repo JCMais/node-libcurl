@@ -13,6 +13,7 @@
     ],
     "esModuleInterop": true,
     "declaration": true,
+    "declarationMap": true,
     "rootDir": "lib",
     "outDir": "dist",
     "sourceMap": true,
