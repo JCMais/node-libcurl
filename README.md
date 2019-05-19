@@ -32,6 +32,7 @@ _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-
   - [Simple Request](#simple-request)
   - [MultiPart Upload / HttpPost libcurl Option](#multipart-upload--httppost-libcurl-option)
 - [API](#api)
+- [Supported Libcurl Versions](#supported-libcurl-versions)
 - [Detailed Installation](#detailed-installation)
   - [Important Notes on Prebuilt Binaries / Direct Installation](#important-notes-on-prebuilt-binaries--direct-installation)
     - [Missing Packages](#missing-packages)
@@ -113,6 +114,14 @@ For more examples check the [examples folder](./examples).
 The code provides Typescript type definitions, which should document most of the API.
 
 Almost all [CURL options](https://curl.haxx.se/libcurl/c/curl_easy_setopt.html) are supported, if you pass one that is not, an error will be thrown.
+
+For more usage examples check the [examples folder](./examples).
+
+## Supported Libcurl Versions
+
+The addon is only tested against libcurl version `7.50.0` and the latest one available.
+
+The code itself is made to compile with any version greater than `7.32.0`, any libcurl version lower than that is **not** supported.
 
 ## Detailed Installation
 
