@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { Share } from '../Share'
-import { CurlCode } from '../enum/CurlCode'
 import {
   CurlOptionName,
   DataCallbackOptions,
@@ -15,8 +14,11 @@ import {
 } from '../generated/CurlOption'
 import { CurlInfoName } from '../generated/CurlInfo'
 
-import { SocketStateEnum } from '../enum/SocketState'
+import { CurlCode } from '../enum/CurlCode'
+import { CurlGssApi } from '../enum/CurlGssApi'
 import { CurlPause } from '../enum/CurlPause'
+import { CurlSslOpt } from '../enum/CurlSslOpt'
+import { SocketStateEnum } from '../enum/SocketState'
 
 import { FileInfo, HttpPostField } from './'
 
@@ -123,6 +125,18 @@ export declare class EasyNativeBinding {
    * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'HTTPPOST', value: HttpPostField[] | null): CurlCode
+  /**
+   * Use `Curl.option` for predefined constants.
+   *
+   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'GSSAPI_DELEGATION', value: CurlGssApi | null): CurlCode
+  /**
+   * Use `Curl.option` for predefined constants.
+   *
+   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'SSL_OPT', value: CurlSslOpt | null): CurlCode
   /**
    * Use `Curl.option` for predefined constants.
    *
