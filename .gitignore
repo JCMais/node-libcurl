@@ -3,7 +3,6 @@ node_modules
 .idea
 npm-debug.log
 examples/cacert*
-docs
 wallaby.json
 lib/binding
 debug
@@ -20,5 +19,10 @@ build
 
 # Ts
 tsconfig.tsbuildinfo
+
+# @TODO Remove when get api-documenter to work
+docs/
+website/
+api/
 
 yarn-error.log
