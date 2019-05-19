@@ -69,6 +69,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `CURLOPT_FTP_FILEMETHOD` ([#148](https://github.com/JCMais/node-libcurl/pull/148))
   - `CURLOPT_MAXAGE_CONN`
   - `CURLOPT_PROXY_TLS13_CIPHERS`
+  - `CURLOPT_RTSPHEADER`
+  - `CURLOPT_RTSP_REQUEST`
+  - `CURLOPT_SOCKS5_AUTH`
   - `CURLOPT_SSH_COMPRESSION`
   - `CURLOPT_TLS13_CIPHERS`
   - `CURLOPT_TIMEVALUE_LARGE`

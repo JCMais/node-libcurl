@@ -243,11 +243,16 @@ const std::vector<CurlConstant> curlOptionInteger = {
 
 #if NODE_LIBCURL_VER_GE(7, 20, 0)
     {"RTSP_CLIENT_CSEQ", CURLOPT_RTSP_CLIENT_CSEQ},
+    {"RTSP_REQUEST", CURLOPT_RTSP_REQUEST},
     {"RTSP_SERVER_CSEQ", CURLOPT_RTSP_SERVER_CSEQ},
 #endif
 
 #if NODE_LIBCURL_VER_GE(7, 31, 0)
     {"SASL_IR", CURLOPT_SASL_IR},
+#endif
+
+#if NODE_LIBCURL_VER_GE(7, 31, 0)
+    {"SOCKS5_AUTH", CURLOPT_SOCKS5_AUTH},
 #endif
 
     {"SSH_AUTH_TYPES", CURLOPT_SSH_AUTH_TYPES},
@@ -395,7 +400,6 @@ const std::vector<CurlConstant> curlOptionString = {
 
 #if NODE_LIBCURL_VER_GE(7, 20, 0)
     {"MAIL_FROM", CURLOPT_MAIL_FROM},
-    {"MAIL_RCPT", CURLOPT_MAIL_RCPT},
 #endif
 
     {"NETRC_FILE", CURLOPT_NETRC_FILE},
@@ -436,10 +440,6 @@ const std::vector<CurlConstant> curlOptionString = {
 
 #if NODE_LIBCURL_VER_GE(7, 55, 0)
     {"REQUEST_TARGET", CURLOPT_REQUEST_TARGET},
-#endif
-
-#if NODE_LIBCURL_VER_GE(7, 21, 3)
-    {"RESOLVE", CURLOPT_RESOLVE},
 #endif
 
 #if NODE_LIBCURL_VER_GE(7, 20, 0)
@@ -549,6 +549,7 @@ const std::vector<CurlConstant> curlOptionLinkedList = {
     {"RESOLVE", CURLOPT_RESOLVE},
 #endif
 
+    {"RTSPHEADER", CURLOPT_RTSPHEADER},
     {"TELNETOPTIONS", CURLOPT_TELNETOPTIONS},
 };
 
