@@ -857,7 +857,7 @@ int Easy::CbTrailer(struct curl_slist** headerList, void* userdata) {
 
   return CURL_TRAILERFUNC_OK;
 #else
-  return 0
+  return 0;
 #endif
 }
 
@@ -1748,6 +1748,7 @@ NAN_METHOD(Easy::Upkeep) {
 #if NODE_LIBCURL_VER_GE(7, 62, 0)
   CURLcode code = curl_easy_upkeep(obj->ch);
 #else
+  CURLcode code = CURLE_FUNCTION_NOT_FOUND;
   Nan::ThrowError(
       "The addon was built against a libcurl version that does not support upkeep. It requires "
       "libcurl >= 7.62");
