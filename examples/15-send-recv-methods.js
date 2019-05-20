@@ -7,31 +7,43 @@
 
 /**
  * This is an example showing how one could use the send and recv methods
+ * It's the most raw way to do connections with libcurl
  */
-const Easy = require('../lib/Easy')
-const Multi = require('../lib/Multi')
-const Curl = require('../lib/Curl')
+const { Curl, CurlCode, Easy, Multi, SocketState } = require('../dist')
 
 const easy = new Easy()
 const multi = new Multi()
 
 const send = Buffer.from('GET / HTTP/1.0\r\nHost: example.com\r\n\r\n')
-const recv = Buffer.alloc(5 * 1024 * 1024) //reserve 5mb
+// reserve 5mb for the response
+const recv = Buffer.alloc(5 * 1024 * 1024)
 
 const shouldUseMultiHandle = true
 
 let wasSent = false
 
 easy.setOpt(Curl.option.URL, 'http://example.com')
+
 // CONNECT_ONLY must be set to send and recv work
 easy.setOpt(Curl.option.CONNECT_ONLY, true)
 
-//This callback is going to be called when there is some action
-// in the socket responsible for this handle.
-// Remember that, for it to be called, one must have called easy.monitorSocketEvents();
+console.log('Lol')
+
+// This callback is going to be called when there is some action
+//  in the socket responsible for this handle.
+// Remember that for this callback to be called, one must have called easy.monitorSocketEvents();
 easy.onSocketEvent((error, events) => {
-  const isWritable = events & Easy.socket.WRITABLE
-  const isReadable = events & Easy.socket.READABLE
+  const isWritable = events & SocketState.Writable
+  const isReadable = events & SocketState.Readable
+
+  console.log(
+    'Lol2',
+    events,
+    isWritable,
+    isReadable,
+    SocketState.Writable,
+    SocketState.Readable,
+  )
 
   if (error) {
     throw error
@@ -43,7 +55,7 @@ easy.onSocketEvent((error, events) => {
     const { code, bytesSent } = easy.send(send)
 
     // just lets make sure the return code is correct and that all the data was sent.
-    if (code !== Curl.code.CURLE_OK || bytesSent !== send.length) {
+    if (code !== CurlCode.CURLE_OK || bytesSent !== send.length) {
       throw Error('Something went wrong.')
     }
 
@@ -57,7 +69,7 @@ easy.onSocketEvent((error, events) => {
     const { code, bytesReceived } = easy.recv(recv)
     console.log(`Received ${bytesReceived} bytes.`)
 
-    if (code !== Curl.code.CURLE_OK) {
+    if (code !== CurlCode.CURLE_OK) {
       throw Error(Easy.strError(code))
     }
 
@@ -80,6 +92,8 @@ easy.onSocketEvent((error, events) => {
 // See: https://github.com/bagder/curl/commit/ecc4940df2c286702262f8c21d7369f893e78968
 if (shouldUseMultiHandle) {
   multi.onMessage((error, easy, errorCode) => {
+    console.log('Lol3')
+
     if (error) {
       console.error('Error code: ' + errorCode)
 

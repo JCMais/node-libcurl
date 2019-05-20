@@ -10,7 +10,7 @@
  */
 const path = require('path')
 
-const Curl = require('../lib/Curl')
+const { Curl } = require('../dist')
 
 const url = 'https://www.google.com'
 const certfile = path.join(__dirname, 'cacert.pem')
@@ -21,10 +21,10 @@ curl.setOpt('URL', url)
 curl.setOpt('FOLLOWLOCATION', 1)
 curl.setOpt('VERBOSE', 1)
 
-//cURL is not bundled with CA cert anymore
-//you need to specify the CA cert to be used, if not, you are
-// going to receive the error 'Peer certificate cannot be authenticated with given CA certificates'
-// more info http://curl.haxx.se/docs/sslcerts.html and http://curl.haxx.se/docs/caextract.html
+// Generally libcurl knows where to find the CA Cert of the system
+//  in case that does not work, you need to specify it yourself, otherwise
+//  you are going to receive the error 'Peer certificate cannot be authenticated with given CA certificates'
+// More info on http://curl.haxx.se/docs/sslcerts.html and http://curl.haxx.se/docs/caextract.html
 if (certfile) {
   curl.setOpt('CAINFO', certfile)
   //This is not a boolean field! 0 -> Disabled, 2 -> Enabled
@@ -35,7 +35,7 @@ if (certfile) {
   curl.setOpt('SSL_VERIFYPEER', 0)
 }
 
-curl.perform()
-
 curl.on('end', curl.close.bind(curl))
 curl.on('error', curl.close.bind(curl))
+
+curl.perform()

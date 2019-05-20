@@ -7,19 +7,25 @@
 
 /**
  * Example showing how to download files from a FTP server
- * using custom wildcard pattern matching
- * Based on the ftp-wildcard example
+ *   using custom wildcard pattern matching
  */
 const path = require('path')
 const util = require('util')
 const fs = require('fs')
 
-const Curl = require('../lib/Curl')
-const Easy = require('../lib/Easy')
+const {
+  Curl,
+  CurlChunk,
+  CurlFileType,
+  CurlFnMatchFunc,
+  Easy,
+} = require('../dist')
 
 // Using the Easy interface because currently there is an issue
 //  when using libcurl with wildcard matching on the multi interface
 //  https://github.com/curl/curl/issues/800
+// It can safely by used with `Curl` or directly with a `Multi` instance
+//  if your libcurl version is greater than 7.49.0
 const handle = new Easy()
 const url = 'ftp://speedtest.tele2.net/*.zip'
 
@@ -42,7 +48,7 @@ handle.setOpt(Curl.option.WRITEFUNCTION, (buff, nmemb, size) => {
     written = fs.writeSync(data.output, buff, 0, nmemb * size)
   } else {
     /* listing output */
-    process.stdout.write(buff.toString())
+    console.log(buff.toString())
     written = size * nmemb
   }
 
@@ -95,16 +101,11 @@ function pregQuote(str, delimiter) {
 function fnMatch(pattern, string) {
   const regex = new RegExp(globStringToRegex(pattern), 'g')
 
-  return string.match(regex) ? Curl.fnmatchfunc.MATCH : Curl.fnmatchfunc.NOMATCH
+  return string.match(regex) ? CurlFnMatchFunc.Match : CurlFnMatchFunc.NoMatch
 }
 
-/**
- * @param {module:node-libcurl~CurlFileInfo} fileInfo
- * @param {Number} remains Number of entries remaining
- * @returns {Number}
- */
 function fileIsComing(fileInfo, remains) {
-  process.stdout.write(
+  console.log(
     util.format(
       'Remaining entries: %d / Current: %s / Size: %d - ',
       remains,
@@ -113,11 +114,13 @@ function fileIsComing(fileInfo, remains) {
     ),
   )
 
+  console.log('fileInfo object:', { fileInfo })
+
   switch (fileInfo.fileType) {
-    case Curl.filetype.DIRECTORY:
+    case CurlFileType.Directory:
       console.log(' DIR')
       break
-    case Curl.filetype.FILE:
+    case CurlFileType.File:
       console.log(' FILE')
       break
     default:
@@ -125,24 +128,24 @@ function fileIsComing(fileInfo, remains) {
       break
   }
 
-  if (fileInfo.fileType === Curl.filetype.FILE) {
+  if (fileInfo.fileType === CurlFileType.File) {
     /* do not transfer files > 1MB */
     if (fileInfo.size > 1024 * 1024) {
       console.log('SKIPPED')
-      return Curl.chunk.BGN_FUNC_SKIP
+      return CurlChunk.BgnFuncSkip
     }
 
     data.output = fs.openSync(path.join(process.cwd(), fileInfo.fileName), 'w+')
 
     if (!data.output) {
-      return Curl.chunk.BGN_FUNC_FAIL
+      return CurlChunk.BgnFuncFail
     }
   } else {
     console.log('SKIPPED')
-    return Curl.chunk.BGN_FUNC_SKIP
+    return CurlChunk.BgnFuncSkip
   }
 
-  return Curl.chunk.BGN_FUNC_OK
+  return CurlChunk.BgnFuncOk
 }
 
 function filesIsDownloaded() {
@@ -152,7 +155,7 @@ function filesIsDownloaded() {
     data.output = null
   }
 
-  return Curl.chunk.END_FUNC_OK
+  return CurlChunk.EndFuncOk
 }
 
 handle.perform()

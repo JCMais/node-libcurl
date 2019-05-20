@@ -127,7 +127,7 @@ describe('Callbacks', () => {
     })
   })
 
-  if (Curl.isVersionGreaterThan(7, 64, 0)) {
+  if (Curl.isVersionGreaterOrEqualThan(7, 64, 0)) {
     describe('trailer', function() {
       this.timeout(5000)
 

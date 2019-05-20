@@ -8,20 +8,22 @@
 /**
  * Example that shows the use of the the progress callback.
  * The progress bar is made using the node-progress (https://github.com/visionmedia/node-progress) module.
- * You need to install the dev dependencies to make it work.
+ * You need to install that package to make it work.
  */
 const path = require('path')
 const fs = require('fs')
 
 const ProgressBar = require('progress')
 
-const Curl = require('../lib/Curl')
+const { Curl, CurlFeature } = require('../dist')
 
 const curl = new Curl()
 const url = process.argv[2] || 'http://ovh.net/files/100Mio.dat'
+
 const complete = '\u001b[42m \u001b[0m'
 const incomplete = '\u001b[43m \u001b[0m'
 const outputFile = path.resolve(__dirname, 'result.out')
+
 const speedInfo = {
   timeStart: [0, 0],
   timeSpent: 0,
@@ -43,7 +45,7 @@ curl.setOpt(Curl.option.NOPROGRESS, false)
 //Since we are downloading a large file, disable internal storage
 // used for automatic http data/headers parsing.
 //Because of that, the end event will receive null for both data/header arguments.
-curl.enable(Curl.feature.NO_STORAGE)
+curl.enable(CurlFeature.NoStorage)
 
 // utility function to convert process.hrtime() call result to ms.
 function hrtimeToMs(hrtimeTouple) {
@@ -102,8 +104,9 @@ curl.setProgressCallback((dltotal, dlnow /*, ultotal, ulnow*/) => {
   return 0
 })
 
-// This is the same than the data event, however,
-// keep in mind that here the return value is considered.
+// This is basically the same than the `data` event emitted on
+//  the `Curl` instance, but keep in mind that here the return value is considered.
+// You must return the amount of data that was written.
 curl.setOpt(Curl.option.WRITEFUNCTION, chunk => {
   fs.appendFileSync(outputFile, chunk)
 

@@ -6,17 +6,17 @@
  */
 
 /**
- * Example showing how to send emails through SMTP/TLS using node-libcurl.
+ * Example showing how to send emails through SMTP/TLS
  * Based on https://curl.haxx.se/libcurl/c/smtp-tls.html
  */
 const path = require('path')
 
-const Curl = require('../lib/Curl')
+const { Curl, CurlUseSsl } = require('../dist')
 
 const curl = new Curl()
 
-const to = 'recipient@domain.tld'
-const from = 'sender@domain.tld (Example Sender)'
+const receiver = 'recipient@domain.tld'
+const sender = 'sender@domain.tld (Example Sender)'
 
 //smtp/TLS is generally bound to 587
 const url = 'smtp://sub.domain.tld:587'
@@ -24,8 +24,8 @@ const url = 'smtp://sub.domain.tld:587'
 // this is going to be our email. Check RFC2821 and RFC2822
 const rawEmail = [
   'Date: Tue, 03 May 2016 10:58:00 -0300\r\n',
-  'To: ' + to + '\r\n',
-  'From: ' + from + '\r\n',
+  'To: ' + receiver + '\r\n',
+  'From: ' + sender + '\r\n',
   //remember the message-ID must be different for each email sent
   'Message-ID: <node-libcurl-email-test-1@sub.domain.tld>\r\n',
   'Subject: SMTP TLS example message\r\n',
@@ -49,21 +49,21 @@ curl.setOpt(Curl.option.URL, url)
 // enabling VERBOSE mode so we can get more details on what is going on.
 curl.setOpt(Curl.option.VERBOSE, true)
 
-curl.setOpt(Curl.option.USE_SSL, Curl.usessl.ALL)
+curl.setOpt(Curl.option.USE_SSL, CurlUseSsl.All)
 curl.setOpt(Curl.option.CAINFO, certfile)
 // This is not safe, but you probably will need it if you are using a self signed certificate.
-//curl.setOpt( Curl.option.SSL_VERIFYPEER, false );
+//curl.setOpt(Curl.option.SSL_VERIFYPEER, false);
 
-curl.setOpt(Curl.option.MAIL_FROM, from)
+curl.setOpt(Curl.option.MAIL_FROM, sender)
 // Make sure that MAIL_RCPT is an array
-curl.setOpt(Curl.option.MAIL_RCPT, [to])
+curl.setOpt(Curl.option.MAIL_RCPT, [receiver])
 
 // As we are sending data, we need to set this option.
 curl.setOpt(Curl.option.UPLOAD, true)
 
 // This callback is responsible for sending the email to the server.
 // Check https://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html for more info about it.
-// buffer is node.js Buffer instance with length of size * nmemb
+// buffer is a Node.js Buffer instance with length of size * nmemb
 // You must return the number of bytes written.
 curl.setOpt(Curl.option.READFUNCTION, (buffer, size, nmemb) => {
   const data = rawEmail[linesRead]

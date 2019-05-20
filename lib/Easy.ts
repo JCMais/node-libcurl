@@ -10,7 +10,6 @@ import path from 'path'
 import binary from 'node-pre-gyp'
 
 import { NodeLibcurlNativeBinding } from './types'
-import { SocketStateEnum } from './enum/SocketState'
 
 const bindingPath = binary.find(
   path.resolve(path.join(__dirname, './../package.json')),
@@ -18,8 +17,6 @@ const bindingPath = binary.find(
 
 const bindings: NodeLibcurlNativeBinding = require(bindingPath)
 
-class Easy extends bindings.Easy {
-  static socket = SocketStateEnum
-}
+class Easy extends bindings.Easy {}
 
 export { Easy }

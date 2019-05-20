@@ -8,10 +8,10 @@
 /**
  * Example that shows all information you can get from a single request.
  */
-const Curl = require('../lib/Curl')
+const { Curl } = require('../dist')
 
 const curl = new Curl()
-const url = 'http://www.google.com'
+const url = 'http://httpbin.org/cookies/set/cookie1name/cookie1value'
 
 curl.setOpt(Curl.option.URL, url)
 curl.setOpt(Curl.option.FOLLOWLOCATION, true)

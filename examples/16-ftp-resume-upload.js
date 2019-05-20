@@ -6,12 +6,13 @@
  */
 
 /**
- * Example showing how to continue uploading a file to a ftp server using node-libcurl
+ * Example showing how to resume upload of a file to a ftp server
  * How to run:
  *  node ftp-upload.js ftp://example-of-ftp-host.com username password /some/local/file.ext /some/remote/file.ext 0-100
  */
 const fs = require('fs')
-const Curl = require('../lib/Curl')
+
+const { Curl, CurlFeature } = require('../dist')
 
 const curl = new Curl()
 const url = process.argv[2].replace(/\/$/, '') + '/'
@@ -40,8 +41,8 @@ curl.setOpt(Curl.option.READDATA, fd)
 //  You must the *_LARGE option if the file is greater than 2GB.
 curl.setOpt(Curl.option.INFILESIZE_LARGE, fileStat.size)
 
-// enable raw mode
-curl.enable(Curl.feature.RAW)
+// enable feature flag to not use storage / parsing
+curl.enable(CurlFeature.NoStorage)
 
 // tell curl to figure out the remote file size by itself
 curl.setOpt(Curl.option.RESUME_FROM, -1)

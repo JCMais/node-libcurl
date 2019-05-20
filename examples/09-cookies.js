@@ -11,10 +11,11 @@
 const path = require('path')
 const fs = require('fs')
 
-const Curl = require('../lib/Curl')
+const { Curl } = require('../dist')
 
 const curl = new Curl()
-const url = 'http://www.google.com'
+// this endpoint will set a cookie named `cookie1name` with value `cookie1value`
+const url = 'http://httpbin.org/cookies/set/cookie1name/cookie1value'
 
 const cookieJarFile = path.join(__dirname, 'cookiejar.txt')
 

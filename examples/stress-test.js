@@ -7,7 +7,7 @@
 
 /*
  * This script does a stress test on the given domain.
- * Don't put a real domain here if you don't want to be blocked by some firewall.
+ * Don't put a real domain here if you don't want to be blocked by some DDOS Protection.
  */
 
 const path = require('path')
@@ -15,6 +15,7 @@ const Curl = require('../lib/Curl')
 
 const url = 'http://127.0.0.1:8080'
 const file = 'file:///' + path.join(__dirname, 'test.txt')
+
 // 25 instances running at max per iteration
 const instances = 25
 // 10000 requests in total per iteration

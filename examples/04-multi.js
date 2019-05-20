@@ -6,10 +6,12 @@
  */
 
 /**
- * Example showing how to use the Multi handle to make async requests.
+ * Example showing how to use the `Multi` handle to make async requests.
+ * The Multi handle is used internally by the `Curl` wrapper
+ *
+ * The methods should have a description, hover over them to see it on your editor
  */
-const Easy = require('../lib/Easy')
-const Multi = require('../lib/Multi')
+const { Easy, Multi } = require('../dist')
 
 const urls = [
   'http://google.com',
@@ -53,23 +55,25 @@ multi.onMessage((error, handle, errorCode) => {
     )
   }
 
+  // we are done with this handle, remove it from the Multi instance and close it
   multi.removeHandle(handle)
   handle.close()
 
   if (++finished === urls.length) {
     console.log('Finished all requests!')
+    // remember to close the multi instance too, when you are done with it.
     multi.close()
   }
 })
 
 /**
- * @param {Buffer} data
- * @param {Number} n
- * @param {Number} nmemb
- * @returns {number}
+ * This will be used as callback for for WRITEFUNCTION
+ *
+ * data is a Buffer, n and nmemb are integers. You must return n * nmemb from this
+ * callback to let libcurl know you handled correctly all data received.
  */
 function onData(data, n, nmemb) {
-  //this === the handle
+  // this === the handle
   const key = handles.indexOf(this)
 
   handlesData[key].push(data)

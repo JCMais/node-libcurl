@@ -18,7 +18,7 @@ import { CurlCode } from '../enum/CurlCode'
 import { CurlGssApi } from '../enum/CurlGssApi'
 import { CurlPause } from '../enum/CurlPause'
 import { CurlSslOpt } from '../enum/CurlSslOpt'
-import { SocketStateEnum } from '../enum/SocketState'
+import { SocketState } from '../enum/SocketState'
 
 import { FileInfo, HttpPostField } from './'
 
@@ -221,7 +221,7 @@ export declare class EasyNativeBinding {
    * Pass `null` to remove the current callback set
    */
   onSocketEvent(
-    cb: ((error: Error | null, events: SocketStateEnum) => void) | null,
+    cb: ((error: Error | null, events: SocketState) => void) | null,
   ): this
 
   /**

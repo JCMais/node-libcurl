@@ -6,13 +6,15 @@
  */
 
 /**
- * Example of how to use the DEBUGFUNCTION option
+ * Example of how to use the DEBUGFUNCTION option.
+ * This can be used to change the behavior of the VERBOSE option.
+ * You can for instance use this to save that log somewhere else.
  */
-const Curl = require('../lib/Curl')
+const { Curl, CurlInfoDebug } = require('../dist')
 
 const curl = new Curl()
 const url = process.argv[2] || 'http://www.google.com'
-const infoTypes = Curl.info.debug
+
 const EOL = process.platform === 'win32' ? '\r\n' : '\n'
 
 const debugCallback = (infoType, content) => {
@@ -21,31 +23,33 @@ const debugCallback = (infoType, content) => {
   const contentString = content.toString('utf8')
 
   switch (infoType) {
-    case infoTypes.TEXT:
+    case CurlInfoDebug.Text:
       text = contentString
       break
-    case infoTypes.DATA_IN:
+    case CurlInfoDebug.DataIn:
       text = '-- RECEIVING DATA: ' + EOL + contentString
       break
-    case infoTypes.DATA_OUT:
+    case CurlInfoDebug.DataOut:
       text = '-- SENDING DATA: ' + EOL + contentString
       break
-    case infoTypes.HEADER_IN:
+    case CurlInfoDebug.HeaderIn:
       text = '-- RECEIVING HEADER: ' + EOL + contentString
       break
-    case infoTypes.HEADER_OUT:
+    case CurlInfoDebug.HeaderOut:
       text = '-- SENDING HEADER: ' + EOL + contentString
       break
-    case infoTypes.SSL_DATA_IN:
+    case CurlInfoDebug.SslDataIn:
       text = '-- RECEIVING SSL DATA: ' + EOL + contentString
       break
-    case infoTypes.SSL_DATA_OUT:
+    case CurlInfoDebug.SslDataOut:
       text = '-- SENDING SSL DATA: ' + EOL + contentString
       break
   }
 
+  // we are just printing it to stdout.
   console.log(text)
 
+  // must return 0, otherwise libcurl will abort the request.
   return 0
 }
 

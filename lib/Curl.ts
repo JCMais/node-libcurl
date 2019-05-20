@@ -9,6 +9,8 @@ import { EventEmitter } from 'events'
 import { StringDecoder } from 'string_decoder'
 import assert from 'assert'
 
+const pkg = require('../package.json')
+
 // tslint:disable-next-line
 import binary from 'node-pre-gyp'
 
@@ -133,9 +135,15 @@ class Curl extends EventEmitter {
     ].join('\n')
   }
 
-  static isVersionGreaterThan = (x: number, y: number, z: number = 0) => {
+  static isVersionGreaterOrEqualThan = (
+    x: number,
+    y: number,
+    z: number = 0,
+  ) => {
     return _Curl.VERSION_NUM >= (x << 16) + (y << 8) + z
   }
+
+  static defaultUserAgent = `node-libcurl/${pkg.version}`
 
   /**
    * Returns the number of handles currently open in the internal multi handle being used.
@@ -208,6 +216,8 @@ class Curl extends EventEmitter {
       Curl.option.HEADERFUNCTION,
       this.defaultHeaderFunction.bind(this),
     )
+
+    handle.setOpt(Curl.option.USERAGENT, Curl.defaultUserAgent)
 
     this.chunks = []
     this.chunksLength = 0

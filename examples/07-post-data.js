@@ -6,11 +6,11 @@
  */
 
 /**
- * Example showing how to send post data using the POSTFIELDS option.
+ * Example showing how to send POST data using the `POSTFIELDS` option.
  */
 const querystring = require('querystring')
 
-const Curl = require('../lib/Curl')
+const { Curl } = require('../dist')
 
 const curl = new Curl()
 const url = 'http://httpbin.org/post'
@@ -24,19 +24,17 @@ const data = {
 
 curl.setOpt(Curl.option.URL, url)
 //You need to build the query string,
-// node has this helper function, but it's limited for real use cases (no support for array values for example)
+// node has this helper function for that:
 curl.setOpt(Curl.option.POSTFIELDS, querystring.stringify(data))
-curl.setOpt(Curl.option.HTTPHEADER, ['User-Agent: node-libcurl/1.0'])
 curl.setOpt(Curl.option.VERBOSE, true)
 
-console.log(querystring.stringify(data))
-
-curl.perform()
-
 curl.on('end', (statusCode, body) => {
+  console.log('Body received from httpbin:')
   console.log(body)
 
   curl.close()
 })
 
 curl.on('error', curl.close.bind(curl))
+
+curl.perform()
