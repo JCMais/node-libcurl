@@ -9,7 +9,7 @@
     'curl_include_dirs%': '',
     'curl_libraries%': '',
     'curl_static_build%': 'false',
-    'curl_config_bin%': '<(module_root_dir)/tools/curl-config.js',
+    'curl_config_bin%': 'node <(module_root_dir)/tools/curl-config.js',
     'node_libcurl_no_setlocale%': 'false',
   },
   'targets': [
