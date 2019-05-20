@@ -86,7 +86,7 @@ export interface CurlyFunction extends HttpMethodCalls {
 }
 
 const create = (): CurlyFunction => {
-  function curl(
+  function curly(
     url: string,
     options: CurlOptionValueType = {},
   ): Promise<CurlyResult> {
@@ -134,22 +134,22 @@ const create = (): CurlyFunction => {
     })
   }
 
-  curl.create = create
+  curly.create = create
 
   for (const httpMethod of methods) {
     // @ts-ignore
-    curl[httpMethod] =
+    curly[httpMethod] =
       httpMethod === 'get'
-        ? curl
+        ? curly
         : (url: string, options: CurlOptionValueType = {}) =>
-            curl(url, {
+            curly(url, {
               customRequest: httpMethod,
               ...options,
             })
   }
 
   // @ts-ignore
-  return curl
+  return curly
 }
 
 export const curly = create()
