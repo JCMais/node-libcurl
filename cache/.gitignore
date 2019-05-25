@@ -1,0 +1,4 @@
+# This directory is used for cache of deps of dockerfiles used for
+#  Some custom builds done manually
+*
+!.gitignore

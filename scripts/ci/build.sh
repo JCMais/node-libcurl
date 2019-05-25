@@ -193,7 +193,7 @@ ls -al $OPENLDAP_BUILD_FOLDER/lib
 # Build libcurl
 ###################
 LIBCURL_ORIGINAL_RELEASE=${LIBCURL_RELEASE:-LATEST}
-LATEST_LIBCURL_RELEASE=$(./scripts/ci/get-latest-libcurl-version.sh)
+LATEST_LIBCURL_RELEASE=${LATEST_LIBCURL_RELEASE:-$(./scripts/ci/get-latest-libcurl-version.sh)}
 LIBCURL_RELEASE=$LIBCURL_ORIGINAL_RELEASE
 if [[ $LIBCURL_RELEASE == "LATEST" ]]; then
   LIBCURL_RELEASE=$LATEST_LIBCURL_RELEASE
@@ -289,6 +289,8 @@ else
 fi
 
 target=`echo $target | sed 's/^v//'`
+# ia32, x64, armv7, etc
+target_arch=${TARGET_ARCH:-"x64"}
 
 # Build Addon
 export npm_config_curl_config_bin="$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin/curl-config"
@@ -297,7 +299,7 @@ export npm_config_build_from_source="true"
 export npm_config_runtime="$runtime"
 export npm_config_dist_url="$dist_url"
 export npm_config_target="$target"
-export npm_config_target_arch="x64"
+export npm_config_target_arch="$target_arch"
 
 yarn install --frozen-lockfile
 

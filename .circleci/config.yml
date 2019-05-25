@@ -84,7 +84,11 @@ orbs:
               condition: <<parameters.node-version>>
               steps:
                 - run: |
-                    [ -f /usr/local/bin/node<<parameters.node-version>> ] && ln -s /usr/local/bin/node<<parameters.node-version>> /usr/local/bin/node || true
+                    if [ -x "$(command -v nvm)" ]; then
+                      nvm use <<parameters.node-version>>
+                    else
+                      [ -f /usr/local/bin/node<<parameters.node-version>> ] && ln -s /usr/local/bin/node<<parameters.node-version>> /usr/local/bin/node || true
+                    fi
           - run:
               name: Setup Environment Variables
               command: |
