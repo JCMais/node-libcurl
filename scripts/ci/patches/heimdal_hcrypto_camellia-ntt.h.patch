@@ -1,0 +1,17 @@
+# Patch necessary to fix this error:
+#  https://github.com/heimdal/heimdal/issues/549
+# Basically this symbol conflicts with one on OpenSSL lcrypto
+--- /home/jcm/deps/heimdal/source/7.5.0/lib/hcrypto/camellia-ntt.original.h	2019-05-01 01:45:43.047978300 +0000
++++ /home/jcm/deps/heimdal/source/7.5.0/lib/hcrypto/camellia-ntt.h	2019-05-01 00:41:43.764349200 +0000
+@@ -32,6 +32,11 @@
+ extern "C" {
+ #endif
+ 
++/* symbol renaming */
++#define Camellia_Ekeygen hc_Camellia_Ekeygen
++#define Camellia_EncryptBlock hc_Camellia_EncryptBlock
++#define Camellia_DecryptBlock hc_Camellia_DecryptBlock
++
+ #define CAMELLIA_BLOCK_SIZE 16
+ #define CAMELLIA_TABLE_BYTE_LEN 272
+ #define CAMELLIA_TABLE_WORD_LEN (CAMELLIA_TABLE_BYTE_LEN / 4)

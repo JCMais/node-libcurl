@@ -1,12 +1,28 @@
-build
 node_modules
+.DS_Store
 .idea
 npm-debug.log
 examples/cacert*
-docs
 wallaby.json
 lib/binding
 debug
 .vscode/
+test/curl/upload.png
+
+# coverage
+.nyc_output/
+coverage/
+
+# build
+dist
+build
+
+# Ts
+tsconfig.tsbuildinfo
+
+# @TODO Remove when get api-documenter to work
+docs/
+website/
+api/
 
 yarn-error.log

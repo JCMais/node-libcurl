@@ -1,0 +1,177 @@
+# http://www.appveyor.com/docs/appveyor-yml
+# mostly copied from nan appveyor.yml
+os: Visual Studio 2017
+
+# Set build version format here instead of in the admin panel.
+version: '{build}'
+
+environment:
+  DEBUG: 'node-libcurl'
+  NODE_LIBCURL_GITHUB_TOKEN:
+    secure: o8iCZIMbaOR5HKy9Q/ArQ6N+5LRepyRVYRtLTrxyCo2gCEXUp8xhUYjLMJmZgNu9
+  matrix:
+    # node.js
+    - nodejs_version: '8'
+    - nodejs_version: '10'
+    - nodejs_version: '12'
+    - nodejs_version: '12'
+      ELECTRON_VERSION: '5.0.1'
+    - nodejs_version: '12'
+      ELECTRON_VERSION: '4.2.0'
+    - nodejs_version: '12'
+      ELECTRON_VERSION: '3.1.9'
+    - nodejs_version: '12'
+      NWJS_VERSION: '0.38.2'
+    - nodejs_version: '12'
+      NWJS_VERSION: '0.37.4'
+
+# matrix:
+#   allow_failures:
+#     - nodejs_version: "11"
+
+platform:
+  - x86
+  - x64
+
+# git clone depth
+clone_depth: 5
+
+cache:
+  - build -> binding.gyp, LIBCURL_VERSION_WIN_DEPS
+  - '%USERPROFILE%\.node-gyp'
+  - '%USERPROFILE%\.nw-gyp'
+  - '%USERPROFILE%\.nw'
+  - '%LOCALAPPDATA%\Yarn\cache'
+  - '%LOCALAPPDATA%\electron\Cache'
+
+# Install scripts. (runs after repo cloning)
+install:
+  # Get nasm
+  - cinst nasm -y
+  - set PATH=%PROGRAMFILES%\NASM;%PATH%
+  # in case above does not work
+  # - curl -L -o nasminst.exe http://libgd.blob.core.windows.net/nasm/nasm-2.07-installer.exe
+  # - start /wait nasminst.exe /S
+  # - ps: $env:path="C:\Program Files (x86)\nasm;$($env:path)"
+
+  - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version) $env:Platform
+  - SET PATH=%cd%\node_modules\.bin\;%PATH%
+  # Output useful info for debugging.
+  - node --version
+  - npm --version
+  - yarn --version
+  # Check if we need to publish the package
+  - SET PUBLISH_BINARY=false
+  # we are creating a empty file named publish
+  - ps: if ( $env:APPVEYOR_REPO_COMMIT_MESSAGE.ToLower().Contains('[publish binary]') -OR $(git describe --tags --always HEAD) -eq $env:APPVEYOR_REPO_BRANCH ) { echo $null >> publish }
+  - IF EXIST "publish" SET PUBLISH_BINARY=true
+  # Install the curl-for-windows dependencies.
+  - git submodule update --init --recursive
+  - python deps\curl-for-windows\configure.py
+  - ps: |
+      # $ErrorActionPreference = "Stop"
+
+      $runtime = ""
+      $dist_url = ""
+      $target = ""
+
+      if ($null -ne $env:ELECTRON_VERSION) {
+        $runtime = "electron"
+        $dist_url = "https://atom.io/download/electron"
+        $target = $env:ELECTRON_VERSION
+
+        yarn global add electron@${env:ELECTRON_VERSION}
+
+      } elseif ($null -ne $env:NWJS_VERSION) {
+        $runtime = "node-webkit"
+        $target = $env:NWJS_VERSION
+
+        # https://github.com/nwjs/nw-gyp/issues/116
+        yarn global add nw-gyp@3.6.2
+        yarn global add nw@$target
+        # patch tool for Windows
+        # https://stackoverflow.com/a/9485089/710693
+        pip install patch
+        # apply patch to nw-gyp fixing issue
+        python -m patch -d "$(yarn global dir)/node_modules/nw-gyp/src" ./scripts/ci/patches/win_delay_load_hook.cc.patch
+      
+        $arch = if ($env:PLATFORM -eq "x86") { "ia32" } else { "x64" }
+
+        $rootFolder = "$env:USERPROFILE/.nw"
+        mkdir -Force $rootFolder
+
+        $nwName = "nwjs-v$target-win-$arch"
+        $outputFolder = "$env:USERPROFILE/.nw/$nwName"
+
+        if (![System.IO.File]::Exists("$outputFolder/nw.exe")) {
+          Write-Host "nw.exe not found on $outputFolder - Downloading it"
+          
+          $url = "https://dl.nwjs.io/v$target/$nwName.zip"
+          $output = "$rootFolder/$nwName.zip"
+
+          # https://blog.jourdant.me/post/3-ways-to-download-files-with-powershell
+          Import-Module BitsTransfer
+          Start-BitsTransfer -Source $url -Destination $output
+
+          Expand-Archive $output -DestinationPath $rootFolder
+
+          Remove-Item –path $output
+        }
+
+        $env:PATH = "$outputFolder;$env:PATH"
+      }
+
+      $env:npm_config_msvs_version      = "2017"
+      $env:npm_config_build_from_source = "true"
+      $env:npm_config_runtime           = $runtime
+      $env:npm_config_dist_url          = $dist_url
+      $env:npm_config_target            = $target
+
+      Write-Host $env:npm_config_msvs_version
+      Write-Host $env:npm_config_build_from_source
+      Write-Host $env:npm_config_runtime
+      Write-Host $env:npm_config_dist_url
+      Write-Host $env:npm_config_target
+
+build_script:
+  - yarn install --frozen-lockfile
+
+# Post-install test scripts.
+test_script:
+  # run tests
+  - ps: |
+      if ($null -ne $env:ELECTRON_VERSION) {
+        yarn test:electron
+      } else {
+        if ($null -ne $env:NWJS_VERSION) {
+          Write-Host "No tests available for nw.js, skipping tests..."
+        } else {
+          yarn test
+        }
+      }
+
+      # This is needed because powershell treats
+      #  output to stderr as errors
+      # See:
+      # https://stackoverflow.com/q/2095088/710693
+      # https://stackoverflow.com/a/12866669/710693
+      # https://stackoverflow.com/a/31451481/710693
+      if ($LASTEXITCODE -eq 0) {
+        $host.SetShouldExit(0)
+      }
+
+after_test:
+  - IF "%PUBLISH_BINARY%" == "true" (node-pre-gyp package testpackage --verbose)
+  - IF "%PUBLISH_BINARY%" == "true" (for /f "usebackq delims=" %%x in (`node-pre-gyp reveal staged_tarball --silent`) do node scripts\module-packaging.js --publish %%x)
+
+on_success:
+  - SET INSTALL_RESULT=0
+  - set npm_config_fallback_to_build=false
+  - IF "%PUBLISH_BINARY%" == "true" (yarn install --frozen-lockfile)
+  - IF "%PUBLISH_BINARY%" == "true" (SET INSTALL_RESULT=%ERRORLEVEL%)
+  - IF NOT %INSTALL_RESULT% == 0 (for /f "usebackq delims=" %%x in (`node-pre-gyp reveal hosted_tarball --silent`) do node scripts\module-packaging.js --unpublish %%x)
+  - IF NOT %INSTALL_RESULT% == 0 (echo "Package unpublished since we got an error while installing it.")
+  - node-pre-gyp clean
+
+# Don't actually deploy.
+deploy: off

@@ -1,0 +1,24 @@
+# Patch necessary to fix this error:
+#  https://github.com/nwjs/nw-gyp/issues/100
+--- win_delay_load_hook.cc	2019-05-15 12:43:43.122622300 +0000
++++ win_delay_load_hook-new.cc	2019-05-15 12:36:58.340946500 +0000
+@@ -17,6 +17,8 @@
+ 
+ #include <delayimp.h>
+ #include <string.h>
++ // Required for _T in GetModuleHandle(_T(...))
++#include <tchar.h>
+ 
+ static HMODULE node_dll = NULL;
+ static HMODULE nw_dll = NULL;
+@@ -31,8 +33,8 @@
+     return ret;
+   }
+   if (event == dliStartProcessing) {
+-    node_dll = GetModuleHandle("node.dll");
+-    nw_dll = GetModuleHandle("nw.dll");
++    node_dll = GetModuleHandle(_T("node.dll"));
++    nw_dll = GetModuleHandle(_T("nw.dll"));
+     return NULL;
+   }
+   if (event != dliNotePreLoadLibrary)

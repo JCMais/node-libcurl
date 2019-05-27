@@ -1,52 +1,59 @@
 /**
- * @author Jonathan Cardoso Machado
- * @license MIT
- * @copyright 2015, Jonathan Cardoso Machado
+ * Copyright (c) Jonathan Cardoso Machado. All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is furnished to do
- * so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
- * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
-
-#include <node.h>
-#include <nan.h>
-#include <iostream>
 #include "Curl.h"
+#include "CurlVersionInfo.h"
 #include "Easy.h"
 #include "Multi.h"
 #include "Share.h"
 
+#include <curl/curl.h>
+#include <nan.h>
+#include <node.h>
+
+#include <iostream>
+
 namespace NodeLibcurl {
 
-    static void AtExitCallback( void* arg ) {
+static void AtExitCallback(void* arg) {
+  (void)arg;
 
-        (void)arg;
-
-        curl_global_cleanup();
-    }
-
-    NODE_LIBCURL_MODULE_INIT( Init ) {
-
-        Initialize( exports, module );
-        Easy::Initialize( exports, module );
-        Multi::Initialize( exports, module );
-        Share::Initialize( exports, module );
-
-        node::AtExit( AtExitCallback, NULL );
-    }
-
-    NODE_MODULE( node_libcurl, Init );
+  curl_global_cleanup();
 }
+
+NAN_MODULE_INIT(Init) {
+  // Some background story on this commented code and other usages of setlocale
+  // elsewhere on the addon: Libcurl, when built with libidn2, calls function
+  // `idn2_lookup_ul` to retrieve a punycode representation
+  //  of a domain. This function internally uses libunistring
+  //  `u8_strconv_from_encoding`, which expects an existing locale being set:
+  //  https://github.com/libidn/libidn2/blob/02a3127d21f8a99042a8ae82f1513b3ffc0170f2/lib/lookup.c#L536
+  // Node.js (correctly) does not set any locale by default, and so when this
+  // function gets called
+  //  an error is returned, and libcurl bails out with MALFORMED URL error.
+  // We could just call setlocale here, like the commented code, and it would
+  // work, however this would
+  //  impact addon users that, in some way, use locale.
+  // (I've opened this issue to make sure
+  // https://github.com/nodejs/help/issues/1878) Instead of doing that, we are
+  // instead calling setlocale on some specific parts of the code, to be
+  //  more specific, on Easy#SetPerform, Multi#AddHandle and Multi#OnSocket
+  // That code is behind a DEFINE guard, which the user can disable by passing
+  //  `node_libcurl_no_setlocale` option when building, this will define
+  //  NODE_LIBCURL_NO_SETLOCALE.
+  // https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/setlocale-wsetlocale?view=vs-2019
+  // setlocale(AC_ALL, "")
+  Initialize(target);
+  Easy::Initialize(target);
+  Multi::Initialize(target);
+  Share::Initialize(target);
+  CurlVersionInfo::Initialize(target);
+
+  node::AtExit(AtExitCallback, NULL);
+}
+
+NODE_MODULE(node_libcurl, Init);
+}  // namespace NodeLibcurl

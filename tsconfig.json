@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "*": ["types/external/*"] },
+    "incremental": true,
+    "module": "commonjs",
+    // Node.js >= 8 supports 100% of ES2017 (https://node.green/)
+    "target": "es2017",
+    "lib": [
+      "es2017",
+      // error Cannot find name 'AsyncIterable'.
+      "esnext.asynciterable"
+    ],
+    "esModuleInterop": true,
+    "declaration": true,
+    "declarationMap": true,
+    "rootDir": "lib",
+    "outDir": "dist",
+    "sourceMap": true,
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    // "typeRoots": ["node_modules/@types", "types/external"],
+    "noUnusedLocals": true,
+    "importHelpers": true
+  },
+  "include": ["lib/**/*"],
+  "exclude": ["node_modules", "test/**/*.js"],
+  // @TODO Remove those when done
+  // "files": ["types/custom/index.d.ts"]
+}

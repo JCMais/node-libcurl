@@ -1,15 +1,14 @@
-var fs = require('fs');
-var path = require('path');
+// Proudly copied from https://github.com/nodegit/nodegit/blob/977251b4aae52eef75cf4f188b4d5a63ba98fa7b/utils/buildFlags.js
+const fs = require('fs')
+const path = require('path')
 
-var isGitRepo;
-
-// Proudly copied from https://github.com/nodegit/nodegit/blob/288ab93/lifecycleScripts/buildFlags.js
+let GitRepo
 
 try {
-  fs.statSync(path.join(__dirname, '..', '.git'));
-  isGitRepo = true;
+  fs.statSync(path.join(__dirname, '..', '.git'))
+  isGitRepo = true
 } catch (e) {
-  isGitRepo = false;
+  isGitRepo = false
 }
 
 module.exports = {
@@ -18,4 +17,4 @@ module.exports = {
   isGitRepo: isGitRepo,
   isNwjs: process.env.npm_config_runtime === 'node-webkit',
   mustBuild: !!(isGitRepo || process.env.BUILD_DEBUG || process.env.BUILD_ONLY),
-};
+}

@@ -1,72 +1,46 @@
+/**
+ * Copyright (c) Jonathan Cardoso Machado. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 #ifndef NODELIBCURL_SHARE_H
 #define NODELIBCURL_SHARE_H
-/**
-* @author Jonathan Cardoso Machado
-* @license MIT
-* @copyright 2015, Jonathan Cardoso Machado
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-* of the Software, and to permit persons to whom the Software is furnished to do
-* so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in all
-* copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-* FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-* COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-* IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-* WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-#include <string>
-#include <unordered_map>
-
-#include <node.h>
-#include <nan.h>
 
 #include <curl/curl.h>
-
-#include "Curl.h"
-#include "macros.h"
-
-using Nan::ObjectWrap;
+#include <nan.h>
+#include <node.h>
 
 namespace NodeLibcurl {
 
-    class Share: public ObjectWrap {
-        
-        Share();
+class Share : public Nan::ObjectWrap {
+  Share();
 
-        Share( const Share &that );
-        Share& operator=( const Share &that );
+  Share(const Share& that);
+  Share& operator=(const Share& that);
 
-        ~Share();
+  ~Share();
 
-        // instance methods
-        void Dispose();
+  // instance methods
+  void Dispose();
 
-    public:
+ public:
+  // js object constructor template
+  static Nan::Persistent<v8::FunctionTemplate> constructor;
 
-        // js object constructor template
-        static Nan::Persistent<v8::FunctionTemplate> constructor;
+  // members
+  CURLSH* sh;
+  bool isOpen;
 
-        // members
-        CURLSH *sh;
-        bool isOpen;
+  // export Easy to js
+  static NAN_MODULE_INIT(Initialize);
 
-        // export Easy to js
-        static NODE_LIBCURL_MODULE_INIT( Initialize );
-
-        // js available methods
-        static NAN_METHOD( New );
-        static NAN_METHOD( SetOpt );
-        static NAN_METHOD( Close );
-        static NAN_METHOD( StrError );
-    };
-}
+  // js available methods
+  static NAN_METHOD(New);
+  static NAN_METHOD(SetOpt);
+  static NAN_METHOD(Close);
+  static NAN_METHOD(StrError);
+};
+}  // namespace NodeLibcurl
 #endif

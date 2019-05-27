@@ -1,9 +1,9 @@
 engines:
-  eslint:
+  tslint:
     enabled: true
 ratings:
    paths:
-   - "**.js"
+   - "**.ts"
 exclude_paths:
 - test/**/*
 - node_modules/**/*
