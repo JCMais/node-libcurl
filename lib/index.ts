@@ -8,7 +8,13 @@ export { Curl } from './Curl'
 export { Easy } from './Easy'
 export { Multi } from './Multi'
 export { Share } from './Share'
-export { curly } from './curly'
+export { curly, CurlyFunction, CurlyResult } from './curly'
+
+// those are only for documentation purposes
+// export { Easy } from './Easy.doc'
+// export { Multi } from './Multi.doc'
+// export { Share } from './Share.doc'
+// export { curly, CurlyResult } from './curly.doc'
 
 // enums
 export * from './enum/CurlAuth'
@@ -30,6 +36,7 @@ export * from './enum/CurlPause'
 export * from './enum/CurlPipe'
 export * from './enum/CurlProtocol'
 export * from './enum/CurlProxy'
+export * from './enum/CurlReadFunc'
 export * from './enum/CurlRtspRequest'
 export * from './enum/CurlShareLock'
 export * from './enum/CurlShareOption'
@@ -38,6 +45,7 @@ export * from './enum/CurlSslOpt'
 export * from './enum/CurlSslVersion'
 export * from './enum/CurlTimeCond'
 export * from './enum/CurlUseSsl'
+export * from './enum/CurlWriteFunc'
 export * from './enum/SocketState'
 
 // types that can be helpful for library consumer

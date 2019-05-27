@@ -96,6 +96,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Errors thrown inside callbacks are correctly caught / passed forward (if using multi interface)
 - All `Curl` instances now set their `USERAGENT` to `node-libcurl/${packageVersion}` during creation.  
   You change the default user agent string by changing `Curl.defaultUserAgent`, and disable it by setting their value to null.
+- `CurlWriteFunc` and `CurlReadFunc` enums with special return codes for their respective options, `WRITEFUNCTION` and `READFUNCTION`.
 - Added **experimental** `curly(url: string, options: {})` / `curly.<http-verb>(url: string, options: {})` async api.  
   This API can change between minor releases.
 ### Changed

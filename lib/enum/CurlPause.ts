@@ -10,9 +10,6 @@
  *
  * `CURLPAUSE_RECV_CONT` becomes `CurlPause.RecvCont`
  *
- * This also contains a special member called WriteFuncPause, that when returned from the WriteFunction callback
- *  will pause the current request
- *
  * @public
  */
 export enum CurlPause {
@@ -24,7 +21,4 @@ export enum CurlPause {
 
   All = Recv | Send,
   Cont = RecvCont | SendCont,
-
-  // https://github.com/curl/curl/blob/e1be8254534898fccafc5d6cd04f6235f283cfbd/include/curl/curl.h#L252
-  WriteFuncPause = 0x10000001,
 }
