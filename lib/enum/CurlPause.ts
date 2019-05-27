@@ -12,6 +12,8 @@
  *
  * This also contains a special member called WriteFuncPause, that when returned from the WriteFunction callback
  *  will pause the current request
+ *
+ * @public
  */
 export enum CurlPause {
   Recv = 1 << 0,

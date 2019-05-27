@@ -9,6 +9,8 @@
  * Object with constants for option `FTP_SSL_CCC`
  *
  * `CURLFTPSSL_CCC_NONE` becomes `CurlFtpSsl.CccNone`
+ *
+ * @public
  */
 export enum CurlFtpSsl {
   /**

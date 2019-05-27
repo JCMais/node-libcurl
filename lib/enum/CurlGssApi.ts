@@ -9,6 +9,8 @@
  * Object with constants for option `GSSAPI_DELEGATION`
  *
  * `CURLGSSAPI_DELEGATION_FLAG` becomes `CurlGssApi.DelegationFlag`
+ *
+ * @public
  */
 export enum CurlGssApi {
   /**

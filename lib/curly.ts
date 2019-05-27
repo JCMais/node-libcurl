@@ -152,4 +152,9 @@ const create = (): CurlyFunction => {
   return curly
 }
 
+/**
+ * Curly function
+ *
+ * @public
+ */
 export const curly = create()

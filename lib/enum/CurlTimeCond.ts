@@ -9,6 +9,8 @@
  * Object with constants for option `TIMECONDITION`
  *
  * `CURL_TIMECOND_IFMODSINCE` becomes `CurlTimeCond.IfModSince`
+ *
+ * @public
  */
 export enum CurlTimeCond {
   None,

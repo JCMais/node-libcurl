@@ -83,8 +83,15 @@ multiHandle.onMessage((error, handle, errorCode) => {
 })
 
 /**
- * Wrapper class around an Easy handle.
- * It provides a more *nodejs-friendly* interface.
+ * Wrapper around {@link Easy} class with a more *nodejs-friendly* interface.
+ *
+ * @remarks
+ *
+ * Also see the Curl Interface definition for some overloaded methods.
+ * The `setOpt` method here has `(never, never)` as type for their arguments because
+ *  the overloaded methods are the ones with the correct signatures.
+ *
+ * @public
  */
 class Curl extends EventEmitter {
   /**
@@ -530,6 +537,9 @@ class Curl extends EventEmitter {
   }
 }
 
+/**
+ * Overloaded methods for the Curl class.
+ */
 interface Curl {
   on(event: 'data', listener: (chunk: Buffer, curlInstance: Curl) => void): this
   on(

@@ -11,6 +11,8 @@
  * Should be used when setting `PROTOCOLS` and `REDIR_PROTOCOLS` options.
  *
  * `CURLPROTO_HTTP` becomes `CurlProtocol.HTTP`
+ *
+ * @public
  */
 export enum CurlProtocol {
   HTTP = 1 << 0,

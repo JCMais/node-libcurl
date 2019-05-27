@@ -16,6 +16,8 @@
  * See following StackOverflow questions for more info:
  *  https://stackoverflow.com/q/39660274/710693
  *  https://stackoverflow.com/q/3637702/710693
+ *
+ * @public
  */
 export enum CurlAuth {
   None = 0,
@@ -45,6 +47,8 @@ export enum CurlAuth {
  * Object with constants for option `FTPSSLAUTH`
  *
  * `CURLFTPAUTH_DEFAULT` becomes `CurlFtpAuth.Default`
+ *
+ * @public
  */
 export enum CurlFtpAuth {
   Default,

@@ -10,6 +10,8 @@
  *
  * `CURL_HTTP_VERSION_NONE` becomes `CurlHttpVersion.None`
  *   and `CURL_HTTP_VERSION_1_0` becomes `CurlHttpVersion.V1_0`
+ *
+ * @public
  */
 export enum CurlHttpVersion {
   /**

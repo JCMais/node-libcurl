@@ -18,6 +18,11 @@ const bindingPath = binary.find(
 
 const bindings: NodeLibcurlNativeBinding = require(bindingPath)
 
+/**
+ * Share class
+ *
+ * @public
+ */
 class Share extends bindings.Share {
   /**
    * Options to be used with `Share.setOpt`

@@ -10,6 +10,8 @@
  * Object with constants for option `FTP_FILEMETHOD`
  *
  * `CURLFTPMETHOD_MULTICWD` becomes `CurlFtpMethod.MultiCwd`
+ *
+ * @public
  */
 export enum CurlFtpMethod {
   /**

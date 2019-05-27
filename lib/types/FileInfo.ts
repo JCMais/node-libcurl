@@ -6,6 +6,9 @@
  */
 import { CurlFileType } from '../enum/CurlFileType'
 
+/**
+ * @public
+ */
 export type FileInfo = {
   fileType: CurlFileType
   time: Date

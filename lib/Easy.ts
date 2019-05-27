@@ -17,6 +17,11 @@ const bindingPath = binary.find(
 
 const bindings: NodeLibcurlNativeBinding = require(bindingPath)
 
+/**
+ * Easy Class
+ *
+ * @public
+ */
 class Easy extends bindings.Easy {}
 
 export { Easy }
