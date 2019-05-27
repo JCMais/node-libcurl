@@ -71,21 +71,33 @@ void CurlHttpPost::Reset() {
 
 CURLFORMcode CurlHttpPost::AddFile(char* fieldName, long fieldNameLength,  // NOLINT(runtime/int)
                                    char* fileName) {
+  std::string fname = fileName;
+#ifdef _WIN32
+  fname = UTF8ToAscii(fileName);
+#endif
   return curl_formadd(&this->first, &this->last, CURLFORM_COPYNAME, fieldName, CURLFORM_NAMELENGTH,
-                      fieldNameLength, CURLFORM_FILE, fileName, CURLFORM_END);
+                      fieldNameLength, CURLFORM_FILE, fname.c_str(), CURLFORM_END);
 }
 
 CURLFORMcode CurlHttpPost::AddFile(char* fieldName, long fieldNameLength,  // NOLINT(runtime/int)
                                    char* fileName, char* contentType) {
+  std::string fname = fileName;
+#ifdef _WIN32
+  fname = UTF8ToAscii(fileName);
+#endif
   return curl_formadd(&this->first, &this->last, CURLFORM_COPYNAME, fieldName, CURLFORM_NAMELENGTH,
-                      fieldNameLength, CURLFORM_FILE, fileName, CURLFORM_CONTENTTYPE, contentType,
+                      fieldNameLength, CURLFORM_FILE, fname.c_str(), CURLFORM_CONTENTTYPE, contentType,
                       CURLFORM_END);
 }
 
 CURLFORMcode CurlHttpPost::AddFile(char* fieldName, long fieldNameLength,  // NOLINT(runtime/int)
                                    char* fileName, char* contentType, char* newFileName) {
+  std::string fname = fileName;
+#ifdef _WIN32
+    fname = UTF8ToAscii(fileName);
+#endif
   return curl_formadd(&this->first, &this->last, CURLFORM_COPYNAME, fieldName, CURLFORM_NAMELENGTH,
-                      fieldNameLength, CURLFORM_FILE, fileName, CURLFORM_CONTENTTYPE, contentType,
+                      fieldNameLength, CURLFORM_FILE, fname.c_str(), CURLFORM_CONTENTTYPE, contentType,
                       CURLFORM_FILENAME, newFileName, CURLFORM_END);
 }
 
