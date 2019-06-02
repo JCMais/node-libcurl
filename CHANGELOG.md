@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0] - 2019-06-02
 ### Breaking Change
 - Dropped support for Node.js 4 and 6
 - Prebuilt binary is now statically built with brotli, libssh2, nghttp2, OpenSSL and zlib. brotli, OpenSSL, nghttp2 and zlib versions match their respective versions used by Node.js.
