@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
+## [2.0.1] - 2019-06-06
+### Fixed
+- Fixed problem when building with libcurl <= 7.38
+
 ## [2.0.0] - 2019-06-02
 ### Breaking Change
 - Dropped support for Node.js 4 and 6
