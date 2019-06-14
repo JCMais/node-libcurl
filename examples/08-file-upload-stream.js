@@ -62,6 +62,7 @@ stream.on('ready', () => {
 
     console.log(`Written ${data.length} bytes`)
 
+    // we could also return CurlReadFunc.Abort or CurlReadFunc.Pause here.
     return totalWritten
   })
 

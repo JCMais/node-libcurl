@@ -11,6 +11,9 @@ import { CurlGssApi } from '../enum/CurlGssApi'
 import { CurlSslOpt } from '../enum/CurlSslOpt'
 import { Share } from '../Share'
 
+/**
+ * @public
+ */
 export interface CurlOption {
   /**
    * Path to an abstract Unix domain socket.
@@ -573,7 +576,7 @@ export interface CurlOption {
   readonly ISSUERCERT: 'ISSUERCERT'
 
   /**
-   * Keep sending on HTTP >= 300 errors.
+   * Keep sending on HTTP \>= 300 errors.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_KEEP_SENDING_ON_ERROR.html](https://curl.haxx.se/libcurl/c/CURLOPT_KEEP_SENDING_ON_ERROR.html)
    */
@@ -1161,7 +1164,7 @@ export interface CurlOption {
   readonly RTSP_REQUEST: 'RTSP_REQUEST'
 
   /**
-   * CSEQ number for RTSP Server->Client request.
+   * CSEQ number for RTSP Server-\>Client request.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_RTSP_SERVER_CSEQ.html](https://curl.haxx.se/libcurl/c/CURLOPT_RTSP_SERVER_CSEQ.html)
    */
@@ -2206,7 +2209,7 @@ export const CurlOptionCamelCaseMap = {
   issuerCert: 'ISSUERCERT',
 
   /**
-   * Keep sending on HTTP >= 300 errors.
+   * Keep sending on HTTP \>= 300 errors.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_KEEP_SENDING_ON_ERROR.html](https://curl.haxx.se/libcurl/c/CURLOPT_KEEP_SENDING_ON_ERROR.html)
    */
@@ -2794,7 +2797,7 @@ export const CurlOptionCamelCaseMap = {
   rtspRequest: 'RTSP_REQUEST',
 
   /**
-   * CSEQ number for RTSP Server->Client request.
+   * CSEQ number for RTSP Server-\>Client request.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_RTSP_SERVER_CSEQ.html](https://curl.haxx.se/libcurl/c/CURLOPT_RTSP_SERVER_CSEQ.html)
    */
@@ -3277,6 +3280,9 @@ export const CurlOptionCamelCaseMap = {
   xoauth2Bearer: 'XOAUTH2_BEARER',
 } as const
 
+/**
+ * @public
+ */
 export type CurlOptionName =
   | 'ABSTRACT_UNIX_SOCKET'
   | 'ACCEPT_ENCODING'
@@ -3543,6 +3549,9 @@ export type SpecificOptions =
   | 'GSSAPI_DELEGATION'
   | 'PROXY_SSL_OPTIONS'
   | 'SSL_OPTIONS'
+/**
+ * @public
+ */
 export type CurlOptionValueType = {
   /**
    * Path to an abstract Unix domain socket.
@@ -4669,14 +4678,14 @@ export type CurlOptionValueType = {
   issuerCert?: string | number | boolean | null
 
   /**
-   * Keep sending on HTTP >= 300 errors.
+   * Keep sending on HTTP \>= 300 errors.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_KEEP_SENDING_ON_ERROR.html](https://curl.haxx.se/libcurl/c/CURLOPT_KEEP_SENDING_ON_ERROR.html)
    */
   KEEP_SENDING_ON_ERROR?: string | number | boolean | null
 
   /**
-   * Keep sending on HTTP >= 300 errors.
+   * Keep sending on HTTP \>= 300 errors.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_KEEP_SENDING_ON_ERROR.html](https://curl.haxx.se/libcurl/c/CURLOPT_KEEP_SENDING_ON_ERROR.html)
    */
@@ -5859,14 +5868,14 @@ export type CurlOptionValueType = {
   rtspRequest?: string | number | boolean | null
 
   /**
-   * CSEQ number for RTSP Server->Client request.
+   * CSEQ number for RTSP Server-\>Client request.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_RTSP_SERVER_CSEQ.html](https://curl.haxx.se/libcurl/c/CURLOPT_RTSP_SERVER_CSEQ.html)
    */
   RTSP_SERVER_CSEQ?: string | number | boolean | null
 
   /**
-   * CSEQ number for RTSP Server->Client request.
+   * CSEQ number for RTSP Server-\>Client request.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_RTSP_SERVER_CSEQ.html](https://curl.haxx.se/libcurl/c/CURLOPT_RTSP_SERVER_CSEQ.html)
    */

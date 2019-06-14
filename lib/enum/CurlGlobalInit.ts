@@ -5,6 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 // https://github.com/curl/curl/blob/c4e0be44089/include/curl/curl.h#L2630
+/**
+ * @public
+ */
 export const enum CurlGlobalInit {
   Nothing = 0,
   /* no purpose since 7.57.0 */

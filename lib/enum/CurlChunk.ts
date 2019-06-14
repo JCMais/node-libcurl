@@ -10,6 +10,8 @@
  *  with the options `CHUNK_BGN_FUNCTION` and `CHUNK_END_FUNCTION`.
  *
  * `CURL_CHUNK_BGN_FUNC_OK` becomes `CurlChunk.BgnFuncOk`
+ *
+ * @public
  */
 export enum CurlChunk {
   BgnFuncOk = 0,

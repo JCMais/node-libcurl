@@ -4,7 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+
 // https://github.com/curl/curl/blob/7e35eb7729/include/curl/multi.h#L61
+/**
+ * @public
+ */
 export enum CurlMultiCode {
   CURLM_CALL_MULTI_PERFORM = -1 /* please call curl_multi_perform() or
   curl_multi_socket*() soon */,
@@ -27,6 +31,9 @@ export enum CurlMultiCode {
 }
 
 // https://github.com/curl/curl/blob/e1be825453/include/curl/curl.h#L478
+/**
+ * @public
+ */
 export enum CurlCode {
   CURLE_OK = 0,
   CURLE_UNSUPPORTED_PROTOCOL /* 1 */,
@@ -180,6 +187,9 @@ export enum CurlCode {
 }
 
 // https://github.com/curl/curl/blob/e1be825453/include/curl/curl.h#L2675
+/**
+ * @public
+ */
 export enum CurlShareCode {
   CURLSHE_OK /* all is fine */,
   CURLSHE_BAD_OPTION /* 1 */,

@@ -10,6 +10,8 @@
  *  the first argument to the callback will be one of these.
  *
  * `CURLINFO_SSL_DATA_IN` becomes `CurlInfoDebug.SslDataOut`
+ *
+ * @public
  */
 export enum CurlInfoDebug {
   Text,

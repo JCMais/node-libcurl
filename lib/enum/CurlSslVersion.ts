@@ -9,6 +9,8 @@
  * Object with constants for option `SSLVERSION`
  *
  * `CURL_SSLVERSION_DEFAULT` becomes `CurlSslVersion.Default`
+ *
+ * @public
  */
 export enum CurlSslVersion {
   Default,
@@ -28,6 +30,8 @@ export enum CurlSslVersion {
  * It is also possible to OR one of the `CurlSslVersion` fields with one of `CurlSslVersionMax`
  *
  * `CURL_SSLVERSION_MAX_TLSv1_0` becomes `CurlSslVersionMax.TlsV1_0`
+ *
+ * @public
  */
 export enum CurlSslVersionMax {
   None = 0,

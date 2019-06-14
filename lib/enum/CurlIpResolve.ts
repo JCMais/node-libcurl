@@ -9,6 +9,8 @@
  * Object with constants for option `IPRESOLVE`
  *
  * `CURL_IPRESOLVE_V4` becomes `Curl.ipresolve.V4`
+ *
+ * @public
  */
 export enum CurlIpResolve {
   Whatever,

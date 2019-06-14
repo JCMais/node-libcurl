@@ -9,6 +9,8 @@
  * Options to be used with the `Curl.share.SHARE` and `Curl.share.UNSHARE` options.
  *
  * `CURL_LOCK_DATA_SSL_SESSION` becomes `CurlShareLock.DataSslSession`
+ *
+ * @public
  */
 export enum CurlShareLock {
   DataNone,

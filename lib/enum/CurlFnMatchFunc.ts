@@ -9,6 +9,8 @@
  * Object to be used as the return value for the callback set with the option `FNMATCH_FUNCTION`
  *
  * `CURL_FNMATCHFUNC_MATCH` becomes `CurlFnMatch.Match`
+ *
+ * @public
  */
 export enum CurlFnMatchFunc {
   Match,

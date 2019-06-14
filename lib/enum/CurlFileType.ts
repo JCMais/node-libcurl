@@ -10,6 +10,8 @@
  *  used alongside the `CHUNK_BGN_FUNCTION` option
  *
  * `CURLFILETYPE_DEVICE_BLOCK` becomes `CurlFileType.DeviceBlock`
+ *
+ * @public
  */
 export enum CurlFileType {
   File,

@@ -17,6 +17,11 @@ const bindingPath = binary.find(
 
 const bindings: NodeLibcurlNativeBinding = require(bindingPath)
 
+/**
+ * Multi class
+ *
+ * @public
+ */
 class Multi extends bindings.Multi {
   /**
    * Options to be used with `Multi.setOpt`

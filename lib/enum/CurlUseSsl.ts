@@ -9,6 +9,8 @@
  * Object with constants for option `USE_SSL`
  *
  * `CURLUSESSL_NONE` becomes `CurlUseSsl.None`
+ *
+ * @public
  */
 export enum CurlUseSsl {
   None,

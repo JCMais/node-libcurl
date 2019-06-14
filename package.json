@@ -1,6 +1,6 @@
 {
   "name": "node-libcurl",
-  "version": "2.0.0-alpha.9",
+  "version": "2.0.1",
   "author": "Jonathan Cardoso <me@jonathancardoso.com>",
   "description": "Node bindings for libcurl. Based on the work from node-curl.",
   "keywords": [
@@ -29,7 +29,7 @@
     "clean:build": "rimraf build",
     "clean:dist": "rimraf dist",
     "clean": "yarn clean:build && yarn clean:dist",
-    "docs": "api-documenter markdown -i build/api-extractor -o docs",
+    "docs": "yarn build:dist && yarn ae && api-documenter markdown -i build/api-extractor -o docs",
     "lint": "tslint -p . -c tslint.json",
     "lint:files": "tslint -c tslint.json",
     "pregyp": "node-pre-gyp",

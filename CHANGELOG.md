@@ -4,7 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## Unreleased Changes
+### Breaking Change
+
+### Fixed
+
+### Added
+
+### Changed
+
+## [2.0.1] - 2019-06-06
+### Fixed
+- Fixed problem when building with libcurl <= 7.38
+
+## [2.0.0] - 2019-06-02
 ### Breaking Change
 - Dropped support for Node.js 4 and 6
 - Prebuilt binary is now statically built with brotli, libssh2, nghttp2, OpenSSL and zlib. brotli, OpenSSL, nghttp2 and zlib versions match their respective versions used by Node.js.
@@ -96,6 +109,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Errors thrown inside callbacks are correctly caught / passed forward (if using multi interface)
 - All `Curl` instances now set their `USERAGENT` to `node-libcurl/${packageVersion}` during creation.  
   You change the default user agent string by changing `Curl.defaultUserAgent`, and disable it by setting their value to null.
+- `CurlWriteFunc` and `CurlReadFunc` enums with special return codes for their respective options, `WRITEFUNCTION` and `READFUNCTION`.
 - Added **experimental** `curly(url: string, options: {})` / `curly.<http-verb>(url: string, options: {})` async api.  
   This API can change between minor releases.
 ### Changed

@@ -23,7 +23,11 @@ const createConstantsFile = async ({
   extraHeaderText = '',
 }) => {
   const constantsObj = [
-    `export interface ${variableName} {`,
+    `
+    /**
+     * @public
+     */
+    export interface ${variableName} {`,
     ...constants.map(
       option =>
         `
@@ -48,7 +52,11 @@ const createConstantsFile = async ({
       ].join('\n')
     : ''
 
-  const optionNameUnionType = `export type ${variableName}Name = ${constants
+  const optionNameUnionType = `
+  /**
+   * @public
+   */
+  export type ${variableName}Name = ${constants
     .map(option => require('util').inspect(option.constantName))
     .join(' | ')}`
 

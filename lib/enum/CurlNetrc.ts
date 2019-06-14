@@ -9,6 +9,8 @@
  * To be used with the `NETRC` option
  *
  * `CURL_NETRC_OPTIONAL` becomes `CurlNetrc.Optional`
+ *
+ * @public
  */
 export enum CurlNetrc {
   /**

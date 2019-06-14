@@ -87,7 +87,11 @@ const run = async () => {
   // Now we must create the type for the curl.<http-verb> options param
   optionsValueTypeData = [
     ...optionsValueTypeData,
-    'export type CurlOptionValueType = {',
+    `
+    /**
+     * @public
+     */
+    export type CurlOptionValueType = {`,
   ]
 
   for (const option of allowedCurlOptions) {

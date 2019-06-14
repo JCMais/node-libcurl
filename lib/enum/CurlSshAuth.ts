@@ -9,6 +9,8 @@
  * Object with constants for option `SSH_AUTH_TYPES`
  *
  * `CURLSSH_AUTH_PASSWORD` becomes `CurlSshAuth.Password`
+ *
+ * @public
  */
 export enum CurlSshAuth {
   /**

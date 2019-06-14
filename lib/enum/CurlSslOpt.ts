@@ -9,6 +9,8 @@
  * Object with constants for option `SSL_OPT` and/or `PROXY_SSL_OPT`
  *
  * `CURLSSLOPT_ALLOW_BEAST` becomes `CurlSslOpt.AllowBeast`
+ *
+ * @public
  */
 export enum CurlSslOpt {
   /**

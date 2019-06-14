@@ -41,7 +41,9 @@ const std::vector<CurlVersionInfo::feature> CurlVersionInfo::features = {
     {"IPv6", CURL_VERSION_IPV6},
     {"Largefile", CURL_VERSION_LARGEFILE},
     {"SSPI", CURL_VERSION_SSPI},
+#if NODE_LIBCURL_VER_GE(7, 38, 0)
     {"GSS-API", CURL_VERSION_GSSAPI},
+#endif
 #if NODE_LIBCURL_VER_GE(7, 40, 0)
     {"Kerberos", CURL_VERSION_KERBEROS5},
 #else

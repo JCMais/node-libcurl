@@ -14,9 +14,27 @@ import { HeaderInfo } from './parseHeaders'
 
 import { Curl } from './Curl'
 
+/**
+ * Object the curly call resolves to.
+ *
+ * @public
+ */
 export interface CurlyResult {
+  /**
+   * Data will be the body of the requested URL
+   */
   data: string
+
+  /**
+   * Parsed headers
+   *
+   * See {@link HeaderInfo}
+   */
   headers: HeaderInfo[]
+
+  /**
+   * HTTP Status code for the last request
+   */
   statusCode: number
 }
 
@@ -66,7 +84,7 @@ interface CurlyHttpMethodCall {
    *
    * Async wrapper around the Curl class.
    *
-   * The `curl.<field>` being used will be the HTTP verb sent.
+   * The `curly.<field>` being used will be the HTTP verb sent.
    */
   (url: string, options?: CurlOptionValueType): Promise<CurlyResult>
 }
@@ -152,4 +170,9 @@ const create = (): CurlyFunction => {
   return curly
 }
 
+/**
+ * Curly function
+ *
+ * @public
+ */
 export const curly = create()

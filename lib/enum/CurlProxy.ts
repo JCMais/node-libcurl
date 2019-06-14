@@ -9,6 +9,8 @@
  * Object with constants for option `PROXYTYPE`
  *
  * `CURLPROXY_HTTP` becomes `CurlProxy.Http`
+ *
+ * @public
  */
 export enum CurlProxy {
   Http = 0,

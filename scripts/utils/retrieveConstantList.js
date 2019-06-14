@@ -27,6 +27,7 @@ const retrieveConstantList = async ({ url, constantPrefix, blacklist }) => {
         .text()
         .trim()
         .replace(/See$/, '')
+        .replace(/>/g, '\\>')
         .trim()
 
       const constantOriginal = $(el).text()

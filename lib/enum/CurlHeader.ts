@@ -8,9 +8,11 @@
 /**
  * Object with bitmasks to be used with `HEADEROPT`.
  *
- * Available since libcurl version >= 7.37.0
+ * Available since libcurl version \>= 7.37.0
  *
  * `CURLHEADER_UNIFIED` becomes `CurlHeader.Unified`
+ *
+ * @public
  */
 export enum CurlHeader {
   Unified = 0,
