@@ -54,6 +54,8 @@ In case you need to rebuild:
 $ yarn pregyp rebuild
 ```
 
+If you have any issues with the build process, please refer to a [readme build troubleshooting section](https://github.com/JCMais/node-libcurl#important-notes-on-prebuilt-binaries--direct-installation).
+
 ### Adding New libcurl Options
 
 If you want to include a new libcurl option on the addon, those are the basic steps:
