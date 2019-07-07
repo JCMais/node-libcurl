@@ -26,9 +26,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `Curl.reset` now correctly resets their instance ([#141](https://github.com/JCMais/node-libcurl/pull/141))
 - Previously `Curl.code` had all Curl codes into a single enum like object, that is, it included properties for each `CURLMCode`, `CURLcode` and `CURLSHcode` libcurl enums.  
   Now they are separated, each on their own object:  
-   `CURLMCode  -> Multi.code`  
-   `CURLcode`   -> `Curl.code`  
-   `CURLSHCode` -> `Share.code`  
+   `CURLMCode`  -> `CurlMultiCode`  
+   `CURLcode`   -> `CurlCode`  
+   `CURLSHCode` -> `CurlShareCode`  
 - `DEBUGFUNCTION` now receives a `Buffer` as the `data` argument, instead of a `string`.
 - `Easy.send` and `Easy.recv` now return an object, `{ code: CurlCode, bytesSent: number }` and `{ code: CurlCode, bytesReceived: number }` respectively.
 - `Curl` class: removed `_` prefix from their private members.  
