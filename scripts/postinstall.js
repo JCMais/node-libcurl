@@ -1,23 +1,24 @@
 // Mostly copied from https://github.com/nodegit/nodegit/blob/288ab93/lifecycleScripts/postinstall.js
-const fse = require('fs-extra')
 const path = require('path')
 const fs = require('fs')
 
 const log = require('npmlog')
-const osenv = require('osenv')
+const os = require('os')
 
-const homeDir = osenv.home()
+const rimraf = require('./utils/rimraf')
+
+const homeDir = os.homedir()
 
 let { version } = process
-let gypFolder = '.node-gyp'
+let gypFolder = envPaths('node-gyp', { suffix: '' }).cache
 
 if (process.env.npm_config_runtime === 'node-webkit') {
   version = process.env.npm_config_target
-  gypFolder = '.nw-gyp'
+  gypFolder = path.resolve(homeDir, '.nw-gyp')
 }
 
-// node-gyp path from here: https://github.com/nodejs/node-gyp/blob/v3.8.0/bin/node-gyp.js#L31
-const gypDir = path.resolve(homeDir, gypFolder, version.replace('v', ''))
+// node-gyp path from here: https://github.com/nodejs/node-gyp/blob/v5.0.3/bin/node-gyp.js#L31
+const gypDir = path.resolve(gypFolder, version.replace('v', ''))
 
 // reverting what we do on tools/retrieve-win-deps.js
 const opensslFolder = path.resolve(gypDir, 'include', 'node', 'openssl')
@@ -81,12 +82,9 @@ module.exports = function install() {
         // build them for node and then nah eff that noise let's rebuild them
         // again for the actual platform! Hurray!!! When that madness is dead
         // we can clean up the source which is a serious amount of data.
-        // fse.removeSync(path.join(rootPath, "vendor"));
-        // fse.removeSync(path.join(rootPath, "src"));
-        // fse.removeSync(path.join(rootPath, "include"));
-        fse.removeSync(path.join(rootPath, 'build'))
-        if (fse.pathExists(path.join(rootPath, 'curl-for-windows'))) {
-          fse.removeSync(path.join(rootPath, 'curl-for-windows'))
+        rimraf.sync(path.join(rootPath, 'build'))
+        if (fs.existsSync(path.join(rootPath, 'curl-for-windows'))) {
+          rimraf.sync(path.join(rootPath, 'curl-for-windows'))
         }
       }
     })

@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+// https://github.com/nodejs/node-gyp/blob/64bb407c14149c216885a48e78df178cedaec8fd/bin/node-gyp.js#L25
 if (process.platform !== 'win32') {
   process.exit(0)
 }
@@ -16,23 +17,23 @@ if (process.platform !== 'win32') {
  */
 
 const { exec } = require('child_process')
+const envPaths = require('env-paths')
 const fs = require('fs')
 const path = require('path')
+const os = require('os')
 
-const osenv = require('osenv')
-
-const homeDir = osenv.home()
+const homeDir = os.homedir()
 
 let { version } = process
-let gypFolder = '.node-gyp'
+let gypFolder = envPaths('node-gyp', { suffix: '' }).cache
 
 if (process.env.npm_config_runtime === 'node-webkit') {
   version = process.env.npm_config_target
-  gypFolder = '.nw-gyp'
+  gypFolder = path.resolve(homeDir, '.nw-gyp')
 }
 
-// node-gyp path from here: https://github.com/nodejs/node-gyp/blob/v3.8.0/bin/node-gyp.js#L31
-const gypDir = path.resolve(homeDir, gypFolder, version.replace('v', ''))
+// node-gyp path from here: https://github.com/nodejs/node-gyp/blob/v5.0.3/bin/node-gyp.js#L31
+const gypDir = path.resolve(gypFolder, version.replace('v', ''))
 
 // we are renaming openssl directory
 //  so it does not get used when compilling.
