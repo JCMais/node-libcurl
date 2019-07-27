@@ -17,10 +17,11 @@ if (process.platform !== 'win32') {
  */
 
 const { exec } = require('child_process')
-const envPaths = require('env-paths')
 const fs = require('fs')
 const path = require('path')
 const os = require('os')
+
+const envPaths = require('env-paths')
 
 const homeDir = os.homedir()
 

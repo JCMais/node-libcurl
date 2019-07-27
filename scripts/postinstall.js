@@ -1,9 +1,10 @@
 // Mostly copied from https://github.com/nodegit/nodegit/blob/288ab93/lifecycleScripts/postinstall.js
 const path = require('path')
 const fs = require('fs')
+const os = require('os')
 
 const log = require('npmlog')
-const os = require('os')
+const envPaths = require('env-paths')
 
 const rimraf = require('./utils/rimraf')
 
