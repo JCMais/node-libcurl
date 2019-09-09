@@ -15,6 +15,8 @@ environment:
     - nodejs_version: '10'
     - nodejs_version: '12'
     - nodejs_version: '12'
+      ELECTRON_VERSION: '6.0.7'
+    - nodejs_version: '12'
       ELECTRON_VERSION: '5.0.1'
     - nodejs_version: '12'
       ELECTRON_VERSION: '4.2.0'

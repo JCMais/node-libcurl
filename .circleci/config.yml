@@ -242,6 +242,21 @@ workflows:
           e:
             name: alpine
       ####
+      # Electron v6
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-electron-v6-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          electron-version: "6.0.7"
+          libcurl-version: "7.64.1"
+          nghttp2-version: "1.38.0"
+          openssl-version: "1.1.1b"
+          e:
+            name: debian
+      ####
       # Electron v5
       ####
       - build-addon-alpine-and-publish/build-addon:
