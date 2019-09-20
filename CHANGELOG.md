@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
+## [2.0.2] - 2019-09-20
+### Added
+- Build on Electron v6
+### Changed
+- Improved build scripts
+- bump libssh2 to 1.9.0
+
 ## [2.0.1] - 2019-06-06
 ### Fixed
 - Fixed problem when building with libcurl <= 7.38
