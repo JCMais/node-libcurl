@@ -11,6 +11,7 @@ import { CurlFileType } from '../enum/CurlFileType'
  */
 export type FileInfo = {
   fileType: CurlFileType
+  fileName: string
   time: Date
   perm: number
   uid: number
