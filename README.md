@@ -1,4 +1,10 @@
 # node-libcurl<!-- omit in toc -->
+
+<a href="https://www.patreon.com/bePatron?u=19985213" data-patreon-widget-type="become-patron-button">
+  <img src="https://c5.patreon.com/external/logo/become_a_patron_button@2x.png" width="160">
+</a>
+<br>
+
 [![NPM version][npm-image]][npm-url]
 [![node][node-image]][node-url]
 [![license][license-image]][license-url]
