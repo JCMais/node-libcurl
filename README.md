@@ -95,6 +95,14 @@ curl.on('error', curl.close.bind(curl));
 curl.perform();
 ```
 
+#### Setting HTTP headers
+
+Pass an array of strings specifying headers
+```javascript
+curl.setOpt(Curl.option.HTTPHEADER,
+  ['Content-Type: application/x-amz-json-1.1'])
+```
+
 ### MultiPart Upload / HttpPost libcurl Option
 
 ```javascript
@@ -103,8 +111,8 @@ const { Curl } = require('node-libcurl');
 const curl = new Curl();
 const close = curl.close.bind(curl);
 
-curl.setOpt(curl.option.URL, '127.0.0.1/upload.php');
-curl.setOpt(curl.option.HTTPPOST, [
+curl.setOpt(Curl.option.URL, '127.0.0.1/upload.php');
+curl.setOpt(Curl.option.HTTPPOST, [
     { name: 'input-name', file: '/file/path', type: 'text/html' },
     { name: 'input-name2', contents: 'field-contents' }
 ]);
@@ -314,7 +322,8 @@ npm install node-libcurl --build-from-source --runtime=electron --target=$(yarn 
 Where `target` is the version of electron you are using, in our case, we are just using the version returned by the locally installed `electron` binary.
 
 You can also put those args in a .npmrc file, like so:
-```
+
+```bash
 runtime = electron
 target = 5.0.1
 target_arch = x64
