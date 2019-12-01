@@ -202,7 +202,7 @@ if [[ $LIBCURL_RELEASE == "LATEST" ]]; then
   LIBCURL_RELEASE=$LATEST_LIBCURL_RELEASE
 fi
 LIBCURL_DEST_FOLDER=$PREFIX_DIR/deps/libcurl
-echo "Building libcurl v$LIBCURL_RELEASE - Latest is v$LATELATEST_LIBCURL_RELEASEST"
+echo "Building libcurl v$LIBCURL_RELEASE - Latest is v$LATEST_LIBCURL_RELEASE"
 ./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER || (echo "libcurl failed build log:" && cat_slower $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log && exit 1)
 echo "libcurl successful build log:"
 cat_slower $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log
