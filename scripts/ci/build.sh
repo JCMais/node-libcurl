@@ -202,7 +202,7 @@ if [[ $LIBCURL_RELEASE == "LATEST" ]]; then
   LIBCURL_RELEASE=$LATEST_LIBCURL_RELEASE
 fi
 LIBCURL_DEST_FOLDER=$PREFIX_DIR/deps/libcurl
-echo "Building libcurl v$LIBCURL_RELEASE"
+echo "Building libcurl v$LIBCURL_RELEASE - Latest is v$LATELATEST_LIBCURL_RELEASEST"
 ./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER || (echo "libcurl failed build log:" && cat_slower $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log && exit 1)
 echo "libcurl successful build log:"
 cat_slower $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log
@@ -232,6 +232,8 @@ if [ -z "$PUBLISH_BINARY" ]; then
     PUBLISH_BINARY=true;
   fi
 fi
+
+echo "Publish binary is: $PUBLISH_BINARY"
 
 # Configure Yarn cache
 mkdir -p ~/.cache/yarn
@@ -333,6 +335,7 @@ fi
 # If we are here, it means the addon worked
 # Check if we need to publish the binaries
 if [[ $PUBLISH_BINARY == true && $LIBCURL_RELEASE == $LATEST_LIBCURL_RELEASE ]]; then
+  echo "Publish binary is true - Testing and publishing package with pregyp"
   yarn pregyp package testpackage --verbose
   node scripts/module-packaging.js --publish "$(yarn --silent pregyp reveal staged_tarball --silent)"
 fi
@@ -341,9 +344,11 @@ fi
 # Otherwise, unpublish them
 INSTALL_RESULT=0
 if [[ $PUBLISH_BINARY == true ]]; then
+  echo "Publish binary is true - Testing if it was published correctly"
   INSTALL_RESULT=$(npm_config_fallback_to_build=false yarn install --frozen-lockfile > /dev/null)$? || true
 fi
 if [[ $INSTALL_RESULT != 0 ]]; then
+  echo "Failed to install package from npm after being published"
   node scripts/module-packaging.js --unpublish "$(yarn --silent pregyp reveal hosted_tarball --silent)"
   false
 fi
