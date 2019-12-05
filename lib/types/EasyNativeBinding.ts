@@ -84,7 +84,7 @@ export declare class EasyNativeBinding {
    */
   setOpt(
     option: 'DEBUGFUNCTION',
-    value: ((type: number, data: Buffer) => void) | null,
+    value: ((type: number, data: Buffer) => 0) | null,
   ): CurlCode
   /**
    * Use `Curl.option` for predefined constants.
