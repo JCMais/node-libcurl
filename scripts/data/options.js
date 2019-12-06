@@ -39,7 +39,7 @@ const optionKindValueMap = {
   /* @TODO Add type definitions, they are on Curl.chunk */
   CHUNK_END_FUNCTION: '(() => number)',
   /* @TODO Add type definitions, they are on Curl.info.debug */
-  DEBUGFUNCTION: '((type: number, data: Buffer) => void)',
+  DEBUGFUNCTION: '((type: number, data: Buffer) => 0)',
   /* @TODO Add type definitions, they are on Curl.fnmatchfunc */
   FNMATCH_FUNCTION: '((pattern: string, value: string) => number)',
   HTTPPOST: 'HttpPostField[]',
