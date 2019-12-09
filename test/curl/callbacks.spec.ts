@@ -58,13 +58,16 @@ describe('Callbacks', () => {
     })
 
     app.put('/headers', (req, res) => {
-      res.send({
-        headers: req.headers,
-        trailers: req.trailers,
-      })
+
+      req.resume()
 
       req.on('end', () => {
         trailers = req.trailers
+
+        res.send({
+          headers: req.headers,
+          trailers: req.trailers,
+        })
       })
     })
   })

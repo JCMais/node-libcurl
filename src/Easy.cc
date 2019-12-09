@@ -1615,7 +1615,7 @@ NAN_METHOD(Easy::GetInfo) {
         curr = linkedList;
 
         while (curr) {
-          arr->Set(arr->Length(), Nan::New<v8::String>(curr->data).ToLocalChecked());
+          arr->Set(arr->CreationContext(), arr->Length(), Nan::New<v8::String>(curr->data).ToLocalChecked());
           curr = curr->next;
         }
 
