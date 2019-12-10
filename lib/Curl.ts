@@ -541,18 +541,27 @@ class Curl extends EventEmitter {
  * Overloaded methods for the Curl class.
  */
 interface Curl {
-  on(event: 'data', listener: (chunk: Buffer, curlInstance: Curl) => void): this
+  on(
+    event: 'data',
+    listener: (this: Curl, chunk: Buffer, curlInstance: Curl) => void,
+  ): this
   on(
     event: 'header',
-    listener: (chunk: Buffer, curlInstance: Curl) => void,
+    listener: (this: Curl, chunk: Buffer, curlInstance: Curl) => void,
   ): this
   on(
     event: 'error',
-    listener: (error: Error, errorCode: CurlCode, curlInstance: Curl) => void,
+    listener: (
+      this: Curl,
+      error: Error,
+      errorCode: CurlCode,
+      curlInstance: Curl,
+    ) => void,
   ): this
   on(
     event: 'end',
     listener: (
+      this: Curl,
       status: number,
       data: string | Buffer,
       headers: Buffer | HeaderInfo[],
