@@ -24,8 +24,8 @@
 [codeclimate-url]:https://codeclimate.com/github/JCMais/node-libcurl
 [node-image]:https://img.shields.io/badge/node.js-%3E=_4-green.svg?style=flat-square
 [node-url]:https://nodejs.org/download/
-[license-image]:https://img.shields.io/github/license/JCMais/node-libcurl.svg?style=flat-square
-[license-url]:https://raw.githubusercontent.com/JCMais/node-libcurl/develop/LICENSE-MIT
+[license-image]:https://img.shields.io/npm/l/node-libcurl?style=flat-square
+[license-url]:https://raw.githubusercontent.com/JCMais/node-libcurl/develop/LICENSE
 [deps-image]:https://img.shields.io/david/JCMais/node-libcurl.svg?style=flat-square
 [deps-url]:https://david-dm.org/jcmais/node-libcurl
 
