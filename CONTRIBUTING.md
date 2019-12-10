@@ -98,7 +98,45 @@ More information go to https://github.com/nodejs/llnode
 
 We are using [`np`](https://github.com/sindresorhus/np) for releases.
 
-For prereleases, use something like:
+#### Semver Major / Minor / Patch
+
+1. Checkout `master`
+2. Merge changes from `develop`
+3. Create version
+4. Publish
+
+So basically:
+```bash
+git checkout master
+git merge develop
+```
+And then:
+```bash
+npx np [major|minor|patch]
+```
+
+or if you are having trouble with `np`:
+```bash
+yarn publish
+```
+
+or even if you are having trouble with `yarn`:
+```bash
+npm version [major|minor|patch]
+npm publish
+```
+
+And finally
+```bash
+git push --follow-tags
+git checkout develop
+git merge master
+git push
+```
+
+#### Prereleases
+
+For prereleases, use something like this from the `develop` branch:
 ```shell
 $ npx np prerelease --any-branch --tag next
 ```
