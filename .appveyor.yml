@@ -151,6 +151,7 @@ test_script:
         if ($null -ne $env:NWJS_VERSION) {
           Write-Host "No tests available for nw.js, skipping tests..."
         } else {
+          yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())"
           yarn test
         }
       }

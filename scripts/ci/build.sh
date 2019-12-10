@@ -329,6 +329,7 @@ if [ -n "$ELECTRON_VERSION" ]; then
 elif [ -n "$NWJS_VERSION" ]; then
   echo "No tests available for node-webkit (nw.js)"
 else
+  yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
   yarn test
 fi
 

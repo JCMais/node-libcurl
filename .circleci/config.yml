@@ -245,7 +245,7 @@ workflows:
       # Node 13
       ####
       - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-node-12-libcurl-latest
+          name: build-addon-node-13-libcurl-latest
           context: general
           filters:
             tags:
