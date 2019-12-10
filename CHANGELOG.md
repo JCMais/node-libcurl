@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
+## [2.0.3] - 2019-12-10 - Unreleased Changes
+### Fixed
+- Updated return type of DEBUGFUNCTION ([#202](https://github.com/JCMais/node-libcurl/issues/202))
+- Fixed issues when building with newer versions of v8 (Node.js >= 13 and Electron >= 7) ([#203](https://github.com/JCMais/node-libcurl/issues/203))
+
+### Added
+- Type for `this` added to event listeners callbacks
+- Build on Node.js 13 and Electron 7
+
 ## [2.0.2] - 2019-09-20
 ### Added
 - Build on Electron v6
