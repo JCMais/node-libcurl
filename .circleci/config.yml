@@ -122,7 +122,7 @@ orbs:
                 echo "$OPENSSL_RELEASE" >> _libs_versions
                 echo "$ZLIB_RELEASE" >> _libs_versions
           - restore_cache:
-              key: v1-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-nwjsV<<parameters.nwjs-version>>-deps-libs-{{ checksum "_libs_versions" }}-{{ checksum "yarn.lock" }}
+              key: v2-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-nwjsV<<parameters.nwjs-version>>-deps-libs-{{ checksum "_libs_versions" }}-{{ checksum "yarn.lock" }}
           
           - steps: <<parameters.before-build>>
           ####
@@ -136,7 +136,7 @@ orbs:
           # Cache
           ####
           - save_cache:
-              key: v1-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-nwjsV<<parameters.nwjs-version>>-deps-libs-{{ checksum "_libs_versions" }}-{{ checksum "yarn.lock" }}
+              key: v2-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-nwjsV<<parameters.nwjs-version>>-deps-libs-{{ checksum "_libs_versions" }}-{{ checksum "yarn.lock" }}
               paths:
                 - ~/.electron
                 - ~/.cache/electron
@@ -163,57 +163,57 @@ workflows:
       ####
       # Node 8
       ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-node-8-libcurl-latest
-          context: general
-          filters:
-            tags:
-              only: /^v.*/
-          node-version: "8"
-          libcurl-version: "7.64.1"
-          nghttp2-version: "1.33.0"
-          openssl-version: "1.0.2r"
-          e:
-            name: alpine
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-node-8-libcurl-old
-          context: general
-          filters:
-            tags:
-              only: /^v.*/
-          node-version: "8"
-          libcurl-version: "7.50.0"
-          nghttp2-version: "1.33.0"
-          openssl-version: "1.0.2r"
-          e:
-            name: alpine
-      ####
-      # Node 10
-      ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-node-10-libcurl-latest
-          context: general
-          filters:
-            tags:
-              only: /^v.*/
-          node-version: "10"
-          libcurl-version: "7.64.1"
-          nghttp2-version: "1.34.0"
-          openssl-version: "1.1.0j"
-          e:
-            name: alpine
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-node-10-libcurl-old
-          context: general
-          filters:
-            tags:
-              only: /^v.*/
-          node-version: "10"
-          libcurl-version: "7.50.0"
-          nghttp2-version: "1.34.0"
-          openssl-version: "1.1.0j"
-          e:
-            name: alpine
+      # - build-addon-alpine-and-publish/build-addon:
+      #     name: build-addon-node-8-libcurl-latest
+      #     context: general
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #     node-version: "8"
+      #     libcurl-version: "7.64.1"
+      #     nghttp2-version: "1.33.0"
+      #     openssl-version: "1.0.2r"
+      #     e:
+      #       name: alpine
+      # - build-addon-alpine-and-publish/build-addon:
+      #     name: build-addon-node-8-libcurl-old
+      #     context: general
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #     node-version: "8"
+      #     libcurl-version: "7.50.0"
+      #     nghttp2-version: "1.33.0"
+      #     openssl-version: "1.0.2r"
+      #     e:
+      #       name: alpine
+      # ####
+      # # Node 10
+      # ####
+      # - build-addon-alpine-and-publish/build-addon:
+      #     name: build-addon-node-10-libcurl-latest
+      #     context: general
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #     node-version: "10"
+      #     libcurl-version: "7.64.1"
+      #     nghttp2-version: "1.34.0"
+      #     openssl-version: "1.1.0j"
+      #     e:
+      #       name: alpine
+      # - build-addon-alpine-and-publish/build-addon:
+      #     name: build-addon-node-10-libcurl-old
+      #     context: general
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #     node-version: "10"
+      #     libcurl-version: "7.50.0"
+      #     nghttp2-version: "1.34.0"
+      #     openssl-version: "1.1.0j"
+      #     e:
+      #       name: alpine
       ####
       # Node 12
       ####
@@ -229,107 +229,107 @@ workflows:
           openssl-version: "1.1.1b"
           e:
             name: alpine
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-node-12-libcurl-old
-          context: general
-          filters:
-            tags:
-              only: /^v.*/
-          node-version: "12"
-          libcurl-version: "7.50.0"
-          nghttp2-version: "1.38.0"
-          openssl-version: "1.1.1b"
-          e:
-            name: alpine
-      ####
-      # Electron v6
-      ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-electron-v6-libcurl-latest
-          context: general
-          filters:
-            tags:
-              only: /^v.*/
-          electron-version: "6.0.7"
-          libcurl-version: "7.64.1"
-          nghttp2-version: "1.38.0"
-          openssl-version: "1.1.1b"
-          e:
-            name: debian
-      ####
-      # Electron v5
-      ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-electron-v5-libcurl-latest
-          context: general
-          filters:
-            tags:
-              only: /^v.*/
-          electron-version: "5.0.1"
-          libcurl-version: "7.64.1"
-          nghttp2-version: "1.38.0"
-          openssl-version: "1.1.1b"
-          e:
-            name: debian
-      ####
-      # Electron v4
-      ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-electron-v4-libcurl-latest
-          context: general
-          filters:
-            tags:
-              only: /^v.*/
-          electron-version: "4.2.0"
-          libcurl-version: "7.64.1"
-          nghttp2-version: "1.38.0"
-          openssl-version: "1.1.1b"
-          e:
-            name: debian
-      ####
-      # Electron v3
-      ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-electron-v3-libcurl-latest
-          context: general
-          filters:
-            tags:
-              only: /^v.*/
-          electron-version: "3.1.9"
-          libcurl-version: "7.64.1"
-          nghttp2-version: "1.38.0"
-          openssl-version: "1.1.1b"
-          e:
-            name: debian
-          # Just for reference
-          # before-build: *install-deps
-      ####
-      # Nwjs v0.38
-      ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-nwjs-v0.38-libcurl-latest
-          context: general
-          filters:
-            tags:
-              only: /^v.*/
-          nwjs-version: "0.38.2"
-          libcurl-version: "7.64.1"
-          nghttp2-version: "1.38.0"
-          openssl-version: "1.1.1b"
-          e:
-            name: debian
-      ####
-      # Nw.js v0.37
-      ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-nwjs-v0.37-libcurl-latest
-          context: general
-          filters:
-            tags:
-              only: /^v.*/
-          nwjs-version: "0.37.4"
-          libcurl-version: "7.64.1"
-          nghttp2-version: "1.38.0"
-          openssl-version: "1.1.1b"
-          e:
-            name: debian
+      # - build-addon-alpine-and-publish/build-addon:
+      #     name: build-addon-node-12-libcurl-old
+      #     context: general
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #     node-version: "12"
+      #     libcurl-version: "7.50.0"
+      #     nghttp2-version: "1.38.0"
+      #     openssl-version: "1.1.1b"
+      #     e:
+      #       name: alpine
+      # ####
+      # # Electron v6
+      # ####
+      # - build-addon-alpine-and-publish/build-addon:
+      #     name: build-addon-electron-v6-libcurl-latest
+      #     context: general
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #     electron-version: "6.0.7"
+      #     libcurl-version: "7.64.1"
+      #     nghttp2-version: "1.38.0"
+      #     openssl-version: "1.1.1b"
+      #     e:
+      #       name: debian
+      # ####
+      # # Electron v5
+      # ####
+      # - build-addon-alpine-and-publish/build-addon:
+      #     name: build-addon-electron-v5-libcurl-latest
+      #     context: general
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #     electron-version: "5.0.1"
+      #     libcurl-version: "7.64.1"
+      #     nghttp2-version: "1.38.0"
+      #     openssl-version: "1.1.1b"
+      #     e:
+      #       name: debian
+      # ####
+      # # Electron v4
+      # ####
+      # - build-addon-alpine-and-publish/build-addon:
+      #     name: build-addon-electron-v4-libcurl-latest
+      #     context: general
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #     electron-version: "4.2.0"
+      #     libcurl-version: "7.64.1"
+      #     nghttp2-version: "1.38.0"
+      #     openssl-version: "1.1.1b"
+      #     e:
+      #       name: debian
+      # ####
+      # # Electron v3
+      # ####
+      # - build-addon-alpine-and-publish/build-addon:
+      #     name: build-addon-electron-v3-libcurl-latest
+      #     context: general
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #     electron-version: "3.1.9"
+      #     libcurl-version: "7.64.1"
+      #     nghttp2-version: "1.38.0"
+      #     openssl-version: "1.1.1b"
+      #     e:
+      #       name: debian
+      #     # Just for reference
+      #     # before-build: *install-deps
+      # ####
+      # # Nwjs v0.38
+      # ####
+      # - build-addon-alpine-and-publish/build-addon:
+      #     name: build-addon-nwjs-v0.38-libcurl-latest
+      #     context: general
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #     nwjs-version: "0.38.2"
+      #     libcurl-version: "7.64.1"
+      #     nghttp2-version: "1.38.0"
+      #     openssl-version: "1.1.1b"
+      #     e:
+      #       name: debian
+      # ####
+      # # Nw.js v0.37
+      # ####
+      # - build-addon-alpine-and-publish/build-addon:
+      #     name: build-addon-nwjs-v0.37-libcurl-latest
+      #     context: general
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #     nwjs-version: "0.37.4"
+      #     libcurl-version: "7.64.1"
+      #     nghttp2-version: "1.38.0"
+      #     openssl-version: "1.1.1b"
+      #     e:
+      #       name: debian
