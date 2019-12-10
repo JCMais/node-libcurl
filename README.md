@@ -20,7 +20,7 @@
 [travis-url]:https://travis-ci.com/JCMais/node-libcurl
 [appveyor-image]:https://ci.appveyor.com/api/projects/status/u7ox641jyb6hxrkt/branch/master?svg=true
 [appveyor-url]:https://ci.appveyor.com/project/JCMais/node-libcurl
-[codeclimate-image]:https://img.shields.io/codeclimate/github/JCMais/node-libcurl.svg?style=flat-square
+[codeclimate-image]:https://img.shields.io/codeclimate/maintainability/JCMais/node-libcurl?style=flat-square
 [codeclimate-url]:https://codeclimate.com/github/JCMais/node-libcurl
 [node-image]:https://img.shields.io/badge/node.js-%3E=_4-green.svg?style=flat-square
 [node-url]:https://nodejs.org/download/
@@ -36,6 +36,7 @@ _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-
   - [Install](#install)
   - [Simple Request - Async / Await](#simple-request---async--await)
   - [Simple Request](#simple-request)
+    - [Setting HTTP headers](#setting-http-headers)
   - [MultiPart Upload / HttpPost libcurl Option](#multipart-upload--httppost-libcurl-option)
 - [API](#api)
 - [Supported Libcurl Versions](#supported-libcurl-versions)
@@ -44,7 +45,7 @@ _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-
     - [Missing Packages](#missing-packages)
   - [Building on Linux](#building-on-linux)
   - [Building on macOS](#building-on-macos)
-    - [Xcode >= 10 | macOS Mojave](#xcode--10--macos-mojave)
+    - [Xcode &gt;= 10 | macOS Mojave](#xcode-gt-10--macos-mojave)
   - [Building on Windows](#building-on-windows)
   - [Electron / NW.js](#electron--nwjs)
     - [NW.js (aka node-webkit)](#nwjs-aka-node-webkit)
