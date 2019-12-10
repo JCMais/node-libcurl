@@ -14,6 +14,9 @@ environment:
     - nodejs_version: '8'
     - nodejs_version: '10'
     - nodejs_version: '12'
+    - nodejs_version: '13'
+    - nodejs_version: '12'
+      ELECTRON_VERSION: '7.1.2'
     - nodejs_version: '12'
       ELECTRON_VERSION: '6.0.7'
     - nodejs_version: '12'
@@ -96,7 +99,7 @@ install:
         pip install patch
         # apply patch to nw-gyp fixing issue
         python -m patch -d "$(yarn global dir)/node_modules/nw-gyp/src" ./scripts/ci/patches/win_delay_load_hook.cc.patch
-      
+
         $arch = if ($env:PLATFORM -eq "x86") { "ia32" } else { "x64" }
 
         $rootFolder = "$env:USERPROFILE/.nw"
