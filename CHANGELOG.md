@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
-## [2.0.3] - 2019-12-10 - Unreleased Changes
+## [2.0.3] - 2019-12-11
 ### Fixed
 - Updated return type of DEBUGFUNCTION ([#202](https://github.com/JCMais/node-libcurl/issues/202))
 - Fixed issues when building with newer versions of v8 (Node.js >= 13 and Electron >= 7) ([#203](https://github.com/JCMais/node-libcurl/issues/203))
