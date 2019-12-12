@@ -18,9 +18,12 @@ executors:
     environment:
       RECONFIGURE_NGHTTP2: 'true'
       BASH_ENV: '/home/circleci/.bashrc'
+      LATEST_LIBCURL_RELEASE: '7.64.1'
   alpine:
     docker:
       - image: jonathancardoso/alpine-ci
+    environment:
+      LATEST_LIBCURL_RELEASE: '7.64.1'
 
 orbs:
   build-addon-alpine-and-publish:
