@@ -95,7 +95,6 @@ orbs:
                 echo 'export ELECTRON_VERSION="<<parameters.electron-version>>"' >> $BASH_ENV
                 echo 'export NWJS_VERSION="<<parameters.nwjs-version>>"' >> $BASH_ENV
                 echo 'export BROTLI_RELEASE="<<parameters.brotli-version>>"' >> $BASH_ENV
-                echo 'export LATEST_LIBCURL_RELEASE="<<parameters.libcurl-version>>"' >> $BASH_ENV
                 echo 'export LIBCURL_RELEASE="<<parameters.libcurl-version>>"' >> $BASH_ENV
                 echo 'export LIBIDN2_RELEASE="<<parameters.libidn2-version>>"' >> $BASH_ENV
                 echo 'export LIBSSH2_RELEASE="<<parameters.libssh2-version>>"' >> $BASH_ENV
