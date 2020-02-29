@@ -388,6 +388,10 @@ const std::vector<CurlConstant> curlOptionString = {
     {"RTSP_STREAM_URI", CURLOPT_RTSP_STREAM_URI},
     {"RTSP_TRANSPORT", CURLOPT_RTSP_TRANSPORT},
 
+#if NODE_LIBCURL_VER_GE(7, 66, 0)
+    {"SASL_AUTHZID", CURLOPT_SASL_AUTHZID},
+#endif
+
 #if NODE_LIBCURL_VER_GE(7, 43, 0)
     {"SERVICE_NAME", CURLOPT_SERVICE_NAME},
 #endif
