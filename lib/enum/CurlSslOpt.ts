@@ -26,4 +26,10 @@ export enum CurlSslOpt {
    * SSL backends where such behavior is present.
    */
   NoRevoke = 1 << 1,
+
+  /**
+   * Tells libcurl to *NOT* accept a partial certificate chain
+   * if possible. The OpenSSL backend has this ability.
+   */
+  NoPartialChain = 1 << 2,
 }
