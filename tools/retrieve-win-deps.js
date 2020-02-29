@@ -72,11 +72,10 @@ exec('git rev-parse --show-toplevel', execConfig, function(err, stdout) {
       path.resolve(__dirname, '..', 'deps', 'curl-for-windows'),
     )
     process.stdout.write('deps/' + depsGypTarget)
+    cleanupAndExit()
   } else {
     retrieveWinDeps()
   }
-
-  cleanupAndExit()
 })
 
 function retrieveWinDeps() {
@@ -142,6 +141,7 @@ function retrieveWinDeps() {
             }
 
             process.stdout.write(depsGypTarget)
+            cleanupAndExit()
           })
         },
       )
