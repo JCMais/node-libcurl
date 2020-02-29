@@ -32,7 +32,7 @@ const optionKindMap = {
 const optionKindValueMap = {
   dataCallback: '((data: Buffer, size: number, nmemb: number) => number)',
   progressCallback:
-    '((dltotal: number,dlnow: number,ultotal: number,ulnow: number) => number)',
+    '((dltotal: number,dlnow: number,ultotal: number,ulnow: number) => number | CurlProgressFunc)',
   stringList: 'string[]',
   /* @TODO Add type definitions, they are on Curl.chunk */
   CHUNK_BGN_FUNCTION: '((fileInfo: FileInfo, remains: number) => number)',

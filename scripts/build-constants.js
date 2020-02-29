@@ -42,6 +42,7 @@ const run = async () => {
     shouldGenerateCamelCaseMap: true,
     extraHeaderText: `
       import { CurlGssApi } from "../enum/CurlGssApi"
+      import { CurlProgressFunc } from "../enum/CurlProgressFunc"
       import { CurlSslOpt } from "../enum/CurlSslOpt"
       import { Share } from "../Share"
     `,
@@ -110,9 +111,7 @@ const run = async () => {
     optionsValueTypeData = [
       ...optionsValueTypeData,
       `${optionDescription}${option.constantName}?: ${optionValueType} | null`,
-      `${optionDescription}${
-        option.constantNameCamelCase
-      }?: ${optionValueType} | null`,
+      `${optionDescription}${option.constantNameCamelCase}?: ${optionValueType} | null`,
     ]
   }
 

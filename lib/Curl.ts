@@ -40,6 +40,7 @@ import { CurlFeature } from './enum/CurlFeature'
 import { CurlGlobalInit } from './enum/CurlGlobalInit'
 import { CurlGssApi } from './enum/CurlGssApi'
 import { CurlPause } from './enum/CurlPause'
+import { CurlProgressFunc } from './enum/CurlProgressFunc'
 import { CurlSslOpt } from './enum/CurlSslOpt'
 
 const bindingPath = binary.find(
