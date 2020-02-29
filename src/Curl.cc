@@ -496,13 +496,17 @@ const std::vector<CurlConstant> curlMultiOptionInteger = {
     {"CHUNK_LENGTH_PENALTY_SIZE", CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE},
     {"CONTENT_LENGTH_PENALTY_SIZE", CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE},
     {"MAX_HOST_CONNECTIONS", CURLMOPT_MAX_HOST_CONNECTIONS},
-    {"MAX_PIPELINE_LENGTH", CURLMOPT_MAX_PIPELINE_LENGTH},
     {"MAX_TOTAL_CONNECTIONS", CURLMOPT_MAX_TOTAL_CONNECTIONS},
     {"MAXCONNECTS", CURLMOPT_MAXCONNECTS},
+    // Pipelining was removed on libcurl 7.62, since then those options do nothing
+    // Also see: https://github.com/curl/curl/pull/3651
+    {"MAX_PIPELINE_LENGTH", CURLMOPT_MAX_PIPELINE_LENGTH},
     {"PIPELINING", CURLMOPT_PIPELINING},
 };
 
 const std::vector<CurlConstant> curlMultiOptionStringArray = {
+    // Pipelining was removed on libcurl 7.62, since then those options do nothing
+    // Also see: https://github.com/curl/curl/pull/3651
     {"PIPELINING_SERVER_BL", CURLMOPT_PIPELINING_SERVER_BL},
     {"PIPELINING_SITE_BL", CURLMOPT_PIPELINING_SITE_BL},
 };
