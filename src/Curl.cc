@@ -107,7 +107,7 @@ const std::vector<CurlConstant> curlOptionInteger = {
 #if NODE_LIBCURL_VER_GE(7, 60, 0)
     {"DNS_SHUFFLE_ADDRESSES", CURLOPT_DNS_SHUFFLE_ADDRESSES},
 #endif
-
+    // Disabled since libcurl 7.62
     {"DNS_USE_GLOBAL_CACHE", CURLOPT_DNS_USE_GLOBAL_CACHE},
 
 #if NODE_LIBCURL_VER_GE(7, 36, 0)
