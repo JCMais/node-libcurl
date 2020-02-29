@@ -23,6 +23,7 @@ export enum CurlMultiCode {
   attempted to get added - again */,
   CURLM_RECURSIVE_API_CALL /* an api function was called from inside a
   callback */,
+  CURLM_WAKEUP_FAILURE /* wakeup is unavailable or failed */,
   CURLM_LAST,
   /* just to make code nicer when using curl_multi_socket() you can now check
      for CURLM_CALL_MULTI_SOCKET too in the same style it works for
