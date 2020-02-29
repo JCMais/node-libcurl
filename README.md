@@ -43,13 +43,13 @@ _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-
 - [Detailed Installation](#detailed-installation)
   - [Important Notes on Prebuilt Binaries / Direct Installation](#important-notes-on-prebuilt-binaries--direct-installation)
     - [Missing Packages](#missing-packages)
-  - [Building on Linux](#building-on-linux)
-  - [Building on macOS](#building-on-macos)
-    - [Xcode &gt;= 10 | macOS Mojave](#xcode-gt-10--macos-mojave)
-  - [Building on Windows](#building-on-windows)
   - [Electron / NW.js](#electron--nwjs)
     - [NW.js (aka node-webkit)](#nwjs-aka-node-webkit)
     - [electron (aka atom-shell)](#electron-aka-atom-shell)
+  - [Building on Linux](#building-on-linux)
+  - [Building on macOS](#building-on-macos)
+    - [Xcode >= 10 | macOS Mojave](#xcode--10--macos-mojave)
+  - [Building on Windows](#building-on-windows)
 - [Getting Help](#getting-help)
 - [Contributing](#contributing)
 - [Donations / Patreon](#donations--patreon)
@@ -150,7 +150,7 @@ and on the following platforms:
 * Mac OS X 64 bits
 * Windows 32 and 64 bits
 
-Installing via `yarn add node-libcurl` or `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed. However if you trying to install on `nw.js` or `electron` additional steps will be required, check their corresponding section on building from source.
+Installing via `yarn add node-libcurl` or `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed. However if you trying to install on `nw.js` or `electron` additional steps will be required, check their corresponding section below.
 
 The prebuilt binary is statically built with the following library versions, features and protocols:
 ```
@@ -207,6 +207,53 @@ The statically linked version currently does not have support for `GSS-API`, `SP
 The scripts to build Kerberos exists on the `./scripts/ci` folder, but it was removed for two reasons:
 - If built with Heimdal, the addon becomes too big
 - If built with MIT Kerberos, the addon would be bound to their licensing terms.
+
+### Electron / NW.js
+
+If building for a `Electron` or `NW.js` you need to pass additional parameters to the install command.
+
+If you do not want to use the prebuilt binary, pass the `npm_config_build_from_source=true` / `--build-from-source` flag to the install command.
+
+#### NW.js (aka node-webkit)
+For building from source on NW.js you first need to make sure you have nw-gyp installed globally:
+`yarn global add nw-gyp` or `npm i -g nw-gyp`
+
+> If on Windows, you also need addition steps, currently the available win_delay_load_hook.cc on `nw-gyp` is not working with this addon, so it's necessary to apply a patch to it. The patch can be found on `./scripts/ci/patches/win_delay_load_hook.cc.patch`, and should be applied to the file on `<nw-gyp-folder>/src/win_delay_load_hook.cc`.
+
+Then:
+> yarn
+```
+npm_config_runtime=node-webkit npm_config_target=0.38.2 yarn add node-libcurl
+```
+> npm
+```bash
+npm install node-libcurl --runtime=node-webkit --target=0.38.2 --save
+```
+
+where `--target` is the current version of NW.js you are using
+
+#### electron (aka atom-shell)
+
+> yarn
+```bash
+npm_config_runtime=electron npm_config_target=$(yarn --silent electron --version) npm_config_disturl=https://atom.io/download/atom-shell yarn add node-libcurl
+```
+
+> npm
+```bash
+npm install node-libcurl --runtime=electron --target=$(yarn --silent electron --version) --disturl=https://atom.io/download/atom-shell --save
+```
+
+Where `--target` is the version of electron you are using, in our case, we are just using the version returned by the locally installed `electron` binary.
+
+You can also put those args in a .npmrc file, like so:
+
+```bash
+runtime = electron
+target = 5.0.1
+target_arch = x64
+dist_url = https://atom.io/download/atom-shell
+```
 
 ### Building on Linux
 
@@ -283,53 +330,6 @@ cinst nasm
 Currently there is no support to use other libcurl version than the one provided by the [curl-for-windows](https://github.com/JCMais/curl-for-windows) submodule (help is appreciated on adding this feature).
 
 An important note about building the addon on Windows is that we have to do some "hacks" with the header files included by `node-gyp`/`nw-gyp`. The reason for that is because as we are using a standalone version of OpenSSL, we don't want to use the OpenSSL headers provided by Node.js, which are by default added to `<nw-gyp-or-node-gyp-folder>/include/node/openssl`, so what we do is that before compilation that folder is renamed to `openssl.disabled`. After a successful installation the folder is renamed back to their original name, **however** if any error happens during compilation the folder will stay renamed until the addon is compiled successfully. More info on why that was needed and some context can be found on issue [#164](https://github.com/JCMais/node-libcurl/issues/164).
-
-### Electron / NW.js
-
-If building for a `Electron` or `NW.js` you need to pass additional parameters to the install command.
-
-If you are trying to use the prebuilt binary (if available), do not pass the `npm_config_build_from_source=true` / `--build-from-source` below.
-
-#### NW.js (aka node-webkit)
-For building from source on NW.js you first need to make sure you have nw-gyp installed globally:
-`yarn global add nw-gyp` or `npm i -g nw-gyp`
-
-> If on Windows, you also need addition steps, currently the available win_delay_load_hook.cc on `nw-gyp` is not working with this addon, so it's necessary to apply a patch to it. The patch can be found on `./scripts/ci/patches/win_delay_load_hook.cc.patch`, and should be applied to the file on `<nw-gyp-folder>/src/win_delay_load_hook.cc`.
-
-Then:
-> yarn
-```
-npm_config_build_from_source=true npm_config_runtime=node-webkit npm_config_target=0.38.2 yarn add node-libcurl
-```
-> npm
-```bash
-npm install node-libcurl --build-from-source --runtime=node-webkit --target=0.38.2 --save
-```
-
-where `target` is the current version of NW.js you are using
-
-#### electron (aka atom-shell)
-
-> yarn
-```bash
-npm_config_build_from_source=true npm_config_runtime=electron npm_config_target=$(yarn --silent electron --version) npm_config_disturl=https://atom.io/download/atom-shell yarn add node-libcurl
-```
-
-> npm
-```bash
-npm install node-libcurl --build-from-source --runtime=electron --target=$(yarn --silent electron --version) --disturl=https://atom.io/download/atom-shell --save
-```
-
-Where `target` is the version of electron you are using, in our case, we are just using the version returned by the locally installed `electron` binary.
-
-You can also put those args in a .npmrc file, like so:
-
-```bash
-runtime = electron
-target = 5.0.1
-target_arch = x64
-dist_url = https://atom.io/download/atom-shell
-```
 
 ## Getting Help
 
