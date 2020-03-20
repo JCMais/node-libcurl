@@ -143,8 +143,8 @@ The code itself is made to compile with any version greater than `7.32.0`, any l
 The latest version of this package has prebuilt binaries (thanks to [node-pre-gyp](https://github.com/mapbox/node-pre-gyp/)) 
  available for:
 * node.js: Latest two versions on active LTS (see https://github.com/nodejs/Release)
-* electron v5, v4 and v3
-* nw.js (node-webkit): Latest two versions
+* electron: Latest 3 major versions
+* nw.js (node-webkit): Latest 3 major (minor for nw.js case) versions
 and on the following platforms:
 * Linux 64 bits
 * Mac OS X 64 bits
