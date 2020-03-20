@@ -24,6 +24,7 @@ export enum CurlMultiCode {
   CURLM_RECURSIVE_API_CALL /* an api function was called from inside a
   callback */,
   CURLM_WAKEUP_FAILURE /* wakeup is unavailable or failed */,
+  CURLM_BAD_FUNCTION_ARGUMENT /* function called with a bad parameter */,
   CURLM_LAST,
   /* just to make code nicer when using curl_multi_socket() you can now check
      for CURLM_CALL_MULTI_SOCKET too in the same style it works for
@@ -163,6 +164,7 @@ export enum CurlCode {
   CURLE_RECURSIVE_API_CALL /* 93 - an api function was called from inside a callback */,
   CURLE_AUTH_ERROR /* 94 - an authentication function returned an error */,
   CURLE_HTTP3 /* 95 - An HTTP/3 layer problem */,
+  CURLE_QUIC_CONNECT_ERROR /* 96 - QUIC connection error */,
   CURLE_LAST,
   /*  compatibility with older names */
   CURLE_FTP_WEIRD_SERVER_REPLY = CURLE_WEIRD_SERVER_REPLY,
