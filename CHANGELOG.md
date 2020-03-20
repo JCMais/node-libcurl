@@ -11,16 +11,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fix retrieve-win-deps Windows build script not working correctly
 
 ### Added
-- Added missing [`CURLOPT_SASL_AUTHZID`](https://curl.haxx.se/libcurl/c/CURLOPT_SASL_AUTHZID.html) option added with libcurl 7.66.0
+- Added missing [`CURLOPT_SASL_AUTHZID`](https://curl.haxx.se/libcurl/c/CURLOPT_SASL_AUTHZID.html) option - libcurl 7.66.0
 - Added missing `CURLE_AUTH_ERROR` error code added with libcurl 7.66.0
-- Added missing [`CURLINFO_RETRY_AFTER`](https://curl.haxx.se/libcurl/c/CURLINFO_RETRY_AFTER.html) info field added with libcurl 7.66.0
-- Added missing `CURL_HTTP_VERSION_3` related http version to the `CurlHttpVersion` enum. Constant added with libcurl 7.66.0
-- Added missing [`CURLMOPT_MAX_CONCURRENT_STREAMS`](https://curl.haxx.se/libcurl/c/CURLMOPT_MAX_CONCURRENT_STREAMS.html) option  added with libcurl 7.67.0
-- Added missing `CurlProgressFunc` enum to reflect the new `CURL_PROGRESSFUNC_CONTINUE` constant added with libcurl 7.68.0
-- Added missing `CurlSslOpt` enum member `NoPartialChain` - Added with libcurl 7.68.0
-- Added missing `CURLE_HTTP3` error code - An HTTP/3 layer problem - Added with libcurl 7.68.0
+- Added missing [`CURLINFO_RETRY_AFTER`](https://curl.haxx.se/libcurl/c/CURLINFO_RETRY_AFTER.html) info field - libcurl 7.66.0
+- Added missing `CURL_HTTP_VERSION_3` constant related http version to the `CurlHttpVersion` enum - libcurl 7.66.0
+- Added missing [`CURLMOPT_MAX_CONCURRENT_STREAMS`](https://curl.haxx.se/libcurl/c/CURLMOPT_MAX_CONCURRENT_STREAMS.html) option - libcurl 7.67.0
+- Added missing `CurlProgressFunc` enum to reflect the new `CURL_PROGRESSFUNC_CONTINUE` constant - libcurl 7.68.0
+- Added missing `CurlSslOpt` enum member `NoPartialChain` - libcurl 7.68.0
+- Added missing `CURLE_HTTP3` error code - An HTTP/3 layer problem - libcurl 7.68.0
 - Added missing `CURLM_WAKEUP_FAILURE` error code - wakeup is unavailable or failed - libcurl 7.68.0
-
+- Added missing `CURLM_BAD_FUNCTION_ARGUMENT` error code - function called with a bad parameter - libcurl 7.69.0
+- Added missing `CURLE_QUIC_CONNECT_ERROR` error code - QUIC connection error - libcurl 7.69.0
+- Added missing [`CURLOPT_MAIL_RCPT_ALLLOWFAILS`](https://curl.haxx.se/libcurl/c/CURLOPT_MAIL_RCPT_ALLLOWFAILS) option - libcurl 7.69.0
 ### Changed
 
 ## [2.0.3] - 2019-12-11
