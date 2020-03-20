@@ -23,7 +23,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added missing `CURLM_BAD_FUNCTION_ARGUMENT` error code - function called with a bad parameter - libcurl 7.69.0
 - Added missing `CURLE_QUIC_CONNECT_ERROR` error code - QUIC connection error - libcurl 7.69.0
 - Added missing [`CURLOPT_MAIL_RCPT_ALLLOWFAILS`](https://curl.haxx.se/libcurl/c/CURLOPT_MAIL_RCPT_ALLLOWFAILS) option - libcurl 7.69.0
+
 ### Changed
+- Prebuilt binaries are now compiled with libcurl 7.69.1 and, when possible, latest version of other related dependencies:
+  - OpenSSL 1.1.1d
+  - nghttp2 1.4.0
+  - libssh2 1.9.0
+- Added prebuilt binaries for:
+  - Electron v8
+  - NW.js v0.44, v0.43 and v0.42
+- Dropped prebuilt binaries for:
+  - Node.js 8
+  - Electron v3, v4 and v5
+  - NW.js v0.38 and v0.39
 
 ## [2.0.3] - 2019-12-11
 ### Fixed
