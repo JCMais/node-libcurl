@@ -94,9 +94,9 @@ install:
         # https://github.com/nwjs/nw-gyp/issues/116
         # patch tool for Windows
         # https://stackoverflow.com/a/9485089/710693
-        # pip install patch
+        pip install patch
         # apply patch to nw-gyp fixing issue
-        # python -m patch -d "$(yarn global dir)/node_modules/nw-gyp/src" ./scripts/ci/patches/win_delay_load_hook.cc.patch
+        python -m patch -d "$(yarn global dir)/node_modules/nw-gyp/src" ./scripts/ci/patches/win_delay_load_hook.cc.patch
 
         $arch = if ($env:PLATFORM -eq "x86") { "ia32" } else { "x64" }
 
