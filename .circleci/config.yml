@@ -294,17 +294,17 @@ workflows:
       # Nwjs v0.44
       ####
       - build-addon-alpine-and-publish/build-addon:
-        name: build-addon-nwjs-v0.44-libcurl-latest
-        context: general
-        filters:
-          tags:
-            only: /^v.*/
-        nwjs-version: '0.44.5'
-        libcurl-version: '7.69.1'
-        nghttp2-version: '1.40.0'
-        openssl-version: '1.1.1d'
-        e:
-          name: debian
+          name: build-addon-nwjs-v0.44-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          nwjs-version: '0.44.5'
+          libcurl-version: '7.69.1'
+          nghttp2-version: '1.40.0'
+          openssl-version: '1.1.1d'
+          e:
+            name: debian
       ####
       # Nwjs v0.43
       ####
