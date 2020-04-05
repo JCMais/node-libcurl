@@ -9,6 +9,7 @@ import 'should'
 import crypto from 'crypto'
 
 import httpAuth from 'http-auth'
+import httpAuthConnect from 'http-auth-connect'
 
 import { app, host, port, server } from '../helper/server'
 import { Curl, CurlAuth } from '../../lib'
@@ -19,19 +20,19 @@ const username = 'user'
 const password = 'pass'
 const realmBasic = 'basic'
 const realmDigest = 'digest'
-const basic = auth.basic(
+const basic = httpAuth.basic(
   {
     realm: realmBasic,
   },
-  (usr, pass, callback) => {
+  (usr: string, pass: string, callback: Function) => {
     callback(usr === username && pass === password)
   },
 )
-const digest = auth.digest(
+const digest = httpAuth.digest(
   {
     realm: realmDigest,
   },
-  (usr, callback) => {
+  (usr: string, callback: Function) => {
     const hash = crypto.createHash('md5')
 
     if (usr === username) {
@@ -69,8 +70,9 @@ describe('Option HTTPAUTH', () => {
   })
 
   it('should authenticate using basic auth', (done) => {
-    app.use(auth.connect(basic))
+    app.use(httpAuthConnect(basic))
     app.get('/', (req, res) => {
+      // @ts-ignore
       res.send(req.user)
     })
 
@@ -103,8 +105,9 @@ describe('Option HTTPAUTH', () => {
       user = `${realmDigest}/${username}`
     }
 
-    app.use(auth.connect(digest))
+    app.use(httpAuthConnect(digest))
     app.get('/', (req, res) => {
+      // @ts-ignore
       res.send(req.user)
     })
 
@@ -128,8 +131,9 @@ describe('Option HTTPAUTH', () => {
   })
 
   it('should not authenticate using basic', (done) => {
-    app.use(auth.connect(basic))
+    app.use(httpAuthConnect(basic))
     app.get('/', (req, res) => {
+      // @ts-ignore
       res.send(req.user)
     })
 

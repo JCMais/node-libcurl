@@ -9,15 +9,6 @@ interface HttpAuthConfig {
 
 interface HttpAuthFunction {}
 
-declare module 'express-serve-static-core' {
-  interface Request {
-    user?: string
-  }
-  interface Response {
-    user?: string
-  }
-}
-
 export function basic(
   config: HttpAuthConfig,
   callback?: (
@@ -31,11 +22,3 @@ export function digest(
   config: HttpAuthConfig,
   callback?: (username: string, callback: (digest?: string) => void) => void,
 ): HttpAuthFunction
-
-export function connect(
-  func: HttpAuthFunction,
-): (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction,
-) => void

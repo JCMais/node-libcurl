@@ -93,7 +93,7 @@ describe('Put Upload', () => {
       (
         error: any,
         _req: express.Request,
-        res: express.Response,
+        res: express.Response<string>,
         _next: express.NextFunction,
       ) => {
         if (error.type !== 'request.aborted') {
