@@ -1,6 +1,6 @@
 {
   "name": "node-libcurl",
-  "version": "2.1.0-1",
+  "version": "2.1.0-2",
   "author": "Jonathan Cardoso <me@jonathancardoso.com>",
   "description": "Node bindings for libcurl. Based on the work from node-curl.",
   "keywords": [
