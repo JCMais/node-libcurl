@@ -107,7 +107,7 @@ curl.setProgressCallback((dltotal, dlnow /*, ultotal, ulnow*/) => {
 // This is basically the same than the `data` event emitted on
 //  the `Curl` instance, but keep in mind that here the return value is considered.
 // You must return the amount of data that was written.
-curl.setOpt(Curl.option.WRITEFUNCTION, chunk => {
+curl.setOpt(Curl.option.WRITEFUNCTION, (chunk) => {
   fs.appendFileSync(outputFile, chunk)
 
   return chunk.length
@@ -118,7 +118,7 @@ curl.on('end', () => {
   curl.close()
 })
 
-curl.on('error', error => {
+curl.on('error', (error) => {
   console.log('Failed to download file', error)
   curl.close()
 })

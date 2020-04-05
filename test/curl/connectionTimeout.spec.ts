@@ -9,10 +9,10 @@ import 'should'
 import { Curl } from '../../lib'
 
 describe('Connection Timeout', () => {
-  it('should give an error on timeout', done => {
+  it('should give an error on timeout', (done) => {
     const curl = new Curl()
 
-    //http://stackoverflow.com/a/904609/710693
+    // http://stackoverflow.com/a/904609/710693
     curl.setOpt('URL', '10.255.255.1')
     curl.setOpt('CONNECTTIMEOUT', 1)
 

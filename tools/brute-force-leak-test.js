@@ -6,17 +6,17 @@
  */
 var Easy = require('../lib/Easy'),
   Curl = require('../lib/Curl'),
-  readline = require('readline');
+  readline = require('readline')
 
 var rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
-});
+})
 
 var instances = [],
   amount = 1e3,
   iteration = 0,
-  handle;
+  handle
 
 var postData = [
   {
@@ -24,44 +24,44 @@ var postData = [
     file: 'test.img',
     type: 'image/png',
   },
-];
+]
 
 function createOrCloseCurlHandles() {
   var i = amount,
-    shouldClose = iteration++ % 2;
+    shouldClose = iteration++ % 2
 
   if (shouldClose) {
-    console.log('Closing handles.');
+    console.log('Closing handles.')
   } else {
-    console.log('Opening handles.');
+    console.log('Opening handles.')
   }
 
   while (i--) {
     if (shouldClose) {
-      instances[i].close();
-      instances[i] = null;
+      instances[i].close()
+      instances[i] = null
     } else {
-      handle = new Easy();
-      handle.setOpt('HTTPPOST', postData);
-      handle.setOpt(Curl.option.XFERINFOFUNCTION, () => {});
-      instances[i] = handle;
+      handle = new Easy()
+      handle.setOpt('HTTPPOST', postData)
+      handle.setOpt(Curl.option.XFERINFOFUNCTION, () => {})
+      instances[i] = handle
     }
   }
 
   if (global.gc && shouldClose) {
-    console.log('Calling garbage collector.');
-    global.gc();
+    console.log('Calling garbage collector.')
+    global.gc()
   }
 
-  handle = null;
+  handle = null
 }
 
 function loop() {
-  rl.question('Type anything to go to the next iteration: ', function() {
-    createOrCloseCurlHandles();
+  rl.question('Type anything to go to the next iteration: ', function () {
+    createOrCloseCurlHandles()
 
-    process.nextTick(loop);
-  });
+    process.nextTick(loop)
+  })
 }
 
-loop();
+loop()

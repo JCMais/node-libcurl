@@ -27,7 +27,7 @@ describe('Features', () => {
     curl.close()
   })
 
-  before(done => {
+  before((done) => {
     server.listen(port, host, done)
 
     app.get('/', (_req, res) => {
@@ -43,7 +43,7 @@ describe('Features', () => {
     app._router.stack.pop()
   })
 
-  it('should not store data when NoDataStorage is set', done => {
+  it('should not store data when NoDataStorage is set', (done) => {
     curl.enable(CurlFeature.NoDataStorage)
 
     curl.on('end', (_status, data, headers) => {
@@ -57,7 +57,7 @@ describe('Features', () => {
     curl.perform()
   })
 
-  it('should not store headers when NoHeaderStorage is set', done => {
+  it('should not store headers when NoHeaderStorage is set', (done) => {
     curl.enable(CurlFeature.NoHeaderStorage)
 
     curl.on('end', (_status, data, headers) => {
@@ -73,7 +73,7 @@ describe('Features', () => {
     curl.perform()
   })
 
-  it('should not parse data when NoDataParsing is set', done => {
+  it('should not parse data when NoDataParsing is set', (done) => {
     curl.enable(CurlFeature.NoDataParsing)
 
     curl.on('end', (_status, data, headers) => {
@@ -89,7 +89,7 @@ describe('Features', () => {
     curl.perform()
   })
 
-  it('should not parse headers when NoHeaderParsing is set', done => {
+  it('should not parse headers when NoHeaderParsing is set', (done) => {
     curl.enable(CurlFeature.NoHeaderParsing)
 
     curl.on('end', (_status, data, headers) => {

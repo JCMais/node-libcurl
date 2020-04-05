@@ -24,7 +24,7 @@ fs.writeFileSync(fileName, crypto.randomBytes(fileSize))
 
 console.log('File: ', fs.readFileSync(fileName, 'base64'))
 
-fs.open(fileName, 'r+', function(err, fd) {
+fs.open(fileName, 'r+', function (err, fd) {
   // enabling VERBOSE mode so we can get more details on what is going on.
   curl.setOpt(Curl.option.VERBOSE, true)
   // set UPLOAD to a truthy value to enable PUT upload.
@@ -35,7 +35,7 @@ fs.open(fileName, 'r+', function(err, fd) {
 
   curl.setOpt(Curl.option.URL, url)
 
-  curl.on('end', function(statusCode, body) {
+  curl.on('end', function (statusCode, body) {
     console.log('Response from httpbin:')
     console.log({
       statusCode,
@@ -50,7 +50,7 @@ fs.open(fileName, 'r+', function(err, fd) {
     this.close()
   })
 
-  curl.on('error', function(error, errorCode) {
+  curl.on('error', function (error, errorCode) {
     console.log(error, errorCode)
 
     fs.closeSync(fd)

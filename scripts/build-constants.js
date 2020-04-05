@@ -71,7 +71,7 @@ const run = async () => {
   })
 
   // add extra types to CurlOption
-  const union = arr => arr.map(i => inspect(i)).join(' | ')
+  const union = (arr) => arr.map((i) => inspect(i)).join(' | ')
 
   let optionsValueTypeData = [
     'import { FileInfo, HttpPostField } from "../types"',

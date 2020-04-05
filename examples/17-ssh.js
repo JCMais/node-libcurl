@@ -28,7 +28,7 @@ curl.on('end', () => {
   curl.close()
 })
 
-curl.on('error', error => {
+curl.on('error', (error) => {
   console.error(error)
   curl.close()
 })

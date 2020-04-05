@@ -24,7 +24,7 @@
     "importHelpers": true
   },
   "include": ["lib/**/*"],
-  "exclude": ["node_modules", "test/**/*.js"],
+  "exclude": ["node_modules"],
   // @TODO Remove those when done
   // "files": ["types/custom/index.d.ts"]
 }

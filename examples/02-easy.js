@@ -20,7 +20,7 @@ handle.setOpt(Curl.option.VERBOSE, url)
 
 // This is used to receive the headers
 // See https://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
-handle.setOpt(Curl.option.HEADERFUNCTION, function(buf, size, nmemb) {
+handle.setOpt(Curl.option.HEADERFUNCTION, function (buf, size, nmemb) {
   console.log('HEADERFUNCTION: ')
   console.log(arguments)
 
@@ -29,7 +29,7 @@ handle.setOpt(Curl.option.HEADERFUNCTION, function(buf, size, nmemb) {
 
 // This is used to receive the response data
 // See https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html
-handle.setOpt(Curl.option.WRITEFUNCTION, function(buf, size, nmemb) {
+handle.setOpt(Curl.option.WRITEFUNCTION, function (buf, size, nmemb) {
   console.log('WRITEFUNCTION: ')
   console.log(arguments)
 

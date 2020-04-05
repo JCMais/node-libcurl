@@ -5,9 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 export { CurlNativeBindingObject } from './CurlNativeBinding'
-export {
-  CurlVersionInfoNativeBindingObject,
-} from './CurlVersionInfoNativeBinding'
+export { CurlVersionInfoNativeBindingObject } from './CurlVersionInfoNativeBinding'
 export { EasyNativeBinding, EasyNativeBindingObject } from './EasyNativeBinding'
 export { FileInfo } from './FileInfo'
 export { HttpPostField } from './HttpPostField'

@@ -15,7 +15,7 @@ const config = { cwd: resolve(__dirname, '..') }
 
 exec(
   'git submodule update --init --recursive && python deps/curl-for-windows/configure.py',
-  function(err) {
+  function (err) {
     if (err) {
       console.log(err.toString())
       process.exit(1)

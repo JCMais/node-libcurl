@@ -17,9 +17,7 @@ const retrieveConstantList = async ({ url, constantPrefix, blacklist }) => {
 
   return constants
     .map((i, el) => {
-      const $descriptionEl = $(el)
-        .parent()
-        .next()
+      const $descriptionEl = $(el).parent().next()
 
       $descriptionEl.find('a').remove()
 
@@ -45,7 +43,7 @@ const retrieveConstantList = async ({ url, constantPrefix, blacklist }) => {
     })
     .get()
     .sort((a, b) => a.constantName.localeCompare(b.constantName))
-    .filter(item => !blacklist.includes(item.constantOriginal))
+    .filter((item) => !blacklist.includes(item.constantOriginal))
 }
 
 module.exports = {

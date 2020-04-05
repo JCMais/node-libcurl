@@ -47,7 +47,7 @@ curl.on('end', (code, body, headers) => {
   curl.close()
 })
 
-curl.on('error', error => {
+curl.on('error', (error) => {
   console.error(error)
 
   fs.closeSync(fileOut)

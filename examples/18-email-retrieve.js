@@ -32,12 +32,12 @@ curl.setOpt(Curl.option.CAINFO, certfile)
 //This is not safe, but you probably will need it if you are using a self signed certificate.
 //curl.setOpt(Curl.option.SSL_VERIFYPEER, false);
 
-curl.on('end', function(statusCode, body) {
+curl.on('end', function (statusCode, body) {
   console.log(body)
   this.close()
 })
 
-curl.on('error', function(error, errorCode) {
+curl.on('error', function (error, errorCode) {
   console.log(error, errorCode)
   this.close()
 })

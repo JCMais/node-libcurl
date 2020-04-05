@@ -22,7 +22,7 @@ describe('Callbacks', () => {
     curl.close()
   })
 
-  before(done => {
+  before((done) => {
     server.listen(port, host, done)
 
     app.get('/delayed', (_req, res) => {
@@ -58,7 +58,6 @@ describe('Callbacks', () => {
     })
 
     app.put('/headers', (req, res) => {
-
       req.resume()
 
       req.on('end', () => {
@@ -79,10 +78,10 @@ describe('Callbacks', () => {
     app._router.stack.pop()
   })
 
-  describe('progress', function() {
+  describe('progress', function () {
     this.timeout(10000)
 
-    it('should work', done => {
+    it('should work', (done) => {
       let wasCalled = false
 
       curl.setOpt('URL', `${url}/delayed`)
@@ -107,7 +106,7 @@ describe('Callbacks', () => {
       curl.perform()
     })
 
-    it('should not accept undefined return', done => {
+    it('should not accept undefined return', (done) => {
       curl.setOpt('URL', `${url}/delayed`)
       curl.setOpt('NOPROGRESS', false)
 
@@ -120,7 +119,7 @@ describe('Callbacks', () => {
         done()
       })
 
-      curl.on('error', error => {
+      curl.on('error', (error) => {
         // eslint-disable-next-line no-undef
         error.should.be.a.instanceOf(TypeError)
         done()
@@ -131,10 +130,10 @@ describe('Callbacks', () => {
   })
 
   if (Curl.isVersionGreaterOrEqualThan(7, 64, 0)) {
-    describe('trailer', function() {
+    describe('trailer', function () {
       this.timeout(5000)
 
-      it('should work', done => {
+      it('should work', (done) => {
         let wasCalled = false
         let isFirstCall = true
 
@@ -179,7 +178,7 @@ describe('Callbacks', () => {
         curl.perform()
       })
 
-      it('should abort request on false', done => {
+      it('should abort request on false', (done) => {
         curl.setOpt('URL', `${url}/headers`)
         curl.setOpt('UPLOAD', true)
         curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])
@@ -204,7 +203,7 @@ describe('Callbacks', () => {
         curl.perform()
       })
 
-      it('should throw an error on invalid return value', done => {
+      it('should throw an error on invalid return value', (done) => {
         curl.setOpt('URL', `${url}/headers`)
         curl.setOpt('UPLOAD', true)
         curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])

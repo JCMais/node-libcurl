@@ -15,7 +15,7 @@ let firstRun = true
 let curl: Curl
 
 describe('reset()', () => {
-  before(done => {
+  before((done) => {
     curl = new Curl()
     curl.setOpt('URL', url)
 
@@ -32,7 +32,7 @@ describe('reset()', () => {
     app._router.stack.pop()
   })
 
-  it('should reset the curl handler', done => {
+  it('should reset the curl handler', (done) => {
     const endHandler = () => {
       if (!firstRun) {
         done(new Error('Failed to reset.'))
@@ -45,12 +45,12 @@ describe('reset()', () => {
       curl.on('end', endHandler)
       curl.on('error', errorHandler)
 
-      //try to make another request
+      // try to make another request
       curl.perform()
     }
 
     const errorHandler = (error: Error, errorCode: CurlCode) => {
-      //curlCode == 3 -> Invalid URL
+      // curlCode == 3 -> Invalid URL
       done(errorCode === 3 ? undefined : error)
     }
 

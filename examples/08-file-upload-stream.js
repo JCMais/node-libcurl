@@ -68,7 +68,7 @@ stream.on('ready', () => {
 
   curl.setOpt(Curl.option.URL, url)
 
-  curl.on('end', function(statusCode, body) {
+  curl.on('end', function (statusCode, body) {
     console.log('Response from httpbin:')
     console.log({
       statusCode,
@@ -80,7 +80,7 @@ stream.on('ready', () => {
     this.close()
   })
 
-  curl.on('error', function(error, errorCode) {
+  curl.on('error', function (error, errorCode) {
     console.log(error, errorCode)
 
     fs.unlinkSync(fileName)

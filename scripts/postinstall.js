@@ -64,7 +64,7 @@ module.exports = function install() {
     : path.resolve(rootPath, 'lib', 'index.ts')
 
   return exec(`${executable} "${file}"`)
-    .catch(function(e) {
+    .catch(function (e) {
       if (~e.toString().indexOf('Module version mismatch')) {
         log.warn('node-libcurl was built for a different version of node.')
         log.warn(
@@ -74,7 +74,7 @@ module.exports = function install() {
         throw e
       }
     })
-    .then(function() {
+    .then(function () {
       // If we're using node-libcurl from a package manager then let's clean up after
       // ourselves when we install successfully.
       if (!buildFlags.mustBuild) {
@@ -93,7 +93,7 @@ module.exports = function install() {
 
 // Called on the command line
 if (require.main === module) {
-  module.exports().catch(function(e) {
+  module.exports().catch(function (e) {
     log.warn('Could not finish postinstall')
 
     if (process.platform === 'linux' && ~e.toString().indexOf('libstdc++')) {

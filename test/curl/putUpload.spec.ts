@@ -17,7 +17,7 @@ import { Curl } from '../../lib'
 
 const url = `http://${host}:${port}`
 
-const fileSize = 10 * 1024 //10K
+const fileSize = 10 * 1024 // 10K
 const fileName = path.resolve(__dirname, 'upload.test')
 
 let fileHash = ''
@@ -45,17 +45,17 @@ const hashOfFile = (
 }
 
 describe('Put Upload', () => {
-  beforeEach(done => {
+  beforeEach((done) => {
     curl = new Curl()
-    curl.setOpt(Curl.option.URL, url + '/upload/upload-result.test')
+    curl.setOpt(Curl.option.URL, `${url}/upload/upload-result.test`)
     curl.setOpt(Curl.option.HTTPHEADER, [
       'Content-Type: application/node-libcurl.raw',
     ])
 
-    //write random bytes to a file, this will be our test file.
+    // write random bytes to a file, this will be our test file.
     fs.writeFileSync(fileName, crypto.randomBytes(fileSize))
 
-    //get a hash of given file so we can assert later
+    // get a hash of given file so we can assert later
     // that the file sent is equals to the one we created.
     hashOfFile(fileName, (error, hash) => {
       fileHash = hash
@@ -72,7 +72,7 @@ describe('Put Upload', () => {
     }
   })
 
-  before(done => {
+  before((done) => {
     app.put('/upload/:filename', (req, res) => {
       uploadLocation = path.resolve(__dirname, req.params['filename'])
 
@@ -114,7 +114,7 @@ describe('Put Upload', () => {
     app._router.stack.pop()
   })
 
-  it('should upload data correctly using put', done => {
+  it('should upload data correctly using put', (done) => {
     const fd = fs.openSync(fileName, 'r+')
 
     curl.setOpt('UPLOAD', 1)
@@ -128,7 +128,7 @@ describe('Put Upload', () => {
       done()
     })
 
-    curl.on('error', error => {
+    curl.on('error', (error) => {
       fs.closeSync(fd)
       done(error)
     })
@@ -136,14 +136,14 @@ describe('Put Upload', () => {
     curl.perform()
   })
 
-  it('should upload data correctly using READFUNCTION callback option', done => {
+  it('should upload data correctly using READFUNCTION callback option', (done) => {
     const CURL_READFUNC_PAUSE = 0x10000001
     const CURL_READFUNC_ABORT = 0x10000000
     const CURLPAUSE_CONT = 0
 
     const stream = fs.createReadStream(fileName)
 
-    let cancelRequested = false
+    const cancelRequested = false
     let isPaused = false
     let isEnded = false
 
@@ -178,7 +178,7 @@ describe('Put Upload', () => {
       }
     })
 
-    curl.setOpt('READFUNCTION', targetBuffer => {
+    curl.setOpt('READFUNCTION', (targetBuffer) => {
       if (cancelRequested) {
         return CURL_READFUNC_ABORT
       }
@@ -203,7 +203,7 @@ describe('Put Upload', () => {
     curl.perform()
   })
 
-  it('should abort upload with invalid fd', done => {
+  it('should abort upload with invalid fd', (done) => {
     curl.setOpt('UPLOAD', 1)
     curl.setOpt('READDATA', -1)
 
@@ -216,7 +216,7 @@ describe('Put Upload', () => {
     })
 
     curl.on('error', (_error, errorCode) => {
-      //[Error: Operation was aborted by an application callback]
+      // [Error: Operation was aborted by an application callback]
       errorCode.should.be.equal(42)
 
       done()

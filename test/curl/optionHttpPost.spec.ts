@@ -34,7 +34,7 @@ describe('Option HTTPPOST', () => {
     curl.close()
   })
 
-  before(done => {
+  before((done) => {
     server.listen(port, host, () => {
       fs.writeFile(imageFilePath, buffer, done)
     })
@@ -61,13 +61,13 @@ describe('Option HTTPPOST', () => {
     })
   })
 
-  after(done => {
+  after((done) => {
     server.close()
     app._router.stack.pop()
     fs.unlink(imageFilePath, done)
   })
 
-  it('should upload file correctly', done => {
+  it('should upload file correctly', (done) => {
     const postData = [
       {
         name: 'file',
@@ -80,7 +80,7 @@ describe('Option HTTPPOST', () => {
 
     curl.on('end', (status, data) => {
       if (status !== 200) {
-        throw Error('Invalid status code: ' + status)
+        throw Error(`Invalid status code: ${status}`)
       }
 
       const result = JSON.parse(data as string)
@@ -97,10 +97,8 @@ describe('Option HTTPPOST', () => {
     curl.perform()
   })
 
-  it('should upload file correctly with filename', done => {
-    const name = Math.random()
-      .toString(36)
-      .substring(7)
+  it('should upload file correctly with filename', (done) => {
+    const name = Math.random().toString(36).substring(7)
     const postData = [
       {
         name: 'file',
@@ -114,7 +112,7 @@ describe('Option HTTPPOST', () => {
 
     curl.on('end', (status, data) => {
       if (status !== 200) {
-        throw Error('Invalid status code: ' + status)
+        throw Error(`Invalid status code: ${status}`)
       }
 
       const result = JSON.parse(data as string)

@@ -8,7 +8,7 @@ import 'should'
 
 import crypto from 'crypto'
 
-import auth from 'http-auth'
+import httpAuth from 'http-auth'
 
 import { app, host, port, server } from '../helper/server'
 import { Curl, CurlAuth } from '../../lib'
@@ -60,7 +60,7 @@ describe('Option HTTPAUTH', () => {
     app._router.stack.pop()
   })
 
-  before(done => {
+  before((done) => {
     server.listen(port, host, done)
   })
 
@@ -68,7 +68,7 @@ describe('Option HTTPAUTH', () => {
     server.close()
   })
 
-  it('should authenticate using basic auth', done => {
+  it('should authenticate using basic auth', (done) => {
     app.use(auth.connect(basic))
     app.get('/', (req, res) => {
       res.send(req.user)
@@ -80,7 +80,7 @@ describe('Option HTTPAUTH', () => {
 
     curl.on('end', (status, data) => {
       if (status !== 200) {
-        throw Error('Invalid status code: ' + status)
+        throw Error(`Invalid status code: ${status}`)
       }
 
       data.should.be.equal(username)
@@ -93,14 +93,14 @@ describe('Option HTTPAUTH', () => {
     curl.perform()
   })
 
-  it('should authenticate using digest', done => {
-    //Currently, there is a bug with libcurl > 7.40 when using digest auth
+  it('should authenticate using digest', (done) => {
+    // Currently, there is a bug with libcurl > 7.40 when using digest auth
     // on Windows, the realm is not populated from the Auth header.
     //  So we need to use the workaround below to make it work.
     let user = username
 
     if (process.platform === 'win32' && Curl.VERSION_NUM >= 0x072800) {
-      user = realmDigest + '/' + username
+      user = `${realmDigest}/${username}`
     }
 
     app.use(auth.connect(digest))
@@ -114,7 +114,7 @@ describe('Option HTTPAUTH', () => {
 
     curl.on('end', (status, data) => {
       if (status !== 200) {
-        throw Error('Invalid status code: ' + status)
+        throw Error(`Invalid status code: ${status}`)
       }
 
       data.should.be.equal(username)
@@ -127,7 +127,7 @@ describe('Option HTTPAUTH', () => {
     curl.perform()
   })
 
-  it('should not authenticate using basic', done => {
+  it('should not authenticate using basic', (done) => {
     app.use(auth.connect(basic))
     app.get('/', (req, res) => {
       res.send(req.user)
@@ -137,7 +137,7 @@ describe('Option HTTPAUTH', () => {
     curl.setOpt('USERNAME', username)
     curl.setOpt('PASSWORD', password)
 
-    curl.on('end', status => {
+    curl.on('end', (status) => {
       status.should.be.equal(401)
 
       done()

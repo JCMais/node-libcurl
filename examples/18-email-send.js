@@ -84,7 +84,7 @@ curl.on('end', (statusCode, body) => {
   this.close()
 })
 
-curl.on('error', error => {
+curl.on('error', (error) => {
   console.log(error)
   this.close()
 })

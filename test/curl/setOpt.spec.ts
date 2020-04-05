@@ -23,7 +23,7 @@ describe('setOpt()', () => {
     curl.close()
   })
 
-  before(done => {
+  before((done) => {
     server.listen(port, host, done)
 
     app.get('/', (_req, res) => {
@@ -70,18 +70,18 @@ describe('setOpt()', () => {
     }).should.throw(/^Unsupported/)
   })
 
-  it('should restore default internal callbacks when setting WRITEFUNCTION and HEADERFUNCTION callback back to null', done => {
+  it('should restore default internal callbacks when setting WRITEFUNCTION and HEADERFUNCTION callback back to null', (done) => {
     let shouldCallEvents = false
     let lastCall = false
     let headerEvtCalled = false
     let dataEvtCalled = false
 
-    curl.setOpt('WRITEFUNCTION', buffer => {
+    curl.setOpt('WRITEFUNCTION', (buffer) => {
       buffer.should.be.instanceof(Buffer)
       return buffer.length
     })
 
-    curl.setOpt('HEADERFUNCTION', buffer => {
+    curl.setOpt('HEADERFUNCTION', (buffer) => {
       buffer.should.be.instanceof(Buffer)
       return buffer.length
     })

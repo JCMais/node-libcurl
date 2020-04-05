@@ -55,7 +55,7 @@ describe('dupHandle()', () => {
     duplicatedCurl && duplicatedCurl.close()
   })
 
-  before(done => {
+  before((done) => {
     server.listen(port, host, () => {
       fs.writeFile(imageFilename, buffer, done)
     })
@@ -86,7 +86,7 @@ describe('dupHandle()', () => {
     })
   })
 
-  after(done => {
+  after((done) => {
     server.close()
 
     app._router.stack.pop()
@@ -95,7 +95,7 @@ describe('dupHandle()', () => {
     fs.unlink(imageFilename, done)
   })
 
-  it('should correctly send HTTPPOST data when duplicated', done => {
+  it('should correctly send HTTPPOST data when duplicated', (done) => {
     curl.setOpt('URL', `${url}/multipart`)
     curl.setOpt('HTTPPOST', httpPostData)
 
@@ -106,7 +106,7 @@ describe('dupHandle()', () => {
 
     duplicatedCurl.on('end', (status, data) => {
       if (status !== 200) {
-        throw Error('Invalid status code: ' + status)
+        throw Error(`Invalid status code: ${status}`)
       }
 
       const parsedData = JSON.parse(data as string)
@@ -123,7 +123,7 @@ describe('dupHandle()', () => {
     duplicatedCurl.perform()
   })
 
-  it('should correctly send POSTFIELDS data when duplicated', done => {
+  it('should correctly send POSTFIELDS data when duplicated', (done) => {
     curl.setOpt('URL', `${url}/urlencoded`)
     curl.setOpt('POSTFIELDS', querystring.stringify(postFieldsData))
 
@@ -134,7 +134,7 @@ describe('dupHandle()', () => {
 
     duplicatedCurl.on('end', (status, data) => {
       if (status !== 200) {
-        throw Error('Invalid status code: ' + status)
+        throw Error(`Invalid status code: ${status}`)
       }
 
       const parsedData = JSON.parse(data as string)

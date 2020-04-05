@@ -15,7 +15,7 @@ const buffer = Buffer.from(image, 'base64')
 const size = buffer.length
 
 describe('Binary Data', () => {
-  before(done => {
+  before((done) => {
     server.listen(port, host, done)
 
     app.post('/', (req, res) => {
@@ -28,7 +28,7 @@ describe('Binary Data', () => {
     app._router.stack.pop()
   })
 
-  it('should upload binary data correctly', done => {
+  it('should upload binary data correctly', (done) => {
     const curl = new Curl()
     curl.setOpt('URL', `http://${host}:${port}`)
     curl.setOpt('POSTFIELDSIZE', size)
@@ -39,7 +39,7 @@ describe('Binary Data', () => {
       curl.close()
 
       if (status !== 200) {
-        throw Error('Invalid status code: ' + status)
+        throw Error(`Invalid status code: ${status}`)
       }
 
       const receivedSize = parseInt(data as string, 10)
@@ -49,7 +49,7 @@ describe('Binary Data', () => {
       done()
     })
 
-    curl.on('error', error => {
+    curl.on('error', (error) => {
       curl.close()
       done(error)
     })

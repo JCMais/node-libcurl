@@ -64,7 +64,7 @@ const cleanupAndExit = (code = 0) => {
 
 // Check if we are on the root git dir. That is, someone is running this
 //  directly from the node-libcurl repo.
-exec('git rev-parse --show-toplevel', execConfig, function(err, stdout) {
+exec('git rev-parse --show-toplevel', execConfig, function (err, stdout) {
   // Make sure we are the root git repo
   //  path.relative will return an empty string if both paths are equal
   if (!err && path.relative(execConfig.cwd, stdout.trim()) === '') {
@@ -92,12 +92,9 @@ function retrieveWinDeps() {
 
   const depsTag = envCurlForWindowsDepsVersionTag
     ? envCurlForWindowsDepsVersionTag.trim()
-    : fs
-        .readFileSync(fileWithDepsTag)
-        .toString()
-        .replace(/\n|\s/g, '')
+    : fs.readFileSync(fileWithDepsTag).toString().replace(/\n|\s/g, '')
 
-  exec('git clone --branch ' + depsTag + ' ' + depsRepo, execConfig, function(
+  exec('git clone --branch ' + depsTag + ' ' + depsRepo, execConfig, function (
     err,
   ) {
     if (err) {
@@ -106,7 +103,7 @@ function retrieveWinDeps() {
           .toString()
           .indexOf('already exists and is not an empty directory') !== -1
       ) {
-        exec('rmdir curl-for-windows /S /Q', execConfig, function(err) {
+        exec('rmdir curl-for-windows /S /Q', execConfig, function (err) {
           if (err) {
             console.error(err.toString())
             cleanupAndExit(1)
@@ -122,7 +119,7 @@ function retrieveWinDeps() {
       exec(
         'cd curl-for-windows && git submodule update --init && python configure.py',
         execConfig,
-        function(err) {
+        function (err) {
           if (err) {
             console.error(err.toString())
             cleanupAndExit(1)
@@ -134,7 +131,9 @@ function retrieveWinDeps() {
           )
 
           // remove git folder
-          exec('rmdir curl-for-windows\\.git /S /Q', execConfig, function(err) {
+          exec('rmdir curl-for-windows\\.git /S /Q', execConfig, function (
+            err,
+          ) {
             if (err) {
               console.error(err.toString())
               cleanupAndExit(1)

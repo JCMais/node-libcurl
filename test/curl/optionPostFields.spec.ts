@@ -31,7 +31,7 @@ describe('Option POSTFIELDS', () => {
     server.close()
   })
 
-  before(done => {
+  before((done) => {
     server.listen(port, host, done)
 
     app.post('/', (req, res) => {
@@ -43,12 +43,12 @@ describe('Option POSTFIELDS', () => {
     app._router.stack.pop()
   })
 
-  it('should post the correct data', done => {
+  it('should post the correct data', (done) => {
     curl.setOpt('POSTFIELDS', querystring.stringify(postData))
 
     curl.on('end', (status, data) => {
       if (status !== 200) {
-        throw Error('Invalid status code: ' + status)
+        throw Error(`Invalid status code: ${status}`)
       }
 
       const parsedData = JSON.parse(data as string)

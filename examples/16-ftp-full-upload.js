@@ -66,12 +66,12 @@ curl.enable(CurlFeature.NoStorage)
 
 curl.perform()
 
-curl.on('end', function() {
+curl.on('end', function () {
   curl.close()
   fs.closeSync(fd)
 })
 
-curl.on('error', function(error, errorCode) {
+curl.on('error', function (error, errorCode) {
   console.log(error, errorCode)
 
   curl.close()

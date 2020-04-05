@@ -12,8 +12,8 @@ function convertToDashCase(optionPart) {
 function convertCurlConstantToCamelCase(option) {
   const pieces = option.split('_')
   return pieces
-    .map(piece => convertToDashCase(piece))
-    .map(item => (Array.isArray(item) ? item.join('_') : item))
+    .map((piece) => convertToDashCase(piece))
+    .map((item) => (Array.isArray(item) ? item.join('_') : item))
     .join('_')
     .split('_')
     .map((item, idx) =>

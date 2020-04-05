@@ -8,7 +8,7 @@ const isWindows = process.platform === 'win32'
 
 function defaults(options) {
   const methods = ['unlink', 'chmod', 'stat', 'lstat', 'rmdir', 'readdir']
-  methods.forEach(m => {
+  methods.forEach((m) => {
     options[m] = options[m] || fs[m]
     m = m + 'Sync'
     options[m] = options[m] || fs[m]
@@ -95,7 +95,7 @@ function rimraf_(p, options, cb) {
       return rmdir(p, options, er, cb)
     }
 
-    options.unlink(p, er => {
+    options.unlink(p, (er) => {
       if (er) {
         if (er.code === 'ENOENT') {
           return cb(null)
@@ -122,7 +122,7 @@ function fixWinEPERM(p, options, er, cb) {
     assert(er instanceof Error)
   }
 
-  options.chmod(p, 0o666, er2 => {
+  options.chmod(p, 0o666, (er2) => {
     if (er2) {
       cb(er2.code === 'ENOENT' ? null : er)
     } else {
@@ -186,7 +186,7 @@ function rmdir(p, options, originalEr, cb) {
   // try to rmdir first, and only readdir on ENOTEMPTY or EEXIST (SunOS)
   // if we guessed wrong, and it's not a directory, then
   // raise the original error.
-  options.rmdir(p, er => {
+  options.rmdir(p, (er) => {
     if (
       er &&
       (er.code === 'ENOTEMPTY' || er.code === 'EEXIST' || er.code === 'EPERM')
@@ -213,8 +213,8 @@ function rmkids(p, options, cb) {
 
     if (n === 0) return options.rmdir(p, cb)
 
-    files.forEach(f => {
-      rimraf(path.join(p, f), options, er => {
+    files.forEach((f) => {
+      rimraf(path.join(p, f), options, (er) => {
         if (errState) {
           return
         }
@@ -306,7 +306,7 @@ function rmdirSync(p, options, originalEr) {
 function rmkidsSync(p, options) {
   assert(p)
   assert(options)
-  options.readdirSync(p).forEach(f => rimrafSync(path.join(p, f), options))
+  options.readdirSync(p).forEach((f) => rimrafSync(path.join(p, f), options))
 
   if (isWindows) {
     // We only end up here once we got ENOTEMPTY at least once, and

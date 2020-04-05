@@ -22,7 +22,7 @@ describe('getInfo()', () => {
     curl.close()
   })
 
-  before(done => {
+  before((done) => {
     server.listen(port, host, done)
 
     app.get('/', (_req, res) => {
@@ -35,10 +35,10 @@ describe('getInfo()', () => {
     server.close()
   })
 
-  it('should not work with non-implemented infos', done => {
-    curl.on('end', status => {
+  it('should not work with non-implemented infos', (done) => {
+    curl.on('end', (status) => {
       if (status !== 200) {
-        throw Error('Invalid status code: ' + status)
+        throw Error(`Invalid status code: ${status}`)
       }
 
       ;(() => {
@@ -53,10 +53,10 @@ describe('getInfo()', () => {
     curl.perform()
   })
 
-  it('should get all infos', done => {
-    curl.on('end', status => {
+  it('should get all infos', (done) => {
+    curl.on('end', (status) => {
       if (status !== 200) {
-        throw Error('Invalid status code: ' + status)
+        throw Error(`Invalid status code: ${status}`)
       }
 
       for (const infoId in Curl.info) {

@@ -14,9 +14,9 @@ import { Curl, CurlHttpVersion } from '../../lib'
 let session: ServerHttp2Session
 
 describe('HTTP2', () => {
-  before(done => {
-    serverHttp2.on('error', error => console.error(error))
-    serverHttp2.on('session', sess => {
+  before((done) => {
+    serverHttp2.on('error', (error) => console.error(error))
+    serverHttp2.on('session', (sess) => {
       session = sess
     })
     serverHttp2.on('stream', (stream, _headers) => {
@@ -36,14 +36,14 @@ describe('HTTP2', () => {
     serverHttp2.close()
   })
 
-  it('should work with https2 site', done => {
+  it('should work with https2 site', (done) => {
     const curl = new Curl()
 
     curl.setOpt('URL', `https://${host}:${portHttp2}/`)
     curl.setOpt('HTTP_VERSION', CurlHttpVersion.V2_0)
     curl.setOpt('SSL_VERIFYPEER', false)
 
-    curl.on('end', statusCode => {
+    curl.on('end', (statusCode) => {
       curl.close()
       session && session.destroy()
 
@@ -51,7 +51,7 @@ describe('HTTP2', () => {
       done()
     })
 
-    curl.on('error', error => {
+    curl.on('error', (error) => {
       curl.close()
       session && session.destroy()
       done(error)

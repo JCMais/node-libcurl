@@ -41,7 +41,7 @@ curl.setOpt('POSTFIELDS', querystring.stringify(data))
 
 // if you pass an arrow function here, keep in mind this will refer to the outer scope
 //  to still have access to the curl handle on this case, you can use the last argument
-curl.on('end', function(statusCode, body, headers /*, curlHandle */) {
+curl.on('end', function (statusCode, body, headers /*, curlHandle */) {
   ++count
 
   console.log('Handle #' + this.handleNumber + ' finished')
@@ -66,7 +66,7 @@ curl.on('end', function(statusCode, body, headers /*, curlHandle */) {
   this.close()
 })
 
-curl.on('error', function(error, errorCode) {
+curl.on('error', function (error, errorCode) {
   console.error('Err: ', error)
   console.error('Code: ', errorCode)
 

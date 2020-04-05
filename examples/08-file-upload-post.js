@@ -42,7 +42,7 @@ curl.setOpt(Curl.option.URL, url)
 curl.setOpt(Curl.option.HTTPPOST, data)
 curl.setOpt(Curl.option.VERBOSE, true)
 
-curl.on('end', function(statusCode, body) {
+curl.on('end', function (statusCode, body) {
   console.log('Response from httpbin:')
   console.log({
     statusCode,
@@ -53,7 +53,7 @@ curl.on('end', function(statusCode, body) {
   fs.unlinkSync(imageFilename)
 })
 
-curl.on('error', function(error, errorCode) {
+curl.on('error', function (error, errorCode) {
   console.error(error, errorCode)
 
   this.close()

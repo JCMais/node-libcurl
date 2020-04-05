@@ -22,7 +22,7 @@ describe('Events', () => {
     curl.close()
   })
 
-  before(done => {
+  before((done) => {
     app.all('/', (req, res) => {
       if (req.body.errReq) {
         res.status(500)
@@ -44,14 +44,14 @@ describe('Events', () => {
     server.close()
   })
 
-  it('should emit "end" event when the connection ends without errors.', done => {
+  it('should emit "end" event when the connection ends without errors.', (done) => {
     curl.on('end', () => {
       clearTimeout(timeout)
 
       done()
     })
 
-    curl.on('error', error => {
+    curl.on('error', (error) => {
       clearTimeout(timeout)
 
       done(error)
@@ -60,7 +60,7 @@ describe('Events', () => {
     curl.perform()
   })
 
-  it('should emit "error" event when the connection fails', done => {
+  it('should emit "error" event when the connection fails', (done) => {
     curl.setOpt('POSTFIELDS', 'errReq=true')
     curl.setOpt('FAILONERROR', true)
 
@@ -83,7 +83,7 @@ describe('Events', () => {
     curl.perform()
   })
 
-  it('should emit "error" when the connection is aborted in the progress cb', done => {
+  it('should emit "error" when the connection is aborted in the progress cb', (done) => {
     curl.setProgressCallback(() => {
       return 1
     })
@@ -96,7 +96,7 @@ describe('Events', () => {
       done(Error('end event was called, but the connection was aborted.'))
     })
 
-    curl.on('error', error => {
+    curl.on('error', (error) => {
       error.should.be.instanceof(Error)
 
       clearTimeout(timeout)
@@ -107,7 +107,7 @@ describe('Events', () => {
     curl.perform()
   })
 
-  it('should emit "error" when the connection is aborted in the header cb', done => {
+  it('should emit "error" when the connection is aborted in the header cb', (done) => {
     curl.setOpt('HEADERFUNCTION', (_data, _size, _nmemb) => {
       return -1
     })
@@ -132,7 +132,7 @@ describe('Events', () => {
     curl.perform()
   })
 
-  it('should emit "error" when the connection is aborted in the data cb', done => {
+  it('should emit "error" when the connection is aborted in the data cb', (done) => {
     curl.setOpt('WRITEFUNCTION', (_data, _size, _nmemb) => {
       return -1
     })

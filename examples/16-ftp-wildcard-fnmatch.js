@@ -59,9 +59,7 @@ handle.setOpt(Curl.option.WRITEFUNCTION, (buff, nmemb, size) => {
 
 function globStringToRegex(str) {
   return new RegExp(
-    pregQuote(str)
-      .replace(/\\\*/g, '.*')
-      .replace(/\\\?/g, '.'),
+    pregQuote(str).replace(/\\\*/g, '.*').replace(/\\\?/g, '.'),
     'g',
   )
 }

@@ -1,6 +1,6 @@
 const fs = require('fs')
 
-const getDescriptionCommentForOption = option =>
+const getDescriptionCommentForOption = (option) =>
   option.description.trim()
     ? `
 /**
@@ -29,7 +29,7 @@ const createConstantsFile = async ({
      */
     export interface ${variableName} {`,
     ...constants.map(
-      option =>
+      (option) =>
         `
       ${getDescriptionCommentForOption(option)}readonly ${
           option.constantName
@@ -43,7 +43,7 @@ const createConstantsFile = async ({
     ? [
         `export const ${variableName}CamelCaseMap = {`,
         ...constants.map(
-          option =>
+          (option) =>
             `${getDescriptionCommentForOption(option)}${
               option.constantNameCamelCase
             }: "${option.constantName}",`,
@@ -57,7 +57,7 @@ const createConstantsFile = async ({
    * @public
    */
   export type ${variableName}Name = ${constants
-    .map(option => require('util').inspect(option.constantName))
+    .map((option) => require('util').inspect(option.constantName))
     .join(' | ')}`
 
   fs.writeFileSync(
