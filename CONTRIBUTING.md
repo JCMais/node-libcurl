@@ -138,5 +138,10 @@ git push
 
 For prereleases, use something like this from the `develop` branch:
 ```shell
-$ npx np prerelease --any-branch --tag next
+$ yarn np prerelease --any-branch --tag next
+```
+
+If for some reason np fails to run with Yarn, you can use this command to skip cleaning up and use npm to publish:
+```shell
+$ yarn np prerelease --no-yarn --no-cleanup --any-branch --tag next
 ```
