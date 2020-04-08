@@ -48,7 +48,7 @@ _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-
     - [electron (aka atom-shell)](#electron-aka-atom-shell)
   - [Building on Linux](#building-on-linux)
   - [Building on macOS](#building-on-macos)
-    - [Xcode >= 10 | macOS Mojave](#xcode--10--macos-mojave)
+    - [Xcode >= 10 | macOS >= Mojave](#xcode--10--macos--mojave)
   - [Building on Windows](#building-on-windows)
 - [Getting Help](#getting-help)
 - [Contributing](#contributing)
@@ -287,8 +287,8 @@ It should return their path, in case it returns nothing, you must install it by 
 xcode-select --install
 ```
 
-#### Xcode >= 10 | macOS Mojave
-In case you have errors installing the addon from source, and you are using macOS Mojave, check if the error you are receiving is the following one:
+#### Xcode >= 10 | macOS >= Mojave
+In case you have errors installing the addon from source, and you are using macOS version >= Mojave, check if the error you are receiving is the following one:
 ```
   CXX(target) Release/obj.target/node_libcurl/src/node_libcurl.o
   clang: error: no such file or directory: '/usr/include'
@@ -296,17 +296,10 @@ In case you have errors installing the addon from source, and you are using macO
 
 If that is the case, it's because newer versions of the Command Line Tools does not add the `/usr/include` folder by default. Check [Xcode 10 release notes](https://developer.apple.com/documentation/xcode_release_notes/xcode_10_release_notes#3035624) for details.
 
-To fix this you need to install the separated package for the headers file:
+The `/usr/include` is now available on `$(xcrun --show-sdk-path)/usr/include`. To correctly build libcurl you then need to pass that path to the `npm_config_curl_include_dirs` environment variable:
 ```
-open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg
+npm_config_curl_include_dirs="$(xcrun --show-sdk-path)/usr/include" yarn add node-libcurl
 ```
-
-To ignore the UI and install directly from the command line, use:
-```
-sudo installer -pkg /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg -target /
-```
-
-After that you can try to install `node-libcurl` again.
 
 ### Building on Windows
 
