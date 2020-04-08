@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Node.js 8
   - Electron v3, v4 and v5
   - NW.js v0.38 and v0.39
+- Remove dynamic require ([#204](https://github.com/JCMais/node-libcurl/issues/204))
 
 ## [2.0.3] - 2019-12-11
 ### Fixed
