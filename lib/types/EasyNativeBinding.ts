@@ -53,7 +53,7 @@ export declare class EasyNativeBinding {
           dlnow: number,
           ultotal: number,
           ulnow: number,
-        ) => number)
+        ) => number | CurlProgressFunc)
       | null,
   ): CurlCode
   /**

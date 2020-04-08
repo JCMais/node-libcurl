@@ -36,7 +36,7 @@ import { CurlFeature } from './enum/CurlFeature'
 import { CurlGlobalInit } from './enum/CurlGlobalInit'
 import { CurlGssApi } from './enum/CurlGssApi'
 import { CurlPause } from './enum/CurlPause'
-// import { CurlProgressFunc } from './enum/CurlProgressFunc'
+import { CurlProgressFunc } from './enum/CurlProgressFunc'
 import { CurlSslOpt } from './enum/CurlSslOpt'
 
 const bindings: NodeLibcurlNativeBinding = require('../lib/binding/node_libcurl.node')
@@ -586,7 +586,7 @@ interface Curl {
           dlnow: number,
           ultotal: number,
           ulnow: number,
-        ) => number)
+        ) => number | CurlProgressFunc)
       | null,
   ): this
   /**
