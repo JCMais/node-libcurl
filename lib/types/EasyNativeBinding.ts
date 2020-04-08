@@ -17,6 +17,7 @@ import { CurlInfoName } from '../generated/CurlInfo'
 import { CurlCode } from '../enum/CurlCode'
 import { CurlGssApi } from '../enum/CurlGssApi'
 import { CurlPause } from '../enum/CurlPause'
+import { CurlProgressFunc } from '../enum/CurlProgressFunc'
 import { CurlSslOpt } from '../enum/CurlSslOpt'
 import { SocketState } from '../enum/SocketState'
 
