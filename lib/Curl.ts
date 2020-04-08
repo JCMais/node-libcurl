@@ -4,15 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import path from 'path'
 import { EventEmitter } from 'events'
 import { StringDecoder } from 'string_decoder'
 import assert from 'assert'
 
 const pkg = require('../package.json')
-
-// tslint:disable-next-line
-import binary from 'node-pre-gyp'
 
 import {
   NodeLibcurlNativeBinding,
@@ -43,11 +39,7 @@ import { CurlPause } from './enum/CurlPause'
 // import { CurlProgressFunc } from './enum/CurlProgressFunc'
 import { CurlSslOpt } from './enum/CurlSslOpt'
 
-const bindingPath = binary.find(
-  path.resolve(path.join(__dirname, './../package.json')),
-)
-
-const bindings: NodeLibcurlNativeBinding = require(bindingPath)
+const bindings: NodeLibcurlNativeBinding = require('../lib/binding/node_libcurl.node')
 
 // tslint:disable-next-line
 const { Curl: _Curl, CurlVersionInfo } = bindings
