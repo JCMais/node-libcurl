@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - Fix retrieve-win-deps Windows build script not working correctly
+- Fix context switches between addon callbacks not causing Node.js to drain microtasks - ([#177](https://github.com/JCMais/node-libcurl/issues/204))
 
 ### Added
 - Added missing [`CURLOPT_SASL_AUTHZID`](https://curl.haxx.se/libcurl/c/CURLOPT_SASL_AUTHZID.html) option - libcurl 7.66.0
@@ -37,7 +38,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Electron v3, v4 and v5
   - NW.js v0.38 and v0.39
 - Remove dynamic require ([#204](https://github.com/JCMais/node-libcurl/issues/204))
-
+- The C++ implementation for the previously removed `onData` and `onHeader` Curl/Easy instance fields has been removed - If you were still using those internal fields your code is going to break. Use `WRITEFUNCTION`  and `HEADERFUNCTION` options instead.
 ## [2.0.3] - 2019-12-11
 ### Fixed
 - Updated return type of DEBUGFUNCTION ([#202](https://github.com/JCMais/node-libcurl/issues/202))
