@@ -4,10 +4,10 @@
     "paths": { "*": ["types/external/*"] },
     "incremental": true,
     "module": "commonjs",
-    // Node.js >= 8 supports 100% of ES2017 (https://node.green/)
-    "target": "es2017",
+    // Node.js >= 19 supports almost 100% of ES2018 (https://node.green/#ES2018)
+    "target": "es2018",
     "lib": [
-      "es2017",
+      "es2018",
       // error Cannot find name 'AsyncIterable'.
       "esnext.asynciterable"
     ],
