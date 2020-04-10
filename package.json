@@ -37,7 +37,7 @@
     "prettier": "prettier --write",
     "test": "mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
     "test:electron": "electron-mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
-    "test:watch": "yarn test --watch --watch-extensions ts"
+    "test:watch": "yarn test --watch --watch-files test/**/*.spec.ts"
   },
   "binary": {
     "module_name": "node_libcurl",
