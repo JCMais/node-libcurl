@@ -1,5 +1,5 @@
 ## Benchmarks
-> Disclaimer: Those benchmarks are probably far from real world usage scenarios and should not be taken too seriouly before doing tests with your use-case in mind first.
+> Disclaimer: Those benchmarks are probably far from real world usage scenarios and should not be taken too seriously before doing tests with your use-case in mind first.
 
 If you feel any of the code available is wrong, please open a PR with a suggested fix.
 
