@@ -48,6 +48,7 @@ extern const std::vector<CurlConstant> curlOptionSpecific;
 
 extern const std::vector<CurlConstant> curlInfoNotImplemented;
 extern const std::vector<CurlConstant> curlInfoString;
+extern const std::vector<CurlConstant> curlInfoOffT;
 extern const std::vector<CurlConstant> curlInfoDouble;
 extern const std::vector<CurlConstant> curlInfoInteger;
 extern const std::vector<CurlConstant> curlInfoSocket;

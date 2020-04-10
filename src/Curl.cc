@@ -550,6 +550,32 @@ const std::vector<CurlConstant> curlInfoString = {
 #endif
 };
 
+const std::vector<CurlConstant> curlInfoOffT = {
+#if NODE_LIBCURL_VER_GE(7, 55, 0)
+    {"CONTENT_LENGTH_DOWNLOAD_T", CURLINFO_CONTENT_LENGTH_DOWNLOAD_T},
+    {"CONTENT_LENGTH_UPLOAD_T", CURLINFO_CONTENT_LENGTH_UPLOAD_T},
+    {"SIZE_DOWNLOAD_T", CURLINFO_SIZE_DOWNLOAD_T},
+    {"SIZE_UPLOAD_T", CURLINFO_SIZE_UPLOAD_T},
+    {"SPEED_DOWNLOAD_T", CURLINFO_SPEED_DOWNLOAD_T},
+    {"SPEED_UPLOAD_T", CURLINFO_SPEED_UPLOAD_T},
+#endif
+#if NODE_LIBCURL_VER_GE(7, 59, 0)
+    {"FILETIME_T", CURLINFO_FILETIME_T},
+#endif
+#if NODE_LIBCURL_VER_GE(7, 61, 0)
+    {"APPCONNECT_TIME_T", CURLINFO_APPCONNECT_TIME_T},
+    {"CONNECT_TIME_T", CURLINFO_CONNECT_TIME_T},
+    {"NAMELOOKUP_TIME_T", CURLINFO_NAMELOOKUP_TIME_T},
+    {"PRETRANSFER_TIME_T", CURLINFO_PRETRANSFER_TIME_T},
+    {"REDIRECT_TIME_T", CURLINFO_REDIRECT_TIME_T},
+    {"STARTTRANSFER_TIME_T", CURLINFO_STARTTRANSFER_TIME_T},
+    {"TOTAL_TIME_T", CURLINFO_TOTAL_TIME_T},
+#endif
+#if NODE_LIBCURL_VER_GE(7, 66, 0)
+    {"RETRY_AFTER", CURLINFO_RETRY_AFTER},
+#endif
+};
+
 const std::vector<CurlConstant> curlInfoDouble = {
     {"APPCONNECT_TIME", CURLINFO_APPCONNECT_TIME},
     {"CONNECT_TIME", CURLINFO_CONNECT_TIME},
@@ -564,35 +590,11 @@ const std::vector<CurlConstant> curlInfoDouble = {
     {"SPEED_UPLOAD", CURLINFO_SPEED_UPLOAD},
     {"STARTTRANSFER_TIME", CURLINFO_STARTTRANSFER_TIME},
     {"TOTAL_TIME", CURLINFO_TOTAL_TIME},
-
-// curl_off_t variants
-#if NODE_LIBCURL_VER_GE(7, 55, 0)
-    {"CONTENT_LENGTH_DOWNLOAD_T", CURLINFO_CONTENT_LENGTH_DOWNLOAD_T},
-    {"CONTENT_LENGTH_UPLOAD_T", CURLINFO_CONTENT_LENGTH_UPLOAD_T},
-    {"SIZE_DOWNLOAD_T", CURLINFO_SIZE_DOWNLOAD_T},
-    {"SIZE_UPLOAD_T", CURLINFO_SIZE_UPLOAD_T},
-    {"SPEED_DOWNLOAD_T", CURLINFO_SPEED_DOWNLOAD_T},
-    {"SPEED_UPLOAD_T", CURLINFO_SPEED_UPLOAD_T},
-#endif
-#if NODE_LIBCURL_VER_GE(7, 61, 0)
-    {"APPCONNECT_TIME_T", CURLINFO_APPCONNECT_TIME_T},
-    {"CONNECT_TIME_T", CURLINFO_CONNECT_TIME_T},
-    {"NAMELOOKUP_TIME_T", CURLINFO_NAMELOOKUP_TIME_T},
-    {"PRETRANSFER_TIME_T", CURLINFO_PRETRANSFER_TIME_T},
-    {"REDIRECT_TIME_T", CURLINFO_REDIRECT_TIME_T},
-    {"STARTTRANSFER_TIME_T", CURLINFO_STARTTRANSFER_TIME_T},
-    {"TOTAL_TIME_T", CURLINFO_TOTAL_TIME_T},
-#endif
 };
 
 const std::vector<CurlConstant> curlInfoInteger = {
     {"CONDITION_UNMET", CURLINFO_CONDITION_UNMET},
     {"FILETIME", CURLINFO_FILETIME},
-
-#if NODE_LIBCURL_VER_GE(7, 59, 0)
-    {"FILETIME_T", CURLINFO_FILETIME_T},
-#endif
-
     {"HEADER_SIZE", CURLINFO_HEADER_SIZE},
     {"HTTPAUTH_AVAIL", CURLINFO_HTTPAUTH_AVAIL},
     {"HTTP_CONNECTCODE", CURLINFO_HTTP_CONNECTCODE},
@@ -619,11 +621,6 @@ const std::vector<CurlConstant> curlInfoInteger = {
 
     {"REDIRECT_COUNT", CURLINFO_REDIRECT_COUNT},
     {"REQUEST_SIZE", CURLINFO_REQUEST_SIZE},
-
-#if NODE_LIBCURL_VER_GE(7, 66, 0)
-    {"RETRY_AFTER", CURLINFO_RETRY_AFTER},
-#endif
-
     {"RESPONSE_CODE", CURLINFO_RESPONSE_CODE},
     {"RTSP_CLIENT_CSEQ", CURLINFO_RTSP_CLIENT_CSEQ},
     {"RTSP_CSEQ_RECV", CURLINFO_RTSP_CSEQ_RECV},
@@ -679,8 +676,9 @@ NAN_MODULE_INIT(Initialize) {
   v8::Local<v8::Object> infosObj = Nan::New<v8::Object>();
   ExportConstants(infosObj, curlInfoNotImplemented, attributesDontEnum);
   ExportConstants(infosObj, curlInfoString, attributes);
-  ExportConstants(infosObj, curlInfoInteger, attributes);
+  ExportConstants(infosObj, curlInfoOffT, attributes);
   ExportConstants(infosObj, curlInfoDouble, attributes);
+  ExportConstants(infosObj, curlInfoInteger, attributes);
   ExportConstants(infosObj, curlInfoSocket, attributes);
   ExportConstants(infosObj, curlInfoLinkedList, attributes);
 

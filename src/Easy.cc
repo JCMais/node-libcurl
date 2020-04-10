@@ -1586,42 +1586,15 @@ NAN_METHOD(Easy::GetInfo) {
   // String
   if ((infoId = IsInsideCurlConstantStruct(curlInfoString, infoVal))) {
     retVal = Easy::GetInfoTmpl<char*, v8::String>(obj, infoId);
-
+    // curl_off_t
+  } else if ((infoId = IsInsideCurlConstantStruct(curlInfoOffT, infoVal))) {
+    retVal = Easy::GetInfoTmpl<curl_off_t, v8::Number>(obj, infoId);
     // Double
   } else if ((infoId = IsInsideCurlConstantStruct(curlInfoDouble, infoVal))) {
-    switch (infoId) {
-      // curl_off_t variants that were added on 7.55
-#if NODE_LIBCURL_VER_GE(7, 59, 0)
-      case CURLINFO_FILETIME_T:
-#endif
-#if NODE_LIBCURL_VER_GE(7, 61, 0)
-      case CURLINFO_APPCONNECT_TIME_T:
-      case CURLINFO_CONNECT_TIME_T:
-      case CURLINFO_NAMELOOKUP_TIME_T:
-      case CURLINFO_PRETRANSFER_TIME_T:
-      case CURLINFO_REDIRECT_TIME_T:
-      case CURLINFO_STARTTRANSFER_TIME_T:
-      case CURLINFO_TOTAL_TIME_T:
-#endif
-#if NODE_LIBCURL_VER_GE(7, 55, 0)
-      case CURLINFO_CONTENT_LENGTH_DOWNLOAD_T:
-      case CURLINFO_CONTENT_LENGTH_UPLOAD_T:
-      case CURLINFO_SIZE_DOWNLOAD_T:
-      case CURLINFO_SIZE_UPLOAD_T:
-      case CURLINFO_SPEED_DOWNLOAD_T:
-      case CURLINFO_SPEED_UPLOAD_T:
-        retVal = Easy::GetInfoTmpl<curl_off_t, v8::Number>(obj, infoId);
-        break;
-#endif
-      default:
-        retVal = Easy::GetInfoTmpl<double, v8::Number>(obj, infoId);
-        break;
-    }
-
+    retVal = Easy::GetInfoTmpl<double, v8::Number>(obj, infoId);
     // Integer
   } else if ((infoId = IsInsideCurlConstantStruct(curlInfoInteger, infoVal))) {
     retVal = Easy::GetInfoTmpl<long, v8::Number>(obj, infoId);  // NOLINT(runtime/int)
-
     // ACTIVESOCKET and alike
   } else if ((infoId = IsInsideCurlConstantStruct(curlInfoSocket, infoVal))) {
 #if NODE_LIBCURL_VER_GE(7, 45, 0)
