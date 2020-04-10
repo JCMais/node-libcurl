@@ -48,7 +48,6 @@ class Multi : public Nan::ObjectWrap {
   int runningHandles = 0;
 
   std::shared_ptr<Nan::Callback> cbOnMessage;
-  std::shared_ptr<Nan::AsyncResource> cbOnMessageAsyncResource;
 
   deleted_unique_ptr<uv_timer_t> timeout;
 

@@ -45,11 +45,8 @@ class Easy : public Nan::ObjectWrap {
   // callbacks
   typedef std::map<CURLoption, std::shared_ptr<Nan::Callback>> CallbacksMap;
   CallbacksMap callbacks = CallbacksMap{};
-  typedef std::map<CURLoption, std::shared_ptr<Nan::AsyncResource>> AsyncResourcesMap;
-  AsyncResourcesMap asyncResources = AsyncResourcesMap{};
   std::shared_ptr<Nan::Callback>
       cbOnSocketEvent;  // still required since it's not related to any CURLOption
-  std::shared_ptr<Nan::AsyncResource> cbOnSocketEventAsyncResource;
 
   // members
   uv_poll_t* socketPollHandle = nullptr;

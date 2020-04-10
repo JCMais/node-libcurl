@@ -285,8 +285,8 @@ void Multi::CallOnMessageCallback(CURL* easy, CURLcode statusCode) {
   v8::Local<v8::Value> argv[] = {err, easyArg, errCode};
   const int argc = 3;
 
-  this->cbOnMessageAsyncResource->runInAsyncScope(obj->handle(), this->cbOnMessage->GetFunction(),
-                                                  argc, argv);
+  Nan::AsyncResource asyncResource("Multi::CallOnMessageCallback");
+  asyncResource.runInAsyncScope(obj->handle(), this->cbOnMessage->GetFunction(), argc, argv);
 }
 
 // Add Curl constructor to the module exports
@@ -413,10 +413,8 @@ NAN_METHOD(Multi::OnMessage) {
 
   if (isNull) {
     obj->cbOnMessage = nullptr;
-    obj->cbOnMessageAsyncResource = nullptr;
   } else {
     obj->cbOnMessage.reset(new Nan::Callback(arg.As<v8::Function>()));
-    obj->cbOnMessageAsyncResource.reset(new Nan::AsyncResource("Multi::onMessage"));
   }
 
   info.GetReturnValue().Set(info.This());

@@ -68,11 +68,9 @@ Easy::Easy(Easy* orig) {
 
   // copy the orig callbacks and async resources to the current handle
   this->callbacks.insert(orig->callbacks.begin(), orig->callbacks.end());
-  this->asyncResources.insert(orig->asyncResources.begin(), orig->asyncResources.end());
 
   if (orig->cbOnSocketEvent) {
     this->cbOnSocketEvent = orig->cbOnSocketEvent;
-    this->cbOnSocketEventAsyncResource = orig->cbOnSocketEventAsyncResource;
   }
 
   // make sure to reset the *DATA options when duplicating a handle. We are
@@ -239,7 +237,8 @@ void Easy::CallSocketEvent(int status, int events) {
   v8::Local<v8::Value> argv[] = {err, Nan::New<v8::Integer>(events)};
 
   // **(this->cbOnSocketEvent.get()) is the same than this->cbOnSocketEvent->GetFunction()
-  this->cbOnSocketEventAsyncResource->runInAsyncScope(
+  Nan::AsyncResource asyncResource("Easy::CallSocketEvent");
+  Nan::MaybeLocal<v8::Value> returnValueCallback = asyncResource.runInAsyncScope(
       this->handle(), this->cbOnSocketEvent->GetFunction(), argc, argv);
 }
 
@@ -284,9 +283,9 @@ size_t Easy::ReadFunction(char* ptr, size_t size, size_t nmemb, void* userdata) 
     };
 
     Nan::TryCatch tryCatch;
+    Nan::AsyncResource asyncResource("Easy::ReadFunction");
     Nan::MaybeLocal<v8::Value> returnValueCallback =
-        obj->asyncResources.find(CURLOPT_READFUNCTION)
-            ->second->runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
+        asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
 
     if (tryCatch.HasCaught()) {
       if (obj->isInsideMultiHandle) {
@@ -373,9 +372,9 @@ size_t Easy::SeekFunction(void* userdata, curl_off_t offset, int origin) {
       };
 
       Nan::TryCatch tryCatch;
+      Nan::AsyncResource asyncResource("Easy::SeekFunction");
       Nan::MaybeLocal<v8::Value> returnValueCallback =
-          obj->asyncResources.find(CURLOPT_SEEKFUNCTION)
-              ->second->runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
+          asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
 
       if (tryCatch.HasCaught()) {
         if (obj->isInsideMultiHandle) {
@@ -435,8 +434,9 @@ size_t Easy::OnData(char* data, size_t size, size_t nmemb) {
   v8::Local<v8::Value> argv[argc] = {buf, sizeArg, nmembArg};
   Nan::MaybeLocal<v8::Value> retVal;
 
-  retVal = this->asyncResources.find(CURLOPT_WRITEFUNCTION)
-               ->second->runInAsyncScope(this->handle(), it->second->GetFunction(), argc, argv);
+  // @TODO Test throwing errors inside this function?
+  Nan::AsyncResource asyncResource("Easy::OnData");
+  retVal = asyncResource.runInAsyncScope(this->handle(), it->second->GetFunction(), argc, argv);
 
   size_t ret = n;
 
@@ -471,8 +471,9 @@ size_t Easy::OnHeader(char* data, size_t size, size_t nmemb) {
   v8::Local<v8::Value> argv[argc] = {buf, sizeArg, nmembArg};
   Nan::MaybeLocal<v8::Value> retVal;
 
-  retVal = this->asyncResources.find(CURLOPT_HEADERFUNCTION)
-               ->second->runInAsyncScope(this->handle(), it->second->GetFunction(), argc, argv);
+  // @TODO Test throwing errors inside this function?
+  Nan::AsyncResource asyncResource("Easy::OnHeader");
+  retVal = asyncResource.runInAsyncScope(this->handle(), it->second->GetFunction(), argc, argv);
 
   size_t ret = n;
 
@@ -556,9 +557,10 @@ long Easy::CbChunkBgn(curl_fileinfo* transferInfo, void* ptr, int remains) {  //
   int32_t returnValue = CURL_CHUNK_BGN_FUNC_FAIL;
 
   Nan::TryCatch tryCatch;
+
+  Nan::AsyncResource asyncResource("Easy::CbChunkBgn");
   Nan::MaybeLocal<v8::Value> returnValueCallback =
-      obj->asyncResources.find(CURLOPT_CHUNK_BGN_FUNCTION)
-          ->second->runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
+      asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
 
   if (tryCatch.HasCaught()) {
     if (obj->isInsideMultiHandle) {
@@ -597,9 +599,10 @@ long Easy::CbChunkEnd(void* ptr) {  // NOLINT(runtime/int)
   int32_t returnValue = CURL_CHUNK_END_FUNC_FAIL;
 
   Nan::TryCatch tryCatch;
+
+  Nan::AsyncResource asyncResource("Easy::CbChunkEnd");
   Nan::MaybeLocal<v8::Value> returnValueCallback =
-      obj->asyncResources.find(CURLOPT_CHUNK_END_FUNCTION)
-          ->second->runInAsyncScope(obj->handle(), it->second->GetFunction(), 0, NULL);
+      asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), 0, NULL);
 
   if (tryCatch.HasCaught()) {
     if (obj->isInsideMultiHandle) {
@@ -646,9 +649,10 @@ int Easy::CbDebug(CURL* handle, curl_infotype type, char* data, size_t size, voi
   int32_t returnValue = 1;
 
   Nan::TryCatch tryCatch;
+
+  Nan::AsyncResource asyncResource("Easy::CbDebug");
   Nan::MaybeLocal<v8::Value> returnValueCallback =
-      obj->asyncResources.find(CURLOPT_DEBUGFUNCTION)
-          ->second->runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
+      asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
 
   if (tryCatch.HasCaught()) {
     if (obj->isInsideMultiHandle) {
@@ -692,9 +696,10 @@ int Easy::CbFnMatch(void* ptr, const char* pattern, const char* string) {
   int32_t returnValue = CURL_FNMATCHFUNC_FAIL;
 
   Nan::TryCatch tryCatch;
+
+  Nan::AsyncResource asyncResource("Easy::CbFnMatch");
   Nan::MaybeLocal<v8::Value> returnValueCallback =
-      obj->asyncResources.find(CURLOPT_FNMATCH_FUNCTION)
-          ->second->runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
+      asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
 
   if (tryCatch.HasCaught()) {
     if (obj->isInsideMultiHandle) {
@@ -748,9 +753,10 @@ int Easy::CbProgress(void* clientp, double dltotal, double dlnow, double ultotal
                                  Nan::New<v8::Number>(static_cast<double>(ulnow))};
 
   Nan::TryCatch tryCatch;
+
+  Nan::AsyncResource asyncResource("Easy::CbProgress");
   Nan::MaybeLocal<v8::Value> returnValueCallback =
-      obj->asyncResources.find(CURLOPT_PROGRESSFUNCTION)
-          ->second->runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
+      asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
 
   if (tryCatch.HasCaught()) {
     if (obj->isInsideMultiHandle) {
@@ -796,9 +802,10 @@ int Easy::CbTrailer(struct curl_slist** headerList, void* userdata) {
   assert(it != obj->callbacks.end() && "Trailer callback not set.");
 
   Nan::TryCatch tryCatch;
-  Nan::MaybeLocal<v8::Value> returnValueCb =
-      obj->asyncResources.find(CURLOPT_TRAILERFUNCTION)
-          ->second->runInAsyncScope(obj->handle(), it->second->GetFunction(), 0, NULL);
+
+  Nan::AsyncResource asyncResource("Easy::CbTrailer");
+  Nan::MaybeLocal<v8::Value> returnValueCallback =
+      asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), 0, NULL);
 
   if (tryCatch.HasCaught()) {
     if (obj->isInsideMultiHandle) {
@@ -812,8 +819,9 @@ int Easy::CbTrailer(struct curl_slist** headerList, void* userdata) {
   v8::Local<v8::Value> returnValueCbTypeError = Nan::TypeError(
       "Return value from the Trailer callback must be an array of strings or false.");
 
-  bool isInvalid = returnValueCb.IsEmpty() || (!returnValueCb.ToLocalChecked()->IsArray() &&
-                                               !returnValueCb.ToLocalChecked()->IsFalse());
+  bool isInvalid =
+      returnValueCallback.IsEmpty() || (!returnValueCallback.ToLocalChecked()->IsArray() &&
+                                        !returnValueCallback.ToLocalChecked()->IsFalse());
 
   if (isInvalid) {
     if (obj->isInsideMultiHandle) {
@@ -826,13 +834,13 @@ int Easy::CbTrailer(struct curl_slist** headerList, void* userdata) {
     return CURL_TRAILERFUNC_ABORT;
   }
 
-  v8::Local<v8::Value> returnValueCbChecked = returnValueCb.ToLocalChecked();
+  v8::Local<v8::Value> returnValueCallbackChecked = returnValueCallback.ToLocalChecked();
 
-  if (returnValueCbChecked->IsFalse()) {
+  if (returnValueCallbackChecked->IsFalse()) {
     return CURL_TRAILERFUNC_ABORT;
   }
 
-  v8::Local<v8::Array> rows = v8::Local<v8::Array>::Cast(returnValueCbChecked);
+  v8::Local<v8::Array> rows = v8::Local<v8::Array>::Cast(returnValueCallbackChecked);
 
   // [headerStr1, headerStr2]
   for (uint32_t i = 0, len = rows->Length(); i < len; ++i) {
@@ -874,16 +882,13 @@ int Easy::CbXferinfo(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_o
   }
 
   CallbacksMap::iterator it;
-  AsyncResourcesMap::iterator asyncResourcesIt;
 
   // make sure the callback was set
 #if NODE_LIBCURL_VER_GE(7, 32, 0)
   it = obj->callbacks.find(CURLOPT_XFERINFOFUNCTION);
-  asyncResourcesIt = obj->asyncResources.find(CURLOPT_XFERINFOFUNCTION);
 #else
   // just to make it compile ¯\_(ツ)_/¯
   it = obj->callbacks.end();
-  asyncResourcesIt = obj->asyncResources.end();
 #endif
   assert(it != obj->callbacks.end() && "XFERINFO callback not set.");
 
@@ -894,8 +899,10 @@ int Easy::CbXferinfo(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_o
                                  Nan::New<v8::Number>(static_cast<double>(ulnow))};
 
   Nan::TryCatch tryCatch;
-  Nan::MaybeLocal<v8::Value> returnValueCallback = asyncResourcesIt->second->runInAsyncScope(
-      obj->handle(), it->second->GetFunction(), argc, argv);
+
+  Nan::AsyncResource asyncResource("Easy::CbXferinfo");
+  Nan::MaybeLocal<v8::Value> returnValueCallback =
+      asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
 
   if (tryCatch.HasCaught()) {
     if (obj->isInsideMultiHandle) {
@@ -1312,14 +1319,11 @@ NAN_METHOD(Easy::SetOpt) {
           }
 
           obj->callbacks.erase(CURLOPT_CHUNK_BGN_FUNCTION);
-          obj->asyncResources.erase(CURLOPT_CHUNK_BGN_FUNCTION);
 
           setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_CHUNK_BGN_FUNCTION, NULL);
         } else {
           obj->callbacks[CURLOPT_CHUNK_BGN_FUNCTION].reset(
               new Nan::Callback(value.As<v8::Function>()));
-          obj->asyncResources[CURLOPT_CHUNK_BGN_FUNCTION].reset(
-              new Nan::AsyncResource("Easy::SetOpt(CURLOPT_CHUNK_BGN_FUNCTION)"));
 
           curl_easy_setopt(obj->ch, CURLOPT_CHUNK_DATA, obj);
           setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_CHUNK_BGN_FUNCTION, Easy::CbChunkBgn);
@@ -1336,14 +1340,11 @@ NAN_METHOD(Easy::SetOpt) {
           }
 
           obj->callbacks.erase(CURLOPT_CHUNK_END_FUNCTION);
-          obj->asyncResources.erase(CURLOPT_CHUNK_END_FUNCTION);
 
           setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_CHUNK_END_FUNCTION, NULL);
         } else {
           obj->callbacks[CURLOPT_CHUNK_END_FUNCTION].reset(
               new Nan::Callback(value.As<v8::Function>()));
-          obj->asyncResources[CURLOPT_CHUNK_END_FUNCTION].reset(
-              new Nan::AsyncResource("Easy::SetOpt(CURLOPT_CHUNK_END_FUNCTION)"));
 
           curl_easy_setopt(obj->ch, CURLOPT_CHUNK_DATA, obj);
           setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_CHUNK_END_FUNCTION, Easy::CbChunkEnd);
@@ -1355,14 +1356,11 @@ NAN_METHOD(Easy::SetOpt) {
 
         if (isNull) {
           obj->callbacks.erase(CURLOPT_DEBUGFUNCTION);
-          obj->asyncResources.erase(CURLOPT_DEBUGFUNCTION);
 
           curl_easy_setopt(obj->ch, CURLOPT_DEBUGDATA, NULL);
           setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_DEBUGFUNCTION, NULL);
         } else {
           obj->callbacks[CURLOPT_DEBUGFUNCTION].reset(new Nan::Callback(value.As<v8::Function>()));
-          obj->asyncResources[CURLOPT_DEBUGFUNCTION].reset(
-              new Nan::AsyncResource("Easy::SetOpt(CURLOPT_DEBUGFUNCTION)"));
 
           curl_easy_setopt(obj->ch, CURLOPT_DEBUGDATA, obj);
           setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_DEBUGFUNCTION, Easy::CbDebug);
@@ -1374,15 +1372,12 @@ NAN_METHOD(Easy::SetOpt) {
 
         if (isNull) {
           obj->callbacks.erase(CURLOPT_FNMATCH_FUNCTION);
-          obj->asyncResources.erase(CURLOPT_FNMATCH_FUNCTION);
 
           curl_easy_setopt(obj->ch, CURLOPT_FNMATCH_DATA, NULL);
           setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_FNMATCH_FUNCTION, NULL);
         } else {
           obj->callbacks[CURLOPT_FNMATCH_FUNCTION].reset(
               new Nan::Callback(value.As<v8::Function>()));
-          obj->asyncResources[CURLOPT_FNMATCH_FUNCTION].reset(
-              new Nan::AsyncResource("Easy::SetOpt(CURLOPT_FNMATCH_FUNCTION)"));
 
           curl_easy_setopt(obj->ch, CURLOPT_FNMATCH_DATA, obj);
           setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_FNMATCH_FUNCTION, Easy::CbFnMatch);
@@ -1395,11 +1390,8 @@ NAN_METHOD(Easy::SetOpt) {
 
         if (isNull) {
           obj->callbacks.erase(CURLOPT_HEADERFUNCTION);
-          obj->asyncResources.erase(CURLOPT_HEADERFUNCTION);
         } else {
           obj->callbacks[CURLOPT_HEADERFUNCTION].reset(new Nan::Callback(value.As<v8::Function>()));
-          obj->asyncResources[CURLOPT_HEADERFUNCTION].reset(
-              new Nan::AsyncResource("Easy::SetOpt(CURLOPT_HEADERFUNCTION)"));
         }
 
         break;
@@ -1408,15 +1400,12 @@ NAN_METHOD(Easy::SetOpt) {
 
         if (isNull) {
           obj->callbacks.erase(CURLOPT_PROGRESSFUNCTION);
-          obj->asyncResources.erase(CURLOPT_PROGRESSFUNCTION);
 
           curl_easy_setopt(obj->ch, CURLOPT_PROGRESSDATA, NULL);
           setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_PROGRESSFUNCTION, NULL);
         } else {
           obj->callbacks[CURLOPT_PROGRESSFUNCTION].reset(
               new Nan::Callback(value.As<v8::Function>()));
-          obj->asyncResources[CURLOPT_PROGRESSFUNCTION].reset(
-              new Nan::AsyncResource("Easy::SetOpt(CURLOPT_PROGRESSFUNCTION)"));
 
           curl_easy_setopt(obj->ch, CURLOPT_PROGRESSDATA, obj);
           setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_PROGRESSFUNCTION, Easy::CbProgress);
@@ -1430,11 +1419,8 @@ NAN_METHOD(Easy::SetOpt) {
 
         if (isNull) {
           obj->callbacks.erase(CURLOPT_READFUNCTION);
-          obj->asyncResources.erase(CURLOPT_READFUNCTION);
         } else {
           obj->callbacks[CURLOPT_READFUNCTION].reset(new Nan::Callback(value.As<v8::Function>()));
-          obj->asyncResources[CURLOPT_READFUNCTION].reset(
-              new Nan::AsyncResource("Easy::SetOpt(CURLOPT_READFUNCTION)"));
         }
 
         break;
@@ -1445,11 +1431,8 @@ NAN_METHOD(Easy::SetOpt) {
 
         if (isNull) {
           obj->callbacks.erase(CURLOPT_SEEKFUNCTION);
-          obj->asyncResources.erase(CURLOPT_SEEKFUNCTION);
         } else {
           obj->callbacks[CURLOPT_SEEKFUNCTION].reset(new Nan::Callback(value.As<v8::Function>()));
-          obj->asyncResources[CURLOPT_SEEKFUNCTION].reset(
-              new Nan::AsyncResource("Easy::SetOpt(CURLOPT_SEEKFUNCTION)"));
         }
 
         break;
@@ -1459,15 +1442,12 @@ NAN_METHOD(Easy::SetOpt) {
 
         if (isNull) {
           obj->callbacks.erase(CURLOPT_TRAILERFUNCTION);
-          obj->asyncResources.erase(CURLOPT_TRAILERFUNCTION);
 
           curl_easy_setopt(obj->ch, CURLOPT_TRAILERDATA, NULL);
           setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_TRAILERFUNCTION, NULL);
         } else {
           obj->callbacks[CURLOPT_TRAILERFUNCTION].reset(
               new Nan::Callback(value.As<v8::Function>()));
-          obj->asyncResources[CURLOPT_TRAILERFUNCTION].reset(
-              new Nan::AsyncResource("Easy::SetOpt(CURLOPT_TRAILERFUNCTION)"));
 
           curl_easy_setopt(obj->ch, CURLOPT_TRAILERDATA, obj);
           setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_TRAILERFUNCTION, Easy::CbTrailer);
@@ -1484,15 +1464,12 @@ NAN_METHOD(Easy::SetOpt) {
 
         if (isNull) {
           obj->callbacks.erase(CURLOPT_XFERINFOFUNCTION);
-          obj->asyncResources.erase(CURLOPT_XFERINFOFUNCTION);
 
           curl_easy_setopt(obj->ch, CURLOPT_XFERINFODATA, NULL);
           setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_XFERINFOFUNCTION, NULL);
         } else {
           obj->callbacks[CURLOPT_XFERINFOFUNCTION].reset(
               new Nan::Callback(value.As<v8::Function>()));
-          obj->asyncResources[CURLOPT_XFERINFOFUNCTION].reset(
-              new Nan::AsyncResource("Easy::SetOpt(CURLOPT_XFERINFOFUNCTION)"));
 
           curl_easy_setopt(obj->ch, CURLOPT_XFERINFODATA, obj);
           setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_XFERINFOFUNCTION, Easy::CbXferinfo);
@@ -1507,11 +1484,8 @@ NAN_METHOD(Easy::SetOpt) {
 
         if (isNull) {
           obj->callbacks.erase(CURLOPT_WRITEFUNCTION);
-          obj->asyncResources.erase(CURLOPT_WRITEFUNCTION);
         } else {
           obj->callbacks[CURLOPT_WRITEFUNCTION].reset(new Nan::Callback(value.As<v8::Function>()));
-          obj->asyncResources[CURLOPT_WRITEFUNCTION].reset(
-              new Nan::AsyncResource("Easy::SetOpt(CURLOPT_WRITEFUNCTION)"));
         }
 
         break;
@@ -1849,7 +1823,6 @@ NAN_METHOD(Easy::OnSocketEvent) {
 
   if (arg->IsNull()) {
     obj->cbOnSocketEvent = nullptr;
-    obj->cbOnSocketEventAsyncResource = nullptr;
 
     info.GetReturnValue().Set(info.This());
     return;
@@ -1863,7 +1836,6 @@ NAN_METHOD(Easy::OnSocketEvent) {
   v8::Local<v8::Function> callback = arg.As<v8::Function>();
 
   obj->cbOnSocketEvent.reset(new Nan::Callback(callback));
-  obj->cbOnSocketEventAsyncResource.reset(new Nan::AsyncResource("Easy::OnSocketEvent"));
 
   info.GetReturnValue().Set(info.This());
 }
