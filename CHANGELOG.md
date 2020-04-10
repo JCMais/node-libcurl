@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fix retrieve-win-deps Windows build script not working correctly
 - Fix context switches between addon callbacks not causing Node.js to drain microtasks - ([#177](https://github.com/JCMais/node-libcurl/issues/204))
 - Fix some curl_off_t getinfo values corrupting the stack
+- `WRITEFUNCTION`, `HEADERFUNCTION` and `READFUNCTION` callbacks now correctly rethrow JS errors thrown inside of them.
+  The return value of both callbacks is now also checked to be an integer, any other type will cause an error.
+  This is considered a fix because previously the return value was being cast to an integer, which means the method would already fail, as there are remote chances (aka impossible) casting something else to an integer would yield the length of the data passed by libcurl.
 
 ### Added
 - Added missing [`CURLOPT_SASL_AUTHZID`](https://curl.haxx.se/libcurl/c/CURLOPT_SASL_AUTHZID.html) option - libcurl 7.66.0
