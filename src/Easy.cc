@@ -415,7 +415,7 @@ size_t Easy::SeekFunction(void* userdata, curl_off_t offset, int origin) {
 size_t Easy::OnData(char* data, size_t size, size_t nmemb) {
   Nan::HandleScope scope;
 
-  size_t n = size * nmemb;
+  size_t dataLength = size * nmemb;
 
   CallbacksMap::iterator it = this->callbacks.find(CURLOPT_WRITEFUNCTION);
 
@@ -423,36 +423,54 @@ size_t Easy::OnData(char* data, size_t size, size_t nmemb) {
 
   // No callback is set
   if (!hasWriteCallback) {
-    return n;
+    return dataLength;
   }
 
+  // if this gets returned it will cause a CURLE_WRITE_ERROR
+  int32_t returnValue = -1;
+
   const int argc = 3;
-  v8::Local<v8::Object> buf = Nan::CopyBuffer(data, static_cast<uint32_t>(n)).ToLocalChecked();
+  v8::Local<v8::Object> buf = Nan::CopyBuffer(data, static_cast<uint32_t>(dataLength)).ToLocalChecked();
   v8::Local<v8::Uint32> sizeArg = Nan::New<v8::Uint32>(static_cast<uint32_t>(size));
   v8::Local<v8::Uint32> nmembArg = Nan::New<v8::Uint32>(static_cast<uint32_t>(nmemb));
 
   v8::Local<v8::Value> argv[argc] = {buf, sizeArg, nmembArg};
-  Nan::MaybeLocal<v8::Value> retVal;
 
-  // @TODO Test throwing errors inside this function?
+  Nan::TryCatch tryCatch;
   Nan::AsyncResource asyncResource("Easy::OnData");
-  retVal = asyncResource.runInAsyncScope(this->handle(), it->second->GetFunction(), argc, argv);
+  Nan::MaybeLocal<v8::Value> returnValueCallback =
+      asyncResource.runInAsyncScope(this->handle(), it->second->GetFunction(), argc, argv);
 
-  size_t ret = n;
-
-  if (retVal.IsEmpty()) {
-    ret = 0;
-  } else {
-    ret = Nan::To<uint32_t>(retVal.ToLocalChecked()).FromJust();
+  if (tryCatch.HasCaught()) {
+    if (this->isInsideMultiHandle) {
+      this->callbackError.Reset(tryCatch.Exception());
+    } else {
+      tryCatch.ReThrow();
+    }
+    return returnValue;
   }
 
-  return ret;
+  if (returnValueCallback.IsEmpty() || !returnValueCallback.ToLocalChecked()->IsInt32()) {
+    v8::Local<v8::Value> typeError =
+        Nan::TypeError("Return value from the WRITE callback must be an integer.");
+    if (this->isInsideMultiHandle) {
+      this->callbackError.Reset(typeError);
+    } else {
+      Nan::ThrowError(typeError);
+      tryCatch.ReThrow();
+    }
+    return returnValue;
+  } else {
+    returnValue = Nan::To<int32_t>(returnValueCallback.ToLocalChecked()).FromJust();
+  }
+
+  return returnValue;
 }
 
 size_t Easy::OnHeader(char* data, size_t size, size_t nmemb) {
   Nan::HandleScope scope;
 
-  size_t n = size * nmemb;
+  size_t dataLength = size * nmemb;
 
   CallbacksMap::iterator it = this->callbacks.find(CURLOPT_HEADERFUNCTION);
 
@@ -460,30 +478,48 @@ size_t Easy::OnHeader(char* data, size_t size, size_t nmemb) {
 
   // No callback is set
   if (!hasHeaderCallback) {
-    return n;
+    return dataLength;
   }
 
+  // if this gets returned it will cause a CURLE_WRITE_ERROR
+  int32_t returnValue = -1;
+
   const int argc = 3;
-  v8::Local<v8::Object> buf = Nan::CopyBuffer(data, static_cast<uint32_t>(n)).ToLocalChecked();
+  v8::Local<v8::Object> buf = Nan::CopyBuffer(data, static_cast<uint32_t>(dataLength)).ToLocalChecked();
   v8::Local<v8::Uint32> sizeArg = Nan::New<v8::Uint32>(static_cast<uint32_t>(size));
   v8::Local<v8::Uint32> nmembArg = Nan::New<v8::Uint32>(static_cast<uint32_t>(nmemb));
 
   v8::Local<v8::Value> argv[argc] = {buf, sizeArg, nmembArg};
-  Nan::MaybeLocal<v8::Value> retVal;
 
-  // @TODO Test throwing errors inside this function?
+  Nan::TryCatch tryCatch;
   Nan::AsyncResource asyncResource("Easy::OnHeader");
-  retVal = asyncResource.runInAsyncScope(this->handle(), it->second->GetFunction(), argc, argv);
+  Nan::MaybeLocal<v8::Value> returnValueCallback =
+      asyncResource.runInAsyncScope(this->handle(), it->second->GetFunction(), argc, argv);
 
-  size_t ret = n;
-
-  if (retVal.IsEmpty()) {
-    ret = 0;
-  } else {
-    ret = Nan::To<uint32_t>(retVal.ToLocalChecked()).FromJust();
+  if (tryCatch.HasCaught()) {
+    if (this->isInsideMultiHandle) {
+      this->callbackError.Reset(tryCatch.Exception());
+    } else {
+      tryCatch.ReThrow();
+    }
+    return returnValue;
   }
 
-  return ret;
+  if (returnValueCallback.IsEmpty() || !returnValueCallback.ToLocalChecked()->IsInt32()) {
+    v8::Local<v8::Value> typeError =
+        Nan::TypeError("Return value from the HEADER callback must be an integer.");
+    if (this->isInsideMultiHandle) {
+      this->callbackError.Reset(typeError);
+    } else {
+      Nan::ThrowError(typeError);
+      tryCatch.ReThrow();
+    }
+    return returnValue;
+  } else {
+    returnValue = Nan::To<int32_t>(returnValueCallback.ToLocalChecked()).FromJust();
+  }
+
+  return returnValue;
 }
 
 v8::Local<v8::Value> NullValueIfInvalidString(char* str) {
