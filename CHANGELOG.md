@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Fix retrieve-win-deps Windows build script not working correctly
 - Fix context switches between addon callbacks not causing Node.js to drain microtasks - ([#177](https://github.com/JCMais/node-libcurl/issues/204))
+- Fix some curl_off_t getinfo values corrupting the stack
 
 ### Added
 - Added missing [`CURLOPT_SASL_AUTHZID`](https://curl.haxx.se/libcurl/c/CURLOPT_SASL_AUTHZID.html) option - libcurl 7.66.0
