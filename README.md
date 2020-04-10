@@ -29,8 +29,9 @@
 [deps-image]:https://img.shields.io/david/JCMais/node-libcurl.svg?style=flat-square
 [deps-url]:https://david-dm.org/jcmais/node-libcurl
 
+> The [fastest](#benchmarks) http(s) client for Node.js
+
 [Libcurl](https://github.com/bagder/curl) bindings for Node.js.
-_Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-curl)._
 
 - [Quick Start](#quick-start)
   - [Install](#install)
@@ -38,6 +39,7 @@ _Based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-
   - [Simple Request](#simple-request)
     - [Setting HTTP headers](#setting-http-headers)
   - [MultiPart Upload / HttpPost libcurl Option](#multipart-upload--httppost-libcurl-option)
+- [Benchmarks](#benchmarks)
 - [API](#api)
 - [Supported Libcurl Versions](#supported-libcurl-versions)
 - [Detailed Installation](#detailed-installation)
@@ -123,6 +125,9 @@ curl.on('error', close);
 ```
 
 For more examples check the [examples folder](./examples).
+
+## Benchmarks
+Go [here](./benchmark)
 
 ## API
 
@@ -339,3 +344,5 @@ Some people have been asking if there are any means to support my work, I've cre
 If you want to donate via PayPal, use the same e-mail that is available on my GitHub profile: https://github.com/JCMais
 
 And thanks for reading till here! 😄
+
+_Originally this addon was based on the work from [jiangmiao/node-curl](https://github.com/jiangmiao/node-curl), things have changed and most if not all code has been rewritten._

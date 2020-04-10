@@ -2,12 +2,14 @@
   "name": "node-libcurl",
   "version": "2.1.0-4",
   "author": "Jonathan Cardoso <me@jonathancardoso.com>",
-  "description": "Node bindings for libcurl. Based on the work from node-curl.",
+  "description": "The fastest http(s) client (and much more) for Node.js - Node.js bindings for libcurl",
   "keywords": [
     "node-curl",
     "curl",
     "libcurl",
-    "node-libcurl"
+    "node-libcurl",
+    "axios",
+    "request"
   ],
   "license": "MIT",
   "homepage": "https://github.com/JCMais/node-libcurl",
