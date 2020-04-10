@@ -1,5 +1,7 @@
 import { Curl } from '../../lib'
 
+import should from 'should'
+
 describe('issues', function () {
   this.timeout(20000)
 
@@ -34,7 +36,7 @@ describe('issues', function () {
       error = _error
     }
 
-    error.should.not.be.equal(null)
+    should(error).not.be.equal(null)
     const promiseResolvedTime = process.hrtime(testStartTime)
     promiseResolvedTime[0].should.be.lessThan(2)
 
