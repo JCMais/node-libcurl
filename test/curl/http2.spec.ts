@@ -6,34 +6,57 @@
  */
 import 'should'
 
-import { ServerHttp2Session } from 'http2'
+import {
+  ServerHttp2Session,
+  ServerHttp2Stream,
+  IncomingHttpHeaders,
+} from 'http2'
 
 import { host, portHttp2, serverHttp2 } from '../helper/server'
 import { Curl, CurlHttpVersion } from '../../lib'
 
+type OnSessionFn = (session: ServerHttp2Session) => void
+type OnStreamFn = (
+  stream: ServerHttp2Stream,
+  headers: IncomingHttpHeaders,
+  flags: number,
+) => void
+
 let session: ServerHttp2Session
+
+const onError = (error: Error) => console.error(error)
+const onSession: OnSessionFn = (_session) => {
+  session = _session
+}
+const onStream: OnStreamFn = (stream, _headers) => {
+  stream.respond({
+    'content-type': 'text/html',
+    ':status': 200,
+  })
+  stream.end('<h1>Hello World</h1>')
+}
 
 describe('HTTP2', () => {
   before((done) => {
-    serverHttp2.on('error', (error) => console.error(error))
-    serverHttp2.on('session', (sess) => {
-      session = sess
-    })
-    serverHttp2.on('stream', (stream, _headers) => {
-      stream.respond({
-        'content-type': 'text/html',
-        ':status': 200,
-      })
-      stream.end('<h1>Hello World</h1>')
-    })
+    serverHttp2.on('error', onError)
+    serverHttp2.on('session', onSession)
+    serverHttp2.on('stream', onStream)
 
     serverHttp2.listen(portHttp2, host, () => {
       done()
     })
   })
 
-  after(() => {
-    serverHttp2.close()
+  after((done) => {
+    serverHttp2.removeListener('error', onError)
+    serverHttp2.removeListener('session', onSession)
+    serverHttp2.removeListener('stream', onStream)
+    session
+      ? session.close(() => {
+          session.destroy()
+          serverHttp2.close(done)
+        })
+      : serverHttp2.close(done)
   })
 
   it('should work with https2 site', (done) => {
@@ -45,7 +68,6 @@ describe('HTTP2', () => {
 
     curl.on('end', (statusCode) => {
       curl.close()
-      session && session.destroy()
 
       statusCode.should.be.equal(200)
       done()
@@ -53,7 +75,6 @@ describe('HTTP2', () => {
 
     curl.on('error', (error) => {
       curl.close()
-      session && session.destroy()
       done(error)
     })
 
