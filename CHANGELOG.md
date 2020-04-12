@@ -4,9 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased Changes
-### Breaking Change
+## [Unreleased]
+### Breaking Change  
+### Fixed  
+### Added  
+### Changed  
 
+## [2.1.0] - 2020-04-12
 ### Fixed
 - Fix retrieve-win-deps Windows build script not working correctly
 - Fix context switches between addon callbacks not causing Node.js to drain microtasks - ([#177](https://github.com/JCMais/node-libcurl/issues/204))
@@ -43,6 +47,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - NW.js v0.38 and v0.39
 - Remove dynamic require ([#204](https://github.com/JCMais/node-libcurl/issues/204))
 - The C++ implementation for the previously removed `onData` and `onHeader` Curl/Easy instance fields has been removed - If you were still using those internal fields your code is going to break. Use `WRITEFUNCTION`  and `HEADERFUNCTION` options instead.
+
 ## [2.0.3] - 2019-12-11
 ### Fixed
 - Updated return type of DEBUGFUNCTION ([#202](https://github.com/JCMais/node-libcurl/issues/202))
@@ -192,7 +197,12 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/compare/v1.3.3...HEAD
+[Unreleased]: https://github.com/JCMais/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/JCMais/compare/v2.0.3...v2.1.0
+[2.0.3]: https://github.com/JCMais/compare/v2.0.2...v2.0.3
+[2.0.2]: https://github.com/JCMais/compare/v2.0.1...v2.0.2
+[2.0.1]: https://github.com/JCMais/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/JCMais/compare/v1.3.3...v2.0.0
 [1.3.3]: https://github.com/JCMais/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/JCMais/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/JCMais/compare/v1.2.0...v1.3.1
