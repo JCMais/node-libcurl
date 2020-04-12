@@ -20,12 +20,12 @@ environment:
       ELECTRON_VERSION: '7.1.14'
     - nodejs_version: '12'
       ELECTRON_VERSION: '6.1.9'
-    - nodejs_version: '12'
-      NWJS_VERSION: '0.44.5'
-    - nodejs_version: '12'
-      NWJS_VERSION: '0.43.6'
-    - nodejs_version: '12'
-      NWJS_VERSION: '0.42.6'
+#     - nodejs_version: '12'
+#       NWJS_VERSION: '0.44.5'
+#     - nodejs_version: '12'
+#       NWJS_VERSION: '0.43.6'
+#     - nodejs_version: '12'
+#       NWJS_VERSION: '0.42.6'
 
 # matrix:
 #   allow_failures:
