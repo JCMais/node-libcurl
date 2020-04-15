@@ -11,6 +11,7 @@ environment:
     secure: o8iCZIMbaOR5HKy9Q/ArQ6N+5LRepyRVYRtLTrxyCo2gCEXUp8xhUYjLMJmZgNu9
   matrix:
     # node.js
+    - nodejs_version: '8'
     - nodejs_version: '10'
     - nodejs_version: '12'
     - nodejs_version: '13'
