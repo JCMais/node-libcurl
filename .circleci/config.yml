@@ -166,17 +166,17 @@ workflows:
       # Node 8 - Just prebuilt binary for latest version
       ####
       - build-addon-alpine-and-publish/build-addon:
-        name: build-addon-node-8-libcurl-latest
-        context: general
-        filters:
-          tags:
-            only: /^v.*/
-        node-version: '8'
-        libcurl-version: '7.69.1'
-        nghttp2-version: '1.39.2'
-        openssl-version: '1.0.2s'
-        e:
-          name: alpine
+          name: build-addon-node-8-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          node-version: '8'
+          libcurl-version: '7.69.1'
+          nghttp2-version: '1.39.2'
+          openssl-version: '1.0.2s'
+          e:
+            name: alpine
       ####
       # Node 10 - Just prebuilt binary for latest version
       ####
