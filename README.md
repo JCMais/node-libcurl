@@ -43,6 +43,7 @@
 - [Benchmarks](#benchmarks)
 - [API](#api)
 - [Supported Libcurl Versions](#supported-libcurl-versions)
+- [For Enterprise](#for-enterprise)
 - [Detailed Installation](#detailed-installation)
   - [Important Notes on Prebuilt Binaries / Direct Installation](#important-notes-on-prebuilt-binaries--direct-installation)
     - [Missing Packages](#missing-packages)
@@ -143,6 +144,12 @@ For more usage examples check the [examples folder](./examples).
 The addon is only tested against libcurl version `7.50.0` and the latest one available.
 
 The code itself is made to compile with any version greater than `7.32.0`, any libcurl version lower than that is **not** supported.
+
+## For Enterprise
+
+`node-libcurl` is vailable as part of the [Tidelift Subscription](https://tidelift.com/subscription/pkg/npm-node-libcurl?utm_source=npm-node-libcurl&utm_medium=referral&utm_campaign=enterprise&utm_term=repo).
+
+The maintainers of node-libcurl and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source dependencies you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact dependencies you use. [Learn more.](https://tidelift.com/subscription/pkg/npm-node-libcurl?utm_source=npm-node-libcurl&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
 
 ## Detailed Installation
 
