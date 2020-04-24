@@ -9,7 +9,7 @@ import 'should'
 import fs from 'fs'
 import path from 'path'
 
-import multiparty from 'multiparty'
+import formidable from 'formidable'
 
 import { app, host, port, server } from '../helper/server'
 import { Curl } from '../../lib'
@@ -39,24 +39,27 @@ describe('Option HTTPPOST', () => {
       fs.writeFile(imageFilePath, buffer, done)
     })
 
-    app.post('/', (req, res) => {
+    app.post('/', (req, res, next) => {
       // parse a file upload
-      const form = new multiparty.Form()
+      // @ts-ignore
+      const form = formidable({ multiples: true })
 
+      // @ts-ignore
       form.parse(req, (error, _fields, files) => {
         if (error) {
-          throw error
+          next(error)
+          return
         }
 
         const file = files.file
 
         const response = {
-          size: file[0].size,
-          name: file[0].originalFilename,
-          type: file[0].headers['content-type'],
+          size: file.size,
+          name: file.name,
+          type: file.type,
         }
 
-        res.send(JSON.stringify(response))
+        res.json(response)
       })
     })
   })

@@ -19,7 +19,7 @@
     "sourceMap": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,
-    // "typeRoots": ["node_modules/@types", "types/external"],
+    "typeRoots": ["node_modules/@types", "types/external"],
     "noUnusedLocals": true,
     "importHelpers": true
   },

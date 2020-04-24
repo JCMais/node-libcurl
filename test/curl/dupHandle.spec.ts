@@ -16,7 +16,7 @@ import fs from 'fs'
 import path from 'path'
 
 import querystring from 'querystring'
-import multiparty from 'multiparty'
+import formidable from 'formidable'
 
 import { app, host, port, server } from '../helper/server'
 import { Curl } from '../../lib'
@@ -64,24 +64,27 @@ describe('dupHandle()', () => {
       res.send(JSON.stringify(req.body))
     })
 
-    app.post('/multipart', (req, res) => {
+    app.post('/multipart', (req, res, next) => {
       // parse a file upload
-      const form = new multiparty.Form()
+      // @ts-ignore
+      const form = formidable({ multiples: true })
 
-      form.parse(req, (error, fields, files) => {
+      // @ts-ignore
+      form.parse(req, (error, _fields, files) => {
         if (error) {
-          throw error
+          next(error)
+          return
         }
 
         const file = files.file
 
         const response = {
-          size: file[0].size,
-          name: file[0].originalFilename,
-          type: file[0].headers['content-type'],
+          size: file.size,
+          name: file.name,
+          type: file.type,
         }
 
-        res.send(JSON.stringify(response))
+        res.json(response)
       })
     })
   })
