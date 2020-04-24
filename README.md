@@ -147,7 +147,7 @@ The code itself is made to compile with any version greater than `7.32.0`, any l
 
 ## For Enterprise
 
-`node-libcurl` is vailable as part of the [Tidelift Subscription](https://tidelift.com/subscription/pkg/npm-node-libcurl?utm_source=npm-node-libcurl&utm_medium=referral&utm_campaign=enterprise&utm_term=repo).
+`node-libcurl` is available as part of the [Tidelift Subscription](https://tidelift.com/subscription/pkg/npm-node-libcurl?utm_source=npm-node-libcurl&utm_medium=referral&utm_campaign=enterprise&utm_term=repo).
 
 The maintainers of node-libcurl and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source dependencies you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact dependencies you use. [Learn more.](https://tidelift.com/subscription/pkg/npm-node-libcurl?utm_source=npm-node-libcurl&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
 
