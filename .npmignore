@@ -8,6 +8,7 @@
 .circleci/
 .nyc_output/
 .vscode/
+benchmark/
 build/
 cache/
 coverage/
