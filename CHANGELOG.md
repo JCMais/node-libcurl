@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added  
 ### Changed  
 
+## [2.1.1] - 2020-04-28
+### Fixed  
+- Remove `benchmark` folder from the distributed npm package (reducing the package size)
+
 ## [2.1.0] - 2020-04-12
 ### Fixed
 - Fix retrieve-win-deps Windows build script not working correctly
