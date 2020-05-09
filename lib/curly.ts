@@ -154,15 +154,36 @@ const create = (): CurlyFunction => {
 
   curly.create = create
 
+  const httpMethodOptionsMap: Record<
+    string,
+    null | ((m: string, o: CurlOptionValueType) => CurlOptionValueType)
+  > = {
+    get: null,
+    post: (_m, o) => ({
+      post: true,
+      ...o,
+    }),
+    head: (_m, o) => ({
+      nobody: true,
+      ...o,
+    }),
+    _: (m, o) => ({
+      customRequest: m,
+      ...o,
+    }),
+  }
+
   for (const httpMethod of methods) {
+    const httpMethodOptions =
+      httpMethodOptionsMap[httpMethod] || httpMethodOptionsMap['_']
+
     // @ts-ignore
     curly[httpMethod] =
-      httpMethod === 'get'
+      httpMethodOptions === null
         ? curly
         : (url: string, options: CurlOptionValueType = {}) =>
             curly(url, {
-              customRequest: httpMethod,
-              ...options,
+              ...httpMethodOptions(httpMethod, options),
             })
   }
 
