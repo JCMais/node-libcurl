@@ -276,6 +276,51 @@ workflows:
           openssl-version: '1.1.1e'
           e:
             name: debian
+      ####
+      # Electron v5
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-electron-v5-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          electron-version: '5.0.13'
+          libcurl-version: '7.69.1'
+          nghttp2-version: '1.40.0'
+          openssl-version: '1.1.1e'
+          e:
+            name: debian
+      ####
+      # Electron v4
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-electron-v4-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          electron-version: '4.2.12'
+          libcurl-version: '7.69.1'
+          nghttp2-version: '1.40.0'
+          openssl-version: '1.1.1e'
+          e:
+            name: debian
+      ####
+      # Electron v3
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-electron-v3-libcurl-latest
+          context: general
+          filters:
+            tags:
+              only: /^v.*/
+          electron-version: '3.1.13'
+          libcurl-version: '7.69.1'
+          nghttp2-version: '1.40.0'
+          openssl-version: '1.1.1e'
+          e:
+            name: debian
           # Just for reference
           # before-build: *install-deps
       ####
