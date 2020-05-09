@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Breaking Change  
 ### Fixed  
 - Fix `curly.post` and `curly.head` using wrong libcurl options to set the HTTP Method.
+- Fix `postinstall` script not working properly.
 ### Added  
 ### Changed  
 

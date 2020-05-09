@@ -43,6 +43,17 @@ function printStandardLibError() {
   log.error('$ sudo apt-get install libstdc++-4.9-dev')
 }
 
+function cleanup() {
+  // If we're using node-libcurl from a package manager then let's clean up after
+  // ourselves when we install successfully - unless specified not to.
+  if (!buildFlags.mustBuild) {
+    rimraf.sync(path.join(rootPath, 'build'))
+    if (fs.existsSync(path.join(rootPath, 'curl-for-windows'))) {
+      rimraf.sync(path.join(rootPath, 'curl-for-windows'))
+    }
+  }
+}
+
 module.exports = function install() {
   if (buildFlags.isGitRepo) {
     // If we're building NodeGit from a git repo we aren't going to do any
@@ -53,6 +64,7 @@ module.exports = function install() {
   if (buildFlags.isElectron || buildFlags.isNWjs) {
     // If we're building for electron or NWjs, we're unable to require the
     // built library so we have to just assume success, unfortunately.
+    cleanup()
     return Promise.resolve()
   }
 
@@ -74,21 +86,7 @@ module.exports = function install() {
         throw e
       }
     })
-    .then(function () {
-      // If we're using node-libcurl from a package manager then let's clean up after
-      // ourselves when we install successfully.
-      if (!buildFlags.mustBuild) {
-        // We can't remove the source files yet because apparently the
-        // "standard workflow" for native node modules in Electron/nwjs is to
-        // build them for node and then nah eff that noise let's rebuild them
-        // again for the actual platform! Hurray!!! When that madness is dead
-        // we can clean up the source which is a serious amount of data.
-        rimraf.sync(path.join(rootPath, 'build'))
-        if (fs.existsSync(path.join(rootPath, 'curl-for-windows'))) {
-          rimraf.sync(path.join(rootPath, 'curl-for-windows'))
-        }
-      }
-    })
+    .then(cleanup)
 }
 
 // Called on the command line
