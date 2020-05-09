@@ -25,17 +25,17 @@ export enum CurlFeature {
   Raw = NoDataParsing | NoHeaderParsing,
 
   /**
-   * Data received is not stored inside this handle, implies NO_DATA_PARSING.
+   * Data received is not stored inside this handle, implies `NoDataParsing`.
    */
   NoDataStorage = 1 << 2,
 
   /**
-   * Header received is not stored inside this handle, implies NO_HEADER_PARSING.
+   * Header received is not stored inside this handle, implies `NoHeaderParsing`.
    */
   NoHeaderStorage = 1 << 3,
 
   /**
-   * Same than `NoDataStorage | NoHeaderStorage`, implies RAW.
+   * Same than `NoDataStorage | NoHeaderStorage`, implies `Raw`.
    */
   NoStorage = NoDataStorage | NoHeaderStorage,
 }

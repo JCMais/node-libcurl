@@ -312,7 +312,7 @@ class Curl extends EventEmitter {
 
   /**
    * Enables a feature, should not be used while a request is running.
-   * Use `Curl.feature` for predefined constants.
+   * Use `CurlFeature` for predefined constants.
    */
   enable(bitmask: CurlFeature) {
     if (this.isRunning) {
