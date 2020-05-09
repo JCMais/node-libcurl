@@ -39,9 +39,11 @@
   - [Simple Request - Async / Await](#simple-request---async--await)
   - [Simple Request](#simple-request)
     - [Setting HTTP headers](#setting-http-headers)
-  - [MultiPart Upload / HttpPost libcurl Option](#multipart-upload--httppost-libcurl-option)
+  - [Form Submission (Content-Type: application/x-www-form-urlencoded)](#form-submission-content-type-applicationx-www-form-urlencoded)
+  - [MultiPart Upload / HttpPost libcurl Option (Content-Type: multipart/form-data)](#multipart-upload--httppost-libcurl-option-content-type-multipartform-data)
 - [Benchmarks](#benchmarks)
 - [API](#api)
+- [Common Issues](#common-issues)
 - [Supported Libcurl Versions](#supported-libcurl-versions)
 - [For Enterprise](#for-enterprise)
 - [Detailed Installation](#detailed-installation)
@@ -77,6 +79,19 @@ const { curly } = require('node-libcurl');
 const { statusCode, data, headers } = await curly.get('http://www.google.com')
 ```
 
+Any option can be passed using their `FULLNAME` or a `lowerPascalCase` format:
+```javascript
+const querystring = require('querystring');
+const { curly } = require('node-libcurl');
+
+const { statusCode, data, headers } = await curly.post('http://httpbin.com/post', {
+  postFields: querystring.stringify({
+    field: 'value',
+  }),
+  // can use `postFields` or `POSTFIELDS`
+})
+```
+
 ### Simple Request
 ```javascript
 const { Curl } = require('node-libcurl');
@@ -108,7 +123,25 @@ curl.setOpt(Curl.option.HTTPHEADER,
   ['Content-Type: application/x-amz-json-1.1'])
 ```
 
-### MultiPart Upload / HttpPost libcurl Option
+### Form Submission (Content-Type: application/x-www-form-urlencoded)
+```javascript
+const querystring = require('querystring');
+const { Curl } = require('node-libcurl');
+
+const curl = new Curl();
+const close = curl.close.bind(curl);
+
+curl.setOpt(Curl.option.URL, '127.0.0.1/upload');
+curl.setOpt(Curl.option.POST, true)
+curl.setOpt(Curl.option.POSTFIELDS, querystring.stringify({
+  field: 'value',
+}));
+
+curl.on('end', close);
+curl.on('error', close);
+```
+
+### MultiPart Upload / HttpPost libcurl Option (Content-Type: multipart/form-data)
 
 ```javascript
 const { Curl } = require('node-libcurl');
@@ -138,6 +171,10 @@ The code provides Typescript type definitions, which should document most of the
 Almost all [CURL options](https://curl.haxx.se/libcurl/c/curl_easy_setopt.html) are supported, if you pass one that is not, an error will be thrown.
 
 For more usage examples check the [examples folder](./examples).
+
+## Common Issues
+
+See [COMMON_ISSUES.md](./COMMON_ISSUES.md)
 
 ## Supported Libcurl Versions
 
