@@ -1,6 +1,6 @@
 {
   "name": "node-libcurl",
-  "version": "2.1.1",
+  "version": "2.1.2-0",
   "author": "Jonathan Cardoso <me@jonathancardoso.com>",
   "description": "The fastest http(s) client (and much more) for Node.js - Node.js bindings for libcurl",
   "keywords": [
