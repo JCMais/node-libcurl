@@ -41,9 +41,9 @@
     - [Setting HTTP headers](#setting-http-headers)
   - [Form Submission (Content-Type: application/x-www-form-urlencoded)](#form-submission-content-type-applicationx-www-form-urlencoded)
   - [MultiPart Upload / HttpPost libcurl Option (Content-Type: multipart/form-data)](#multipart-upload--httppost-libcurl-option-content-type-multipartform-data)
-- [Benchmarks](#benchmarks)
 - [API](#api)
 - [Common Issues](#common-issues)
+- [Benchmarks](#benchmarks)
 - [Supported Libcurl Versions](#supported-libcurl-versions)
 - [For Enterprise](#for-enterprise)
 - [Detailed Installation](#detailed-installation)
@@ -161,9 +161,6 @@ curl.on('error', close);
 
 For more examples check the [examples folder](./examples).
 
-## Benchmarks
-Go [here](./benchmark)
-
 ## API
 
 The code provides Typescript type definitions, which should document most of the API.
@@ -175,6 +172,9 @@ For more usage examples check the [examples folder](./examples).
 ## Common Issues
 
 See [COMMON_ISSUES.md](./COMMON_ISSUES.md)
+
+## Benchmarks
+Go [here](./benchmark)
 
 ## Supported Libcurl Versions
 
@@ -286,12 +286,12 @@ where `--target` is the current version of NW.js you are using
 
 > yarn
 ```bash
-npm_config_runtime=electron npm_config_target=$(yarn --silent electron --version) npm_config_disturl=https://atom.io/download/atom-shell yarn add node-libcurl
+npm_config_runtime=electron npm_config_target=$(yarn --silent electron --version) npm_config_disturl=https://www.electronjs.org/headers yarn add node-libcurl
 ```
 
 > npm
 ```bash
-npm install node-libcurl --runtime=electron --target=$(yarn --silent electron --version) --disturl=https://atom.io/download/atom-shell --save
+npm install node-libcurl --runtime=electron --target=$(yarn --silent electron --version) --disturl=https://www.electronjs.org/headers --save
 ```
 
 Where `--target` is the version of electron you are using, in our case, we are just using the version returned by the locally installed `electron` binary.
