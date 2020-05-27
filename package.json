@@ -57,8 +57,8 @@
     "tslib": "^1.11.1"
   },
   "devDependencies": {
-    "@microsoft/api-documenter": "^7.7.17",
-    "@microsoft/api-extractor": "^7.7.12",
+    "@microsoft/api-documenter": "^7.8.0",
+    "@microsoft/api-extractor": "^7.8.0",
     "@types/body-parser": "^1.19.0",
     "@types/cookie-parser": "^1.4.2",
     "@types/express": "^4.17.4",
@@ -90,7 +90,8 @@
     "tslint": "^6.1.1",
     "tslint-config-airbnb": "^5.11.2",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.8.3"
+    "typedoc": "^0.17.7",
+    "typescript": "^3.9.3"
   },
   "lint-staged": {
     "*.js": [

@@ -27,4 +27,12 @@
   "exclude": ["node_modules"],
   // @TODO Remove those when done
   // "files": ["types/custom/index.d.ts"]
+  "typedocOptions": {
+    // "mode": "modules",
+    "mode": "library",
+    "out": "docs",
+    "excludeNotExported": true,
+    "excludePrivate": true,
+    "readme": "none"
+  }
 }
