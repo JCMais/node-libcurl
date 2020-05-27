@@ -55,7 +55,6 @@ class Easy : public Nan::ObjectWrap {
   bool isCbProgressAlreadyAborted =
       false;  // we need this flag because of
               // https://github.com/curl/curl/commit/907520c4b93616bddea15757bbf0bfb45cde8101
-  bool isMonitoringSockets = false;
 
   int32_t readDataFileDescriptor = -1;  // READDATA sets that
   curl_off_t readDataOffset = -1;       // SEEKDATA sets that
@@ -77,6 +76,7 @@ class Easy : public Nan::ObjectWrap {
   // members
   CURL* ch;
   bool isInsideMultiHandle = false;
+  bool isMonitoringSockets = false;
   bool isOpen = true;
 
   // used to return callback errors when inside Multi interface
@@ -92,6 +92,7 @@ class Easy : public Nan::ObjectWrap {
   static NAN_METHOD(New);
   static NAN_GETTER(IdGetter);
   static NAN_GETTER(IsInsideMultiHandleGetter);
+  static NAN_GETTER(IsMonitoringSocketsGetter);
   static NAN_METHOD(SetOpt);
   static NAN_METHOD(GetInfo);
   static NAN_METHOD(Send);

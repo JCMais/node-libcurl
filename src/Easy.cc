@@ -996,10 +996,14 @@ NAN_MODULE_INIT(Easy::Initialize) {
   // static methods
   Nan::SetMethod(tmpl, "strError", Easy::StrError);
 
+  // Instance accessors
   Nan::SetAccessor(proto, Nan::New("id").ToLocalChecked(), Easy::IdGetter, 0,
                    v8::Local<v8::Value>(), v8::DEFAULT, v8::ReadOnly);
   Nan::SetAccessor(proto, Nan::New("isInsideMultiHandle").ToLocalChecked(),
                    Easy::IsInsideMultiHandleGetter, 0, v8::Local<v8::Value>(), v8::DEFAULT,
+                   v8::ReadOnly);
+  Nan::SetAccessor(proto, Nan::New("isMonitoringSockets").ToLocalChecked(),
+                   Easy::IsMonitoringSocketsGetter, 0, v8::Local<v8::Value>(), v8::DEFAULT,
                    v8::ReadOnly);
 
   Easy::constructor.Reset(tmpl);
@@ -1046,6 +1050,12 @@ NAN_GETTER(Easy::IsInsideMultiHandleGetter) {
   Easy* obj = Nan::ObjectWrap::Unwrap<Easy>(info.This());
 
   info.GetReturnValue().Set(Nan::New(obj->isInsideMultiHandle));
+}
+
+NAN_GETTER(Easy::IsMonitoringSocketsGetter) {
+  Easy* obj = Nan::ObjectWrap::Unwrap<Easy>(info.This());
+
+  info.GetReturnValue().Set(Nan::New(obj->isMonitoringSockets));
 }
 
 NAN_METHOD(Easy::SetOpt) {
