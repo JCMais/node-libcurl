@@ -40,6 +40,23 @@ describe('setOpt()', () => {
     curl.setOpt(Curl.option.URL, url)
   })
 
+  it('should be able to set string value back to null', () => {
+    curl.setOpt('URL', url)
+    curl.setOpt('URL', null)
+  })
+
+  it('should be able to set integer value back to null', () => {
+    curl.setOpt('ACCEPTTIMEOUT_MS', 30000)
+    curl.setOpt('ACCEPTTIMEOUT_MS', null)
+  })
+
+  it('should be able to set function value back to null', () => {
+    curl.setOpt('WRITEFUNCTION', () => {
+      return 0
+    })
+    curl.setOpt('WRITEFUNCTION', null)
+  })
+
   it('should not accept invalid argument type', () => {
     const optionsToTest = [
       ['URL', 0],
@@ -119,6 +136,26 @@ describe('setOpt()', () => {
   })
 
   describe('HTTPPOST', () => {
+    it('should work', () => {
+      curl.setOpt('HTTPPOST', [
+        {
+          name: 'field',
+          contents: 'value',
+        },
+      ])
+    })
+
+    it('should be able to set option back to null', () => {
+      curl.setOpt('HTTPPOST', [
+        {
+          name: 'field',
+          contents: 'value',
+        },
+      ])
+
+      curl.setOpt('HTTPPOST', null)
+    })
+
     it('should not accept invalid arrays', () => {
       try {
         // @ts-ignore

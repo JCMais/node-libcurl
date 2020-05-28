@@ -430,7 +430,8 @@ size_t Easy::OnData(char* data, size_t size, size_t nmemb) {
   int32_t returnValue = -1;
 
   const int argc = 3;
-  v8::Local<v8::Object> buf = Nan::CopyBuffer(data, static_cast<uint32_t>(dataLength)).ToLocalChecked();
+  v8::Local<v8::Object> buf =
+      Nan::CopyBuffer(data, static_cast<uint32_t>(dataLength)).ToLocalChecked();
   v8::Local<v8::Uint32> sizeArg = Nan::New<v8::Uint32>(static_cast<uint32_t>(size));
   v8::Local<v8::Uint32> nmembArg = Nan::New<v8::Uint32>(static_cast<uint32_t>(nmemb));
 
@@ -485,7 +486,8 @@ size_t Easy::OnHeader(char* data, size_t size, size_t nmemb) {
   int32_t returnValue = -1;
 
   const int argc = 3;
-  v8::Local<v8::Object> buf = Nan::CopyBuffer(data, static_cast<uint32_t>(dataLength)).ToLocalChecked();
+  v8::Local<v8::Object> buf =
+      Nan::CopyBuffer(data, static_cast<uint32_t>(dataLength)).ToLocalChecked();
   v8::Local<v8::Uint32> sizeArg = Nan::New<v8::Uint32>(static_cast<uint32_t>(size));
   v8::Local<v8::Uint32> nmembArg = Nan::New<v8::Uint32>(static_cast<uint32_t>(nmemb));
 
@@ -1107,8 +1109,11 @@ NAN_METHOD(Easy::SetOpt) {
     }
     // linked list options
   } else if ((optionId = IsInsideCurlConstantStruct(curlOptionLinkedList, opt))) {
-    // HTTPPOST is a special case, since it's an array of objects.
-    if (optionId == CURLOPT_HTTPPOST) {
+    if (value->IsNull()) {
+      setOptRetCode = curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), NULL);
+
+      // HTTPPOST is a special case, since it's an array of objects.
+    } else if (optionId == CURLOPT_HTTPPOST) {
       std::string invalidArrayMsg = "HTTPPOST option value should be an Array of Objects.";
 
       if (!value->IsArray()) {
@@ -1258,66 +1263,57 @@ NAN_METHOD(Easy::SetOpt) {
       }
 
     } else {
-      if (value->IsNull()) {
-        setOptRetCode = curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), NULL);
-
-      } else {
-        if (!value->IsArray()) {
-          Nan::ThrowTypeError("Option value must be an Array.");
-          return;
-        }
-
-        // convert value to curl linked list (curl_slist)
-        curl_slist* slist = NULL;
-        v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(value);
-
-        for (uint32_t i = 0, len = array->Length(); i < len; ++i) {
-          slist = curl_slist_append(slist, *Nan::Utf8String(Nan::Get(array, i).ToLocalChecked()));
-        }
-
-        setOptRetCode = curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), slist);
-
-        if (setOptRetCode == CURLE_OK) {
-          obj->toFree->slist.push_back(slist);
-        }
+      if (!value->IsArray()) {
+        Nan::ThrowTypeError("Option value must be an Array.");
+        return;
       }
-    }
 
-    // check if option is string, and the value is correct
-  } else if ((optionId = IsInsideCurlConstantStruct(curlOptionString, opt))) {
-    if (!value->IsString()) {
-      Nan::ThrowTypeError("Option value must be a string.");
-      return;
-    }
+      // convert value to curl linked list (curl_slist)
+      curl_slist* slist = NULL;
+      v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(value);
 
-    // Create a string copy
-    bool isNull = value->IsNull();
+      for (uint32_t i = 0, len = array->Length(); i < len; ++i) {
+        slist = curl_slist_append(slist, *Nan::Utf8String(Nan::Get(array, i).ToLocalChecked()));
+      }
 
-    if (isNull) {
-      setOptRetCode = curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), NULL);
-    }
-
-    Nan::Utf8String value(info[1]);
-
-    size_t length = static_cast<size_t>(value.length());
-
-    std::string valueStr = std::string(*value, length);
-
-    // libcurl makes a copy of the strings after version 7.17, CURLOPT_POSTFIELD
-    // is the only exception
-    if (static_cast<CURLoption>(optionId) == CURLOPT_POSTFIELDS) {
-      std::vector<char> valueChar = std::vector<char>(valueStr.begin(), valueStr.end());
-      valueChar.push_back(0);
-
-      setOptRetCode = curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), &valueChar[0]);
+      setOptRetCode = curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), slist);
 
       if (setOptRetCode == CURLE_OK) {
-        obj->toFree->str.push_back(std::move(valueChar));
+        obj->toFree->slist.push_back(slist);
+      }
+    }
+    // check if option is string, and the value is correct
+  } else if ((optionId = IsInsideCurlConstantStruct(curlOptionString, opt))) {
+    if (value->IsNull()) {
+      setOptRetCode = curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), NULL);
+    } else {
+      if (!value->IsString()) {
+        Nan::ThrowTypeError("Option value must be a string.");
+        return;
       }
 
-    } else {
-      setOptRetCode =
-          curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), valueStr.c_str());
+      Nan::Utf8String value(info[1]);
+
+      size_t length = static_cast<size_t>(value.length());
+
+      std::string valueStr = std::string(*value, length);
+
+      // libcurl makes a copy of the strings after version 7.17, CURLOPT_POSTFIELD
+      // is the only exception
+      if (static_cast<CURLoption>(optionId) == CURLOPT_POSTFIELDS) {
+        std::vector<char> valueChar = std::vector<char>(valueStr.begin(), valueStr.end());
+        valueChar.push_back(0);
+
+        setOptRetCode = curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), &valueChar[0]);
+
+        if (setOptRetCode == CURLE_OK) {
+          obj->toFree->str.push_back(std::move(valueChar));
+        }
+
+      } else {
+        setOptRetCode =
+            curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), valueStr.c_str());
+      }
     }
 
     // check if option is an integer, and the value is correct

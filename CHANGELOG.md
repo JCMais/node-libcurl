@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed  
 - Fix `curly.post` and `curly.head` using wrong libcurl options to set the HTTP Method.
 - Fix `postinstall` script not working properly.
+- Setting the `HTTPPOST` option to `null`would, wrongly, throw an Error.
+- Setting any string option to `null` would, wrongly, throw an Error.
 ### Added
 - Added back prebuilt binaries for:
   - Electron v3, v4 and v5
