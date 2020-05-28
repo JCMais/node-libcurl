@@ -180,6 +180,8 @@ For more examples check the [examples folder](./examples).
 
 The code provides Typescript type definitions, which should document most of the API.
 
+Full API documentation is available at [http://jcmais.github.io/node-libcurl/](http://jcmais.github.io/node-libcurl/modules/_index_.html)
+
 Almost all [CURL options](https://curl.haxx.se/libcurl/c/curl_easy_setopt.html) are supported, if you pass one that is not, an error will be thrown.
 
 For more usage examples check the [examples folder](./examples).
