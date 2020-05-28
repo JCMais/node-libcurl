@@ -1,9 +1,10 @@
 # node-libcurl<!-- omit in toc -->
 
+<p align="center">
 <a href="https://www.patreon.com/bePatron?u=19985213" data-patreon-widget-type="become-patron-button">
-  <img src="https://c5.patreon.com/external/logo/become_a_patron_button@2x.png" width="160">
+  <img src="https://c5.patreon.com/external/logo/become_a_patron_button@2x.png" width="190">
 </a>
-<br>
+</p>
 
 [![NPM version][npm-image]][npm-url]
 [![node][node-image]][node-url]
@@ -36,9 +37,9 @@
 
 - [Quick Start](#quick-start)
   - [Install](#install)
-  - [Simple Request - Async / Await](#simple-request---async--await)
-  - [Simple Request](#simple-request)
-    - [Setting HTTP headers](#setting-http-headers)
+  - [Simple Request - Async / Await using curly](#simple-request---async--await-using-curly)
+  - [Simple Request - Using Curl class](#simple-request---using-curl-class)
+  - [Setting HTTP headers](#setting-http-headers)
   - [Form Submission (Content-Type: application/x-www-form-urlencoded)](#form-submission-content-type-applicationx-www-form-urlencoded)
   - [MultiPart Upload / HttpPost libcurl Option (Content-Type: multipart/form-data)](#multipart-upload--httppost-libcurl-option-content-type-multipartform-data)
 - [API](#api)
@@ -70,7 +71,7 @@ or
 ```shell
 yarn add node-libcurl
 ```
-### Simple Request - Async / Await
+### Simple Request - Async / Await using curly
 > this API is experimental and is subject to changes without a major version bump
 
 ```javascript
@@ -92,7 +93,21 @@ const { statusCode, data, headers } = await curly.post('http://httpbin.com/post'
 })
 ```
 
-### Simple Request
+JSON POST example:
+```javascript
+const { curly } = require('node-libcurl')
+const { data } = await curly.post('http://httpbin.com/post', {
+  postFields: JSON.stringify({ field: 'value' }),
+  httpHeader: [
+    'Content-Type: application/json',
+    'Accept: application/json'
+  ],
+})
+
+console.log(JSON.parse(data))
+```
+
+### Simple Request - Using Curl class
 ```javascript
 const { Curl } = require('node-libcurl');
 
@@ -115,7 +130,7 @@ curl.on('error', curl.close.bind(curl));
 curl.perform();
 ```
 
-#### Setting HTTP headers
+### Setting HTTP headers
 
 Pass an array of strings specifying headers
 ```javascript
