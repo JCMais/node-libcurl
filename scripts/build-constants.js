@@ -51,7 +51,16 @@ const run = async () => {
   const allowedCurlInfos = await retrieveConstantList({
     url: 'https://curl.haxx.se/libcurl/c/curl_easy_getinfo.html',
     constantPrefix: 'CURLINFO_',
-    blacklist: [],
+    blacklist: [
+      // time constants at the bottom
+      'NAMELOOKUP',
+      'CONNECT',
+      'APPCONNECT',
+      'PRETRANSFER',
+      'STARTTRANSFER',
+      'TOTAL',
+      'REDIRECT',
+    ],
   })
   await createConstantsFile({
     constants: allowedCurlInfos,

@@ -9,9 +9,10 @@ const getSetOptDefinition = (
   setOptReturnType,
 ) =>
   `/**
- * Use \`Curl.option\` for predefined constants.
- * 
- * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+ * Use {@link "Curl".Curl.option|\`Curl.option\`} for predefined constants.
+ *
+ *
+ * Official libcurl documentation: [\`curl_easy_setopt()\`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
  */
 setOpt(option: ${optionNameType}, value: ${optionValueType} | null): ${setOptReturnType}`
 
