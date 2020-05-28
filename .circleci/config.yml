@@ -169,6 +169,9 @@ workflows:
           name: build-addon-node-10-libcurl-latest
           context: general
           filters:
+            branches:
+              ignore:
+                - gh-pages
             tags:
               only: /^v.*/
           node-version: '10'
@@ -184,6 +187,9 @@ workflows:
           name: build-addon-node-12-libcurl-latest
           context: general
           filters:
+            branches:
+              ignore:
+                - gh-pages
             tags:
               only: /^v.*/
           node-version: '12'
@@ -196,6 +202,9 @@ workflows:
           name: build-addon-node-12-libcurl-old
           context: general
           filters:
+            branches:
+              ignore:
+                - gh-pages
             tags:
               only: /^v.*/
           node-version: '12'
@@ -211,6 +220,9 @@ workflows:
           name: build-addon-node-14-libcurl-latest
           context: general
           filters:
+            branches:
+              ignore:
+                - gh-pages
             tags:
               only: /^v.*/
           node-version: '14'
@@ -223,6 +235,9 @@ workflows:
           name: build-addon-node-14-libcurl-old
           context: general
           filters:
+            branches:
+              ignore:
+                - gh-pages
             tags:
               only: /^v.*/
           node-version: '14'
@@ -238,6 +253,9 @@ workflows:
           name: build-addon-electron-v8-libcurl-latest
           context: general
           filters:
+            branches:
+              ignore:
+                - gh-pages
             tags:
               only: /^v.*/
           electron-version: '8.1.1'
@@ -253,6 +271,9 @@ workflows:
           name: build-addon-electron-v7-libcurl-latest
           context: general
           filters:
+            branches:
+              ignore:
+                - gh-pages
             tags:
               only: /^v.*/
           electron-version: '7.1.14'
@@ -268,6 +289,9 @@ workflows:
           name: build-addon-electron-v6-libcurl-latest
           context: general
           filters:
+            branches:
+              ignore:
+                - gh-pages
             tags:
               only: /^v.*/
           electron-version: '6.1.9'
@@ -283,6 +307,9 @@ workflows:
           name: build-addon-electron-v5-libcurl-latest
           context: general
           filters:
+            branches:
+              ignore:
+                - gh-pages
             tags:
               only: /^v.*/
           electron-version: '5.0.13'
@@ -298,6 +325,9 @@ workflows:
           name: build-addon-electron-v4-libcurl-latest
           context: general
           filters:
+            branches:
+              ignore:
+                - gh-pages
             tags:
               only: /^v.*/
           electron-version: '4.2.12'
@@ -313,6 +343,9 @@ workflows:
           name: build-addon-electron-v3-libcurl-latest
           context: general
           filters:
+            branches:
+              ignore:
+                - gh-pages
             tags:
               only: /^v.*/
           electron-version: '3.1.13'
@@ -330,6 +363,9 @@ workflows:
           name: build-addon-nwjs-v0.44-libcurl-latest
           context: general
           filters:
+            branches:
+              ignore:
+                - gh-pages
             tags:
               only: /^v.*/
           nwjs-version: '0.44.5'
@@ -345,6 +381,9 @@ workflows:
           name: build-addon-nwjs-v0.43-libcurl-latest
           context: general
           filters:
+            branches:
+              ignore:
+                - gh-pages
             tags:
               only: /^v.*/
           nwjs-version: '0.43.6'
@@ -360,6 +399,9 @@ workflows:
           name: build-addon-nwjs-v0.42-libcurl-latest
           context: general
           filters:
+            branches:
+              ignore:
+                - gh-pages
             tags:
               only: /^v.*/
           nwjs-version: '0.42.6'

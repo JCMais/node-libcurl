@@ -3,16 +3,17 @@ name: deploy-docs
 # This workflow is triggered on pushes to the repository.
 on:
   push:
-    # branches:
-    #   - master
-    paths:
-      - 'lib/**/*.ts'
-      - 'tsconfig.json'
-      - 'package.json'
-      - 'CHANGELOG.md'
+    branches:
+      - master
+      - develop
+    # paths:
+    #   - 'lib/**/*.ts'
+    #   - 'tsconfig.json'
+    #   - 'package.json'
+    #   - 'CHANGELOG.md'
 
 jobs:
-  build-and-test:
+  deploy-docs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
