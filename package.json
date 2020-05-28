@@ -32,6 +32,7 @@
     "clean:dist": "rimraf dist",
     "clean": "yarn clean:build && yarn clean:dist",
     "docs": "yarn build:dist && yarn ae && api-documenter markdown -i build/api-extractor -o docs",
+    "gen:constants": "node scripts/build-constants.js",
     "lint": "tslint -p . -c tslint.json",
     "lint:files": "tslint -c tslint.json",
     "pregyp": "node-pre-gyp",
