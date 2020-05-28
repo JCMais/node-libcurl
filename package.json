@@ -25,7 +25,7 @@
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
     "postinstall": "node scripts/postinstall",
-    "preversion": "yarn lint && yarn build:dist",
+    "preversion": "yarn lint && yarn clean:dist && yarn build:dist",
     "build:dist": "tsc",
     "ae": "api-extractor run --local --verbose",
     "clean:build": "rimraf build",
