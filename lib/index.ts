@@ -4,17 +4,15 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+/**
+ * node-libcurl
+ * @packageDocumentation
+ */
 export { Curl } from './Curl'
 export { Easy } from './Easy'
 export { Multi } from './Multi'
 export { Share } from './Share'
 export { curly, CurlyFunction, CurlyResult } from './curly'
-
-// those are only for documentation purposes
-// export { Easy } from './Easy.doc'
-// export { Multi } from './Multi.doc'
-// export { Share } from './Share.doc'
-// export { curly, CurlyResult } from './curly.doc'
 
 // enums
 export * from './enum/CurlAuth'
@@ -46,6 +44,7 @@ export * from './enum/CurlSslOpt'
 export * from './enum/CurlSslVersion'
 export * from './enum/CurlTimeCond'
 export * from './enum/CurlUseSsl'
+export * from './enum/CurlVersion'
 export * from './enum/CurlWriteFunc'
 export * from './enum/SocketState'
 

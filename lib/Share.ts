@@ -10,18 +10,22 @@ import { CurlShareOption } from './enum/CurlShareOption'
 const bindings: NodeLibcurlNativeBinding = require('../lib/binding/node_libcurl.node')
 
 /**
- * Share class
+ * This is a Node.js wrapper around the binding {@link EasyNativeBinding | native Easy class}.
+ *
+ * The only extra is that it provides a static field `option` and `lock`.
  *
  * @public
  */
 class Share extends bindings.Share {
   /**
-   * Options to be used with `Share.setOpt`
+   * Options to be used with {@link setOpt | `setOpt`}.
    *
-   * See the official documentation of [curl_share_setopt()](http://curl.haxx.se/libcurl/c/curl_share_setopt.html)
+   * See the official documentation of [`curl_share_setopt()`](http://curl.haxx.se/libcurl/c/curl_share_setopt.html)
    *  for reference.
    *
    * `CURLSHOPT_SHARE` becomes `Share.option.SHARE`
+   *
+   * @deprecated Use {@link CurlShareOption|`CurlShareOption`} directly instead.
    */
   static option = CurlShareOption
 }

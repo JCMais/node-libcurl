@@ -16,6 +16,12 @@ import {
 //   new (): T
 // } & B
 
+/**
+ * This is the interface exported from the addon binding itself.
+ * Not available for library users.
+ *
+ * @internal
+ */
 export interface NodeLibcurlNativeBinding {
   // This would work too, but I don't like it
   // Curl: Constructable<

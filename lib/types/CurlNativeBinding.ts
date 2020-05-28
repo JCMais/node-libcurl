@@ -10,6 +10,11 @@ import { CurlInfo } from '../generated/CurlInfo'
 import { CurlOption } from '../generated/CurlOption'
 import { MultiOption } from '../generated/MultiOption'
 
+/**
+ * This is the internal `Curl` object exported by the addon. It's not available for library users directly.
+ *
+ * @internal
+ */
 export declare interface CurlNativeBindingObject {
   globalInit(flags: CurlGlobalInit): number
   globalCleanup(): void

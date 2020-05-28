@@ -7,6 +7,8 @@
 import { CurlFileType } from '../enum/CurlFileType'
 
 /**
+ * This is the object passed as first parameter to the callback set with the `CHUNK_BGN_FUNCTION` option.
+ *
  * @public
  */
 export type FileInfo = {

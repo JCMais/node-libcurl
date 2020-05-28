@@ -7,6 +7,8 @@
 /**
  * This function is used to merge the buffers
  *  that were stored while the request was being processed.
+ *
+ * @internal
  */
 export function mergeChunks(chunks: Buffer[], length: number) {
   // We init the whole buffer below, so no need to use, the slower, Buffer.alloc

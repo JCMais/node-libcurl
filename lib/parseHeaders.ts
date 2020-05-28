@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 /**
+ * Whe data parsing is enabled on the {@link "Curl".Curl} instance, the headers parameter passed
+ *  to the `end` event's callback will be one array of this type.
  * @public
  */
 export type HeaderInfo = {
@@ -20,6 +22,8 @@ export type HeaderInfo = {
 /**
  * Parses the headers that were stored while
  *  the request was being processed.
+ *
+ * @internal
  */
 export function parseHeaders(headersString: string): HeaderInfo[] {
   const headers = headersString.split(/\r?\n|\r/g)

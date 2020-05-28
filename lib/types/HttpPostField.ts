@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 /**
+ * The `HTTPPOST` option accepts an array with this type.
+ *
  * @public
  */
 export type HttpPostField =

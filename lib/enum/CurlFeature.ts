@@ -6,6 +6,7 @@
  */
 
 /**
+ * Flags to be used with {@link "Curl".Curl.enable | `Curl#enable`} and {@link "Curl".Curl.disable | `Curl#disable`}
  * @public
  */
 export enum CurlFeature {

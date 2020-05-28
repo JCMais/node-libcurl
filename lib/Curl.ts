@@ -76,20 +76,17 @@ multiHandle.onMessage((error, handle, errorCode) => {
 })
 
 /**
- * Wrapper around {@link Easy} class with a more *nodejs-friendly* interface.
+ * Wrapper around {@link "Easy".Easy | `Easy`} class with a more *nodejs-friendly* interface.
  *
- * @remarks
- *
- * Also see the Curl Interface definition for some overloaded methods.
- * The `setOpt` method here has `(never, never)` as type for their arguments because
- *  the overloaded methods are the ones with the correct signatures.
+ * This uses an internal {@link "Multi".Multi | `Multi`} instance to asynchronous fire the requests.
  *
  * @public
  */
 class Curl extends EventEmitter {
   /**
-   * Calls [curl_global_init()](http://curl.haxx.se/libcurl/c/curl_global_init.html)
-   * For **flags** see the the enum `CurlGlobalInit`
+   * Calls [`curl_global_init()`](http://curl.haxx.se/libcurl/c/curl_global_init.html).
+   *
+   * For **flags** see the the enum {@link CurlGlobalInit | `CurlGlobalInit`}.
    *
    * This is automatically called when the addon is loaded, to disable this, set the environment variable
    *  `NODE_LIBCURL_DISABLE_GLOBAL_INIT_CALL=false`
@@ -97,30 +94,39 @@ class Curl extends EventEmitter {
   static globalInit = _Curl.globalInit
 
   /**
-   * Calls [curl_global_cleanup()](http://curl.haxx.se/libcurl/c/curl_global_cleanup.html)
+   * Calls [`curl_global_cleanup()`](http://curl.haxx.se/libcurl/c/curl_global_cleanup.html)
    *
-   * This is automatically called when the process is exiting
+   * This is automatically called when the process is exiting.
    */
   static globalCleanup = _Curl.globalCleanup
 
   /**
    * Returns libcurl version string.
-   * The string shows which features are enabled,
-   *  and the version of the libraries that libcurl was built with.
+   *
+   * The string shows which libraries libcurl was built with and their versions, example:
+   * ```
+   * libcurl/7.69.1-DEV OpenSSL/1.1.1d zlib/1.2.11 WinIDN libssh2/1.9.0_DEV nghttp2/1.40.0
+   * ```
    */
   static getVersion = _Curl.getVersion
 
   /**
    * Returns an object with a representation of the current libcurl version and their features/protocols.
    *
-   * This is basically [curl_version_info()](https://curl.haxx.se/libcurl/c/curl_version_info.html)
+   * This is basically [`curl_version_info()`](https://curl.haxx.se/libcurl/c/curl_version_info.html)
    */
   static getVersionInfo = () => CurlVersionInfo
 
   /**
    * Returns a string that looks like the one returned by
-   * ```
+   * ```bash
    * curl -V
+   * ```
+   * Example:
+   * ```
+   * Version: libcurl/7.69.1-DEV OpenSSL/1.1.1d zlib/1.2.11 WinIDN libssh2/1.9.0_DEV nghttp2/1.40.0
+   * Protocols: dict, file, ftp, ftps, gopher, http, https, imap, imaps, ldap, ldaps, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp
+   * Features: AsynchDNS, IDN, IPv6, Largefile, SSPI, Kerberos, SPNEGO, NTLM, SSL, libz, HTTP2, HTTPS-proxy
    * ```
    */
   static getVersionInfoString = () => {
@@ -135,6 +141,12 @@ class Curl extends EventEmitter {
     ].join('\n')
   }
 
+  /**
+   * Useful if you want to check if the current libcurl version is greater or equal than another one.
+   * @param x major
+   * @param y minor
+   * @param z patch
+   */
   static isVersionGreaterOrEqualThan = (
     x: number,
     y: number,
@@ -143,31 +155,50 @@ class Curl extends EventEmitter {
     return _Curl.VERSION_NUM >= (x << 16) + (y << 8) + z
   }
 
+  /**
+   * This is the default user agent that is going to be used on all `Curl` instances.
+   *
+   * You can overwrite this in a per instance basis, calling `curlHandle.setOpt('USERAGENT', 'my-user-agent/1.0')`, or
+   *  by directly changing this property so it affects all newly created `Curl` instances.
+   *
+   * To disable this behavior set this property to `null`.
+   */
   static defaultUserAgent = `node-libcurl/${pkg.version}`
 
   /**
-   * Returns the number of handles currently open in the internal multi handle being used.
+   * Returns the number of handles currently open in the internal {@link "Multi".Multi | `Multi`} handle being used.
    */
   static getCount = multiHandle.getCount
 
   /**
-   * Current libcurl version
+   * Integer representing the current libcurl version.
+   *
+   * It was built the following way:
+   * ```
+   * <8 bits major number> | <8 bits minor number> | <8 bits patch number>.
+   * ```
+   * Version `7.69.1` is therefore returned as `0x074501` / `476417`
    */
   static VERSION_NUM = _Curl.VERSION_NUM
 
   /**
-   * Options to be used with `Easy.getInfo` or `Curl.getInfo`
+   * This is a object with members resembling the `CURLINFO_*` libcurl constants.
    *
-   * See the official documentation of [curl_easy_getinfo()](http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html)
+   * It can be used with {@link "Easy".Easy.getInfo | `Easy#getInfo`} or {@link getInfo | `Curl#getInfo`}.
+   *
+   * See the official documentation of [`curl_easy_getinfo()`](http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html)
    *  for reference.
    *
    * `CURLINFO_EFFECTIVE_URL` becomes `Curl.info.EFFECTIVE_URL`
    */
   static info = _Curl.info
+
   /**
-   * Options to be used with `Easy.setOpt` or `Curl.setOpt`
+   * This is a object with members resembling the `CURLOPT_*` libcurl constants.
    *
-   * See the official documentation of [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   * It can be used with {@link "Easy".Easy.setOpt | `Easy#setOpt`} or {@link setOpt | `Curl#setOpt`}.
+   *
+   * See the official documentation of [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    *  for reference.
    *
    * `CURLOPT_URL` becomes `Curl.option.URL`
@@ -180,26 +211,50 @@ class Curl extends EventEmitter {
   protected handle: EasyNativeBinding
 
   /**
-   * Stores current response payload
-   * This will not store anything in case the NO_DATA_STORAGE flag is enabled
+   * Stores current response payload.
+   *
+   * This will not store anything in case {@link CurlFeature.NoDataStorage | `NoDataStorage`} flag is enabled
    */
   protected chunks: Buffer[]
+  /**
+   * Current response length.
+   *
+   * Will always be zero in case {@link CurlFeature.NoDataStorage | `NoDataStorage`} flag is enabled
+   */
   protected chunksLength: number
 
   /**
-   * Stores current headers payload
-   * This will not store anything in case the NO_DATA_STORAGE flag is enabled
+   * Stores current headers payload.
+   *
+   * This will not store anything in case {@link CurlFeature.NoDataStorage | `NoDataStorage`} flag is enabled
    */
   protected headerChunks: Buffer[]
+  /**
+   * Current headers length.
+   *
+   * Will always be zero in case {@link CurlFeature.NoDataStorage | `NoDataStorage`} flag is enabled
+   */
   protected headerChunksLength: number
 
+  /**
+   * Currently enabled features.
+   *
+   * See {@link enable | `enable`} and {@link disable | `disable`}
+   */
   protected features: CurlFeature
 
   /**
-   * Whether this instance is running or not (called perform())
+   * Whether this instance is running or not ({@link perform | `perform()`} was called).
+   *
+   * Make sure to not change their value, otherwise unexpected behavior would happen.
+   *
+   * @protected
    */
   isRunning: boolean
 
+  /**
+   * @param cloneHandle {@link "Easy".Easy | `Easy`} handle that should be used instead of creating a new one.
+   */
   constructor(cloneHandle?: EasyNativeBinding) {
     super()
 
@@ -231,6 +286,9 @@ class Curl extends EventEmitter {
     curlInstanceMap.set(handle, this)
   }
 
+  /**
+   * This is the default callback passed to {@link setOpt | `setOpt('WRITEFUNCTION', cb)`}.
+   */
   protected defaultWriteFunction(chunk: Buffer, size: number, nmemb: number) {
     if (!(this.features & CurlFeature.NoDataStorage)) {
       this.chunks.push(chunk)
@@ -242,6 +300,9 @@ class Curl extends EventEmitter {
     return size * nmemb
   }
 
+  /**
+   * This is the default callback passed to {@link setOpt | `setOpt('HEADERFUNCTION', cb)`}.
+   */
   protected defaultHeaderFunction(chunk: Buffer, size: number, nmemb: number) {
     if (!(this.features & CurlFeature.NoHeaderStorage)) {
       this.headerChunks.push(chunk)
@@ -254,7 +315,10 @@ class Curl extends EventEmitter {
   }
 
   /**
-   * Event called when an error is thrown on this handle.
+   * Callback called when an error is thrown on this handle.
+   *
+   * This is called from the internal callback we use with the {@link "Multi".Multi.onMessage | `onMessage`}
+   *  method of the global {@link "Multi".Multi | `Multi`} handle used by all `Curl` instances.
    */
   onError(error: Error, errorCode: CurlCode) {
     this.isRunning = false
@@ -268,7 +332,10 @@ class Curl extends EventEmitter {
   }
 
   /**
-   * Called when this handle has finished the request.
+   * Callback called when this handle has finished the request.
+   *
+   * This is called from the internal callback we use with the {@link "Multi".Multi.onMessage | `onMessage`}
+   *  method of the global {@link "Multi".Multi | `Multi`} handle used by all `Curl` instances.
    */
   onEnd() {
     const isHeaderStorageEnabled = !(
@@ -311,8 +378,9 @@ class Curl extends EventEmitter {
   }
 
   /**
-   * Enables a feature, should not be used while a request is running.
-   * Use `CurlFeature` for predefined constants.
+   * Enables a feature, must not be used while a request is running.
+   *
+   * Use {@link CurlFeature | `CurlFeature`} for predefined constants.
    */
   enable(bitmask: CurlFeature) {
     if (this.isRunning) {
@@ -327,8 +395,9 @@ class Curl extends EventEmitter {
   }
 
   /**
-   * Disables a feature, should not be used while a request is running.
-   * Use `Curl.feature` for predefined constants.
+   * Disables a feature, must not be used while a request is running.
+   *
+   * Use {@link CurlFeature | `CurlFeature`} for predefined constants.
    */
   disable(bitmask: CurlFeature) {
     if (this.isRunning) {
@@ -342,10 +411,19 @@ class Curl extends EventEmitter {
     return this
   }
 
+  /**
+   * Sets an option the handle.
+   *
+   * This overloaded method has `never` as type for the arguments
+   *  because one of the other overloaded signatures must be used.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * @param optionIdOrName Option name or integer value. Use {@link Curl.option | `Curl.option`} for predefined constants.
+   * @param optionValue The value of the option, value type depends on the option being set.
+   */
   setOpt(optionIdOrName: never, optionValue: never): this {
-    // we are using never as arguments here, because we want to make sure the client
-    //  uses one of the overloaded types
-
     // special case for WRITEFUNCTION and HEADERFUNCTION callbacks
     //  since if they are set back to null, we must restore the default callback.
     let value = optionValue
@@ -377,8 +455,12 @@ class Curl extends EventEmitter {
   }
 
   /**
-   * Use `Curl.info` for predefined constants.
-   * Official libcurl documentation: [curl_easy_getinfo()](http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html)
+   * Retrieves some information about the last request made by a handle.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_getinfo()`](http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html)
+   *
+   * @param infoNameOrId Info name or integer value. Use {@link Curl.info | `Curl.info`} for predefined constants.
    */
   getInfo(infoNameOrId: CurlInfoName) {
     const { code, data } = this.handle.getInfo(infoNameOrId)
@@ -391,12 +473,12 @@ class Curl extends EventEmitter {
   }
 
   /**
-   * The option XFERINFOFUNCTION was introduced in curl version 7.32.0,
-   *  versions older than that should use PROGRESSFUNCTION.
+   * The option `XFERINFOFUNCTION` was introduced in curl version `7.32.0`,
+   *  versions older than that should use `PROGRESSFUNCTION`.
    * If you don't want to mess with version numbers you can use this method,
-   * instead of directly calling `Curl.setOpt`
+   * instead of directly calling {@link Curl.setOpt | `Curl#setOpt`}.
    *
-   * NOPROGRESS should be set to false to make this function actually get called.
+   * `NOPROGRESS` should be set to false to make this function actually get called.
    */
   setProgressCallback(
     cb:
@@ -420,7 +502,11 @@ class Curl extends EventEmitter {
   /**
    * Add this instance to the processing queue.
    * This method should be called only one time per request,
-   *  otherwise it will throw an exception.
+   *  otherwise it will throw an error.
+   *
+   * @remarks
+   *
+   * This basically calls the {@link "Multi".Multi.addHandle | `Multi#addHandle`} method.
    */
   perform() {
     if (this.isRunning) {
@@ -436,6 +522,9 @@ class Curl extends EventEmitter {
 
   /**
    * Perform any connection upkeep checks.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_upkeep()`](http://curl.haxx.se/libcurl/c/curl_easy_upkeep.html)
    */
   upkeep() {
     const code = this.handle.upkeep()
@@ -448,11 +537,14 @@ class Curl extends EventEmitter {
   }
 
   /**
-   * Using this function, you can explicitly mark a running connection to get paused, and you can unpause a connection that was previously paused.
+   * Use this function to pause / unpause a connection.
    *
    * The bitmask argument is a set of bits that sets the new state of the connection.
    *
-   * Use `Curl.pause` for predefined constants.
+   * Use {@link CurlPause | `CurlPause`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_pause()`](http://curl.haxx.se/libcurl/c/curl_easy_pause.html)
    */
   pause(bitmask: CurlPause) {
     const code = this.handle.pause(bitmask)
@@ -466,6 +558,11 @@ class Curl extends EventEmitter {
 
   /**
    * Reset this handle options to their defaults.
+   *
+   * This will put the handle in a clean state, as if it was just created.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_reset()`](http://curl.haxx.se/libcurl/c/curl_easy_reset.html)
    */
   reset() {
     this.removeAllListeners()
@@ -488,7 +585,10 @@ class Curl extends EventEmitter {
    * Duplicate this handle with all their options.
    * Keep in mind that, by default, this also means all event listeners.
    *
-   * Use the argument to change that behaviour.
+   *
+   * Official libcurl documentation: [`curl_easy_duphandle()`](http://curl.haxx.se/libcurl/c/curl_easy_duphandle.html)
+   *
+   * @param shouldCopyEventListeners If you don't want to copy the event listeners, set this to `false`.
    */
   dupHandle(shouldCopyEventListeners: boolean = true) {
     const duplicatedHandle = new Curl(this.handle.dupHandle())
@@ -512,7 +612,10 @@ class Curl extends EventEmitter {
   /**
    * Close this handle.
    *
-   * **NOTE:** After closing the handle, it should not be used anymore! Doing so will throw an exception.
+   * **NOTE:** After closing the handle, it must not be used anymore. Doing so will throw an error.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_cleanup()`](http://curl.haxx.se/libcurl/c/curl_easy_cleanup.html)
    */
   close() {
     curlInstanceMap.delete(this.handle)
@@ -530,9 +633,6 @@ class Curl extends EventEmitter {
   }
 }
 
-/**
- * Overloaded methods for the Curl class.
- */
 interface Curl {
   on(
     event: 'data',
@@ -565,18 +665,20 @@ interface Curl {
 
   // START AUTOMATICALLY GENERATED CODE - DO NOT EDIT
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(
     option: DataCallbackOptions,
     value: ((data: Buffer, size: number, nmemb: number) => number) | null,
   ): this
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(
     option: ProgressCallbackOptions,
@@ -590,96 +692,109 @@ interface Curl {
       | null,
   ): this
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: StringListOptions, value: string[] | null): this
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(
     option: 'CHUNK_BGN_FUNCTION',
     value: ((fileInfo: FileInfo, remains: number) => number) | null,
   ): this
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'CHUNK_END_FUNCTION', value: (() => number) | null): this
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(
     option: 'DEBUGFUNCTION',
     value: ((type: number, data: Buffer) => 0) | null,
   ): this
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(
     option: 'FNMATCH_FUNCTION',
     value: ((pattern: string, value: string) => number) | null,
   ): this
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(
     option: 'SEEKFUNCTION',
     value: ((offset: number, origin: number) => number) | null,
   ): this
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(
     option: 'TRAILERFUNCTION',
     value: (() => string[] | false) | null,
   ): this
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'SHARE', value: Share | null): this
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'HTTPPOST', value: HttpPostField[] | null): this
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'GSSAPI_DELEGATION', value: CurlGssApi | null): this
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'PROXY_SSL_OPTIONS', value: CurlSslOpt | null): this
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'SSL_OPTIONS', value: CurlSslOpt | null): this
   /**
-   * Use `Curl.option` for predefined constants.
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
-   * Official libcurl documentation: [curl_easy_setopt()](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(
     option: Exclude<CurlOptionName, SpecificOptions>,

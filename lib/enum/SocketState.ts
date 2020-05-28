@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 /**
+ * This will be the type of the second parameter passed to the callback set with
+ *  {@link "Easy".Easy.onSocketEvent|`Easy#onSocketEvent`}.
  * @public
  */
 export enum SocketState {

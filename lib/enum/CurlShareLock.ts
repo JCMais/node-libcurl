@@ -6,7 +6,7 @@
  */
 // https://github.com/curl/curl/blob/e1be82545348/include/curl/curl.h#L2643
 /**
- * Options to be used with the `Curl.share.SHARE` and `Curl.share.UNSHARE` options.
+ * Options to be used when setting `SHARE` or `UNSHARE` with {@link "Share".Share.setOpt | `Share#setOpt`}.
  *
  * `CURL_LOCK_DATA_SSL_SESSION` becomes `CurlShareLock.DataSslSession`
  *

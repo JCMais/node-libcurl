@@ -6,7 +6,7 @@
  */
 // https://github.com/curl/curl/blob/e1be8254/include/curl/curl.h#L2828
 /**
- * Options to be used with `Easy.pause` or `Curl.pause`
+ * Options to be used with {@link "Easy".Easy.pause | `Easy#pause`} and {@link "Curl".Curl.pause | `Curl#pause`}.
  *
  * `CURLPAUSE_RECV_CONT` becomes `CurlPause.RecvCont`
  *

@@ -9,15 +9,17 @@ import { NodeLibcurlNativeBinding } from './types'
 const bindings: NodeLibcurlNativeBinding = require('../lib/binding/node_libcurl.node')
 
 /**
- * Multi class
+ * This is a Node.js wrapper around the binding {@link MultiNativeBinding | native Multi class}.
+ *
+ * The only extra is that it provides a static field `option`.
  *
  * @public
  */
 class Multi extends bindings.Multi {
   /**
-   * Options to be used with `Multi.setOpt`
+   * Options to be used with {@link setOpt | `setOpt`}.
    *
-   * See the official documentation of [curl_multi_setopt()](http://curl.haxx.se/libcurl/c/curl_multi_setopt.html)
+   * See the official documentation of [`curl_multi_setopt()`](http://curl.haxx.se/libcurl/c/curl_multi_setopt.html)
    *  for reference.
    *
    * `CURLMOPT_MAXCONNECTS` becomes `Multi.option.MAXCONNECTS`

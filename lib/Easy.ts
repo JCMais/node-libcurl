@@ -9,7 +9,7 @@ import { NodeLibcurlNativeBinding } from './types'
 const bindings: NodeLibcurlNativeBinding = require('../lib/binding/node_libcurl.node')
 
 /**
- * Easy Class
+ * This is a Node.js wrapper around the binding {@link EasyNativeBinding | native Easy class}
  *
  * @public
  */
