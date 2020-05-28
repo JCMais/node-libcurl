@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Electron v3, v4 and v5
 - Added `isMonitoringSockets` boolean readonly property to `Easy` instances, it is `true`
     when `monitorSocketEvents` has been called on that `Easy` instance.
+- Added `CurlVersion` enum to be used with the `rawFeatures` property returned from `Curl.getVersionInfo`.
 ### Changed  
 
 ## [2.1.1] - 2020-04-28
