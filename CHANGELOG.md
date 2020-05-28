@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Setting the `HTTPPOST` option to `null`would, wrongly, throw an Error.
 - Setting any string option to `null` would, wrongly, throw an Error.
 ### Added
+- We now have API docs! 🥳 http://jcmais.github.io/node-libcurl/modules/_index_.html
+  Thanks to [typedoc](https://typedoc.org/)
 - Added back prebuilt binaries for:
   - Electron v3, v4 and v5
 - Added `isMonitoringSockets` boolean readonly property to `Easy` instances, it is `true`
