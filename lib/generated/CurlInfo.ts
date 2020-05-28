@@ -19,13 +19,6 @@ export interface CurlInfo {
   readonly ACTIVESOCKET: 'ACTIVESOCKET'
 
   /**
-   * and . The time it took from the start until the SSL connect/handshake with the remote host was completed. (Added in 7.19.0) The latter is the integer version (measuring microseconds).  (Added in 7.60.0)
-   *
-   * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/APPCONNECT.html](https://curl.haxx.se/libcurl/c/APPCONNECT.html)
-   */
-  readonly APPCONNECT: 'APPCONNECT'
-
-  /**
    * Time from start until SSL/SSH handshake completed.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLINFO_APPCONNECT_TIME.html](https://curl.haxx.se/libcurl/c/CURLINFO_APPCONNECT_TIME.html)
@@ -52,13 +45,6 @@ export interface CurlInfo {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLINFO_CONDITION_UNMET.html](https://curl.haxx.se/libcurl/c/CURLINFO_CONDITION_UNMET.html)
    */
   readonly CONDITION_UNMET: 'CONDITION_UNMET'
-
-  /**
-   * and . The time it took from the start until the connect to the remote host (or proxy) was completed.
-   *
-   * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CONNECT.html](https://curl.haxx.se/libcurl/c/CONNECT.html)
-   */
-  readonly CONNECT: 'CONNECT'
 
   /**
    * Time from start until remote host or proxy completed.
@@ -194,13 +180,6 @@ export interface CurlInfo {
   readonly LOCAL_PORT: 'LOCAL_PORT'
 
   /**
-   * and . The time it took from the start until the name resolving was completed.
-   *
-   * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/NAMELOOKUP.html](https://curl.haxx.se/libcurl/c/NAMELOOKUP.html)
-   */
-  readonly NAMELOOKUP: 'NAMELOOKUP'
-
-  /**
    * Time from start until name resolving completed.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLINFO_NAMELOOKUP_TIME.html](https://curl.haxx.se/libcurl/c/CURLINFO_NAMELOOKUP_TIME.html)
@@ -227,13 +206,6 @@ export interface CurlInfo {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLINFO_OS_ERRNO.html](https://curl.haxx.se/libcurl/c/CURLINFO_OS_ERRNO.html)
    */
   readonly OS_ERRNO: 'OS_ERRNO'
-
-  /**
-   * and . The time it took from the start until the file transfer is just about to begin. This includes all pre-transfer commands and negotiations that are specific to the particular protocol(s) involved.
-   *
-   * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/PRETRANSFER.html](https://curl.haxx.se/libcurl/c/PRETRANSFER.html)
-   */
-  readonly PRETRANSFER: 'PRETRANSFER'
 
   /**
    * Time from start until just before the transfer begins.
@@ -290,13 +262,6 @@ export interface CurlInfo {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLINFO_PROXYAUTH_AVAIL.html](https://curl.haxx.se/libcurl/c/CURLINFO_PROXYAUTH_AVAIL.html)
    */
   readonly PROXYAUTH_AVAIL: 'PROXYAUTH_AVAIL'
-
-  /**
-   * and . The time it took for all redirection steps include name lookup, connect, pretransfer and transfer before final transaction was started. So, this is zero if no redirection took place.
-   *
-   * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/REDIRECT.html](https://curl.haxx.se/libcurl/c/REDIRECT.html)
-   */
-  readonly REDIRECT: 'REDIRECT'
 
   /**
    * Total number of redirects that were followed.
@@ -453,13 +418,6 @@ export interface CurlInfo {
   readonly SSL_VERIFYRESULT: 'SSL_VERIFYRESULT'
 
   /**
-   * and . The time it took from the start until the first byte is received by libcurl.
-   *
-   * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/STARTTRANSFER.html](https://curl.haxx.se/libcurl/c/STARTTRANSFER.html)
-   */
-  readonly STARTTRANSFER: 'STARTTRANSFER'
-
-  /**
    * Time from start until just when the first byte is received.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLINFO_STARTTRANSFER_TIME.html](https://curl.haxx.se/libcurl/c/CURLINFO_STARTTRANSFER_TIME.html)
@@ -486,13 +444,6 @@ export interface CurlInfo {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLINFO_TLS_SSL_PTR.html](https://curl.haxx.se/libcurl/c/CURLINFO_TLS_SSL_PTR.html)
    */
   readonly TLS_SSL_PTR: 'TLS_SSL_PTR'
-
-  /**
-   * and . Total time of the previous request.
-   *
-   * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/TOTAL.html](https://curl.haxx.se/libcurl/c/TOTAL.html)
-   */
-  readonly TOTAL: 'TOTAL'
 
   /**
    * Total time of previous transfer.
