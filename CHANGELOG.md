@@ -5,7 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Breaking Change  
+### Breaking Change
+### Fixed
+### Added
+### Changed
+
+## [2.1.2] - 2020-06-01
 ### Fixed  
 - Fix `curly.post` and `curly.head` using wrong libcurl options to set the HTTP Method.
 - Fix `postinstall` script not working properly.
@@ -19,7 +24,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added `isMonitoringSockets` boolean readonly property to `Easy` instances, it is `true`
     when `monitorSocketEvents` has been called on that `Easy` instance.
 - Added `CurlVersion` enum to be used with the `rawFeatures` property returned from `Curl.getVersionInfo`.
-### Changed  
 
 ## [2.1.1] - 2020-04-28
 ### Fixed  
@@ -212,7 +216,8 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.1.1...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.1.2...HEAD
+[2.1.2]: https://github.com/JCMais/node-libcurl/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/JCMais/node-libcurl/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/JCMais/node-libcurl/compare/v2.0.3...v2.1.0
 [2.0.3]: https://github.com/JCMais/node-libcurl/compare/v2.0.2...v2.0.3
