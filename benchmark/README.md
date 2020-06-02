@@ -77,7 +77,7 @@ Fastest is node-libcurl Curl - reusing instance - GET,node-libcurl curly - GET
 
 #### Ubuntu 19.10 i7-5500U 2.4GHz - Linux 5.3.0-42 - Node v12.16.2
 ##### local server
-node.js http.request - GET x 720 ops/sec ±2.65% (74 runs sampled)
+```node.js http.request - GET x 720 ops/sec ±2.65% (74 runs sampled)
 axios - GET x 611 ops/sec ±2.14% (78 runs sampled)
 superagent - GET x 681 ops/sec ±1.80% (77 runs sampled)
 request - GET x 671 ops/sec ±2.14% (76 runs sampled)
@@ -92,8 +92,9 @@ Fastest is node-libcurl Easy - reusing instance - GET
 real	0m59,502s
 user	0m19,020s
 sys	0m3,756s
-
+```
 ##### example.com
+```
 node.js http.request - GET x 3.42 ops/sec ±0.95% (21 runs sampled)
 axios - GET x 3.44 ops/sec ±1.16% (21 runs sampled)
 superagent - GET x 3.41 ops/sec ±1.31% (21 runs sampled)
@@ -109,3 +110,4 @@ Fastest is node-libcurl Curl - GET
 real	1m5,417s
 user	0m3,469s
 sys	0m0,229s
+```
