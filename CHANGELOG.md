@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 ### Changed
 
+## [2.1.3] - 2020-06-02
+### Fixed
+- `v2.1.2` had a caching issue on during the dist files generation, which caused it to not build some required files.
+
 ## [2.1.2] - 2020-06-01
 ### Fixed  
 - Fix `curly.post` and `curly.head` using wrong libcurl options to set the HTTP Method.
@@ -216,7 +220,8 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.1.2...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.1.3...HEAD
+[2.1.3]: https://github.com/JCMais/node-libcurl/compare/v2.1.2...v2.1.3
 [2.1.2]: https://github.com/JCMais/node-libcurl/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/JCMais/node-libcurl/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/JCMais/node-libcurl/compare/v2.0.3...v2.1.0
