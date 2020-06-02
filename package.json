@@ -93,6 +93,7 @@
     "tslint-config-airbnb": "^5.11.2",
     "tslint-config-prettier": "^1.18.0",
     "typedoc": "^0.17.7",
+    "typedoc-plugin-nojekyll": "^1.0.1",
     "typescript": "^3.9.3"
   },
   "lint-staged": {
