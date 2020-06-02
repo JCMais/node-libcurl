@@ -26,7 +26,6 @@ build
 tsconfig.tsbuildinfo
 
 # @TODO Remove when get api-documenter to work
-docs/
 website/
 api/
 

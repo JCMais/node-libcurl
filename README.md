@@ -42,6 +42,7 @@
   - [Setting HTTP headers](#setting-http-headers)
   - [Form Submission (Content-Type: application/x-www-form-urlencoded)](#form-submission-content-type-applicationx-www-form-urlencoded)
   - [MultiPart Upload / HttpPost libcurl Option (Content-Type: multipart/form-data)](#multipart-upload--httppost-libcurl-option-content-type-multipartform-data)
+  - [Binary Data](#binary-data)
 - [API](#api)
 - [Common Issues](#common-issues)
 - [Benchmarks](#benchmarks)
@@ -173,6 +174,24 @@ curl.setOpt(Curl.option.HTTPPOST, [
 curl.on('end', close);
 curl.on('error', close);
 ```
+
+### Binary Data
+
+When requesting binary data make sure to do one of these:
+- Pass your own `WRITEFUNCTION` (https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html):
+```
+curl.setOpt('WRITEFUNCTION', (buffer, size, nmemb) => {
+  // something
+})
+```
+- Enable one of the following flags:
+```
+curl.enable(CurlFeature.NoDataParsing)
+// or
+curl.enable(CurlFeature.Raw)
+```
+
+The reasoning behind this is that by default, the `Curl` instance will try to decode the received data and headers to utf8 strings, as can be seen here: https://github.com/JCMais/node-libcurl/blob/b55b13529c9d11fdcdd7959137d8030b39427800/lib/Curl.ts#L391
 
 For more examples check the [examples folder](./examples).
 

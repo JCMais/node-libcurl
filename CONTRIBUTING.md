@@ -102,8 +102,9 @@ We are using [`np`](https://github.com/sindresorhus/np) for releases.
 
 1. Checkout `master`
 2. Merge changes from `develop`
-3. Create version
-4. Publish
+3. Update docs by running `yarn docs` and commit the changes.
+4. Create version
+5. Publish
 
 So basically:
 ```bash

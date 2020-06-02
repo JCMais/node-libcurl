@@ -2,3 +2,4 @@ build/
 deps/
 src/
 dist/
+docs/

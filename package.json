@@ -31,7 +31,7 @@
     "clean:build": "rimraf build",
     "clean:dist": "rimraf dist tsconfig.tsbuildinfo",
     "clean": "yarn clean:build && yarn clean:dist",
-    "docs": "yarn build:dist && yarn ae && api-documenter markdown -i build/api-extractor -o docs",
+    "docs": "typedoc",
     "gen:constants": "node scripts/build-constants.js",
     "lint": "tslint -p . -c tslint.json",
     "lint:files": "tslint -c tslint.json",
