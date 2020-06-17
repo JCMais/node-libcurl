@@ -1,0 +1,10 @@
+syntax="proto3";
+
+message RequestGreet {
+  string name = 1;
+  string message = 2;
+}
+
+message ResponseGreet {
+  string message = 1;
+}
