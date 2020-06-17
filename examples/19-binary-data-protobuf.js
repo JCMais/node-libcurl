@@ -12,10 +12,9 @@
  */
 const path = require('path')
 
-const { Curl, CurlFeature, CurlHttpVersion } = require('node-libcurl')
+const { Curl, CurlFeature } = require('node-libcurl')
 
 const protobuf = require('protobufjs')
-const { request } = require('http')
 
 const HOST = process.env.HOST || 'localhost:8080'
 
