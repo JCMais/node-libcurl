@@ -651,6 +651,20 @@ interface Curl {
       curlInstance: Curl,
     ) => void,
   ): this
+  /**
+   * The `data` paramater passed to the listener callback will be one of the following:
+   *  - Empty `Buffer` if the feature {@link CurlFeature.NoDataStorage | `NoDataStorage`} flag was enabled
+   *  - Non-Empty `Buffer` if the feature {@link CurlFeature.NoDataParsing | `NoDataParsing`} flag was enabled
+   *  - Otherwise, it will be a string, with the result of decoding the received data as a UTF8 string.
+   *      If it's a JSON string for example, you still need to call JSON.parse on it. This library does no extra parsing
+   *       whatsoever.
+   *
+   * The `headers` parameter passed to the listener callback will be one of the following:
+   *  - Empty `Buffer` if the feature {@link CurlFeature.NoHeaderParsing | `NoHeaderStorage`} flag was enabled
+   *  - Non-Empty `Buffer` if the feature {@link CurlFeature.NoHeaderParsing | `NoHeaderParsing`} flag was enabled
+   *  - Otherwise, an array of parsed headers for each request
+   *     libcurl made (if there were 2 redirects before the last request, the array will have 3 elements, one for each request)
+   */
   on(
     event: 'end',
     listener: (
