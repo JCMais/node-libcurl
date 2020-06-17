@@ -80,14 +80,6 @@ async function sendProtoBufMessage(url, message) {
   })
 }
 
-function nodeLibcurlSimpleRpcImpl(method, requestData, callback) {
-  callWithLibcurl(
-    `${HOST}/${method.parent.parent.name}.${method.parent.name}/${method.name}`,
-    requestData,
-    callback,
-  )
-}
-
 async function main() {
   const root = await protobuf.load(protoPath)
 
