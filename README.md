@@ -44,6 +44,8 @@
   - [MultiPart Upload / HttpPost libcurl Option (Content-Type: multipart/form-data)](#multipart-upload--httppost-libcurl-option-content-type-multipartform-data)
   - [Binary Data](#binary-data)
 - [API](#api)
+- [Special Notes](#special-notes)
+  - [`READFUNCTION` option](#readfunction-option)
 - [Common Issues](#common-issues)
 - [Benchmarks](#benchmarks)
 - [Supported Libcurl Versions](#supported-libcurl-versions)
@@ -204,6 +206,14 @@ Full API documentation is available at [https://jcmais.github.io/node-libcurl/](
 Almost all [CURL options](https://curl.haxx.se/libcurl/c/curl_easy_setopt.html) are supported, if you pass one that is not, an error will be thrown.
 
 For more usage examples check the [examples folder](./examples).
+
+## Special Notes
+
+### `READFUNCTION` option
+
+The buffer passed as first parameter to the callback set with the [`READFUNCTION`](https://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html) option is initialized with the size libcurl is using in their upload buffer (which can be set with [`UPLOAD_BUFFERSIZE`](https://curl.haxx.se/libcurl/c/CURLOPT_UPLOAD_BUFFERSIZE.html)), this is initialized using `node::Buffer::Data(buf);` which is basically the same than `Buffer#allocUnsafe` and therefore, it has all the implications as to its correct usage: https://nodejs.org/pt-br/docs/guides/buffer-constructor-deprecation/#regarding-buffer-allocunsafe
+
+So, be careful, make sure to return **exactly** the amount of data you have written to the buffer on this callback. Only that specific amount is going to be copied and handed over to libcurl.
 
 ## Common Issues
 
