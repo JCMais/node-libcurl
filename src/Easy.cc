@@ -82,6 +82,9 @@ Easy::Easy(Easy* orig) {
 #if NODE_LIBCURL_VER_GE(7, 32, 0)
   curl_easy_setopt(this->ch, CURLOPT_XFERINFODATA, this);
 #endif
+#if NODE_LIBCURL_VER_GE(7, 64, 0)
+  curl_easy_setopt(this->ch, CURLOPT_TRAILERDATA, this);
+#endif
   // no need to reset the _DATA option for the READ, SEEK and WRITE callbacks,
   // since they are reset on ResetRequiredHandleOptions()
 
