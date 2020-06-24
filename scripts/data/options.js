@@ -30,22 +30,24 @@ const optionKindMap = {
 }
 
 const optionKindValueMap = {
-  dataCallback: '((data: Buffer, size: number, nmemb: number) => number)',
+  dataCallback:
+    '((this: Easy, data: Buffer, size: number, nmemb: number) => number)',
   progressCallback:
-    '((dltotal: number,dlnow: number,ultotal: number,ulnow: number) => number | CurlProgressFunc)',
+    '((this: Easy, dltotal: number,dlnow: number,ultotal: number,ulnow: number) => number | CurlProgressFunc)',
   stringList: 'string[]',
   /* @TODO Add type definitions, they are on Curl.chunk */
-  CHUNK_BGN_FUNCTION: '((fileInfo: FileInfo, remains: number) => number)',
+  CHUNK_BGN_FUNCTION:
+    '((this: Easy, fileInfo: FileInfo, remains: number) => number)',
   /* @TODO Add type definitions, they are on Curl.chunk */
-  CHUNK_END_FUNCTION: '(() => number)',
+  CHUNK_END_FUNCTION: '((this: Easy) => number)',
   /* @TODO Add type definitions, they are on Curl.info.debug */
-  DEBUGFUNCTION: '((type: number, data: Buffer) => 0)',
+  DEBUGFUNCTION: '((this: Easy, type: number, data: Buffer) => 0)',
   /* @TODO Add type definitions, they are on Curl.fnmatchfunc */
-  FNMATCH_FUNCTION: '((pattern: string, value: string) => number)',
+  FNMATCH_FUNCTION: '((this: Easy, pattern: string, value: string) => number)',
   HTTPPOST: 'HttpPostField[]',
-  TRAILERFUNCTION: '(() => string[] | false)',
+  TRAILERFUNCTION: '((this: Easy) => string[] | false)',
   /* @TODO Add CURL_SEEKFUNC_* type definitions */
-  SEEKFUNCTION: '((offset: number, origin: number) => number)',
+  SEEKFUNCTION: '((this: Easy, offset: number, origin: number) => number)',
   SHARE: 'Share',
 
   // enums

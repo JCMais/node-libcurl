@@ -686,7 +686,14 @@ interface Curl {
    */
   setOpt(
     option: DataCallbackOptions,
-    value: ((data: Buffer, size: number, nmemb: number) => number) | null,
+    value:
+      | ((
+          this: EasyNativeBinding,
+          data: Buffer,
+          size: number,
+          nmemb: number,
+        ) => number)
+      | null,
   ): this
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
@@ -698,6 +705,7 @@ interface Curl {
     option: ProgressCallbackOptions,
     value:
       | ((
+          this: EasyNativeBinding,
           dltotal: number,
           dlnow: number,
           ultotal: number,
@@ -720,7 +728,13 @@ interface Curl {
    */
   setOpt(
     option: 'CHUNK_BGN_FUNCTION',
-    value: ((fileInfo: FileInfo, remains: number) => number) | null,
+    value:
+      | ((
+          this: EasyNativeBinding,
+          fileInfo: FileInfo,
+          remains: number,
+        ) => number)
+      | null,
   ): this
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
@@ -728,7 +742,10 @@ interface Curl {
    *
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
-  setOpt(option: 'CHUNK_END_FUNCTION', value: (() => number) | null): this
+  setOpt(
+    option: 'CHUNK_END_FUNCTION',
+    value: ((this: EasyNativeBinding) => number) | null,
+  ): this
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
@@ -737,7 +754,7 @@ interface Curl {
    */
   setOpt(
     option: 'DEBUGFUNCTION',
-    value: ((type: number, data: Buffer) => 0) | null,
+    value: ((this: EasyNativeBinding, type: number, data: Buffer) => 0) | null,
   ): this
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
@@ -747,7 +764,9 @@ interface Curl {
    */
   setOpt(
     option: 'FNMATCH_FUNCTION',
-    value: ((pattern: string, value: string) => number) | null,
+    value:
+      | ((this: EasyNativeBinding, pattern: string, value: string) => number)
+      | null,
   ): this
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
@@ -757,7 +776,9 @@ interface Curl {
    */
   setOpt(
     option: 'SEEKFUNCTION',
-    value: ((offset: number, origin: number) => number) | null,
+    value:
+      | ((this: EasyNativeBinding, offset: number, origin: number) => number)
+      | null,
   ): this
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
@@ -767,7 +788,7 @@ interface Curl {
    */
   setOpt(
     option: 'TRAILERFUNCTION',
-    value: (() => string[] | false) | null,
+    value: ((this: EasyNativeBinding) => string[] | false) | null,
   ): this
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.

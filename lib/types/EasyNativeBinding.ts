@@ -88,7 +88,14 @@ export declare class EasyNativeBinding {
    */
   setOpt(
     option: DataCallbackOptions,
-    value: ((data: Buffer, size: number, nmemb: number) => number) | null,
+    value:
+      | ((
+          this: EasyNativeBinding,
+          data: Buffer,
+          size: number,
+          nmemb: number,
+        ) => number)
+      | null,
   ): CurlCode
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
@@ -100,6 +107,7 @@ export declare class EasyNativeBinding {
     option: ProgressCallbackOptions,
     value:
       | ((
+          this: Easy,
           dltotal: number,
           dlnow: number,
           ultotal: number,
@@ -122,7 +130,7 @@ export declare class EasyNativeBinding {
    */
   setOpt(
     option: 'CHUNK_BGN_FUNCTION',
-    value: ((fileInfo: FileInfo, remains: number) => number) | null,
+    value: ((this: Easy, fileInfo: FileInfo, remains: number) => number) | null,
   ): CurlCode
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
@@ -130,7 +138,10 @@ export declare class EasyNativeBinding {
    *
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
-  setOpt(option: 'CHUNK_END_FUNCTION', value: (() => number) | null): CurlCode
+  setOpt(
+    option: 'CHUNK_END_FUNCTION',
+    value: ((this: Easy) => number) | null,
+  ): CurlCode
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
@@ -139,7 +150,7 @@ export declare class EasyNativeBinding {
    */
   setOpt(
     option: 'DEBUGFUNCTION',
-    value: ((type: number, data: Buffer) => 0) | null,
+    value: ((this: Easy, type: number, data: Buffer) => 0) | null,
   ): CurlCode
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
@@ -149,7 +160,7 @@ export declare class EasyNativeBinding {
    */
   setOpt(
     option: 'FNMATCH_FUNCTION',
-    value: ((pattern: string, value: string) => number) | null,
+    value: ((this: Easy, pattern: string, value: string) => number) | null,
   ): CurlCode
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
@@ -159,7 +170,7 @@ export declare class EasyNativeBinding {
    */
   setOpt(
     option: 'SEEKFUNCTION',
-    value: ((offset: number, origin: number) => number) | null,
+    value: ((this: Easy, offset: number, origin: number) => number) | null,
   ): CurlCode
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
@@ -169,7 +180,7 @@ export declare class EasyNativeBinding {
    */
   setOpt(
     option: 'TRAILERFUNCTION',
-    value: (() => string[] | false) | null,
+    value: ((this: Easy) => string[] | false) | null,
   ): CurlCode
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
