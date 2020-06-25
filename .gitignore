@@ -10,7 +10,10 @@ lib/binding
 lib/**/*.doc.ts
 
 
-debug
+debug/
+Debug/
+release/
+Release/
 .vscode/
 test/curl/upload.png
 
