@@ -22,38 +22,70 @@ const optionKindMap = {
     'TRAILERFUNCTION',
     'SHARE',
     'HTTPPOST',
+    // enums
+    'FTP_SSL_CCC',
+    'FTP_FILEMETHOD',
     'GSSAPI_DELEGATION',
+    'HEADEROPT',
+    'HTTP_VERSION',
+    'IPRESOLVE',
+    'NETRC',
+    'PROTOCOLS',
     'PROXY_SSL_OPTIONS',
+    'PROXYTYPE',
+    'REDIR_PROTOCOLS',
+    'RTSP_REQUEST',
+    'SSH_AUTH_TYPES',
     'SSL_OPTIONS',
+    'SSLVERSION',
+    'TIMECONDITION',
+    'USE_SSL',
     // @TODO ADD REMAINING OPTIONS WE HAVE ENUM FOR
   ],
 }
 
 const optionKindValueMap = {
   dataCallback:
-    '((this: Easy, data: Buffer, size: number, nmemb: number) => number)',
+    '((this: EasyNativeBinding, data: Buffer, size: number, nmemb: number) => number)',
   progressCallback:
-    '((this: Easy, dltotal: number,dlnow: number,ultotal: number,ulnow: number) => number | CurlProgressFunc)',
+    '((this: EasyNativeBinding, dltotal: number,dlnow: number,ultotal: number,ulnow: number) => number | CurlProgressFunc)',
   stringList: 'string[]',
   /* @TODO Add type definitions, they are on Curl.chunk */
   CHUNK_BGN_FUNCTION:
-    '((this: Easy, fileInfo: FileInfo, remains: number) => number)',
+    '((this: EasyNativeBinding, fileInfo: FileInfo, remains: number) => CurlChunk)',
   /* @TODO Add type definitions, they are on Curl.chunk */
-  CHUNK_END_FUNCTION: '((this: Easy) => number)',
+  CHUNK_END_FUNCTION: '((this: EasyNativeBinding) => CurlChunk)',
   /* @TODO Add type definitions, they are on Curl.info.debug */
-  DEBUGFUNCTION: '((this: Easy, type: number, data: Buffer) => 0)',
+  DEBUGFUNCTION:
+    '((this: EasyNativeBinding, type: CurlInfoDebug, data: Buffer) => 0)',
   /* @TODO Add type definitions, they are on Curl.fnmatchfunc */
-  FNMATCH_FUNCTION: '((this: Easy, pattern: string, value: string) => number)',
+  FNMATCH_FUNCTION:
+    '((this: EasyNativeBinding, pattern: string, value: string) => CurlFnMatchFunc)',
   HTTPPOST: 'HttpPostField[]',
-  TRAILERFUNCTION: '((this: Easy) => string[] | false)',
+  TRAILERFUNCTION: '((this: EasyNativeBinding) => string[] | false)',
   /* @TODO Add CURL_SEEKFUNC_* type definitions */
-  SEEKFUNCTION: '((this: Easy, offset: number, origin: number) => number)',
+  SEEKFUNCTION:
+    '((this: EasyNativeBinding, offset: number, origin: number) => number)',
   SHARE: 'Share',
 
   // enums
+  FTP_SSL_CCC: 'CurlFtpSsl',
+  FTP_FILEMETHOD: 'CurlFtpMethod',
   GSSAPI_DELEGATION: 'CurlGssApi',
+  HEADEROPT: 'CurlHeader',
+  HTTP_VERSION: 'CurlHttpVersion',
+  IPRESOLVE: 'CurlIpResolve',
+  NETRC: 'CurlNetrc',
+  PROTOCOLS: 'CurlProtocol',
   PROXY_SSL_OPTIONS: 'CurlSslOpt',
+  PROXYTYPE: 'CurlProxy',
+  REDIR_PROTOCOLS: 'CurlProtocol',
+  RTSP_REQUEST: 'CurlRtspRequest',
+  SSH_AUTH_TYPES: 'CurlSshAuth',
   SSL_OPTIONS: 'CurlSslOpt',
+  SSLVERSION: 'CurlSslVersion',
+  TIMECONDITION: 'CurlTimeCond',
+  USE_SSL: 'CurlUseSsl',
   _: 'string | number | boolean',
 }
 

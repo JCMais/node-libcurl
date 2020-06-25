@@ -41,9 +41,26 @@ const run = async () => {
     filePath: curlOptionsFilePath,
     shouldGenerateCamelCaseMap: true,
     extraHeaderText: `
-      import { CurlGssApi } from "../enum/CurlGssApi"
-      import { CurlProgressFunc } from "../enum/CurlProgressFunc"
-      import { CurlSslOpt } from "../enum/CurlSslOpt"
+      import { CurlChunk } from '../enum/CurlChunk'
+      import { CurlFnMatchFunc } from '../enum/CurlFnMatchFunc'
+      import { CurlFtpMethod } from '../enum/CurlFtpMethod'
+      import { CurlFtpSsl } from '../enum/CurlFtpSsl'
+      import { CurlGssApi } from '../enum/CurlGssApi'
+      import { CurlHeader } from '../enum/CurlHeader'
+      import { CurlHttpVersion } from '../enum/CurlHttpVersion'
+      import { CurlInfoDebug } from '../enum/CurlInfoDebug'
+      import { CurlIpResolve } from '../enum/CurlIpResolve'
+      import { CurlNetrc } from '../enum/CurlNetrc'
+      import { CurlProgressFunc } from '../enum/CurlProgressFunc'
+      import { CurlProtocol } from '../enum/CurlProtocol'
+      import { CurlProxy } from '../enum/CurlProxy'
+      import { CurlRtspRequest } from '../enum/CurlRtspRequest'
+      import { CurlSshAuth } from '../enum/CurlSshAuth'
+      import { CurlSslOpt } from '../enum/CurlSslOpt'
+      import { CurlSslVersion } from '../enum/CurlSslVersion'
+      import { CurlTimeCond } from '../enum/CurlTimeCond'
+      import { CurlUseSsl } from '../enum/CurlUseSsl'
+      import { EasyNativeBinding } from "../types/EasyNativeBinding"
       import { Share } from "../Share"
     `,
   })
