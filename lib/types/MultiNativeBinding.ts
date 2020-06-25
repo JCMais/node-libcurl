@@ -6,8 +6,11 @@
  */
 import { MultiOptionName } from '../generated/MultiOption'
 import { CurlMultiCode, CurlCode } from '../enum/CurlCode'
+import { CurlPipe } from '../enum/CurlPipe'
 
 import { EasyNativeBinding } from './EasyNativeBinding'
+
+type SpecificOptions = 'PIPELINING'
 
 /**
  * `Multi` class that acts as an wrapper around the native libcurl multi handle.
@@ -29,7 +32,19 @@ export declare class MultiNativeBinding {
    *
    * Official libcurl documentation: [`curl_multi_setopt()`](http://curl.haxx.se/libcurl/c/curl_multi_setopt.html)
    */
-  setOpt(option: MultiOptionName, value: number): CurlMultiCode
+  setOpt(option: 'PIPELINING', value: CurlPipe): CurlMultiCode
+
+  /**
+   * Sets options on this instance.
+   *
+   * Use {@link "Multi".Multi.multi | `Multi.option`} for predefined constants.
+   *
+   * Official libcurl documentation: [`curl_multi_setopt()`](http://curl.haxx.se/libcurl/c/curl_multi_setopt.html)
+   */
+  setOpt(
+    option: Exclude<MultiOptionName, SpecificOptions>,
+    value: number,
+  ): CurlMultiCode
 
   /**
    * Adds an {@link "Easy".Easy | `Easy`} handle to be managed by this instance.

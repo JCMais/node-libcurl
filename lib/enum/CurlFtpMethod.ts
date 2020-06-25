@@ -5,11 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 // https://github.com/curl/curl/blob/e1be825453489/include/curl/curl.h#L873
-
+// @TODO Fix enum members naming on semver major bump
 /**
  * Object with constants for option `FTP_FILEMETHOD`
  *
- * `CURLFTPMETHOD_MULTICWD` becomes `CurlFtpMethod.MultiCwd`
+ * `CURLFTPMETHOD_MULTICWD` becomes `CurlFtpMethod.MULTICWD`
+ *
+ * This is not following the PascalCase naming format because of a mistake. To not cause a breaking change
+ *  it will stay this way until the next major version bump.
  *
  * @public
  */

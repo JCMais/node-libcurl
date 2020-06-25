@@ -15,6 +15,14 @@
  */
 export enum CurlPipe {
   Nothing,
+  /**
+   * Deprecated and has no effect since version 7.62.0
+   */
   Http1,
+  /**
+   * If this bit is set, libcurl will try to multiplex the new transfer over an existing connection if possible. This requires HTTP/2.
+   *
+   * This is enabled by default starting with version 7.62.0
+   */
   Multiplex,
 }

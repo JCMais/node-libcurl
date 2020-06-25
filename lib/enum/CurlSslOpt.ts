@@ -6,7 +6,7 @@
  */
 // https://github.com/curl/curl/blob/e1be8254534898fccafc5d6cd04f6235f283cfbd/include/curl/curl.h#L7
 /**
- * Object with constants for option `SSL_OPT` and/or `PROXY_SSL_OPT`
+ * Object with constants for option `SSL_OPTIONS` and/or `PROXY_SSL_OPTIONS`
  *
  * `CURLSSLOPT_ALLOW_BEAST` becomes `CurlSslOpt.AllowBeast`
  *
