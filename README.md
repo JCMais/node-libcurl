@@ -241,14 +241,15 @@ The latest version of this package has prebuilt binaries (thanks to [node-pre-gy
 * node.js: Latest two versions on active LTS (see https://github.com/nodejs/Release)
 * electron: Latest 3 major versions
 * nw.js (node-webkit): Latest 3 major (minor for nw.js case) versions
-and on the following platforms:
+
+And on the following platforms:
 * Linux 64 bits
 * Mac OS X 64 bits
 * Windows 32 and 64 bits
 
-Installing via `yarn add node-libcurl` or `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed. However if you trying to install on `nw.js` or `electron` additional steps will be required, check their corresponding section below.
+Installing with `yarn add node-libcurl` or `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed. However if you are trying to install on `nw.js` or `electron` additional steps will be required, check their corresponding section below.
 
-The prebuilt binary is statically built with the following library versions, features and protocols:
+The prebuilt binary is statically built with the following library versions, features and protocols (library versions may change between Node.js versions):
 ```
 Version: libcurl/7.64.1 OpenSSL/1.1.0j zlib/1.2.11 brotli/1.0.7 libidn2/2.1.1 libssh2/1.8.2 nghttp2/1.34.0
 Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, NTLM_WB, SSL, libz, brotli, TLS-SRP, HTTP2, UnixSockets, HTTPS-proxy
