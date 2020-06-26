@@ -33,6 +33,8 @@
     "clean": "yarn clean:build && yarn clean:dist",
     "docs": "typedoc",
     "gen:constants": "node scripts/build-constants.js",
+    "gen:compile_commands:release": "yarn pregyp -- configure --release -- --format=\"gyp.generator.compile_commands_json.py\"",
+    "gen:compile_commands:debug": "yarn pregyp -- configure --debug -- --format=\"gyp.generator.compile_commands_json.py\"",
     "lint": "tslint -p . -c tslint.json",
     "lint:files": "tslint -c tslint.json",
     "pregyp": "node-pre-gyp",
@@ -51,11 +53,11 @@
   },
   "dependencies": {
     "env-paths": "2.2.0",
-    "nan": "2.14.0",
-    "node-gyp": "5.1.0",
-    "node-pre-gyp": "0.14.0",
+    "nan": "2.14.1",
+    "node-gyp": "7.0.0",
+    "node-pre-gyp": "0.15.0",
     "npmlog": "4.1.2",
-    "tslib": "^1.11.1"
+    "tslib": "2.0.0"
   },
   "devDependencies": {
     "@microsoft/api-documenter": "^7.8.0",
