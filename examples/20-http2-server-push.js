@@ -1,7 +1,6 @@
 const fs = require('fs')
 const path = require('path')
 
-// @ts-ignore
 const { Curl, CurlPush, Easy, Multi, CurlHttpVersion } = require('node-libcurl')
 
 console.log(Curl.getVersionInfoString())
@@ -65,7 +64,6 @@ multi.setOpt(
       pushFrameHeaders.numberOfHeaders,
     )
 
-    // tslint:disable-next-line: no-increment-decrement
     for (let i = 0; i < pushFrameHeaders.numberOfHeaders; i++) {
       const header = pushFrameHeaders.getByIndex(i)
       console.log('|-> header %d value is: %s', i, header)
