@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Breaking Change
 ### Fixed
+- Fix `curly.get` not working correctly ([#230](https://github.com/JCMais/node-libcurl/pull/230))
+- Fix not resetting `CURLOPT_TRAILERDATA` when duplicating an `Easy` instance (7bf3a51)
 ### Added
 ### Changed
+- Improved Typescript types / documentation for some libcurl options. (63a71b7)
 
 ## [2.1.3] - 2020-06-02
 ### Fixed
