@@ -7,8 +7,10 @@
 #include "Multi.h"
 
 #include "Easy.h"
+#include "Http2PushFrameHeaders.h"
 
 #include <iostream>
+#include <string>
 
 // 85233 was allocated on Win64
 #define MEMORY_PER_HANDLE 60000
@@ -262,14 +264,13 @@ void Multi::CallOnMessageCallback(CURL* easy, CURLcode statusCode) {
   // pointer, although effectively being a 'void *'.
   char* ptr = nullptr;
   CURLcode code = curl_easy_getinfo(easy, CURLINFO_PRIVATE, &ptr);
-  assert(ptr != nullptr && "Invalid handle returned from CURLINFO_PRIVATE.");
-
-  Easy* obj = reinterpret_cast<Easy*>(ptr);
-
   if (code != CURLE_OK) {
     Nan::ThrowError("Error retrieving current handle instance.");
     return;
   }
+
+  assert(ptr != nullptr && "Invalid handle returned from CURLINFO_PRIVATE.");
+  Easy* obj = reinterpret_cast<Easy*>(ptr);
 
   v8::Local<v8::Object> easyArg = obj->handle();
 
@@ -287,6 +288,77 @@ void Multi::CallOnMessageCallback(CURL* easy, CURLcode statusCode) {
 
   Nan::AsyncResource asyncResource("Multi::CallOnMessageCallback");
   asyncResource.runInAsyncScope(obj->handle(), this->cbOnMessage->GetFunction(), argc, argv);
+}
+
+// User set multi_opt callbacks
+
+int Multi::CbPushFunction(CURL* parent, CURL* child, size_t numberOfHeaders,  // NOLINT(runtime/int)
+                          struct curl_pushheaders* headers, void* userPtr) {
+  // Note:
+  //  We cannot throw js errors inside this callback
+  //   as there is no way to signal libcurl to mark this request as failed
+  //   and stop calling this callback for this connection (in case there are more pushes)
+  //   this means that we must not rethrow errors we catch from user land.
+  //   doing so would cause the whole library code to fall apart as it would not be safe to
+  //   use other v8 objects.
+  Nan::HandleScope scope;
+
+  int returnValue = -1;
+
+  Multi* obj = static_cast<Multi*>(userPtr);
+  assert(obj);
+  assert(obj->isOpen);
+
+  CallbacksMap::iterator it = obj->callbacks.find(CURLMOPT_PUSHFUNCTION);
+  assert(it != obj->callbacks.end() && "PUSHFUNCTION callback not set.");
+
+  char* parentEasyPtr = nullptr;
+  CURLcode code = curl_easy_getinfo(parent, CURLINFO_PRIVATE, &parentEasyPtr);
+  assert(code == CURLE_OK &&
+         "It was not possible to retrieve the current Easy instance from the libcurl easy handle");
+  assert(parentEasyPtr != nullptr && "Invalid handle returned from CURLINFO_PRIVATE.");
+
+  Easy* parentEasyObj = reinterpret_cast<Easy*>(parentEasyPtr);
+  assert(parentEasyObj->isOpen &&
+         "The Easy instance doing the current request was closed prematurely");
+
+  v8::Local<v8::Object> parentEasyJsObj = obj->handle();
+
+  // create new Easy instance to be used with the easy curl handle passed
+  //  as second parameter
+  v8::Local<v8::Object> childEasyJsObj = Easy::FromCURLHandle(child);
+
+  auto http2PushFrameJsObj = Http2PushFrameHeaders::NewInstance(headers, numberOfHeaders);
+
+  const int argc = 3;
+  v8::Local<v8::Value> argv[argc] = {
+      parentEasyJsObj,
+      childEasyJsObj,
+      http2PushFrameJsObj,
+  };
+
+  Nan::TryCatch tryCatch;
+
+  Nan::AsyncResource asyncResource("Multi::CbPushFunction");
+  Nan::MaybeLocal<v8::Value> returnValueCallback =
+      asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
+
+  if (tryCatch.HasCaught()) {
+    // See the note at the top of this function, we must not rethrow this error.
+    // Show some Debug message?
+    return returnValue;
+  }
+
+  if (returnValueCallback.IsEmpty() || !returnValueCallback.ToLocalChecked()->IsInt32()) {
+    // Nothing we can do - Let's just ignore it
+    // v8::Local<v8::Value> typeError =
+    //     Nan::TypeError("Return value from the PUSHFUNCTION callback must be an integer.");
+    // Nan::ThrowError(typeError);
+  } else {
+    returnValue = Nan::To<int>(returnValueCallback.ToLocalChecked()).FromJust();
+  }
+
+  return returnValue;
 }
 
 // Add Curl constructor to the module exports
@@ -383,6 +455,33 @@ NAN_METHOD(Multi::SetOpt) {
     int32_t val = Nan::To<int32_t>(value).FromJust();
 
     setOptRetCode = curl_multi_setopt(obj->mh, static_cast<CURLMoption>(optionId), val);
+  } else if ((optionId = IsInsideCurlConstantStruct(curlMultiOptionFunction, opt))) {
+    bool isNull = value->IsNull();
+
+    if (!value->IsFunction() && !isNull) {
+      Nan::ThrowTypeError("Option value must be null or a function.");
+      return;
+    }
+
+    switch (optionId) {
+#if NODE_LIBCURL_VER_GE(7, 44, 0)
+      case CURLMOPT_PUSHFUNCTION:
+
+        if (isNull) {
+          obj->callbacks.erase(CURLMOPT_PUSHFUNCTION);
+
+          curl_multi_setopt(obj->mh, CURLMOPT_PUSHDATA, NULL);
+          setOptRetCode = curl_multi_setopt(obj->mh, CURLMOPT_PUSHFUNCTION, NULL);
+        } else {
+          obj->callbacks[CURLMOPT_PUSHFUNCTION].reset(new Nan::Callback(value.As<v8::Function>()));
+
+          curl_multi_setopt(obj->mh, CURLMOPT_PUSHDATA, obj);
+          setOptRetCode = curl_multi_setopt(obj->mh, CURLMOPT_PUSHFUNCTION, Multi::CbPushFunction);
+        }
+
+        break;
+#endif
+    }
   }
 
   info.GetReturnValue().Set(setOptRetCode);

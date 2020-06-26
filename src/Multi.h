@@ -15,8 +15,7 @@
 #include <nan.h>
 #include <node.h>
 
-#include <functional>
-#include <memory>
+#include <map>
 
 namespace NodeLibcurl {
 
@@ -47,6 +46,10 @@ class Multi : public Nan::ObjectWrap {
   int amountOfHandles = 0;
   int runningHandles = 0;
 
+  // callbacks
+  typedef std::map<CURLMoption, std::shared_ptr<Nan::Callback>> CallbacksMap;
+  CallbacksMap callbacks = CallbacksMap{};
+  // required as it's not specific to a single message
   std::shared_ptr<Nan::Callback> cbOnMessage;
 
   deleted_unique_ptr<uv_timer_t> timeout;
@@ -54,13 +57,8 @@ class Multi : public Nan::ObjectWrap {
   // static helper methods
   static CurlSocketContext* CreateCurlSocketContext(curl_socket_t sockfd, Multi* multi);
   static void DestroyCurlSocketContext(CurlSocketContext* ctx);
-
- public:
   // js object constructor template
   static Nan::Persistent<v8::FunctionTemplate> constructor;
-
-  // export Multi to js
-  static NAN_MODULE_INIT(Initialize);
 
   // js available Methods
   static NAN_METHOD(New);
@@ -75,12 +73,19 @@ class Multi : public Nan::ObjectWrap {
   // libcurl multi_setopt callbacks
   static int HandleSocket(CURL* easy, curl_socket_t s, int action, void* userp, void* socketp);
   static int HandleTimeout(CURLM* multi, long timeoutMs, void* userp);  // NOLINT(runtime/int)
+  static int CbPushFunction(CURL* parent, CURL* child,
+                            size_t numberOfHeaders,  // NOLINT(runtime/int)
+                            struct curl_pushheaders* headers, void* userPtr);
 
   // libuv events
   static UV_TIMER_CB(OnTimeout);
   static void OnTimerClose(uv_handle_t* handle);
   static void OnSocket(uv_poll_t* handle, int status, int events);
   static void OnSocketClose(uv_handle_t* handle);
+
+ public:
+  // export Multi to js
+  static NAN_MODULE_INIT(Initialize);
 };
 
 }  // namespace NodeLibcurl

@@ -7,6 +7,7 @@
 #include "Curl.h"
 #include "CurlVersionInfo.h"
 #include "Easy.h"
+#include "Http2PushFrameHeaders.h"
 #include "Multi.h"
 #include "Share.h"
 
@@ -51,8 +52,14 @@ NAN_MODULE_INIT(Init) {
   Multi::Initialize(target);
   Share::Initialize(target);
   CurlVersionInfo::Initialize(target);
+  Http2PushFrameHeaders::Initialize(target);
 
+  // this will stay until Node.js v10 support is dropped
+  //  after this happens we will be able to get the environment by running
+  //  node::GetCurrentEnvironment
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   node::AtExit(AtExitCallback, NULL);
+#pragma GCC diagnostic pop
 }
 
 NODE_MODULE(node_libcurl, Init);

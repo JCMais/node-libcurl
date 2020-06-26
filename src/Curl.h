@@ -15,7 +15,6 @@
 
 #include <functional>
 #include <memory>
-#include <string>
 #include <vector>
 
 using Nan::ObjectWrap;
@@ -57,6 +56,7 @@ extern const std::vector<CurlConstant> curlInfoLinkedList;
 extern const std::vector<CurlConstant> curlMultiOptionNotImplemented;
 extern const std::vector<CurlConstant> curlMultiOptionInteger;
 extern const std::vector<CurlConstant> curlMultiOptionStringArray;
+extern const std::vector<CurlConstant> curlMultiOptionFunction;
 
 // export Curl to js
 NAN_MODULE_INIT(Initialize);

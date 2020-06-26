@@ -11,13 +11,9 @@
 #include "Share.h"
 #include "make_unique.h"
 
-#include <algorithm>
 #include <cctype>
-#include <cstdlib>
-#include <cstring>
-#include <functional>
 #include <iostream>
-#include <sstream>
+#include <string>
 
 // 36055 was allocated on Win64
 #define MEMORY_PER_HANDLE 30000
@@ -64,7 +60,57 @@ Easy::Easy(Easy* orig) {
 
   NODE_LIBCURL_ADJUST_MEM(MEMORY_PER_HANDLE);
 
-  Nan::HandleScope scope;
+  // copy the orig callbacks and async resources to the current handle
+  this->callbacks.insert(orig->callbacks.begin(), orig->callbacks.end());
+
+  if (orig->cbOnSocketEvent) {
+    this->cbOnSocketEvent = orig->cbOnSocketEvent;
+  }
+
+  // make sure to reset the *DATA options when duplicating a handle. We are
+  // setting all of them, even if they are not set.
+  curl_easy_setopt(this->ch, CURLOPT_CHUNK_DATA, this);
+  curl_easy_setopt(this->ch, CURLOPT_DEBUGDATA, this);
+  curl_easy_setopt(this->ch, CURLOPT_FNMATCH_DATA, this);
+  curl_easy_setopt(this->ch, CURLOPT_PROGRESSDATA, this);
+#if NODE_LIBCURL_VER_GE(7, 32, 0)
+  curl_easy_setopt(this->ch, CURLOPT_XFERINFODATA, this);
+#endif
+#if NODE_LIBCURL_VER_GE(7, 64, 0)
+  curl_easy_setopt(this->ch, CURLOPT_TRAILERDATA, this);
+#endif
+  // no need to reset the _DATA option for the READ, SEEK and WRITE callbacks,
+  // since they are reset on ResetRequiredHandleOptions()
+
+  this->toFree = orig->toFree;
+
+  this->ResetRequiredHandleOptions();
+
+  ++Easy::currentOpenedHandles;
+}
+
+// Create a new Easy instance using an existing curl handle
+// This is the only constructor that is not private
+//  because it's used inside Multi
+Easy::Easy(CURL* easy) {
+  this->ch = easy;
+
+  char* origEasyPtr = nullptr;
+
+  CURLcode code = curl_easy_getinfo(easy, CURLINFO_PRIVATE, &origEasyPtr);
+  // This cannot fail
+  assert(code == CURLE_OK);
+
+  NODE_LIBCURL_ADJUST_MEM(MEMORY_PER_HANDLE);
+
+  // We are creating a new Easy instance based in a easy curl handle
+  //  that must be being used by another Easy instance.
+  // This is basically a copy - just like we have above
+  // If origEasyPtr is still null here, it means this is a new easy curl handle
+  //  and this scenario should currently never happen
+  assert(origEasyPtr != nullptr && "CURLINFO_PRIVATE returned a nullptr which is invalid");
+
+  Easy* orig = reinterpret_cast<Easy*>(origEasyPtr);
 
   // copy the orig callbacks and async resources to the current handle
   this->callbacks.insert(orig->callbacks.begin(), orig->callbacks.end());
@@ -93,6 +139,21 @@ Easy::Easy(Easy* orig) {
   this->ResetRequiredHandleOptions();
 
   ++Easy::currentOpenedHandles;
+}
+
+v8::Local<v8::Object> Easy::FromCURLHandle(CURL* handle) {
+  Nan::EscapableHandleScope scope;
+
+  // create a new js object using this one as the argument for the constructor.
+  const int argc = 1;
+  v8::Local<v8::External> curlEasyHandle = Nan::New<v8::External>(reinterpret_cast<void*>(handle));
+
+  v8::Local<v8::Value> argv[argc] = {curlEasyHandle};
+  v8::Local<v8::Function> cons = Nan::GetFunction(Nan::New(Easy::constructor)).ToLocalChecked();
+
+  v8::Local<v8::Object> newInstance = Nan::NewInstance(cons, argc, argv).ToLocalChecked();
+
+  return scope.Escape(newInstance);
 }
 
 // Implementation of equality operator overload.
@@ -241,8 +302,7 @@ void Easy::CallSocketEvent(int status, int events) {
 
   // **(this->cbOnSocketEvent.get()) is the same than this->cbOnSocketEvent->GetFunction()
   Nan::AsyncResource asyncResource("Easy::CallSocketEvent");
-  Nan::MaybeLocal<v8::Value> returnValueCallback = asyncResource.runInAsyncScope(
-      this->handle(), this->cbOnSocketEvent->GetFunction(), argc, argv);
+  asyncResource.runInAsyncScope(this->handle(), this->cbOnSocketEvent->GetFunction(), argc, argv);
 }
 
 // Called by libcurl when some chunk of data (from body) is available
@@ -1026,14 +1086,20 @@ NAN_METHOD(Easy::New) {
 
   // Copy constructor, used when duplicating handles.
   if (!jsHandle->IsUndefined()) {
-    if (!jsHandle->IsObject() || !Nan::New(Easy::constructor)->HasInstance(jsHandle)) {
+    if (!jsHandle->IsExternal() &&
+        (!jsHandle->IsObject() || !Nan::New(Easy::constructor)->HasInstance(jsHandle))) {
       Nan::ThrowError(Nan::TypeError("Argument must be an instance of an Easy handle."));
       return;
     }
 
-    Easy* orig = Nan::ObjectWrap::Unwrap<Easy>(Nan::To<v8::Object>(info[0]).ToLocalChecked());
-
-    obj = new Easy(orig);
+    // This is the case when calling with a curl easy handle directly
+    if (jsHandle->IsExternal()) {
+      CURL* curlEasyHandle = reinterpret_cast<CURL*>(info[0].As<v8::External>()->Value());
+      obj = new Easy(curlEasyHandle);
+    } else {
+      Easy* orig = Nan::ObjectWrap::Unwrap<Easy>(Nan::To<v8::Object>(info[0]).ToLocalChecked());
+      obj = new Easy(orig);
+    }
 
   } else {
     obj = new Easy();
@@ -1640,20 +1706,30 @@ NAN_METHOD(Easy::GetInfo) {
 
     if (code == CURLE_OK) {
       v8::Local<v8::Array> arr = Nan::New<v8::Array>();
+      bool isValid = true;
 
       if (linkedList) {
         curr = linkedList;
 
         while (curr) {
-          arr->Set(arr->CreationContext(), arr->Length(),
-                   Nan::New<v8::String>(curr->data).ToLocalChecked());
-          curr = curr->next;
+          auto value = arr->Set(arr->CreationContext(), arr->Length(),
+                                Nan::New<v8::String>(curr->data).ToLocalChecked());
+          if (value.IsJust()) {
+            curr = curr->next;
+          } else {
+            curr = NULL;
+            isValid = false;
+          }
         }
 
         curl_slist_free_all(linkedList);
       }
 
-      retVal = arr;
+      if (isValid) {
+        retVal = arr;
+      } else {
+        Nan::ThrowError("Something went wrong while trying to retrieve info from curl slist");
+      }
     }
   }
 

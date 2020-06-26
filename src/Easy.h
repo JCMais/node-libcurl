@@ -7,14 +7,14 @@
 #ifndef NODELIBCURL_EASY_H
 #define NODELIBCURL_EASY_H
 
+#include "Multi.h"
+
 #include <curl/curl.h>
 #include <nan.h>
 #include <node.h>
 
 #include <map>
 #include <memory>
-#include <string>
-#include <vector>
 
 namespace NodeLibcurl {
 
@@ -23,6 +23,7 @@ class Easy : public Nan::ObjectWrap {
 
   Easy();
   explicit Easy(Easy* orig);
+  explicit Easy(CURL* easy);
 
   Easy(const Easy& that);
   Easy& operator=(const Easy& that);
@@ -55,6 +56,7 @@ class Easy : public Nan::ObjectWrap {
   bool isCbProgressAlreadyAborted =
       false;  // we need this flag because of
               // https://github.com/curl/curl/commit/907520c4b93616bddea15757bbf0bfb45cde8101
+  bool isMonitoringSockets = false;
 
   int32_t readDataFileDescriptor = -1;  // READDATA sets that
   curl_off_t readDataOffset = -1;       // SEEKDATA sets that
@@ -64,29 +66,6 @@ class Easy : public Nan::ObjectWrap {
   template <typename TResultType, typename Tv8MappingType>
   static v8::Local<v8::Value> GetInfoTmpl(const Easy* obj, int infoId);
   static v8::Local<v8::Object> CreateV8ObjectFromCurlFileInfo(curl_fileinfo* fileInfo);
-
- public:
-  // operators
-  bool operator==(const Easy& easy) const;
-  bool operator!=(const Easy& other) const;
-
-  // js object constructor template
-  static Nan::Persistent<v8::FunctionTemplate> constructor;
-
-  // members
-  CURL* ch;
-  bool isInsideMultiHandle = false;
-  bool isMonitoringSockets = false;
-  bool isOpen = true;
-
-  // used to return callback errors when inside Multi interface
-  Nan::Persistent<v8::Value> callbackError;
-
-  // static members
-  static uint32_t currentOpenedHandles;
-
-  // export Easy to js
-  static NAN_MODULE_INIT(Initialize);
 
   // js available methods
   static NAN_METHOD(New);
@@ -113,7 +92,6 @@ class Easy : public Nan::ObjectWrap {
   static size_t SeekFunction(void* userdata, curl_off_t offset, int origin);
   static size_t HeaderFunction(char* ptr, size_t size, size_t nmemb, void* userdata);
   static size_t WriteFunction(char* ptr, size_t size, size_t nmemb, void* userdata);
-
   static long CbChunkBgn(curl_fileinfo* transferInfo,  // NOLINT(runtime/int)
                          void* ptr, int remains);
   static long CbChunkEnd(void* ptr);  // NOLINT(runtime/int)
@@ -127,6 +105,30 @@ class Easy : public Nan::ObjectWrap {
   // libuv callbacks
   static void OnSocket(uv_poll_t* handle, int status, int events);
   static void OnSocketClose(uv_handle_t* handle);
+
+ public:
+  // operators
+  bool operator==(const Easy& easy) const;
+  bool operator!=(const Easy& other) const;
+
+  static v8::Local<v8::Object> FromCURLHandle(CURL* handle);
+
+  // js object constructor template
+  static Nan::Persistent<v8::FunctionTemplate> constructor;
+
+  // members
+  CURL* ch;
+  bool isInsideMultiHandle = false;
+  bool isOpen = true;
+
+  // used to return callback errors when inside Multi interface
+  Nan::Persistent<v8::Value> callbackError;
+
+  // static members
+  static uint32_t currentOpenedHandles;
+
+  // export Easy to js
+  static NAN_MODULE_INIT(Initialize);
 };
 }  // namespace NodeLibcurl
 #endif

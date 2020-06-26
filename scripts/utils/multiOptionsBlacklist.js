@@ -4,7 +4,6 @@ const multiOptionsBlacklist = [
   'SOCKETDATA',
   'TIMERFUNCTION',
   'TIMERDATA',
-  'PUSHFUNCTION',
   'PUSHDATA',
   // Those have been deprecated and support was removed with libcurl 7.62
   //  https://github.com/curl/curl/blob/curl-7_61_1/docs/DEPRECATE.md#http-pipelining

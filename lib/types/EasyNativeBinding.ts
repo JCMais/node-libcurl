@@ -95,6 +95,13 @@ export declare class EasyNativeBinding {
    */
   readonly isMonitoringSockets: boolean
 
+  /**
+   * You can set this to anything - Use it to bind some data to this Easy instance.
+   *
+   * This will not be copied to other instaces created when duplicating this one.
+   */
+  private: any
+
   // START AUTOMATICALLY GENERATED CODE - DO NOT EDIT
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.

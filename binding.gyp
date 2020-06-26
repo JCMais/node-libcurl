@@ -24,6 +24,7 @@
         'src/Curl.cc',
         'src/CurlHttpPost.cc',
         'src/CurlVersionInfo.cc',
+        'src/Http2PushFrameHeaders.cc',
       ],
       'include_dirs' : [
         "<!(node -e \"require('nan')\")",
@@ -47,8 +48,9 @@
             'VCCLCompilerTool': {
               # 4244 -> nan_new.h(208): warning C4244: curl_off_t to double loss of data
               # 4506 and 4838 -> about v8 inline function and narrowing
+              # 4068 -> Unknown pragma (mostly GCC pragmas being used)
               # 4996 -> Declared wrongly Nan::Callback::Call
-              'DisableSpecificWarnings': ['4244', '4506', '4838', '4996']
+              'DisableSpecificWarnings': ['4244', '4506', '4068', '4838', '4996']
             },
             'VCLinkerTool': {
               'GenerateDebugInformation': 'true',

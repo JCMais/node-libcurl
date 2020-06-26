@@ -35,6 +35,7 @@ export * from './enum/CurlPipe'
 export * from './enum/CurlProgressFunc'
 export * from './enum/CurlProtocol'
 export * from './enum/CurlProxy'
+export * from './enum/CurlPush'
 export * from './enum/CurlReadFunc'
 export * from './enum/CurlRtspRequest'
 export * from './enum/CurlShareLock'
@@ -59,4 +60,4 @@ export {
 } from './generated/CurlOption'
 export { MultiOption, MultiOptionName } from './generated/MultiOption'
 
-export { FileInfo, HttpPostField } from './types'
+export { FileInfo, Http2PushFrameHeaders, HttpPostField } from './types'

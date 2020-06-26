@@ -9,11 +9,7 @@
 #include "CurlHttpPost.h"
 #include "Easy.h"
 
-#include <algorithm>
-#include <cstdlib>
-#include <cstring>
 #include <iostream>
-#include <string>
 
 namespace NodeLibcurl {
 
@@ -491,12 +487,13 @@ const std::vector<CurlConstant> curlOptionSpecific = {
 // This should be kept in sync with the options on scripts/utils/multiOptionsBlacklist.js
 const std::vector<CurlConstant> curlMultiOptionNotImplemented = {
     // Used internally.
-    {"SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION}, {"SOCKETDATA", CURLMOPT_SOCKETDATA},
-    {"TIMERFUNCTION", CURLMOPT_TIMERFUNCTION},   {"TIMERDATA", CURLMOPT_TIMERDATA},
-
-// Maybe?
+    {"SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION},
+    {"SOCKETDATA", CURLMOPT_SOCKETDATA},
+    {"TIMERFUNCTION", CURLMOPT_TIMERFUNCTION},
+    {"TIMERDATA", CURLMOPT_TIMERDATA},
+// Unnecessary
 #if NODE_LIBCURL_VER_GE(7, 44, 0)
-    {"PUSHFUNCTION", CURLMOPT_PUSHFUNCTION},     {"PUSHDATA", CURLMOPT_PUSHDATA},
+    {"PUSHDATA", CURLMOPT_PUSHDATA},
 #endif
 };
 
@@ -522,6 +519,12 @@ const std::vector<CurlConstant> curlMultiOptionStringArray = {
     {"PIPELINING_SITE_BL", CURLMOPT_PIPELINING_SITE_BL},
 };
 
+const std::vector<CurlConstant> curlMultiOptionFunction = {
+#if NODE_LIBCURL_VER_GE(7, 44, 0)
+    {"PUSHFUNCTION", CURLMOPT_PUSHFUNCTION},
+#endif
+};
+
 const std::vector<CurlConstant> curlInfoNotImplemented = {
 // Complex.
 #if NODE_LIBCURL_VER_GE(7, 34, 0)
@@ -530,7 +533,7 @@ const std::vector<CurlConstant> curlInfoNotImplemented = {
 #if NODE_LIBCURL_VER_GE(7, 48, 0)
     {"TLS_SSL_PTR", CURLINFO_TLS_SSL_PTR},
 #endif
-    // Unecessary.
+    // Unnecessary.
     {"PRIVATE", CURLINFO_PRIVATE},
     // Maybe
     {"CERTINFO", CURLINFO_CERTINFO},
@@ -687,6 +690,7 @@ NAN_MODULE_INIT(Initialize) {
   ExportConstants(multiObj, curlMultiOptionNotImplemented, attributesDontEnum);
   ExportConstants(multiObj, curlMultiOptionInteger, attributes);
   ExportConstants(multiObj, curlMultiOptionStringArray, attributes);
+  ExportConstants(multiObj, curlMultiOptionFunction, attributes);
 
   // static members
   Nan::DefineOwnProperty(obj, Nan::New<v8::String>("option").ToLocalChecked(), optionsObj,

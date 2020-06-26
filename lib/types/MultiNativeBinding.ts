@@ -7,8 +7,10 @@
 import { MultiOptionName } from '../generated/MultiOption'
 import { CurlMultiCode, CurlCode } from '../enum/CurlCode'
 import { CurlPipe } from '../enum/CurlPipe'
+import { CurlPush } from '../enum/CurlPush'
 
 import { EasyNativeBinding } from './EasyNativeBinding'
+import { Http2PushFrameHeaders } from './Http2PushFrameHeaders'
 
 type SpecificOptions = 'PIPELINING'
 
@@ -26,13 +28,40 @@ type SpecificOptions = 'PIPELINING'
  */
 export declare class MultiNativeBinding {
   /**
-   * Sets options on this instance.
-   *
-   * Use {@link "Multi".Multi.multi | `Multi.option`} for predefined constants.
+   * Sets the [`PIPELINING`](https://curl.haxx.se/libcurl/c/CURLMOPT_PIPELINING.html) option.
    *
    * Official libcurl documentation: [`curl_multi_setopt()`](http://curl.haxx.se/libcurl/c/curl_multi_setopt.html)
    */
   setOpt(option: 'PIPELINING', value: CurlPipe): CurlMultiCode
+
+  /**
+   * Sets the [`PUSHFUNCTION`](https://curl.haxx.se/libcurl/c/CURLMOPT_PUSHFUNCTION.html) option.
+   *
+   * @remarks
+   * You **must** not use the {@link Http2PushFrameHeaders | `Http2PushFrameHeaders`} object outside
+   *  of this callback, doing so will try to use memory that libcurl has already
+   *  freed and, in the best case scenario, will cause a segmentation fault.
+   *
+   * In case you have denied the push, you **must** also not use the `duplicatedHandle`
+   *  outside of this callback, as libcurl would already have closed it and you would
+   *  try to access memory that has been freed.
+   *
+   * Errors thrown inside this callback will have the same effect than returning `CurlPush.Deny`.
+   *
+   * Per a libcurl limitation, there is no direct way to cancel the connection from inside
+   *  this callback, a possible workaround is to return an error
+   *  from another callback, like the progress one.
+   *
+   * Official libcurl documentation: [`curl_multi_setopt()`](http://curl.haxx.se/libcurl/c/curl_multi_setopt.html)
+   */
+  setOpt(
+    option: 'PUSHFUNCTION',
+    value: (
+      parent: EasyNativeBinding,
+      duplicatedHandle: EasyNativeBinding,
+      pushFrameHeaders: Http2PushFrameHeaders,
+    ) => CurlPush,
+  ): CurlMultiCode
 
   /**
    * Sets options on this instance.
