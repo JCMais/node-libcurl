@@ -197,9 +197,11 @@ For more examples check the [examples folder](./examples).
 
 ## API
 
-The code provides Typescript type definitions, which should document most of the API.
+API documentation for the latest stable version is available at [https://node-libcurl-docs.netlify.app/](https://node-libcurl-docs.netlify.app/).
 
-Full API documentation is available at [https://jcmais.github.io/node-libcurl/](https://jcmais.github.io/node-libcurl/modules/_index_.html)
+Develop branch documentation is available at [https://develop--node-libcurl-docs.netlify.app/](https://develop--node-libcurl-docs.netlify.app/).
+
+This library provides Typescript type definitions.
 
 Almost all [CURL options](https://curl.haxx.se/libcurl/c/curl_easy_setopt.html) are supported, if you pass one that is not, an error will be thrown.
 
