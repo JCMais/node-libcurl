@@ -11,13 +11,12 @@
 </p>
 
 [![NPM version][npm-image]][npm-url]
-[![node][node-image]][node-url]
 [![license][license-image]][license-url]
+[![Dependencies][deps-image]][deps-url]
 
 [![Travis CI Status][travis-image]][travis-url]
 [![AppVeyor CI Status][appveyor-image]][appveyor-url]
 [![Code Quality][codeclimate-image]][codeclimate-url]
-[![Dependencies][deps-image]][deps-url]
 
 [npm-image]:https://img.shields.io/npm/v/node-libcurl.svg?style=flat-square
 [npm-url]:https://www.npmjs.org/package/node-libcurl
@@ -27,8 +26,6 @@
 [appveyor-url]:https://ci.appveyor.com/project/JCMais/node-libcurl
 [codeclimate-image]:https://img.shields.io/codeclimate/maintainability/JCMais/node-libcurl?style=flat-square
 [codeclimate-url]:https://codeclimate.com/github/JCMais/node-libcurl
-[node-image]:https://img.shields.io/badge/node.js-%3E=_4-green.svg?style=flat-square
-[node-url]:https://nodejs.org/download/
 [license-image]:https://img.shields.io/npm/l/node-libcurl?style=flat-square
 [license-url]:https://raw.githubusercontent.com/JCMais/node-libcurl/develop/LICENSE
 [deps-image]:https://img.shields.io/david/JCMais/node-libcurl.svg?style=flat-square
