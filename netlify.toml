@@ -1,5 +1,5 @@
 [build]
-  command = "yarn run build"
+  command = "yarn docs"
   publish = "docs"
 
 # Production context: All deploys from the main
