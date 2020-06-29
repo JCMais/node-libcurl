@@ -49,6 +49,7 @@
   - [`READFUNCTION` option](#readfunction-option)
 - [Common Issues](#common-issues)
 - [Benchmarks](#benchmarks)
+- [Security](#security)
 - [Supported Libcurl Versions](#supported-libcurl-versions)
 - [For Enterprise](#for-enterprise)
 - [Detailed Installation](#detailed-installation)
@@ -223,7 +224,12 @@ So, be careful, make sure to return **exactly** the amount of data you have writ
 See [COMMON_ISSUES.md](./COMMON_ISSUES.md)
 
 ## Benchmarks
-Go [here](./benchmark)
+
+See [./benchmark](./benchmark)
+
+## Security
+
+See [SECURITY.md](./SECURITY.md)
 
 ## Supported Libcurl Versions
 
@@ -426,7 +432,9 @@ An important note about building the addon on Windows is that we have to do some
 
 ## Getting Help
 
-If your question is directly related to the addon or their usage, post a question on `stack-overflow` and use the `node-libcurl` tag.
+If your question is directly related to the addon or their usage, you can get help the following ways:
+- Post a question on `stack-overflow` and use the `node-libcurl` tag.
+- [Join our Discord server](https://discord.gg/3vacxRY) and send your question there.
 
 ## Contributing
 
