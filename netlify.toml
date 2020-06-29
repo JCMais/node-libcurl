@@ -1,0 +1,17 @@
+[build]
+  command = "yarn docs"
+  publish = "docs"
+
+# Production context: All deploys from the main
+# repository branch will inherit these settings.
+[context.production]
+  [context.production.environment]
+
+# Specific branch context: Deploys from this branch
+# will take these settings and override their
+# current ones.
+[context.develop]
+  [context.develop.environment]
+# Deploy previews
+[context.deploy-preview]
+  [context.deploy-preview.environment]
