@@ -66,7 +66,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-build-deps
     - run: |
-        RUN_PREGYP_CLEAN=false PUBLISH_BINARY=false ./lib/
-
+        RUN_PREGYP_CLEAN=false PUBLISH_BINARY=false ./scripts/ci/build.sh
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
