@@ -1,0 +1,5 @@
+name: "node-libcurl config"
+
+paths:
+  - '/lib' 
+  - '/src' 

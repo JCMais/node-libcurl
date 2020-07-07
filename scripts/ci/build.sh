@@ -37,6 +37,7 @@ function cat_slower() {
 
 PREFIX_DIR=${PREFIX_DIR:-$HOME}
 STOP_ON_INSTALL=${STOP_ON_INSTALL:-false}
+RUN_PREGYP_CLEAN=${RUN_PREGYP_CLEAN:-true}
 
 # Disabled by default
 # Reason for that can be found on the README.md
@@ -355,6 +356,8 @@ if [[ $INSTALL_RESULT != 0 ]]; then
 fi
 
 # Clean everything
-yarn pregyp clean
+if [[ $RUN_PREGYP_CLEAN == true ]]; then
+  yarn pregyp clean
+fi
 
 set +uv
