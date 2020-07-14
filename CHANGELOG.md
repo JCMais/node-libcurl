@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Breaking Change
 ### Fixed
+### Added
+### Changed
+
+## [2.2.0] - 2020-07-14
+### Fixed
 - Fix `curly.get` not working correctly ([#230](https://github.com/JCMais/node-libcurl/pull/230))
 - Fix not resetting `CURLOPT_TRAILERDATA` when duplicating an `Easy` instance (7bf3a51)
 ### Added
@@ -226,7 +231,8 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.1.3...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/JCMais/node-libcurl/compare/v2.1.3...v2.2.0
 [2.1.3]: https://github.com/JCMais/node-libcurl/compare/v2.1.2...v2.1.3
 [2.1.2]: https://github.com/JCMais/node-libcurl/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/JCMais/node-libcurl/compare/v2.1.0...v2.1.1
