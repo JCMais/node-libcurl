@@ -247,6 +247,24 @@ workflows:
           e:
             name: alpine
       ####
+      # Electron v9
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-electron-v8-libcurl-latest
+          context: general
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+            tags:
+              only: /^v.*/
+          electron-version: '9.0.0'
+          libcurl-version: '7.69.1'
+          nghttp2-version: '1.41.0'
+          openssl-version: '1.1.1g'
+          e:
+            name: debian
+      ####
       # Electron v8
       ####
       - build-addon-alpine-and-publish/build-addon:
@@ -261,7 +279,7 @@ workflows:
           electron-version: '8.1.1'
           libcurl-version: '7.69.1'
           nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1e'
+          openssl-version: '1.1.1g'
           e:
             name: debian
       ####
@@ -279,7 +297,7 @@ workflows:
           electron-version: '7.1.14'
           libcurl-version: '7.69.1'
           nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1e'
+          openssl-version: '1.1.1g'
           e:
             name: debian
       ####
@@ -297,7 +315,7 @@ workflows:
           electron-version: '6.1.9'
           libcurl-version: '7.69.1'
           nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1e'
+          openssl-version: '1.1.1g'
           e:
             name: debian
       ####
@@ -315,7 +333,7 @@ workflows:
           electron-version: '5.0.13'
           libcurl-version: '7.69.1'
           nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1e'
+          openssl-version: '1.1.1g'
           e:
             name: debian
       ####
@@ -333,7 +351,7 @@ workflows:
           electron-version: '4.2.12'
           libcurl-version: '7.69.1'
           nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1e'
+          openssl-version: '1.1.1g'
           e:
             name: debian
       ####
@@ -351,7 +369,7 @@ workflows:
           electron-version: '3.1.13'
           libcurl-version: '7.69.1'
           nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1e'
+          openssl-version: '1.1.1g'
           e:
             name: debian
           # Just for reference
@@ -371,7 +389,7 @@ workflows:
           nwjs-version: '0.44.5'
           libcurl-version: '7.69.1'
           nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1e'
+          openssl-version: '1.1.1g'
           e:
             name: debian
       ####
@@ -389,7 +407,7 @@ workflows:
           nwjs-version: '0.43.6'
           libcurl-version: '7.69.1'
           nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1e'
+          openssl-version: '1.1.1g'
           e:
             name: debian
       ####
@@ -407,6 +425,6 @@ workflows:
           nwjs-version: '0.42.6'
           libcurl-version: '7.69.1'
           nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1e'
+          openssl-version: '1.1.1g'
           e:
             name: debian
