@@ -250,7 +250,7 @@ workflows:
       # Electron v9
       ####
       - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-electron-v8-libcurl-latest
+          name: build-addon-electron-v9-libcurl-latest
           context: general
           filters:
             branches:
