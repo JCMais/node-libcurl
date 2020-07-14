@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Added initial support to the `CURLMOPT_PUSHFUNCTION` libcurl multi option. ([#232](https://github.com/JCMais/node-libcurl/issues/232)) (b8d0fac)
 - Added `private` member to the `EasyNativeBinding` typescript class, you can set this value on the `Easy` instances to anything, and Typescript should not complain.
+- Adde prebuilt binaries for Electron v9
 ### Changed
 - Improved Typescript types / documentation for some libcurl options. (63a71b7)
 
