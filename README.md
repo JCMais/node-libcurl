@@ -5,7 +5,7 @@
   <img src="https://c5.patreon.com/external/logo/become_a_patron_button@2x.png" width="190" alt="Patreon Logo">
 </a>
 <br>
-<a href="https://discord.gg/3vacxRY" title="Join our Discord Server">
+<a href="https://discord.io/jonathancardoso" title="Join our Discord Server">
   <img src="https://i.imgur.com/DlKeNmn.png" alt="Discord Logo" width="190" />
 </a>
 </p>
