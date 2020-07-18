@@ -258,7 +258,7 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          electron-version: '9.0.0'
+          electron-version: '9.1.0'
           libcurl-version: '7.69.1'
           nghttp2-version: '1.41.0'
           openssl-version: '1.1.1g'
