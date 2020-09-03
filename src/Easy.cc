@@ -1710,33 +1710,73 @@ NAN_METHOD(Easy::GetInfo) {
     curl_slist* curr;
 
     curlInfo = static_cast<CURLINFO>(infoId);
-    code = curl_easy_getinfo(obj->ch, curlInfo, &linkedList);
+    if (curlInfo == CURLINFO_CERTINFO) {
+      curl_certinfo* ci = NULL;
+      code = curl_easy_getinfo(obj->ch, curlInfo, &ci);
 
-    if (code == CURLE_OK) {
-      v8::Local<v8::Array> arr = Nan::New<v8::Array>();
-      bool isValid = true;
+      if (code == CURLE_OK) {
+        v8::Local<v8::Array> arr = Nan::New<v8::Array>();
+        bool isValid = true;
 
-      if (linkedList) {
-        curr = linkedList;
+        for (int i = 0; i < ci->num_of_certs; i++) {
+          linkedList = ci->certinfo[i];
 
-        while (curr) {
-          auto value = arr->Set(arr->CreationContext(), arr->Length(),
-                                Nan::New<v8::String>(curr->data).ToLocalChecked());
-          if (value.IsJust()) {
-            curr = curr->next;
-          } else {
-            curr = NULL;
-            isValid = false;
+          if (linkedList) {
+            curr = linkedList;
+
+            while (curr) {
+              auto value = arr->Set(arr->CreationContext(), arr->Length(),
+                                    Nan::New<v8::String>(curr->data).ToLocalChecked());
+              if (value.IsJust()) {
+                curr = curr->next;
+              } else {
+                curr = NULL;
+                isValid = false;
+              }
+            }
+
+            // stop the loop if we found an invalid value
+            if (!isValid) {
+              break;
+            }
           }
         }
 
-        curl_slist_free_all(linkedList);
+        if (isValid) {
+          retVal = arr;
+        } else {
+          Nan::ThrowError("Something went wrong while trying to retrieve info from curl slist");
+        }
       }
+    } else {
+      code = curl_easy_getinfo(obj->ch, curlInfo, &linkedList);
 
-      if (isValid) {
-        retVal = arr;
-      } else {
-        Nan::ThrowError("Something went wrong while trying to retrieve info from curl slist");
+      if (code == CURLE_OK) {
+        v8::Local<v8::Array> arr = Nan::New<v8::Array>();
+        bool isValid = true;
+
+        if (linkedList) {
+          curr = linkedList;
+
+          while (curr) {
+            auto value = arr->Set(arr->CreationContext(), arr->Length(),
+                                  Nan::New<v8::String>(curr->data).ToLocalChecked());
+            if (value.IsJust()) {
+              curr = curr->next;
+            } else {
+              curr = NULL;
+              isValid = false;
+            }
+          }
+
+          curl_slist_free_all(linkedList);
+        }
+
+        if (isValid) {
+          retVal = arr;
+        } else {
+          Nan::ThrowError("Something went wrong while trying to retrieve info from curl slist");
+        }
       }
     }
   }

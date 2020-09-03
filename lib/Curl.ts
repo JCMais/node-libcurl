@@ -59,6 +59,7 @@ import { CurlTimeCond } from './enum/CurlTimeCond'
 import { CurlUseSsl } from './enum/CurlUseSsl'
 import { CurlWriteFunc } from './enum/CurlWriteFunc'
 import { CurlReadFunc } from './enum/CurlReadFunc'
+import { CurlInfoNameSpecific, GetInfoReturn } from './types/EasyNativeBinding'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const bindings: NodeLibcurlNativeBinding = require('../lib/binding/node_libcurl.node')
@@ -420,12 +421,14 @@ class Curl extends EventEmitter {
   /**
    * Retrieves some information about the last request made by a handle.
    *
+   * This overloaded method has `never` as type for the argument
+   *  because one of the other overloaded signatures must be used.
    *
    * Official libcurl documentation: [`curl_easy_getinfo()`](http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html)
    *
    * @param infoNameOrId Info name or integer value. Use {@link Curl.info | `Curl.info`} for predefined constants.
    */
-  getInfo(infoNameOrId: CurlInfoName) {
+  getInfo(infoNameOrId: never): any {
     const { code, data } = this.handle.getInfo(infoNameOrId)
 
     if (code !== CurlCode.CURLE_OK) {
@@ -1418,6 +1421,29 @@ interface Curl {
     value: string | number | boolean | null,
   ): this
   // END AUTOMATICALLY GENERATED CODE - DO NOT EDIT
+
+  // overloaded getInfo definitions - changes made here must also be made in EasyNativeBinding.ts
+  // TODO: do this automatically, like above.
+
+  /**
+   * Returns information about the finished connection.
+   *
+   * Official libcurl documentation: [`curl_easy_getinfo()`](http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html)
+   *
+   * @param info Info to retrieve. Use {@link "Curl".Curl.info | `Curl.info`} for predefined constants.
+   */
+  getInfo(info: 'CERTINFO'): GetInfoReturn<string[]>['data']
+
+  /**
+   * Returns information about the finished connection.
+   *
+   * Official libcurl documentation: [`curl_easy_getinfo()`](http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html)
+   *
+   * @param info Info to retrieve. Use {@link "Curl".Curl.info | `Curl.info`} for predefined constants.
+   */
+  getInfo(
+    info: Exclude<CurlInfoName, CurlInfoNameSpecific>,
+  ): GetInfoReturn['data']
 }
 
 export { Curl }

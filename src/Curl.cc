@@ -536,7 +536,6 @@ const std::vector<CurlConstant> curlInfoNotImplemented = {
     // Unnecessary.
     {"PRIVATE", CURLINFO_PRIVATE},
     // Maybe
-    {"CERTINFO", CURLINFO_CERTINFO},
 };
 
 const std::vector<CurlConstant> curlInfoString = {
@@ -640,6 +639,7 @@ const std::vector<CurlConstant> curlInfoSocket = {
 const std::vector<CurlConstant> curlInfoLinkedList = {
     {"SSL_ENGINES", CURLINFO_SSL_ENGINES},
     {"COOKIELIST", CURLINFO_COOKIELIST},
+    {"CERTINFO", CURLINFO_CERTINFO},
 };
 
 static void ExportConstants(v8::Local<v8::Object> obj,

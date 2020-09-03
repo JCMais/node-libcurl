@@ -6,13 +6,14 @@
  */
 import 'should'
 
-import { app, host, port, server } from '../helper/server'
+import { app, closeServer, host, port, server } from '../helper/server'
 import { Curl } from '../../lib'
 
 const url = `http://${host}:${port}/`
 
-let curl: Curl
 describe('getInfo()', () => {
+  let curl: Curl
+
   beforeEach(() => {
     curl = new Curl()
     curl.setOpt('URL', url)
@@ -32,7 +33,7 @@ describe('getInfo()', () => {
 
   after(() => {
     app._router.stack.pop()
-    server.close()
+    closeServer()
   })
 
   it('should not work with non-implemented infos', (done) => {
@@ -68,6 +69,45 @@ describe('getInfo()', () => {
           curl.getInfo(infoId)
         }
       }
+
+      done()
+    })
+
+    curl.on('error', done)
+
+    curl.perform()
+  })
+
+  it('CERTINFO', (done) => {
+    curl.setOpt('URL', 'https://github.com')
+    curl.setOpt('CERTINFO', true)
+    curl.setOpt('FOLLOWLOCATION', true)
+    curl.setOpt('SSL_VERIFYPEER', false)
+    curl.setOpt('SSL_VERIFYHOST', false)
+    curl.on('end', (status) => {
+      if (status !== 200) {
+        throw Error(`Invalid status code: ${status}`)
+      }
+
+      let certInfo: string[] = []
+      ;(() => {
+        certInfo = curl.getInfo(Curl.info.CERTINFO)
+      }).should.not.throw() // Enexpected error while collecting cert info
+
+      Array.isArray(certInfo).should.be.true(
+        'Returned CERTINFO value must be array',
+      )
+
+      certInfo.should.not.have.length(0)
+
+      const cert = certInfo.find(
+        (itm: string): boolean => itm.search('Cert:') === 0,
+      )
+
+      ;(typeof cert).should.not.be.equal(
+        'undefined',
+        'Certificate not returned',
+      )
 
       done()
     })

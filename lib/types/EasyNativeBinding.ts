@@ -39,10 +39,12 @@ import { SocketState } from '../enum/SocketState'
 
 import { FileInfo, HttpPostField } from './'
 
-export interface GetInfoReturn {
-  data: number | string | null
+export interface GetInfoReturn<DataType extends any = number | string | null> {
+  data: DataType
   code: CurlCode
 }
+
+export type CurlInfoNameSpecific = 'CERTINFO'
 
 /**
  * `Easy` class that acts as an wrapper around the libcurl connection handle.
@@ -366,6 +368,16 @@ export declare class EasyNativeBinding {
   ): CurlCode
   // END AUTOMATICALLY GENERATED CODE - DO NOT EDIT
 
+  // overloaded getInfo definitions - changes made here must also be made in Curl.ts
+  // TODO: do this automatically, like above.
+
+  /**
+   * Official libcurl documentation: [`curl_easy_getinfo()`](http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html)
+   *
+   * @param info Info to retrieve. Use {@link "Curl".Curl.info | `Curl.info`} for predefined constants.
+   */
+  getInfo(info: 'CERTINFO'): GetInfoReturn<string[]>
+
   /**
    * Returns information about the finished connection.
    *
@@ -373,7 +385,7 @@ export declare class EasyNativeBinding {
    *
    * @param info Info to retrieve. Use {@link "Curl".Curl.info | `Curl.info`} for predefined constants.
    */
-  getInfo(info: CurlInfoName): GetInfoReturn
+  getInfo(info: Exclude<CurlInfoName, CurlInfoNameSpecific>): GetInfoReturn
 
   /**
    * Sends arbitrary data over the established connection.
