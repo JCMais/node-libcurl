@@ -20,8 +20,17 @@ const { exec } = require('child_process')
 const fs = require('fs')
 const path = require('path')
 const os = require('os')
+const util = require('util')
 
 const envPaths = require('env-paths')
+
+// we cannot use fs.promises because it was added on Node.js 10
+//  but we are support Node.js >= 8
+const fsOpenAsync = util.promisify(fs.open)
+const fsCloseAsync = util.promisify(fs.close)
+const fsReadAsync = util.promisify(fs.read)
+const fsWriteAsync = util.promisify(fs.write)
+const fsStatAsync = util.promisify(fs.stat)
 
 const homeDir = os.homedir()
 
@@ -68,11 +77,14 @@ exec('git rev-parse --show-toplevel', execConfig, function (err, stdout) {
   // Make sure we are the root git repo
   //  path.relative will return an empty string if both paths are equal
   if (!err && path.relative(execConfig.cwd, stdout.trim()) === '') {
+    // no need catch errors here as errors inside this fn will end the process
+    //  immediately
     replaceTokensOnFiles(
       path.resolve(__dirname, '..', 'deps', 'curl-for-windows'),
-    )
-    process.stdout.write('deps/' + depsGypTarget)
-    cleanupAndExit()
+    ).then(() => {
+      process.stdout.write('deps/' + depsGypTarget)
+      cleanupAndExit()
+    })
   } else {
     retrieveWinDeps()
   }
@@ -148,7 +160,7 @@ function retrieveWinDeps() {
   })
 }
 
-function replaceTokensOnFiles(dir) {
+async function replaceTokensOnFiles(dir) {
   const filesToCheck = [
     'libssh2.gyp',
     'openssl/openssl.gyp',
@@ -168,28 +180,67 @@ function replaceTokensOnFiles(dir) {
     // },
   ]
 
-  for (const file of filesToCheck) {
-    const filePath = path.resolve(dir, file)
-    for (const patternReplacementPair of replacements) {
-      replaceOnFile(
-        filePath,
-        patternReplacementPair.pattern,
-        patternReplacementPair.replacement,
-      )
-    }
+  try {
+    await Promise.all(
+      filesToCheck.map(async (file) => {
+        const filePath = path.resolve(dir, file)
+        for (const patternReplacementPair of replacements) {
+          await replaceOnFile(
+            filePath,
+            patternReplacementPair.pattern,
+            patternReplacementPair.replacement,
+          )
+        }
+      }),
+    )
+  } catch (error) {
+    console.error(`Error when calling replaceOnFile: ${error.message}`)
+    cleanupAndExit(1)
   }
 }
 
-function replaceOnFile(file, search, replacement) {
-  if (!fs.existsSync(file)) {
-    console.error('File: ', file, ' not found.')
-    cleanupAndExit(1)
+const REPLACE_ON_FILE_INITIAL_CHUNK_SIZE = 2048
+
+async function replaceOnFile(file, search, replacement) {
+  const fd = await fsOpenAsync(file, 'r+')
+  let caughtError = false
+
+  try {
+    const stat = await fsStatAsync(file)
+
+    const totalSize = stat.size
+    const buffer = Buffer.alloc(totalSize)
+
+    let chunkSize = REPLACE_ON_FILE_INITIAL_CHUNK_SIZE
+    let totalRead = 0
+
+    // this while is not the best way to do this
+    // but hey, it works, and we are processing just 5 files :D
+    // The best way here probably would be to use a readable stream
+    while (totalRead < totalSize) {
+      if (totalRead + chunkSize > totalSize) {
+        chunkSize = totalSize - totalRead
+      }
+      const { bytesRead } = await fsReadAsync(
+        fd,
+        buffer,
+        totalRead,
+        chunkSize,
+        totalRead,
+      )
+      totalRead += bytesRead
+    }
+
+    const fileNewContent = buffer.toString('utf8').replace(search, replacement)
+
+    await fsWriteAsync(fd, fileNewContent, 0, 'utf8')
+  } catch (error) {
+    caughtError = true
+    console.error(
+      `Error when replacing contents of file ${file}: ${error.message}`,
+    )
+  } finally {
+    await fsCloseAsync(fd)
+    caughtError && cleanupAndExit(1)
   }
-
-  const fileContent = fs
-    .readFileSync(file)
-    .toString()
-    .replace(search, replacement)
-
-  fs.writeFileSync(file, fileContent)
 }
