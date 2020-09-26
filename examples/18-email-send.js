@@ -38,7 +38,7 @@ const rawEmail = [
   '.\r\n',
 ]
 
-const linesRead = 0
+let linesRead = 0
 const certfile = path.join(__dirname, 'cacert.pem')
 
 curl.setOpt(Curl.option.USERNAME, 'username')

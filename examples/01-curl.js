@@ -68,15 +68,17 @@ curl.enable(CurlFeature.NoStorage)
 // to get back to what it was before we can disable those features:
 curl.disable(CurlFeature.Raw | CurlFeature.NoStorage)
 
-curl.on('data', (chunk, curlInstance) => {
+// the curlInstance parameter is an easy way to have access to the
+// original handler, even if you are using arrow functions (which this is not bound)
+curl.on('data', (chunk, _curlInstance) => {
   console.log('Receiving data with size: ', chunk.length)
 })
 
-curl.on('header', (chunk, curlInstance) => {
+curl.on('header', (chunk, _curlInstance) => {
   console.log('Receiving headers with size: ', chunk.length)
 })
 
-curl.on('end', (statusCode, body, headers, curlInstance) => {
+curl.on('end', (statusCode, body, headers, _curlInstance) => {
   console.info('Status Code: ', statusCode)
   console.info('Headers: ', headers)
   console.info('Body length: ', body.length)

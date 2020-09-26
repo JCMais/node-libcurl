@@ -38,7 +38,7 @@ curl2.setOpt(Curl.option.FOLLOWLOCATION, true)
 curl2.setOpt(Curl.option.COOKIEFILE, '')
 curl2.setOpt(Curl.option.SHARE, share)
 
-curl1.on('end', (statusCode, body, headers) => {
+curl1.on('end', (statusCode, body, _headers) => {
   console.info('Cookies: ', JSON.parse(body))
 
   curl1.close()
@@ -61,7 +61,7 @@ curl1.on('error', (error, errorCode) => {
   curl1.close()
 })
 
-curl2.on('end', (statusCode, body, headers) => {
+curl2.on('end', (statusCode, body, _headers) => {
   console.info('Cookies: ', JSON.parse(body))
 
   curl2.close()

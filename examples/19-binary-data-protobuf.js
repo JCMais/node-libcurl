@@ -65,7 +65,7 @@ async function sendProtoBufMessage(url, message) {
   })
 
   return new Promise((resolve, reject) => {
-    curl.on('end', (status, data, headers) => {
+    curl.on('end', (status, data, _headers) => {
       curl.close()
       resolve(data)
     })

@@ -20,7 +20,10 @@ curl.perform()
 
 curl.on('end', () => {
   for (const infoName in Curl.info) {
-    if (Curl.info.hasOwnProperty(infoName) && infoName !== 'debug') {
+    if (
+      Object.prototype.hasOwnProperty.call(Curl.info, infoName) &&
+      infoName !== 'debug'
+    ) {
       console.info(infoName, ': ', curl.getInfo(infoName))
     }
   }

@@ -40,7 +40,7 @@ curl.setOpt(Curl.option.WRITEFUNCTION, (buff, nmemb, size) => {
 //  would not be stored anyway. But there are still the headers, which for FTP are the operations output.
 curl.enable(CurlFeature.Raw | CurlFeature.NoStorage)
 
-curl.on('end', (code, body, headers) => {
+curl.on('end', (_code, _body, _headers) => {
   console.log('Finished download of FTP file')
 
   fs.closeSync(fileOut)
