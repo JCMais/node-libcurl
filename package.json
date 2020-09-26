@@ -41,6 +41,7 @@
     "prettier:all": "yarn prettier lib/**/*.ts tools/**/*.js scripts/**/*.js test/**/*.ts examples/**/*.js",
     "prettier": "prettier --write",
     "test": "mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
+    "test:coverage": "nyc --reporter=text yarn test",
     "test:electron": "electron-mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
     "test:watch": "yarn test --watch --watch-files test/**/*.spec.ts"
   },
@@ -57,6 +58,7 @@
     "node-gyp": "7.0.0",
     "node-pre-gyp": "0.15.0",
     "npmlog": "4.1.2",
+    "rimraf": "^3.0.2",
     "tslib": "2.0.0"
   },
   "devDependencies": {
@@ -85,10 +87,10 @@
     "lint-staged": "^10.1.2",
     "mocha": "^7.1.1",
     "np": "^6.2.0",
+    "nyc": "^15.1.0",
     "octonode": "^0.9.5",
     "prettier": "^2.0.2",
     "progress": "^2.0.3",
-    "rimraf": "^3.0.2",
     "should": "^13.2.3",
     "ts-node": "^8.8.2",
     "tslint": "^6.1.1",
