@@ -41,8 +41,7 @@
     "gen:constants": "node scripts/build-constants.js",
     "install": "node-pre-gyp install --fallback-to-build",
     "postinstall": "node scripts/postinstall",
-    "lint": "tslint -p . -c tslint.json",
-    "lint:files": "tslint -c tslint.json",
+    "lint": "eslint lib/ scripts/ test/ examples/",
     "pregyp": "node-pre-gyp",
     "prettier": "prettier --write",
     "prettier:all": "yarn prettier lib/**/*.ts tools/**/*.js scripts/**/*.js test/**/*.ts examples/**/*.js",
@@ -59,16 +58,12 @@
     }
   },
   "lint-staged": {
-    "*.js": [
-      "prettier",
-      "eslint --fix"
-    ],
-    "*.ts": [
-      "prettier",
-      "lint:files --fix"
-    ],
     "*.{cpp,cc,h}": [
       "clang-format -style=file -i"
+    ],
+    "*.{ts,js}": [
+      "prettier",
+      "eslint --fix"
     ],
     "package.json": [
       "sort-package-json",
@@ -95,14 +90,18 @@
     "@types/mocha": "^7.0.2",
     "@types/node": "^12.6.8",
     "@types/should": "^13.0.0",
+    "@typescript-eslint/eslint-plugin": "^4.2.0",
+    "@typescript-eslint/parser": "^4.2.0",
     "body-parser": "^1.19.0",
     "cheerio": "^1.0.0-rc.3",
     "clang-format": "^1.4.0",
     "cookie-parser": "^1.4.5",
     "electron-mocha": "^8.2.1",
-    "eslint": "^6.8.0",
-    "eslint-config-prettier": "^6.10.1",
-    "eslint-plugin-prettier": "^3.1.2",
+    "eslint": "^7.9.0",
+    "eslint-config-prettier": "^6.12.0",
+    "eslint-formatter-friendly": "^7.0.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-prettier": "^3.1.4",
     "express": "^4.17.1",
     "formidable": "^1.2.2",
     "http-auth": "^4.1.2",
