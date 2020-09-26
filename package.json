@@ -1,7 +1,6 @@
 {
   "name": "node-libcurl",
   "version": "2.2.0",
-  "author": "Jonathan Cardoso <me@jonathancardoso.com>",
   "description": "The fastest http(s) client (and much more) for Node.js - Node.js bindings for libcurl",
   "keywords": [
     "node-curl",
@@ -11,46 +10,70 @@
     "axios",
     "request"
   ],
-  "license": "MIT",
   "homepage": "https://github.com/JCMais/node-libcurl",
+  "bugs": {
+    "url": "https://github.com/JCMais/node-libcurl/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/JCMais/node-libcurl.git"
   },
-  "bugs": {
-    "url": "https://github.com/JCMais/node-libcurl/issues"
-  },
+  "license": "MIT",
+  "author": "Jonathan Cardoso <me@jonathancardoso.com>",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "scripts": {
-    "install": "node-pre-gyp install --fallback-to-build",
-    "postinstall": "node scripts/postinstall",
-    "preversion": "yarn lint && yarn clean:dist && yarn build:dist",
-    "build:dist": "tsc",
-    "ae": "api-extractor run --local --verbose",
-    "clean:build": "rimraf build",
-    "clean:dist": "rimraf dist tsconfig.tsbuildinfo",
-    "clean": "yarn clean:build && yarn clean:dist",
-    "docs": "typedoc",
-    "gen:constants": "node scripts/build-constants.js",
-    "gen:compile_commands:release": "yarn pregyp -- configure --release -- --format=\"gyp.generator.compile_commands_json.py\"",
-    "gen:compile_commands:debug": "yarn pregyp -- configure --debug -- --format=\"gyp.generator.compile_commands_json.py\"",
-    "lint": "tslint -p . -c tslint.json",
-    "lint:files": "tslint -c tslint.json",
-    "pregyp": "node-pre-gyp",
-    "prettier:all": "yarn prettier lib/**/*.ts tools/**/*.js scripts/**/*.js test/**/*.ts examples/**/*.js",
-    "prettier": "prettier --write",
-    "test": "mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
-    "test:coverage": "nyc --reporter=text yarn test",
-    "test:electron": "electron-mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
-    "test:watch": "yarn test --watch --watch-files test/**/*.spec.ts"
-  },
   "binary": {
     "module_name": "node_libcurl",
     "module_path": "./lib/binding/",
+    "remote_path": "./v{version}/",
     "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}-{libc}.tar.gz",
-    "host": "https://github.com/JCMais/node-libcurl/releases/download",
-    "remote_path": "./v{version}/"
+    "host": "https://github.com/JCMais/node-libcurl/releases/download"
+  },
+  "scripts": {
+    "ae": "api-extractor run --local --verbose",
+    "build:dist": "tsc",
+    "clean": "yarn clean:build && yarn clean:dist",
+    "clean:build": "rimraf build",
+    "clean:dist": "rimraf dist tsconfig.tsbuildinfo",
+    "docs": "typedoc",
+    "gen:compile_commands:debug": "yarn pregyp -- configure --debug -- --format=\"gyp.generator.compile_commands_json.py\"",
+    "gen:compile_commands:release": "yarn pregyp -- configure --release -- --format=\"gyp.generator.compile_commands_json.py\"",
+    "gen:constants": "node scripts/build-constants.js",
+    "install": "node-pre-gyp install --fallback-to-build",
+    "postinstall": "node scripts/postinstall",
+    "lint": "tslint -p . -c tslint.json",
+    "lint:files": "tslint -c tslint.json",
+    "pregyp": "node-pre-gyp",
+    "prettier": "prettier --write",
+    "prettier:all": "yarn prettier lib/**/*.ts tools/**/*.js scripts/**/*.js test/**/*.ts examples/**/*.js",
+    "test": "mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
+    "test:coverage": "nyc --reporter=text yarn test",
+    "test:electron": "electron-mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
+    "test:watch": "yarn test --watch --watch-files test/**/*.spec.ts",
+    "preversion": "yarn lint && yarn clean:dist && yarn build:dist"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier",
+      "eslint --fix"
+    ],
+    "*.ts": [
+      "prettier",
+      "lint:files --fix"
+    ],
+    "*.{cpp,cc,h}": [
+      "clang-format -style=file -i"
+    ],
+    "package.json": [
+      "sort-package-json",
+      "prettier"
+    ]
   },
   "dependencies": {
     "env-paths": "2.2.0",
@@ -62,6 +85,7 @@
     "tslib": "2.0.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "11.0.0",
     "@microsoft/api-documenter": "^7.8.0",
     "@microsoft/api-extractor": "^7.8.0",
     "@types/body-parser": "^1.19.0",
@@ -83,8 +107,8 @@
     "formidable": "^1.2.2",
     "http-auth": "^4.1.2",
     "http-auth-connect": "^1.0.4",
-    "husky": "^4.2.3",
-    "lint-staged": "^10.1.2",
+    "husky": "^4.3.0",
+    "lint-staged": "^10.4.0",
     "mocha": "^7.1.1",
     "np": "^6.2.0",
     "nyc": "^15.1.0",
@@ -92,6 +116,7 @@
     "prettier": "^2.0.2",
     "progress": "^2.0.3",
     "should": "^13.2.3",
+    "sort-package-json": "^1.46.0",
     "ts-node": "^8.8.2",
     "tslint": "^6.1.1",
     "tslint-config-airbnb": "^5.11.2",
@@ -100,29 +125,10 @@
     "typedoc-plugin-nojekyll": "^1.0.1",
     "typescript": "^3.9.3"
   },
-  "lint-staged": {
-    "*.js": [
-      "yarn prettier",
-      "yarn eslint --fix"
-    ],
-    "*.ts": [
-      "yarn prettier",
-      "yarn lint:files --fix"
-    ],
-    "*.{cpp,cc,h}": [
-      "clang-format -style=file -i"
-    ]
-  },
   "engines": {
     "node": ">= 8"
   },
   "np": {
     "cleanup": false
-  },
-  "husky": {
-    "hooks": {
-      "commitmsg": "commitlint -e $HUSKY_GIT_PARAMS",
-      "pre-commit": "lint-staged"
-    }
   }
 }
