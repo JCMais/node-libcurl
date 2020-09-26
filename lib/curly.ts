@@ -97,13 +97,23 @@ export interface CurlyFunction extends HttpMethodCalls {
    *
    * Async wrapper around the Curl class
    * It's also possible to request using a specific http verb
-   *  directly by using `curl.<http-verb>(url)`
+   *  directly by using `curl.<http-verb>(url: string, options?: CurlOptionValueType)`, like:
+   *
+   * ```js
+   * curly.get('https://www.google.com')
+   * ```
    */
   (url: string, options?: CurlOptionValueType): Promise<CurlyResult>
-  create: () => CurlyFunction
+
+  /**
+   * **EXPERIMENTAL** This API can change between minor releases
+   *
+   * This returns a new `curly` with the specified options set by default.
+   */
+  create: (defaultOptions?: CurlOptionValueType) => CurlyFunction
 }
 
-const create = (): CurlyFunction => {
+const create = (defaultOptions: CurlOptionValueType = {}): CurlyFunction => {
   function curly(
     url: string,
     options: CurlOptionValueType = {},
@@ -112,7 +122,12 @@ const create = (): CurlyFunction => {
 
     curlHandle.setOpt('URL', url)
 
-    for (const key of Object.keys(options)) {
+    const finalOptions = {
+      ...defaultOptions,
+      ...options,
+    }
+
+    for (const key of Object.keys(finalOptions)) {
       const keyTyped = key as keyof CurlOptionValueType
 
       const optionName: CurlOptionName =
