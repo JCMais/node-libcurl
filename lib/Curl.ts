@@ -8,6 +8,7 @@ import { EventEmitter } from 'events'
 import { StringDecoder } from 'string_decoder'
 import assert from 'assert'
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const pkg = require('../package.json')
 
 import {
@@ -55,6 +56,7 @@ import { CurlSslVersion } from './enum/CurlSslVersion'
 import { CurlTimeCond } from './enum/CurlTimeCond'
 import { CurlUseSsl } from './enum/CurlUseSsl'
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const bindings: NodeLibcurlNativeBinding = require('../lib/binding/node_libcurl.node')
 
 // tslint:disable-next-line
@@ -127,51 +129,6 @@ class Curl extends EventEmitter {
   static getVersion = _Curl.getVersion
 
   /**
-   * Returns an object with a representation of the current libcurl version and their features/protocols.
-   *
-   * This is basically [`curl_version_info()`](https://curl.haxx.se/libcurl/c/curl_version_info.html)
-   */
-  static getVersionInfo = () => CurlVersionInfo
-
-  /**
-   * Returns a string that looks like the one returned by
-   * ```bash
-   * curl -V
-   * ```
-   * Example:
-   * ```
-   * Version: libcurl/7.69.1-DEV OpenSSL/1.1.1d zlib/1.2.11 WinIDN libssh2/1.9.0_DEV nghttp2/1.40.0
-   * Protocols: dict, file, ftp, ftps, gopher, http, https, imap, imaps, ldap, ldaps, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp
-   * Features: AsynchDNS, IDN, IPv6, Largefile, SSPI, Kerberos, SPNEGO, NTLM, SSL, libz, HTTP2, HTTPS-proxy
-   * ```
-   */
-  static getVersionInfoString = () => {
-    const version = Curl.getVersion()
-    const protocols = CurlVersionInfo.protocols.join(', ')
-    const features = CurlVersionInfo.features.join(', ')
-
-    return [
-      `Version: ${version}`,
-      `Protocols: ${protocols}`,
-      `Features: ${features}`,
-    ].join('\n')
-  }
-
-  /**
-   * Useful if you want to check if the current libcurl version is greater or equal than another one.
-   * @param x major
-   * @param y minor
-   * @param z patch
-   */
-  static isVersionGreaterOrEqualThan = (
-    x: number,
-    y: number,
-    z: number = 0,
-  ) => {
-    return _Curl.VERSION_NUM >= (x << 16) + (y << 8) + z
-  }
-
-  /**
    * This is the default user agent that is going to be used on all `Curl` instances.
    *
    * You can overwrite this in a per instance basis, calling `curlHandle.setOpt('USERAGENT', 'my-user-agent/1.0')`, or
@@ -180,11 +137,6 @@ class Curl extends EventEmitter {
    * To disable this behavior set this property to `null`.
    */
   static defaultUserAgent = `node-libcurl/${pkg.version}`
-
-  /**
-   * Returns the number of handles currently open in the internal {@link "Multi".Multi | `Multi`} handle being used.
-   */
-  static getCount = multiHandle.getCount
 
   /**
    * Integer representing the current libcurl version.
@@ -220,6 +172,22 @@ class Curl extends EventEmitter {
    * `CURLOPT_URL` becomes `Curl.option.URL`
    */
   static option = _Curl.option
+
+  /**
+   * Returns the number of handles currently open in the internal {@link "Multi".Multi | `Multi`} handle being used.
+   */
+  static getCount = multiHandle.getCount
+
+  /**
+   * Whether this instance is running or not ({@link perform | `perform()`} was called).
+   *
+   * Make sure to not change their value, otherwise unexpected behavior would happen.
+   *
+   * This is marked as protected only with the TSDoc to not cause a breaking change.
+   *
+   * @protected
+   */
+  isRunning: boolean
 
   /**
    * Internal Easy handle being used
@@ -260,15 +228,6 @@ class Curl extends EventEmitter {
   protected features: CurlFeature
 
   /**
-   * Whether this instance is running or not ({@link perform | `perform()`} was called).
-   *
-   * Make sure to not change their value, otherwise unexpected behavior would happen.
-   *
-   * @protected
-   */
-  isRunning: boolean
-
-  /**
    * @param cloneHandle {@link "Easy".Easy | `Easy`} handle that should be used instead of creating a new one.
    */
   constructor(cloneHandle?: EasyNativeBinding) {
@@ -300,34 +259,6 @@ class Curl extends EventEmitter {
     this.isRunning = false
 
     curlInstanceMap.set(handle, this)
-  }
-
-  /**
-   * This is the default callback passed to {@link setOpt | `setOpt('WRITEFUNCTION', cb)`}.
-   */
-  protected defaultWriteFunction(chunk: Buffer, size: number, nmemb: number) {
-    if (!(this.features & CurlFeature.NoDataStorage)) {
-      this.chunks.push(chunk)
-      this.chunksLength += chunk.length
-    }
-
-    this.emit('data', chunk, this)
-
-    return size * nmemb
-  }
-
-  /**
-   * This is the default callback passed to {@link setOpt | `setOpt('HEADERFUNCTION', cb)`}.
-   */
-  protected defaultHeaderFunction(chunk: Buffer, size: number, nmemb: number) {
-    if (!(this.features & CurlFeature.NoHeaderStorage)) {
-      this.headerChunks.push(chunk)
-      this.headerChunksLength += chunk.length
-    }
-
-    this.emit('header', chunk, this)
-
-    return size * nmemb
   }
 
   /**
@@ -606,7 +537,7 @@ class Curl extends EventEmitter {
    *
    * @param shouldCopyEventListeners If you don't want to copy the event listeners, set this to `false`.
    */
-  dupHandle(shouldCopyEventListeners: boolean = true) {
+  dupHandle(shouldCopyEventListeners = true) {
     const duplicatedHandle = new Curl(this.handle.dupHandle())
     const eventsToCopy = ['end', 'error', 'data', 'header']
 
@@ -646,6 +577,75 @@ class Curl extends EventEmitter {
     this.handle.setOpt(Curl.option.HEADERFUNCTION, null)
 
     this.handle.close()
+  }
+
+  /**
+   * This is the default callback passed to {@link setOpt | `setOpt('WRITEFUNCTION', cb)`}.
+   */
+  protected defaultWriteFunction(chunk: Buffer, size: number, nmemb: number) {
+    if (!(this.features & CurlFeature.NoDataStorage)) {
+      this.chunks.push(chunk)
+      this.chunksLength += chunk.length
+    }
+
+    this.emit('data', chunk, this)
+
+    return size * nmemb
+  }
+
+  /**
+   * This is the default callback passed to {@link setOpt | `setOpt('HEADERFUNCTION', cb)`}.
+   */
+  protected defaultHeaderFunction(chunk: Buffer, size: number, nmemb: number) {
+    if (!(this.features & CurlFeature.NoHeaderStorage)) {
+      this.headerChunks.push(chunk)
+      this.headerChunksLength += chunk.length
+    }
+
+    this.emit('header', chunk, this)
+
+    return size * nmemb
+  }
+
+  /**
+   * Returns an object with a representation of the current libcurl version and their features/protocols.
+   *
+   * This is basically [`curl_version_info()`](https://curl.haxx.se/libcurl/c/curl_version_info.html)
+   */
+  static getVersionInfo = () => CurlVersionInfo
+
+  /**
+   * Returns a string that looks like the one returned by
+   * ```bash
+   * curl -V
+   * ```
+   * Example:
+   * ```
+   * Version: libcurl/7.69.1-DEV OpenSSL/1.1.1d zlib/1.2.11 WinIDN libssh2/1.9.0_DEV nghttp2/1.40.0
+   * Protocols: dict, file, ftp, ftps, gopher, http, https, imap, imaps, ldap, ldaps, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp
+   * Features: AsynchDNS, IDN, IPv6, Largefile, SSPI, Kerberos, SPNEGO, NTLM, SSL, libz, HTTP2, HTTPS-proxy
+   * ```
+   */
+  static getVersionInfoString = () => {
+    const version = Curl.getVersion()
+    const protocols = CurlVersionInfo.protocols.join(', ')
+    const features = CurlVersionInfo.features.join(', ')
+
+    return [
+      `Version: ${version}`,
+      `Protocols: ${protocols}`,
+      `Features: ${features}`,
+    ].join('\n')
+  }
+
+  /**
+   * Useful if you want to check if the current libcurl version is greater or equal than another one.
+   * @param x major
+   * @param y minor
+   * @param z patch
+   */
+  static isVersionGreaterOrEqualThan = (x: number, y: number, z = 0) => {
+    return _Curl.VERSION_NUM >= (x << 16) + (y << 8) + z
   }
 }
 
@@ -691,7 +691,7 @@ interface Curl {
       curlInstance: Curl,
     ) => void,
   ): this
-  on(event: string, listener: Function): this
+  on(event: string, listener: (...args: any[]) => void): this
 
   // START AUTOMATICALLY GENERATED CODE - DO NOT EDIT
   /**

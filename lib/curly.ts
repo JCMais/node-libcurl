@@ -174,7 +174,10 @@ const create = (): CurlyFunction => {
   }
 
   for (const httpMethod of methods) {
-    const httpMethodOptionsKey = httpMethodOptionsMap.hasOwnProperty(httpMethod)
+    const httpMethodOptionsKey = Object.prototype.hasOwnProperty.call(
+      httpMethodOptionsMap,
+      httpMethod,
+    )
       ? httpMethod
       : '_'
     const httpMethodOptions = httpMethodOptionsMap[httpMethodOptionsKey]
