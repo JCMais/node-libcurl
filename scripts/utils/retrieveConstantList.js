@@ -1,6 +1,6 @@
 const cheerio = require('cheerio')
 
-const { curly, CurlHttpVersion } = require('../../dist')
+const { curly } = require('../../dist')
 
 const {
   convertCurlConstantToCamelCase,

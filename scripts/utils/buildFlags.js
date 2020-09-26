@@ -2,7 +2,7 @@
 const fs = require('fs')
 const path = require('path')
 
-let GitRepo
+let isGitRepo
 
 try {
   fs.statSync(path.join(__dirname, '..', '.git'))
@@ -14,7 +14,7 @@ try {
 module.exports = {
   debugBuild: !!process.env.BUILD_DEBUG,
   isElectron: process.env.npm_config_runtime === 'electron',
-  isGitRepo: isGitRepo,
+  isGitRepo,
   isNwjs: process.env.npm_config_runtime === 'node-webkit',
   mustBuild: !!(isGitRepo || process.env.BUILD_DEBUG || process.env.BUILD_ONLY),
 }

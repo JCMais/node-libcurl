@@ -9,7 +9,7 @@
     'curl_include_dirs%': '',
     'curl_libraries%': '',
     'curl_static_build%': 'false',
-    'curl_config_bin%': 'node <(module_root_dir)/tools/curl-config.js',
+    'curl_config_bin%': 'node <(module_root_dir)/scripts/curl-config.js',
     'node_libcurl_no_setlocale%': 'false',
   },
   'targets': [
@@ -81,7 +81,7 @@
             }
           },
           'dependencies': [
-            '<!@(node "<(module_root_dir)/tools/retrieve-win-deps.js")'
+            '<!@(node "<(module_root_dir)/scripts/retrieve-win-deps.js")'
           ],
           'defines' : [
             'CURL_STATICLIB'
@@ -109,7 +109,7 @@
           'conditions': [
             ['curl_include_dirs==""', {
               'include_dirs' : [
-                # '<!@(node "<(module_root_dir)/tools/curl-config.js" --cflags | sed "s/-D.* //g" | sed s/-I//g)'
+                # '<!@(node "<(module_root_dir)/scripts/curl-config.js" --cflags | sed "s/-D.* //g" | sed s/-I//g)'
                 '<!(<(curl_config_bin) --prefix)/include'
               ],
             }],

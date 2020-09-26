@@ -58,7 +58,7 @@ const createSetOptOverloads = (filePath, setOptReturnType = 'CurlCode') => {
   const bindingFileMessageGuard = 'AUTOMATICALLY GENERATED CODE - DO NOT EDIT'
 
   const bindingFileRegex = new RegExp(
-    `\/\/ START ${bindingFileMessageGuard}\n(.*)\/\/ END ${bindingFileMessageGuard}\n`,
+    `// START ${bindingFileMessageGuard}\n(.*)// END ${bindingFileMessageGuard}\n`,
     'gs',
   )
 

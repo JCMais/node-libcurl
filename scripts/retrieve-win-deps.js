@@ -9,13 +9,6 @@ if (process.platform !== 'win32') {
   process.exit(0)
 }
 
-/*
- * Notes about this script:
- * It's a mess because of the callback hell, I could have used a promise library here,
- * but adding a dependency that is going to be used only in a single script, that is executed
- * only on Windows machines during install is not worth it.
- */
-
 const { exec } = require('child_process')
 const fs = require('fs')
 const path = require('path')
@@ -25,12 +18,13 @@ const util = require('util')
 const envPaths = require('env-paths')
 
 // we cannot use fs.promises because it was added on Node.js 10
-//  but we are support Node.js >= 8
+//  but we need to support Node.js >= 8
 const fsOpenAsync = util.promisify(fs.open)
 const fsCloseAsync = util.promisify(fs.close)
 const fsReadAsync = util.promisify(fs.read)
 const fsWriteAsync = util.promisify(fs.write)
 const fsStatAsync = util.promisify(fs.stat)
+const execAsync = util.promisify(exec)
 
 const homeDir = os.homedir()
 
@@ -45,12 +39,11 @@ if (process.env.npm_config_runtime === 'node-webkit') {
 // node-gyp path from here: https://github.com/nodejs/node-gyp/blob/v5.0.3/bin/node-gyp.js#L31
 const gypDir = path.resolve(gypFolder, version.replace('v', ''))
 
-// we are renaming openssl directory
-//  so it does not get used when compilling.
+// we are renaming the openssl directory so it does not get used when compilling.
 // node-gyp default addon.gyp file adds the above folder as include, which would make
-//  the c++ includes for openssl/* point to that folder, instead of using the one from the openssl
-//  we are building. This only happens for node >= 10, probably because only there openssl started to
-//  to be have their symbols exported on Windows. Or for other obscure motive.
+// the c++ includes for openssl/* point to that folder, instead of using the one from the openssl
+// we are building. This only happens for node >= 10, probably because only with this version
+// openssl started to be have their symbols exported on Windows, or for another obscure reason.
 const opensslFolder = path.resolve(gypDir, 'include', 'node', 'openssl')
 const opensslFolderDisabled = `${opensslFolder}.disabled`
 if (fs.existsSync(opensslFolder)) {
@@ -68,36 +61,40 @@ const depsRepo = 'https://github.com/JCMais/curl-for-windows.git'
 const envCurlForWindowsDepsVersionTag = process.env.NODE_LIBCURL_WINDEPS_TAG
 
 const cleanupAndExit = (code = 0) => {
+  // we are not reverting the openssl change we did above in here because
+  // this is being done inside scripts/postinstall.js
   process.exit(code)
 }
 
-// Check if we are on the root git dir. That is, someone is running this
-//  directly from the node-libcurl repo.
-exec('git rev-parse --show-toplevel', execConfig, function (err, stdout) {
-  // Make sure we are the root git repo
-  //  path.relative will return an empty string if both paths are equal
-  if (!err && path.relative(execConfig.cwd, stdout.trim()) === '') {
-    // no need catch errors here as errors inside this fn will end the process
-    //  immediately
-    replaceTokensOnFiles(
-      path.resolve(__dirname, '..', 'deps', 'curl-for-windows'),
-    ).then(() => {
-      process.stdout.write('deps/' + depsGypTarget)
-      cleanupAndExit()
-    })
-  } else {
-    retrieveWinDeps()
-  }
-})
+// let the magic begins
+const run = async () => {
+  try {
+    const stdout = await execAsync('git rev-parse --show-toplevel', execConfig)
 
-function retrieveWinDeps() {
+    // Check if we are in the root git dir.
+    // That is, someone is running this directly from the node-libcurl repo.
+    // if we are, just replace the tokens.
+    if (path.relative(execConfig.cwd, stdout.trim()) === '') {
+      return replaceTokensOnFiles(
+        path.resolve(__dirname, '..', 'deps', 'curl-for-windows'),
+      ).then(() => {
+        process.stdout.write(`deps/${depsGypTarget}`)
+      })
+    }
+  } catch (_) {
+    // ignore errors
+  }
+
+  // otherwise retrieve the deps
+  return retrieveWinDeps()
+}
+
+const retrieveWinDeps = async () => {
   const fileExists = fs.existsSync(fileWithDepsTag)
 
   if (!fileExists && !envCurlForWindowsDepsVersionTag) {
     console.error(
-      'File: ',
-      fileWithDepsTag,
-      ' not found, and no NODE_LIBCURL_WINDEPS_TAG environment variable found.',
+      `File: ${fileWithDepsTag} not found, and no NODE_LIBCURL_WINDEPS_TAG environment variable found.`,
     )
     cleanupAndExit(1)
   }
@@ -106,58 +103,34 @@ function retrieveWinDeps() {
     ? envCurlForWindowsDepsVersionTag.trim()
     : fs.readFileSync(fileWithDepsTag).toString().replace(/\n|\s/g, '')
 
-  exec('git clone --branch ' + depsTag + ' ' + depsRepo, execConfig, function (
-    err,
-  ) {
-    if (err) {
-      if (
-        err
-          .toString()
-          .indexOf('already exists and is not an empty directory') !== -1
-      ) {
-        exec('rmdir curl-for-windows /S /Q', execConfig, function (err) {
-          if (err) {
-            console.error(err.toString())
-            cleanupAndExit(1)
-          }
+  try {
+    await execAsync(`git clone --branch ${depsTag} ${depsRepo}`, execConfig)
+  } catch (error) {
+    if (
+      error
+        .toString()
+        .indexOf('already exists and is not an empty directory') !== -1
+    ) {
+      await execAsync('rmdir curl-for-windows /S /Q', execConfig)
 
-          retrieveWinDeps()
-        })
-      } else {
-        console.error(err.toString())
-        cleanupAndExit(1)
-      }
+      return retrieveWinDeps()
     } else {
-      exec(
-        'cd curl-for-windows && git submodule update --init && python configure.py',
-        execConfig,
-        function (err) {
-          if (err) {
-            console.error(err.toString())
-            cleanupAndExit(1)
-          }
-
-          // Grab gyp config files and replace <(library) with static_library
-          replaceTokensOnFiles(
-            path.resolve(__dirname, '..', 'curl-for-windows'),
-          )
-
-          // remove git folder
-          exec('rmdir curl-for-windows\\.git /S /Q', execConfig, function (
-            err,
-          ) {
-            if (err) {
-              console.error(err.toString())
-              cleanupAndExit(1)
-            }
-
-            process.stdout.write(depsGypTarget)
-            cleanupAndExit()
-          })
-        },
-      )
+      throw error
     }
-  })
+  }
+
+  await execAsync(
+    'cd curl-for-windows && git submodule update --init && python configure.py',
+    execConfig,
+  )
+
+  // Grab gyp config files and replace <(library) with static_library
+  await replaceTokensOnFiles(path.resolve(__dirname, '..', 'curl-for-windows'))
+
+  // remove git folder
+  await execAsync('rmdir curl-for-windows\\.git /S /Q', execConfig)
+
+  process.stdout.write(depsGypTarget)
 }
 
 async function replaceTokensOnFiles(dir) {
@@ -168,7 +141,7 @@ async function replaceTokensOnFiles(dir) {
     'zlib.gyp',
     'curl.gyp',
   ]
-  // const pattern = /<\(library\)/g;
+
   const replacements = [
     {
       pattern: /<\(library\)/g,
@@ -180,30 +153,24 @@ async function replaceTokensOnFiles(dir) {
     // },
   ]
 
-  try {
-    await Promise.all(
-      filesToCheck.map(async (file) => {
-        const filePath = path.resolve(dir, file)
-        for (const patternReplacementPair of replacements) {
-          await replaceOnFile(
-            filePath,
-            patternReplacementPair.pattern,
-            patternReplacementPair.replacement,
-          )
-        }
-      }),
-    )
-  } catch (error) {
-    console.error(`Error when calling replaceOnFile: ${error.message}`)
-    cleanupAndExit(1)
-  }
+  await Promise.all(
+    filesToCheck.map(async (file) => {
+      const filePath = path.resolve(dir, file)
+      for (const patternReplacementPair of replacements) {
+        await replaceOnFile(
+          filePath,
+          patternReplacementPair.pattern,
+          patternReplacementPair.replacement,
+        )
+      }
+    }),
+  )
 }
 
 const REPLACE_ON_FILE_INITIAL_CHUNK_SIZE = 2048
 
 async function replaceOnFile(file, search, replacement) {
   const fd = await fsOpenAsync(file, 'r+')
-  let caughtError = false
 
   try {
     const stat = await fsStatAsync(file)
@@ -234,13 +201,16 @@ async function replaceOnFile(file, search, replacement) {
     const fileNewContent = buffer.toString('utf8').replace(search, replacement)
 
     await fsWriteAsync(fd, fileNewContent, 0, 'utf8')
-  } catch (error) {
-    caughtError = true
-    console.error(
-      `Error when replacing contents of file ${file}: ${error.message}`,
-    )
   } finally {
     await fsCloseAsync(fd)
-    caughtError && cleanupAndExit(1)
   }
 }
+
+run()
+  .then(() => {
+    cleanupAndExit()
+  })
+  .catch((error) => {
+    console.error(error.toString())
+    cleanupAndExit(1)
+  })

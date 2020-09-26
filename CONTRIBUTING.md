@@ -36,7 +36,7 @@ TS/JS code should be formatted using prettier
 
 If on Windows, first you will need to grab the deps:
 ```sh
-$ node tools/update-deps.js
+$ node scripts/update-deps.js
 ```
 
 Install the dependencies, this will also build the addon:
