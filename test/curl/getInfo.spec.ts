@@ -60,7 +60,10 @@ describe('getInfo()', () => {
       }
 
       for (const infoId in Curl.info) {
-        if (Curl.info.hasOwnProperty(infoId) && infoId !== 'debug') {
+        if (
+          Object.prototype.hasOwnProperty.call(Curl.info, infoId) &&
+          infoId !== 'debug'
+        ) {
           // @ts-ignore
           curl.getInfo(infoId)
         }

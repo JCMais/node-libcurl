@@ -68,8 +68,8 @@ describe('setOpt()', () => {
 
     for (const optionTuple of optionsToTest) {
       try {
-        // @ts-ignore
-        curl.setOpt.apply(curl, optionTuple)
+        // @ts-expect-error
+        curl.setOpt(...optionTuple)
       } catch (error) {
         errorsCaught += 1
       }

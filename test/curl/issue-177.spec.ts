@@ -7,7 +7,7 @@ describe('issues', function () {
 
   it('issue-177 - node.js microtasks interference', async () => {
     const testStartTime = process.hrtime()
-    const timeout = setTimeout(() => {}, 15000)
+    const timeout = setTimeout(() => void 0, 15000)
     const makeCall = () =>
       new Promise((resolve, reject) => {
         const curl = new Curl()
@@ -23,7 +23,7 @@ describe('issues', function () {
 
         curl.on('end', () => {
           curl.close()
-          resolve()
+          resolve(void 0)
         })
 
         curl.perform()

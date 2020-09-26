@@ -24,7 +24,7 @@ const basic = httpAuth.basic(
   {
     realm: realmBasic,
   },
-  (usr: string, pass: string, callback: Function) => {
+  (usr: string, pass: string, callback: (...args: any[]) => void) => {
     callback(usr === username && pass === password)
   },
 )
@@ -32,7 +32,7 @@ const digest = httpAuth.digest(
   {
     realm: realmDigest,
   },
-  (usr: string, callback: Function) => {
+  (usr: string, callback: (...args: any[]) => void) => {
     const hash = crypto.createHash('md5')
 
     if (usr === username) {

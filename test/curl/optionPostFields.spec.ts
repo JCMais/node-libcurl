@@ -54,7 +54,7 @@ describe('Option POSTFIELDS', () => {
       const parsedData = JSON.parse(data as string)
 
       for (const field in parsedData) {
-        if (parsedData.hasOwnProperty(field)) {
+        if (Object.prototype.hasOwnProperty.call(parsedData, field)) {
           parsedData[field].should.be.equal(postData[field])
         }
       }

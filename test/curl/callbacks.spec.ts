@@ -144,7 +144,7 @@ describe('Callbacks', () => {
           wasCalled = true
           return ['x-random-header: random-value2']
         })
-        curl.setOpt(Curl.option.READFUNCTION, (buffer, size, nmemb) => {
+        curl.setOpt(Curl.option.READFUNCTION, (buffer, _size, _nmemb) => {
           const data = 'HELLO'
           buffer.write(data)
           return 0
@@ -185,7 +185,7 @@ describe('Callbacks', () => {
         curl.setOpt('TRAILERFUNCTION', () => {
           return false
         })
-        curl.setOpt(Curl.option.READFUNCTION, (buffer, size, nmemb) => {
+        curl.setOpt(Curl.option.READFUNCTION, (buffer, _size, _nmemb) => {
           const data = 'HELLO'
           buffer.write(data)
           return 0
@@ -212,7 +212,7 @@ describe('Callbacks', () => {
           throw new Error('thrown error inside callback')
         })
 
-        curl.setOpt(Curl.option.READFUNCTION, (buffer, size, nmemb) => {
+        curl.setOpt(Curl.option.READFUNCTION, (buffer, _size, _nmemb) => {
           const data = 'HELLO'
           buffer.write(data)
           return 0
@@ -240,7 +240,7 @@ describe('Callbacks', () => {
           return {}
         })
 
-        curl.setOpt(Curl.option.READFUNCTION, (buffer, size, nmemb) => {
+        curl.setOpt(Curl.option.READFUNCTION, (buffer, _size, _nmemb) => {
           const data = 'HELLO'
           buffer.write(data)
           return 0
