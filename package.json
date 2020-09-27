@@ -46,9 +46,9 @@
     "prettier": "prettier --write",
     "prettier:all": "yarn prettier lib/**/*.ts tools/**/*.js scripts/**/*.js test/**/*.ts examples/**/*.js",
     "test": "mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
-    "test:coverage": "nyc --reporter=text yarn test",
+    "test:coverage": "nyc --reporter=text-summary --reporter=lcov --reporter=html yarn test",
     "test:electron": "electron-mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
-    "test:watch": "yarn test --watch --watch-files test/**/*.spec.ts",
+    "test:watch": "yarn test --watch --watch-files lib/*.ts lib/**/*.ts test/**/*.spec.ts",
     "preversion": "yarn lint && yarn clean:dist && yarn build:dist"
   },
   "husky": {
