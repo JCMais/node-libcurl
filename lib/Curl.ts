@@ -691,7 +691,8 @@ interface Curl {
       curlInstance: Curl,
     ) => void,
   ): this
-  on(event: string, listener: (...args: any[]) => void): this
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  on(event: string, listener: Function): this
 
   // START AUTOMATICALLY GENERATED CODE - DO NOT EDIT
   /**
