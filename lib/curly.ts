@@ -110,6 +110,13 @@ type CurlyOptions = CurlOptionValueType & {
    * No special handling is done, so make sure you set the url correctly later on.
    */
   curlyBaseUrl?: string
+
+  /**
+   * If true, curly will lower case all headers before returning then.
+   *
+   * By default this is false.
+   */
+  curlyLowerCaseHeaders?: boolean
 }
 
 interface CurlyHttpMethodCall {
@@ -268,6 +275,18 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
                 '`curlyResponseBodyParser` passed to curly must be false or a function.',
               ),
             )
+          }
+
+          // in-place modification
+          // yeah, I know mutability is bad and all that
+          if (finalOptions.curlyLowerCaseHeaders) {
+            for (const headersReq of headers) {
+              const entries = Object.entries(headersReq)
+              for (const [headerKey, headerValue] of entries) {
+                delete headersReq[headerKey]
+                headersReq[headerKey.toLowerCase()] = headerValue
+              }
+            }
           }
 
           try {
