@@ -6,9 +6,42 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Breaking Change
+- `curly` (and `curly.<method>`) is now able to automatically parse the response body based on the content-type header of the response. [#240](https://github.com/JCMais/node-libcurl/issues/240)  
+  Default parsers for `application/json` (calls `JSON.parse`) and `text/*` (converts the raw `Buffer` to a string with `utf8` encoding) were added. This means that for responses without a matching content-type the raw `Buffer` will be returned. This is different from the previous behavior where a string would always be returned.
+  The default parsers can be overwritten by setting `curly.defaultResponseBodyParsers` to an object with the format:
+  ```
+  {
+    'content-type': (data: Buffer, headers: HeaderInfo[]) => any
+  }
+  ```
+  Where `content-type` can be one of these:
+  - the exact content-type.
+  - a pattern using `*` to match specific parts of the content-type, like `text/*`.
+  - a catch-all pattern: just `*`.
+
+  You can also override the parsers using the following options:
+  - `curlyResponseBodyParsers` object that will be merged with `defaultResponseBodyParsers`.
+  - `curlyResponseBodyParser` a parser that will be used for all responses.
+
+  It's also possible to set `curlyResponseBodyParser` to `false` and the data returned will always be the raw `Buffer`.
+
+  Of course, it is still possible to use your own `writeFunction` (libcurl `CURLOPT_WRITEFUNCTION` option) to set your own write callback and not rely on this default handling of the response.
+
+
+As `curly` is marked as experimental, this allows us to do a breaking change in a minor version bump. This release should make the curly API more stable and provide a better developer experience, however, the API remains experimental.
+
 ### Fixed
+- Fix some `curly.<method>` calls not working correctly, to be more specific, all calls that were not `get`, `post` and `head`.
+- Fix errors thrown by the internal `Curl` instance used by `curly` not being re-thrown correctly.
+
 ### Added
+- Calling `curly.create(options)` will now return a new `curly` object that will use the passed `options` as defaults. [#247](https://github.com/JCMais/node-libcurl/issues/247)
+- TypeScript: `curly` (and `curly.<method>`) now accepts a generic type parameter which will be the type of the `data` returned. By default, this is set to `any`.
+- Added new option to `curly`: `curlyBaseUrl: string`, if set, their value will always be added as the prefix for the URL.
+- Added new options `curly`: `curlyLowerCaseHeaders: boolean`, if set to true, headers will be returned in lower case. Defaults to false. [#240](https://github.com/JCMais/node-libcurl/issues/240)
+
 ### Changed
+- `curly` now has 100% code coverage.
 
 ## [2.2.0] - 2020-07-14
 ### Fixed
