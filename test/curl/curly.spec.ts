@@ -19,10 +19,21 @@ describe('curly', () => {
       const method = req.method.toLowerCase()
 
       switch (req.query.type) {
+        case 'redirect-c':
+          return res.redirect(301, '/all?type=redirect-b')
+        case 'redirect-b':
+          return res.redirect(301, '/all?type=redirect-a')
+        case 'redirect-a':
+          return res.redirect(301, '/all?type=json')
         case 'no-content-type':
           res.writeHead(200)
           res.write('no content type :)')
           return res.end()
+        case 'set-cookie':
+          return res
+            .cookie('test-a', 'abc', { httpOnly: true })
+            .cookie('test-b', 'def')
+            .send('')
         case 'method':
           return res.set({ 'x-req-method': method }).send(method)
         case 'json':
@@ -90,6 +101,20 @@ describe('curly', () => {
       })
 
       statusCode.should.be.equal(200)
+    })
+
+    it('lower cases headers when setting curlyLowerCaseHeaders to true', async () => {
+      const { statusCode, headers } = await curly.get(`${url}/all`, {
+        curlyLowerCaseHeaders: true,
+      })
+
+      statusCode.should.be.equal(200)
+
+      for (const headerReq of headers) {
+        for (const key of Object.keys(headerReq)) {
+          key.should.be.equal(key.toLowerCase())
+        }
+      }
     })
 
     it('can set global defaults in a curly object with .create()', async () => {
@@ -189,6 +214,43 @@ describe('curly', () => {
 
       statusCode.should.be.equal(200)
       data.should.be.an.instanceOf(Buffer)
+    })
+  })
+
+  // these are mostly testing Curl behavior
+  // we are testing then here just because this api is cleaner. :P
+  describe('Curl internal handling', () => {
+    it('Set-Cookie header is an array of strings', async () => {
+      const { statusCode, headers } = await curly.get(
+        `${url}/all?type=set-cookie`,
+      )
+
+      statusCode.should.be.equal(200)
+      headers.should.have.length(1)
+      headers[0].should.have.property('Set-Cookie')
+      headers[0]['Set-Cookie']!.should.be.deepEqual([
+        'test-a=abc; Path=/; HttpOnly',
+        'test-b=def; Path=/',
+      ])
+    })
+
+    it('headers is an array where each element contains the headers of each redirect', async () => {
+      const { statusCode, headers } = await curly.get(
+        `${url}/all?type=redirect-c`,
+        {
+          followLocation: true,
+        },
+      )
+
+      statusCode.should.be.equal(200)
+      // there are 3 redirects and the final response, so 4 HeaderInfo objects
+      headers.should.have.length(4)
+
+      for (const [idx, header] of headers.entries()) {
+        header.result!.code.should.be.equal(
+          idx === headers.length - 1 ? 200 : 301,
+        )
+      }
     })
   })
 
