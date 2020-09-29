@@ -69,7 +69,10 @@ const cleanupAndExit = (code = 0) => {
 // let the magic begins
 const run = async () => {
   try {
-    const stdout = await execAsync('git rev-parse --show-toplevel', execConfig)
+    const { stdout } = await execAsync(
+      'git rev-parse --show-toplevel',
+      execConfig,
+    )
 
     // Check if we are in the root git dir.
     // That is, someone is running this directly from the node-libcurl repo.
