@@ -109,7 +109,7 @@ const { data } = await curly.post('http://httpbin.com/post', {
   ],
 })
 
-console.log(JSON.parse(data))
+console.log(data)
 ```
 
 ### Simple Request - Using Curl class
