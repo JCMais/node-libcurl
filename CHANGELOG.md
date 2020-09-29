@@ -31,9 +31,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 As `curly` is marked as experimental, this allows us to do a breaking change in a minor version bump. This release should make the curly API more stable and provide a better developer experience, however, the API remains experimental.
 
 ### Fixed
-- Fix some `curly.<method>` calls not working correctly, to be more specific, all calls that were not `get`, `post` and `head`.
-- Fix errors thrown by the internal `Curl` instance used by `curly` not being re-thrown correctly.
-
+- Some `curly.<method>` calls not working correctly, to be more specific, all calls that were not `get`, `post` and `head`.
+- Errors thrown by the internal `Curl` instance used by `curly` not being re-thrown correctly.
+- Progress callbacks were not allowing to use default libcurl progress meter (by returning `CurlProgressFunc.Continue`).
+  
 ### Added
 - Calling `curly.create(options)` will now return a new `curly` object that will use the passed `options` as defaults. [#247](https://github.com/JCMais/node-libcurl/issues/247)
 - TypeScript: `curly` (and `curly.<method>`) now accepts a generic type parameter which will be the type of the `data` returned. By default, this is set to `any`.
