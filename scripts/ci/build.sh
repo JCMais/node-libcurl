@@ -225,6 +225,7 @@ DISPLAY=${DISPLAY:-}
 PUBLISH_BINARY=${PUBLISH_BINARY:-}
 ELECTRON_VERSION=${ELECTRON_VERSION:-}
 NWJS_VERSION=${NWJS_VERSION:-}
+RUN_TESTS=${RUN_TESTS:-"true"}
 
 if [ -z "$PUBLISH_BINARY" ]; then
   PUBLISH_BINARY=false
@@ -325,13 +326,15 @@ else
   ldd ./lib/binding/node_libcurl.node || true
 fi
 
-if [ -n "$ELECTRON_VERSION" ]; then
-  [ $run_tests_electron == "true" ] && yarn test:electron || echo "Tests for this version of electron were disabled"
-elif [ -n "$NWJS_VERSION" ]; then
-  echo "No tests available for node-webkit (nw.js)"
-else
-  yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
-  yarn test
+if [ "$RUN_TESTS" == "true" ]; then
+  if [ -n "$ELECTRON_VERSION" ]; then
+    [ $run_tests_electron == "true" ] && yarn test:electron || echo "Tests for this version of electron were disabled"
+  elif [ -n "$NWJS_VERSION" ]; then
+    echo "No tests available for node-webkit (nw.js)"
+  else
+    yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
+    yarn test
+  fi
 fi
 
 # If we are here, it means the addon worked
