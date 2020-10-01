@@ -881,7 +881,11 @@ int Easy::CbProgress(void* clientp, double dltotal, double dlnow, double ultotal
     returnValue = Nan::To<int32_t>(returnValueCallback.ToLocalChecked()).FromJust();
   }
 
+#if NODE_LIBCURL_VER_GE(7, 68, 0)
   if (returnValue && returnValue != CURL_PROGRESSFUNC_CONTINUE) {
+#else
+  if (returnValue) {
+#endif
     obj->isCbProgressAlreadyAborted = true;
   }
 
@@ -1027,7 +1031,11 @@ int Easy::CbXferinfo(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_o
     returnValue = Nan::To<int32_t>(returnValueCallback.ToLocalChecked()).FromJust();
   }
 
+#if NODE_LIBCURL_VER_GE(7, 68, 0)
   if (returnValue && returnValue != CURL_PROGRESSFUNC_CONTINUE) {
+#else
+  if (returnValue) {
+#endif
     obj->isCbProgressAlreadyAborted = true;
   }
 
