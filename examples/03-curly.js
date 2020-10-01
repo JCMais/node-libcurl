@@ -6,7 +6,7 @@
  */
 
 /**
- * Example showing how one could do a simple request using the `curlx` async fn
+ * Example showing how one could do a simple request using the `curly` async fn
  */
 const querystring = require('querystring')
 

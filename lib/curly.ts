@@ -4,6 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import { Readable } from 'stream'
+
 import {
   CurlOptionName,
   CurlOptionCamelCaseMap,
@@ -20,7 +22,7 @@ import { CurlFeature } from './enum/CurlFeature'
  *
  * @public
  */
-export interface CurlyResult<ResultData extends any> {
+export interface CurlyResult<ResultData extends any = any> {
   /**
    * Data will be the body of the requested URL
    */
@@ -88,7 +90,12 @@ export type CurlyResponseBodyParsersProperty = {
   [key: string]: CurlyResponseBodyParser
 }
 
-type CurlyOptions = CurlOptionValueType & {
+export interface CurlyOptions extends CurlOptionValueType {
+  /**
+   * Set this to a callback function that should be used as the progress callback.
+   */
+  curlyProgressCallback?: CurlOptionValueType['xferInfoFunction']
+
   /**
    * This can be false to disable the automatic behavior
    *
@@ -117,6 +124,41 @@ type CurlyOptions = CurlOptionValueType & {
    * By default this is false.
    */
   curlyLowerCaseHeaders?: boolean
+
+  /**
+   * If true, curly will return the response data as a stream.
+   *
+   * The curly call will resolve as soon as the stream is available.
+   *
+   * When using this option, if an error is thrown in the internal Curl` instance
+   * after the curly call has been resolved (it resolves as soon as the stream is available)
+   * it will cause an error event to be emitted on the stream itself, this way it's possible
+   * to handle these too, if necessary. The error object will have the property `isCurlError` set to true.
+   *
+   * Calling `destroy()` on the stream will always cause the `Curl` instance to emit the error event.
+   * Even if an error argument was not supplied to `stream.destroy()`.
+   *
+   * By default this is false.
+   */
+  curlyStreamResponse?: boolean
+
+  /**
+   * If set, the contents of this stream will be uploaded to the server.
+   *
+   * Keep in mind that if you set this option you **SHOULD** not set
+   * `progressFunction` or `xferInfoFunction`, as these are used internally.
+   *
+   * If you need to set a progress callback, use the `curlyProgressCallback` option.
+   *
+   * If the stream set here is destroyed before libcurl finishes uploading it, the error
+   * `Curl upload stream was unexpectedly destroyed` (Code `42`) will be emitted in the
+   * internal `Curl` instance, and so will cause the curly call to be rejected with that error.
+   *
+   * If the stream was destroyed with a specific error, this error will be passed instead.
+   *
+   * By default this is not set.
+   */
+  curlyStreamUpload?: Readable | null
 }
 
 interface CurlyHttpMethodCall {
@@ -126,28 +168,30 @@ interface CurlyHttpMethodCall {
    * Async wrapper around the Curl class.
    *
    * The `curly.<field>` being used will be the HTTP verb sent.
+   *
+   * @typeParam ResultData You can use this to specify the type of the `data` property returned from this call.
    */
   <ResultData extends any = any>(url: string, options?: CurlyOptions): Promise<
     CurlyResult<ResultData>
   >
 }
 
-type HttpMethodCalls = { [K in HttpMethod]: CurlyHttpMethodCall }
+// type HttpMethodCalls = { readonly [K in HttpMethod]: CurlyHttpMethodCall }
+type HttpMethodCalls = Record<HttpMethod, CurlyHttpMethodCall>
 
-/**
- * See {@link HttpMethodCalls} for list of methods.
- */
 export interface CurlyFunction extends HttpMethodCalls {
   /**
    * **EXPERIMENTAL** This API can change between minor releases
    *
-   * Async wrapper around the Curl class
+   * Async wrapper around the Curl class.
+   *
    * It's also possible to request using a specific http verb
    *  directly by using `curl.<http-verb>(url: string, options?: CurlyOptions)`, like:
    *
    * ```js
    * curly.get('https://www.google.com')
    * ```
+   * @typeParam ResultData You can use this to specify the type of the `data` property returned from this call.
    */
   <ResultData extends any = any>(url: string, options?: CurlyOptions): Promise<
     CurlyResult<ResultData>
@@ -206,22 +250,83 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
       curlHandle.setOpt(optionName, finalOptions[key])
     }
 
+    // streams!
+    const { curlyStreamResponse, curlyStreamUpload } = finalOptions
+    const isUsingStream = !!(curlyStreamResponse || curlyStreamUpload)
+
+    if (finalOptions.curlyProgressCallback) {
+      if (typeof finalOptions.curlyProgressCallback !== 'function') {
+        throw new TypeError(
+          'curlyProgressCallback must be a function with signature (number, number, number, number) => number',
+        )
+      }
+
+      const fnToCall = isUsingStream
+        ? 'setStreamProgressCallback'
+        : 'setProgressCallback'
+
+      curlHandle[fnToCall](finalOptions.curlyProgressCallback)
+    }
+
+    if (curlyStreamResponse) {
+      curlHandle.enable(CurlFeature.StreamResponse)
+    }
+
+    if (curlyStreamUpload) {
+      curlHandle.setUploadStream(curlyStreamUpload)
+    }
+
+    const lowerCaseHeadersIfNecessary = (headers: HeaderInfo[]) => {
+      // in-place modification
+      // yeah, I know mutability is bad and all that
+      if (finalOptions.curlyLowerCaseHeaders) {
+        for (const headersReq of headers) {
+          const entries = Object.entries(headersReq)
+          for (const [headerKey, headerValue] of entries) {
+            delete headersReq[headerKey]
+            headersReq[headerKey.toLowerCase()] = headerValue
+          }
+        }
+      }
+    }
+
     return new Promise((resolve, reject) => {
+      let stream: Readable
+
+      if (curlyStreamResponse) {
+        curlHandle.on(
+          'stream',
+          (_stream, statusCode, headers: HeaderInfo[]) => {
+            lowerCaseHeadersIfNecessary(headers)
+
+            stream = _stream
+
+            resolve({
+              // @ts-ignore cannot be subtype yada yada
+              data: stream,
+              statusCode,
+              headers,
+            })
+          },
+        )
+      }
+
       curlHandle.on(
         'end',
         (statusCode, data: Buffer, headers: HeaderInfo[]) => {
           curlHandle.close()
 
-          const lowerCaseHeaders = Object.entries(
+          // only need to the remaining here if we did not enabled
+          // the stream response
+          if (curlyStreamResponse) {
+            return
+          }
+
+          const contentTypeEntry = Object.entries(
             headers[headers.length - 1],
-          ).reduce(
-            (acc, [k, v]) => ({
-              ...acc,
-              [k.toLowerCase()]: v,
-            }),
-            {} as Record<string, string>,
-          )
-          let contentType = lowerCaseHeaders['content-type'] || ''
+          ).find(([k]) => k.toLowerCase() === 'content-type')
+
+          let contentType = contentTypeEntry ? contentTypeEntry[1] : ''
 
           // remove the metadata of the content-type, like charset
           // See https://tools.ietf.org/html/rfc7231#section-3.1.1.5
@@ -277,17 +382,7 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
             )
           }
 
-          // in-place modification
-          // yeah, I know mutability is bad and all that
-          if (finalOptions.curlyLowerCaseHeaders) {
-            for (const headersReq of headers) {
-              const entries = Object.entries(headersReq)
-              for (const [headerKey, headerValue] of entries) {
-                delete headersReq[headerKey]
-                headersReq[headerKey.toLowerCase()] = headerValue
-              }
-            }
-          }
+          lowerCaseHeadersIfNecessary(headers)
 
           try {
             resolve({
@@ -303,9 +398,21 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
 
       curlHandle.on('error', (error, errorCode) => {
         curlHandle.close()
+
         // @ts-ignore
         error.code = errorCode
-        reject(error)
+        // @ts-ignore
+        error.isCurlError = true
+
+        // oops, if have a stream it means the promise
+        // has been resolved with it
+        // so instead of rejecting the original promise
+        // we are emitting the error event on the stream
+        if (stream) {
+          if (!stream.destroyed) stream.emit('error', error)
+        } else {
+          reject(error)
+        }
       })
 
       try {
