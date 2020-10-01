@@ -1,13 +1,17 @@
 # node-libcurl<!-- omit in toc -->
 
 <p align="center">
-<a href="https://www.patreon.com/bePatron?u=19985213" data-patreon-widget-type="become-patron-button" title="Become a Patreon">
-  <img src="https://c5.patreon.com/external/logo/become_a_patron_button@2x.png" width="190" alt="Patreon Logo">
-</a>
-<br>
-<a href="https://discord.io/jonathancardoso" title="Join our Discord Server">
-  <img src="https://i.imgur.com/DlKeNmn.png" alt="Discord Logo" width="190" />
-</a>
+  <a href="https://www.buymeacoffee.com/jonathancardoso" target="_blank">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-black.png" alt="Buy Me A Coffee" height="52px" width="190px" />
+  </a>
+  <br />
+  <a href="https://www.patreon.com/bePatron?u=19985213" data-patreon-widget-type="become-patron-button" title="Become a Patreon">
+    <img src="https://c5.patreon.com/external/logo/become_a_patron_button@2x.png" width="190px" alt="Patreon Logo">
+  </a>
+  <br />
+  <a href="https://discord.io/jonathancardoso" title="Join our Discord Server">
+    <img src="https://i.imgur.com/DlKeNmn.png" alt="Discord Logo" width="190px" />
+  </a>
 </p>
 
 [![NPM version][npm-image]][npm-url]
