@@ -7,6 +7,7 @@
 import { EventEmitter } from 'events'
 import { StringDecoder } from 'string_decoder'
 import assert from 'assert'
+import { Readable } from 'stream'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const pkg = require('../package.json')
@@ -29,6 +30,7 @@ import {
   StringListOptions,
   CurlOptionName,
   SpecificOptions,
+  CurlOptionValueType,
 } from './generated/CurlOption'
 import { CurlInfoName } from './generated/CurlInfo'
 
@@ -55,6 +57,8 @@ import { CurlSslOpt } from './enum/CurlSslOpt'
 import { CurlSslVersion } from './enum/CurlSslVersion'
 import { CurlTimeCond } from './enum/CurlTimeCond'
 import { CurlUseSsl } from './enum/CurlUseSsl'
+import { CurlWriteFunc } from './enum/CurlWriteFunc'
+import { CurlReadFunc } from './enum/CurlReadFunc'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const bindings: NodeLibcurlNativeBinding = require('../lib/binding/node_libcurl.node')
@@ -96,7 +100,8 @@ multiHandle.onMessage((error, handle, errorCode) => {
 /**
  * Wrapper around {@link "Easy".Easy | `Easy`} class with a more *nodejs-friendly* interface.
  *
- * This uses an internal {@link "Multi".Multi | `Multi`} instance to asynchronous fire the requests.
+ * This uses an internal {@link "Multi".Multi | `Multi`} instance allowing for asynchronous
+ * requests.
  *
  * @public
  */
@@ -187,7 +192,7 @@ class Curl extends EventEmitter {
    *
    * @protected
    */
-  isRunning: boolean
+  isRunning = false
 
   /**
    * Internal Easy handle being used
@@ -199,33 +204,56 @@ class Curl extends EventEmitter {
    *
    * This will not store anything in case {@link CurlFeature.NoDataStorage | `NoDataStorage`} flag is enabled
    */
-  protected chunks: Buffer[]
+  protected chunks: Buffer[] = []
   /**
    * Current response length.
    *
    * Will always be zero in case {@link CurlFeature.NoDataStorage | `NoDataStorage`} flag is enabled
    */
-  protected chunksLength: number
+  protected chunksLength = 0
 
   /**
    * Stores current headers payload.
    *
    * This will not store anything in case {@link CurlFeature.NoDataStorage | `NoDataStorage`} flag is enabled
    */
-  protected headerChunks: Buffer[]
+  protected headerChunks: Buffer[] = []
   /**
    * Current headers length.
    *
    * Will always be zero in case {@link CurlFeature.NoDataStorage | `NoDataStorage`} flag is enabled
    */
-  protected headerChunksLength: number
+  protected headerChunksLength = 0
 
   /**
    * Currently enabled features.
    *
    * See {@link enable | `enable`} and {@link disable | `disable`}
    */
-  protected features: CurlFeature
+  protected features: CurlFeature = 0
+
+  // these are for stream handling
+  // the streams themselves
+  protected writeFunctionStream: Readable | null = null
+  protected readFunctionStream: Readable | null = null
+
+  // READFUNCTION / upload related
+  protected streamReadFunctionCallbacksToClean: Array<
+    [Readable, string, (...args: any[]) => void]
+  > = []
+  // a state machine would be better here than all these flags 🤣
+  protected streamReadFunctionShouldEnd = false
+  protected streamReadFunctionShouldPause = false
+  protected streamReadFunctionPaused = false
+  // WRITEFUNCTION / download related
+  protected streamWriteFunctionShouldPause = false
+  protected streamWriteFunctionPaused = false
+  protected streamWriteFunctionFirstRun = true
+  // common
+  protected streamPauseNext = false
+  protected streamContinueNext = false
+  protected streamError: false | Error = false
+  protected streamUserSuppliedProgressFunction: CurlOptionValueType['xferInfoFunction'] = null
 
   /**
    * @param cloneHandle {@link "Easy".Easy | `Easy`} handle that should be used instead of creating a new one.
@@ -249,15 +277,6 @@ class Curl extends EventEmitter {
 
     handle.setOpt(Curl.option.USERAGENT, Curl.defaultUserAgent)
 
-    this.chunks = []
-    this.chunksLength = 0
-    this.headerChunks = []
-    this.headerChunksLength = 0
-
-    this.features = 0
-
-    this.isRunning = false
-
     curlInstanceMap.set(handle, this)
   }
 
@@ -266,14 +285,11 @@ class Curl extends EventEmitter {
    *
    * This is called from the internal callback we use with the {@link "Multi".Multi.onMessage | `onMessage`}
    *  method of the global {@link "Multi".Multi | `Multi`} handle used by all `Curl` instances.
+   *
+   * @protected
    */
   onError(error: Error, errorCode: CurlCode) {
-    this.isRunning = false
-
-    this.chunks = []
-    this.chunksLength = 0
-    this.headerChunks = []
-    this.headerChunksLength = 0
+    this.resetInternalState()
 
     this.emit('error', error, errorCode, this)
   }
@@ -283,36 +299,34 @@ class Curl extends EventEmitter {
    *
    * This is called from the internal callback we use with the {@link "Multi".Multi.onMessage | `onMessage`}
    *  method of the global {@link "Multi".Multi | `Multi`} handle used by all `Curl` instances.
+   *
+   * This should not be called in any other way.
+   *
+   * @protected
    */
   onEnd() {
-    const isHeaderStorageEnabled = !(
-      this.features & CurlFeature.NoHeaderStorage
-    )
-    const isDataStorageEnabled = !(this.features & CurlFeature.NoDataStorage)
-    const isHeaderParsingEnabled =
-      !(this.features & CurlFeature.NoHeaderParsing) && isHeaderStorageEnabled
+    const isStreamResponse = this.features & CurlFeature.StreamResponse
+    const isDataStorageEnabled =
+      !isStreamResponse && !(this.features & CurlFeature.NoDataStorage)
     const isDataParsingEnabled =
-      !(this.features & CurlFeature.NoDataParsing) && isDataStorageEnabled
-
-    this.isRunning = false
+      !isStreamResponse &&
+      !(this.features & CurlFeature.NoDataParsing) &&
+      isDataStorageEnabled
 
     const dataRaw = isDataStorageEnabled
       ? mergeChunks(this.chunks, this.chunksLength)
       : Buffer.alloc(0)
-    const headersRaw = isHeaderStorageEnabled
-      ? mergeChunks(this.headerChunks, this.headerChunksLength)
-      : Buffer.alloc(0)
-
-    this.chunks = []
-    this.chunksLength = 0
-
-    this.headerChunks = []
-    this.headerChunksLength = 0
 
     const data = isDataParsingEnabled ? decoder.write(dataRaw) : dataRaw
-    const headers = isHeaderParsingEnabled
-      ? parseHeaders(decoder.write(headersRaw))
-      : headersRaw
+    const headers = this.getHeaders()
+
+    // if this had the stream response flag and the writeFunction stream is enabled
+    // we need to signal the end of the stream by pushing null to it.
+    if (isStreamResponse && this.writeFunctionStream) {
+      this.writeFunctionStream.push(null)
+    }
+
+    this.resetInternalState()
 
     const { code, data: status } = this.handle.getInfo(Curl.info.RESPONSE_CODE)
 
@@ -420,6 +434,184 @@ class Curl extends EventEmitter {
   }
 
   /**
+   * This will set an internal `READFUNCTION` callback that will read all the data from this stream.
+   *
+   * One usage for that is to upload data directly from streams. Example:
+   *
+   * ```typescript
+   *  const curl = new Curl()
+   *  curl.setOpt('URL', 'https://some-domain/upload')
+   *  curl.setOpt('UPLOAD', true)
+   *  // so we do not need to set the content length
+   *  curl.setOpt('HTTPHEADER', ['Transfer-Encoding: chunked'])
+   *
+   *  const filePath = './test.zip'
+   *  const stream = fs.createReadStream(filePath)
+   *  curl.setUploadStream(stream)
+   *
+   *  curl.setStreamProgressCallback(() => {
+   *    // this will use the default progress callback from libcurl
+   *    return CurlProgressFunc.Continue
+   *  })
+   *
+   *  curl.on('end', (statusCode, data) => {
+   *    console.log('\n'.repeat(5))
+   *    // data length should be 0, as it was sent using the response stream
+   *    console.log(
+   *      `curl - end - status: ${statusCode} - data length: ${data.length}`,
+   *    )
+   *    curl.close()
+   *  })
+   *  curl.on('error', (error, errorCode) => {
+   *    console.log('\n'.repeat(5))
+   *    console.error('curl - error: ', error, errorCode)
+   *    curl.close()
+   *  })
+   *  curl.perform()
+   * ```
+   *
+   * Multiple calls with the same stream that was previously set has no effect.
+   *
+   * Setting this to `null` will remove the `READFUNCTION` callback and disable this behavior.
+   *
+   * @remarks
+   *
+   * This option is reset after each request, so if you want to upload the same data again using the same
+   * `Curl` instance, you will need to provide a new stream.
+   */
+  setUploadStream(stream: Readable | null) {
+    if (!stream) {
+      if (this.readFunctionStream) {
+        this.cleanupReadFunctionStreamEvents()
+        this.readFunctionStream = null
+        this.setOpt('READFUNCTION', null)
+      }
+      return this
+    }
+
+    if (this.readFunctionStream === stream) return this
+
+    this.readFunctionStream = stream
+
+    const resumeIfPaused = () => {
+      if (this.streamReadFunctionPaused) {
+        this.streamReadFunctionPaused = false
+
+        // just to make sure we do not try to unpause
+        // a connection that has already finished
+        // this can happen if some error has been throw
+        // in the meantime
+        this.pause(CurlPause.Cont)
+      }
+    }
+
+    const attachEventListenerToStream = (
+      event: string,
+      cb: (...args: any[]) => void,
+    ) => {
+      this.readFunctionStream!.on(event, cb)
+      this.streamReadFunctionCallbacksToClean.push([
+        this.readFunctionStream!,
+        event,
+        cb,
+      ])
+    }
+
+    // TODO: Handle adding the event multiple times?
+    // can only happen if the user calls the method with the same stream more than one time
+    // and due to the if at the top, this is only possible if they use another stream in-between.
+
+    attachEventListenerToStream('readable', () => {
+      resumeIfPaused()
+    })
+
+    // This needs the same logic than the destroy callback for the response stream
+    // inside the default WRITEFUNCTION.
+    // Which basically means we cannot throw an error inside the READFUNCTION itself
+    // as this would cause the pause itself to throw an error
+    // (pause calls the READFUNCTION before returning)
+    // So we must create a fake "pause" just to trigger the progress function, and
+    // then the error will be thrown.
+    // This is why the following two callbacks are setting
+    // this.streamReadFunctionShouldPause = true
+    attachEventListenerToStream('close', () => {
+      // If the stream was closed, but end was not called
+      // it means the stream was forcefully destroyed, so
+      // we must let libcurl fail!
+      // streamError could already be set if destroy was called with an error
+      // as it would call the error callback below, so we don't need to do anything.
+      if (!this.streamReadFunctionShouldEnd && !this.streamError) {
+        this.streamError = new Error(
+          'Curl upload stream was unexpectedly destroyed',
+        )
+
+        this.streamReadFunctionShouldPause = true
+        resumeIfPaused()
+      }
+    })
+    attachEventListenerToStream('error', (error: Error) => {
+      this.streamError = error
+
+      this.streamReadFunctionShouldPause = true
+      resumeIfPaused()
+    })
+
+    attachEventListenerToStream('end', () => {
+      this.streamReadFunctionShouldEnd = true
+
+      resumeIfPaused()
+    })
+
+    this.setOpt('READFUNCTION', (buffer, size, nmemb) => {
+      // Remember, we cannot throw this.streamError here.
+
+      if (this.streamReadFunctionShouldPause) {
+        this.streamReadFunctionShouldPause = false
+        this.streamReadFunctionPaused = true
+        return CurlReadFunc.Pause
+      }
+
+      const amountToRead = size * nmemb
+
+      const data = stream.read(amountToRead)
+
+      if (!data) {
+        if (this.streamReadFunctionShouldEnd) {
+          return 0
+        } else {
+          this.streamReadFunctionPaused = true
+          return CurlReadFunc.Pause
+        }
+      }
+
+      const totalWritten = data.copy(buffer)
+
+      // we could also return CurlReadFunc.Abort or CurlReadFunc.Pause here.
+      return totalWritten
+    })
+
+    return this
+  }
+
+  /**
+   * This sets the callback to be used as the progress function when using any of the stream features.
+   *
+   * This is needed because when this `Curl` instance is enabled to use streams for upload/download, it needs
+   * to set the libcurl progress function option to an internal function.
+   *
+   * If you are using any of the streams features, do not overwrite the progress callback to something else,
+   * be it using {@link setOpt | `setOpt`} or {@link setProgressCallback | `setProgressCallback`}, as this would
+   * cause undefined behavior.
+   *
+   * If are using this callback, there is no need to set the `NOPROGRESS` option to false (as you normally would).
+   */
+  setStreamProgressCallback(cb: CurlOptionValueType['xferInfoFunction']) {
+    this.streamUserSuppliedProgressFunction = cb
+
+    return this
+  }
+
+  /**
    * The option `XFERINFOFUNCTION` was introduced in curl version `7.32.0`,
    *  versions older than that should use `PROGRESSFUNCTION`.
    * If you don't want to mess with version numbers you can use this method,
@@ -461,6 +653,14 @@ class Curl extends EventEmitter {
     }
 
     this.isRunning = true
+
+    // set progress function to our internal one if using stream upload/download
+    const isStreamEnabled =
+      this.features & CurlFeature.StreamResponse || this.readFunctionStream
+    if (isStreamEnabled) {
+      this.setProgressCallback(this.streamModeProgressFunction.bind(this))
+      this.setOpt('NOPROGRESS', false)
+    }
 
     multiHandle.addHandle(this.handle)
 
@@ -580,15 +780,227 @@ class Curl extends EventEmitter {
   }
 
   /**
+   * This is used to reset a few properties to their pre-request state.
+   */
+  protected resetInternalState() {
+    this.isRunning = false
+
+    this.chunks = []
+    this.chunksLength = 0
+    this.headerChunks = []
+    this.headerChunksLength = 0
+
+    const wasStreamEnabled = this.writeFunctionStream || this.readFunctionStream
+
+    if (wasStreamEnabled) {
+      this.setProgressCallback(null)
+    }
+
+    // reset back the READFUNCTION if there was a stream we were reading from
+    if (this.readFunctionStream) {
+      this.setOpt('READFUNCTION', null)
+    }
+
+    // these are mostly streams related, as these options are not persisted between requests
+    // the streams themselves
+    this.writeFunctionStream = null
+    this.readFunctionStream = null
+    // READFUNCTION / upload related
+    this.streamReadFunctionShouldEnd = false
+    this.streamReadFunctionShouldPause = false
+    this.streamReadFunctionPaused = false
+    // WRITEFUNCTION / download related
+    this.streamWriteFunctionShouldPause = false
+    this.streamWriteFunctionPaused = false
+    this.streamWriteFunctionFirstRun = true
+    // common
+    this.streamPauseNext = false
+    this.streamContinueNext = false
+    this.streamError = false
+    this.streamUserSuppliedProgressFunction = null
+
+    this.cleanupReadFunctionStreamEvents()
+  }
+
+  /**
+   * When uploading a stream (by calling {@link setUploadStream | `setUploadStream`})
+   * some event listeners are attached to the stream instance.
+   * This will remove them so our callbacks are not called anymore.
+   */
+  protected cleanupReadFunctionStreamEvents() {
+    this.streamReadFunctionCallbacksToClean.forEach(([stream, event, cb]) => {
+      stream.off(event, cb)
+    })
+    this.streamReadFunctionCallbacksToClean = []
+  }
+
+  /**
+   * Returns headers from the current stored chunks - if any
+   */
+  protected getHeaders() {
+    const isHeaderStorageEnabled = !(
+      this.features & CurlFeature.NoHeaderStorage
+    )
+    const isHeaderParsingEnabled =
+      !(this.features & CurlFeature.NoHeaderParsing) && isHeaderStorageEnabled
+
+    const headersRaw = isHeaderStorageEnabled
+      ? mergeChunks(this.headerChunks, this.headerChunksLength)
+      : Buffer.alloc(0)
+
+    return isHeaderParsingEnabled
+      ? parseHeaders(decoder.write(headersRaw))
+      : headersRaw
+  }
+
+  /**
+   * The internal function passed to `PROGRESSFUNCTION` (`XFERINFOFUNCTION` on most recent libcurl versions)
+   * when using any of the stream features.
+   */
+  protected streamModeProgressFunction(
+    dltotal: number,
+    dlnow: number,
+    ultotal: number,
+    ulnow: number,
+  ) {
+    if (this.streamError) throw this.streamError
+
+    const ret = this.streamUserSuppliedProgressFunction
+      ? this.streamUserSuppliedProgressFunction.call(
+          this.handle,
+          dltotal,
+          dlnow,
+          ultotal,
+          ulnow,
+        )
+      : 0
+
+    return ret
+  }
+
+  /**
    * This is the default callback passed to {@link setOpt | `setOpt('WRITEFUNCTION', cb)`}.
    */
   protected defaultWriteFunction(chunk: Buffer, size: number, nmemb: number) {
+    // this is a stream based request, so we need a totally different handling
+    if (this.features & CurlFeature.StreamResponse) {
+      return this.defaultWriteFunctionStreamBased(chunk, size, nmemb)
+    }
+
     if (!(this.features & CurlFeature.NoDataStorage)) {
       this.chunks.push(chunk)
       this.chunksLength += chunk.length
     }
 
     this.emit('data', chunk, this)
+
+    return size * nmemb
+  }
+
+  /**
+   * This is used by the default callback passed to {@link setOpt | `setOpt('WRITEFUNCTION', cb)`}
+   * when the feature to stream response is enabled.
+   */
+  protected defaultWriteFunctionStreamBased(
+    chunk: Buffer,
+    size: number,
+    nmemb: number,
+  ) {
+    if (!this.writeFunctionStream) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      const handle = this
+      // create the response stream we are going to use
+      this.writeFunctionStream = new Readable({
+        destroy(error, cb) {
+          handle.streamError =
+            error ||
+            new Error('Curl response stream was unexpectedly destroyed')
+
+          // let the event loop run one more time before we do anything
+          // if the handle is not running anymore it means that the
+          // error we set above was caught, if it is still running, then it means that:
+          // - the handle is paused
+          // - the progress function was not called yet
+          // If this is the case, then we just unpause the handle. This will cause the following:
+          // - the WRITEFUNCTION callback will be called
+          // - this will pause the handle again (because we cannot throw the error in here)
+          // - the PROGRESSFUNCTION callback will be called, and then the error will be thrown.
+          setImmediate(() => {
+            if (handle.isRunning && handle.streamWriteFunctionPaused) {
+              handle.streamWriteFunctionPaused = false
+              handle.streamWriteFunctionShouldPause = true
+              try {
+                handle.pause(CurlPause.RecvCont)
+              } catch (error) {
+                cb(error)
+                return
+              }
+            }
+
+            cb(null)
+          })
+        },
+        read(_size) {
+          if (
+            handle.streamWriteFunctionFirstRun ||
+            handle.streamWriteFunctionPaused
+          ) {
+            if (handle.streamWriteFunctionFirstRun) {
+              handle.streamWriteFunctionFirstRun = false
+            }
+            // we must allow Node.js to process the whole event queue
+            // before we unpause
+            setImmediate(() => {
+              if (handle.isRunning) {
+                handle.streamWriteFunctionPaused = false
+                handle.pause(CurlPause.RecvCont)
+              }
+            })
+          }
+        },
+      })
+
+      // as soon as we have the stream, we need to emit the "stream" event
+      // but the "stream" event needs the statusCode and the headers, so this
+      // is what we are retrieving here.
+      const headers = this.getHeaders()
+
+      const { code, data: status } = this.handle.getInfo(
+        Curl.info.RESPONSE_CODE,
+      )
+
+      if (code !== CurlCode.CURLE_OK) {
+        const error = new Error('Could not get status code of request')
+        this.emit('error', error, code, this)
+        return 0
+      }
+
+      // let's emit the event only in the next iteration of the event loop
+      // We need to do this otherwise the event listener callbacks would run
+      // before the pause below, and this is probably not what we want.
+      setImmediate(() =>
+        this.emit('stream', this.writeFunctionStream, status, headers, this),
+      )
+
+      this.streamWriteFunctionPaused = true
+      return CurlWriteFunc.Pause
+    }
+
+    // pause this req
+    if (this.streamWriteFunctionShouldPause) {
+      this.streamWriteFunctionShouldPause = false
+      this.streamWriteFunctionPaused = true
+      return CurlWriteFunc.Pause
+    }
+
+    // write to the stream
+    const ok = this.writeFunctionStream.push(chunk)
+
+    // pause connection until there is more data
+    if (!ok) {
+      this.streamWriteFunctionPaused = true
+      this.pause(CurlPause.Recv)
+    }
 
     return size * nmemb
   }
@@ -664,6 +1076,19 @@ interface Curl {
       this: Curl,
       error: Error,
       errorCode: CurlCode,
+      curlInstance: Curl,
+    ) => void,
+  ): this
+  /**
+   * This is emitted if the StreamResponse feature was enabled.
+   */
+  on(
+    event: 'stream',
+    listener: (
+      this: Curl,
+      stream: Readable,
+      status: number,
+      headers: Buffer | HeaderInfo[],
       curlInstance: Curl,
     ) => void,
   ): this

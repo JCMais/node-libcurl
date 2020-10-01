@@ -39,4 +39,44 @@ export enum CurlFeature {
    * Same than `NoDataStorage | NoHeaderStorage`, implies `Raw`.
    */
   NoStorage = NoDataStorage | NoHeaderStorage,
+
+  /**
+   * This will change the behavior of the internal `WRITEFUNCTION` to push data into a stream instead of
+   * buffering all the data into multiple `Buffer` chunks.
+   *
+   * As soon as the stream is available, it will be passed as the first argument for the `stream` event.
+   *
+   * Example usage:
+   *
+   * ```typescript
+   *  const curl = new Curl()
+   *  curl.setOpt('URL', 'https://some-domain/upload')
+   *
+   *  curl.setStreamProgressCallback(() => {
+   *    // this will use the default progress callback from libcurl
+   *    return CurlProgressFunc.Continue
+   *  })
+   *
+   *  curl.on('end', (statusCode, data) => {
+   *    console.log('\n'.repeat(5))
+   *    console.log(
+   *      `curl - end - status: ${statusCode} - data length: ${data.length}`,
+   *    )
+   *    curl.close()
+   *  })
+   *  curl.on('error', (error, errorCode) => {
+   *    console.log('\n'.repeat(5))
+   *    console.error('curl - error: ', error, errorCode)
+   *    curl.close()
+   *  })
+   *  curl.on('stream', async (stream, _statusCode, _headers) => {
+   *    const writableStream = fs.createWriteStream('./test.out')
+   *    stream.pipe(writableStream)
+   *  })
+   *  curl.perform()
+   * ```
+   *
+   * Using this implies `NoDataStorage`.
+   */
+  StreamResponse = 1 << 4,
 }
