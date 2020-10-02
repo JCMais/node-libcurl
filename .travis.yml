@@ -66,6 +66,12 @@ git:
   depth: 10
   submodules: false
 
+# disable redundancy when building PRs
+branches:
+  only:
+    - master
+    - develop
+
 before_install:
   # Use latest yarn
   - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.15.2
