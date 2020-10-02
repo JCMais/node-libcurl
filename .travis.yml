@@ -76,6 +76,9 @@ before_install:
     export LINK="gcc-${GCC_VERSION}";
     export LINKXX="g++-${GCC_VERSION}";
     fi
+  - if [[ $TRAVIS_PULL_REQUEST != "false" ]]; then
+    export PUBLISH_BINARY="false";
+    fi
   - export PATH=$HOME/bin:$PATH
   - yarn --version
   - node --version

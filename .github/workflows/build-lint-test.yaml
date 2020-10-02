@@ -1,7 +1,11 @@
 name: build-lint-test
 
 on:
-  - push
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
 
 env:
   LIBCURL_RELEASE: 'LATEST'
