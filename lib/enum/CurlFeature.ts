@@ -77,6 +77,11 @@ export enum CurlFeature {
    * ```
    *
    * Using this implies `NoDataStorage`.
+   *
+   * @remarks
+   *
+   * Make sure your libcurl version is greater than or equal 7.69.1.
+   * Versions older than that one are not reliable for streams usage.
    */
   StreamResponse = 1 << 4,
 }

@@ -139,6 +139,11 @@ export interface CurlyOptions extends CurlOptionValueType {
    * Even if an error argument was not supplied to `stream.destroy()`.
    *
    * By default this is false.
+   *
+   * @remarks
+   *
+   * Make sure your libcurl version is greater than or equal 7.69.1.
+   * Versions older than that one are not reliable for streams usage.
    */
   curlyStreamResponse?: boolean
 
@@ -162,6 +167,11 @@ export interface CurlyOptions extends CurlOptionValueType {
    * If the stream was destroyed with a specific error, this error will be passed instead.
    *
    * By default this is not set.
+   *
+   * @remarks
+   *
+   * Make sure your libcurl version is greater than or equal 7.69.1.
+   * Versions older than that one are not reliable for streams usage.
    */
   curlyStreamUpload?: Readable | null
 }

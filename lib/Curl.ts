@@ -480,6 +480,9 @@ class Curl extends EventEmitter {
    *
    * This option is reset after each request, so if you want to upload the same data again using the same
    * `Curl` instance, you will need to provide a new stream.
+   *
+   * Make sure your libcurl version is greater than or equal 7.69.1.
+   * Versions older than that one are not reliable for streams usage.
    */
   setUploadStream(stream: Readable | null) {
     if (!stream) {
