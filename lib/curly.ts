@@ -143,6 +143,11 @@ export interface CurlyOptions extends CurlOptionValueType {
   curlyStreamResponse?: boolean
 
   /**
+   * This will set the hightWaterMark in the response stream, if `curlyStreamResponse` is `true`.
+   */
+  curlyStreamResponseHighWaterMark?: number
+
+  /**
    * If set, the contents of this stream will be uploaded to the server.
    *
    * Keep in mind that if you set this option you **SHOULD** not set
@@ -251,7 +256,11 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
     }
 
     // streams!
-    const { curlyStreamResponse, curlyStreamUpload } = finalOptions
+    const {
+      curlyStreamResponse,
+      curlyStreamResponseHighWaterMark,
+      curlyStreamUpload,
+    } = finalOptions
     const isUsingStream = !!(curlyStreamResponse || curlyStreamUpload)
 
     if (finalOptions.curlyProgressCallback) {
@@ -270,6 +279,12 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
 
     if (curlyStreamResponse) {
       curlHandle.enable(CurlFeature.StreamResponse)
+
+      if (curlyStreamResponseHighWaterMark) {
+        curlHandle.setStreamResponseHighWaterMark(
+          curlyStreamResponseHighWaterMark,
+        )
+      }
     }
 
     if (curlyStreamUpload) {
@@ -409,7 +424,7 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
         // so instead of rejecting the original promise
         // we are emitting the error event on the stream
         if (stream) {
-          if (!stream.destroyed) stream.emit('error', error)
+          stream.emit('error', error)
         } else {
           reject(error)
         }

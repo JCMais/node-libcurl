@@ -63,7 +63,6 @@ import { CurlReadFunc } from './enum/CurlReadFunc'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const bindings: NodeLibcurlNativeBinding = require('../lib/binding/node_libcurl.node')
 
-// tslint:disable-next-line
 const { Curl: _Curl, CurlVersionInfo } = bindings
 
 if (
@@ -246,6 +245,7 @@ class Curl extends EventEmitter {
   protected streamReadFunctionShouldPause = false
   protected streamReadFunctionPaused = false
   // WRITEFUNCTION / download related
+  protected streamWriteFunctionHighWaterMark: number | undefined
   protected streamWriteFunctionShouldPause = false
   protected streamWriteFunctionPaused = false
   protected streamWriteFunctionFirstRun = true
@@ -330,6 +330,8 @@ class Curl extends EventEmitter {
 
     const { code, data: status } = this.handle.getInfo(Curl.info.RESPONSE_CODE)
 
+    // if is ignored because this should never happen under normal circumstances.
+    /* istanbul ignore if */
     if (code !== CurlCode.CURLE_OK) {
       const error = new Error('Could not get status code of request')
       this.emit('error', error, code, this)
@@ -491,17 +493,34 @@ class Curl extends EventEmitter {
 
     if (this.readFunctionStream === stream) return this
 
+    if (
+      typeof stream?.on !== 'function' ||
+      typeof stream?.read !== 'function'
+    ) {
+      throw new Error(
+        'The passed value to setUploadStream does not looks like a stream object',
+      )
+    }
+
     this.readFunctionStream = stream
 
     const resumeIfPaused = () => {
       if (this.streamReadFunctionPaused) {
         this.streamReadFunctionPaused = false
 
-        // just to make sure we do not try to unpause
-        // a connection that has already finished
-        // this can happen if some error has been throw
-        // in the meantime
-        this.pause(CurlPause.Cont)
+        // let's unpause only on the next event loop iteration
+        // this will avoid scenarios where the readable event was emitted
+        // between libcurl pausing the transfer from the READFUNCTION
+        // and the next real iteration.
+        setImmediate(() => {
+          // just to make sure we do not try to unpause
+          // a connection that has already finished
+          // this can happen if some error has been throw
+          // in the meantime
+          if (this.isRunning) {
+            this.pause(CurlPause.Cont)
+          }
+        })
       }
     }
 
@@ -590,6 +609,16 @@ class Curl extends EventEmitter {
       return totalWritten
     })
 
+    return this
+  }
+
+  /**
+   * Set the param to null to use the Node.js default value.
+   *
+   * @param highWaterMark This will passed directly to the Readable stream created to be returned as the response
+   */
+  setStreamResponseHighWaterMark(highWaterMark: number | null) {
+    this.streamWriteFunctionHighWaterMark = highWaterMark || undefined
     return this
   }
 
@@ -911,6 +940,7 @@ class Curl extends EventEmitter {
       const handle = this
       // create the response stream we are going to use
       this.writeFunctionStream = new Readable({
+        highWaterMark: this.streamWriteFunctionHighWaterMark,
         destroy(error, cb) {
           handle.streamError =
             error ||
