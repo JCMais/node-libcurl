@@ -9,6 +9,7 @@ import https from 'https'
 import http2 from 'http2'
 import fs from 'fs'
 import path from 'path'
+import { Socket } from 'net'
 
 import express from 'express'
 import bodyParser from 'body-parser'
@@ -19,7 +20,22 @@ const key = fs.readFileSync(file('./ssl/cert.key'))
 const cert = fs.readFileSync(file('./ssl/cert.pem'))
 
 export const app = express()
+
+const serverSockets = new Set<Socket>()
 export const server = http.createServer(app)
+export const closeServer = () => {
+  for (const socket of serverSockets.values()) {
+    socket.destroy()
+  }
+  server.close()
+}
+server.on('connection', (socket) => {
+  serverSockets.add(socket)
+  socket.on('close', () => {
+    serverSockets.delete(socket)
+  })
+})
+
 export const serverHttps = https.createServer(
   {
     key,

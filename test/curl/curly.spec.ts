@@ -6,8 +6,10 @@
  */
 import 'should'
 
-import { app, host, port, server } from '../helper/server'
 import { curly } from '../../lib'
+
+import { app, host, port, server } from '../helper/server'
+import { allMethodsWithMultipleReqResTypes } from '../helper/commonRoutes'
 
 const url = `http://${host}:${port}`
 
@@ -15,49 +17,7 @@ describe('curly', () => {
   before((done) => {
     server.listen(port, host, done)
 
-    app.all('/all', (req, res) => {
-      const method = req.method.toLowerCase()
-
-      switch (req.query.type) {
-        case 'redirect-c':
-          return res.redirect(301, '/all?type=redirect-b')
-        case 'redirect-b':
-          return res.redirect(301, '/all?type=redirect-a')
-        case 'redirect-a':
-          return res.redirect(301, '/all?type=json')
-        case 'no-content-type':
-          res.writeHead(200)
-          res.write('no content type :)')
-          return res.end()
-        case 'set-cookie':
-          return res
-            .cookie('test-a', 'abc', { httpOnly: true })
-            .cookie('test-b', 'def')
-            .send('')
-        case 'method':
-          return res.set({ 'x-req-method': method }).send(method)
-        case 'json':
-          return res
-            .set({ 'content-type': 'application/json;charset=utf-8' })
-            .json({
-              test: true,
-            })
-        case 'json-body':
-          return res
-            .set({ 'content-type': 'application/json;charset=utf-8' })
-            .json(req.body)
-        case 'json-invalid':
-          return res
-            .set({ 'content-type': 'application/json;charset=utf-8' })
-            .send("I'm invalid :)")
-        case 'something':
-          return res
-            .contentType('application/something')
-            .send('binary data would go here :)')
-        default:
-          return res.send('Hello World!')
-      }
-    })
+    allMethodsWithMultipleReqResTypes(app)
   })
 
   after(() => {
@@ -86,7 +46,12 @@ describe('curly', () => {
       ] as const
 
       for (const [method, options] of methods) {
-        const { statusCode, headers } = await curly[method](urlMethod, options)
+        const { statusCode, headers } = await curly[method](urlMethod, {
+          ...options,
+          curlyProgressCallback() {
+            return 0
+          },
+        })
 
         statusCode.should.be.equal(200)
         headers[0]['x-req-method'].should.be.equal(method)
@@ -266,6 +231,22 @@ describe('curly', () => {
   })
 
   describe('error handling', () => {
+    it('throw error on invalid curlyProgressCallback', async () => {
+      const options = {
+        curlyProgressCallback: 'I should have been a function :)',
+      }
+
+      ;(() =>
+        curly
+          // @ts-expect-error not assignable!
+          .get<string>(`${url}/all?type=json`, options)).should.throw(
+        TypeError,
+        {
+          message: /^curlyProgressCallback must be a function/,
+        },
+      )
+    })
+
     it('throw error on invalid response body parser in option curlyResponseBodyParsers', async () => {
       const options = {
         curlyResponseBodyParsers: {
