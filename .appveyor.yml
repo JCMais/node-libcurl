@@ -183,6 +183,7 @@ on_success:
   - IF "%PUBLISH_BINARY%" == "true" (SET INSTALL_RESULT=%ERRORLEVEL%)
   - IF NOT %INSTALL_RESULT% == 0 (for /f "usebackq delims=" %%x in (`node-pre-gyp reveal hosted_tarball --silent`) do node scripts\module-packaging.js --unpublish %%x)
   - IF NOT %INSTALL_RESULT% == 0 (echo "Package unpublished since we got an error while installing it.")
+  - dir .
   # - node-pre-gyp clean
 
 # Don't actually deploy.
