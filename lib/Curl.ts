@@ -616,9 +616,12 @@ class Curl extends EventEmitter {
   }
 
   /**
-   * Set the param to null to use the Node.js default value.
+   * Set the param to `null` to use the Node.js default value.
    *
-   * @param highWaterMark This will passed directly to the Readable stream created to be returned as the response
+   * @param highWaterMark This will passed directly to the `Readable` stream created to be returned as the response'
+   *
+   * @remarks
+   * Only useful when the {@link CurlFeature.StreamResponse | `StreamResponse`} feature flag is enabled.
    */
   setStreamResponseHighWaterMark(highWaterMark: number | null) {
     this.streamWriteFunctionHighWaterMark = highWaterMark || undefined

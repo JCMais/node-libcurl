@@ -78,6 +78,8 @@ export enum CurlFeature {
    *
    * Using this implies `NoDataStorage`.
    *
+   * To control the `highWaterMark` option of the response stream, see {@link "Curl".Curl.setStreamResponseHighWaterMark | `Curl#setStreamResponseHighWaterMark`}
+   *
    * @remarks
    *
    * Make sure your libcurl version is greater than or equal 7.69.1.
