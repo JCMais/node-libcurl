@@ -146,6 +146,7 @@ install:
 
 build_script:
   - yarn install --frozen-lockfile
+  - dir .
 
 # Post-install test scripts.
 test_script:
