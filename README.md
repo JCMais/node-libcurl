@@ -205,9 +205,9 @@ For more examples check the [examples folder](./examples).
 
 ## API
 
-API documentation for the latest stable version is available at [https://node-libcurl-docs.netlify.app/](https://node-libcurl-docs.netlify.app/).
+API documentation for the latest stable version is available at [https://node-libcurl-docs.netlify.app/modules/_index_.html](https://node-libcurl-docs.netlify.app/modules/_index_.html).
 
-Develop branch documentation is available at [https://develop--node-libcurl-docs.netlify.app/](https://develop--node-libcurl-docs.netlify.app/).
+Develop branch documentation is available at [https://develop--node-libcurl-docs.netlify.app/modules/_index_.html](https://develop--node-libcurl-docs.netlify.app/modules/_index_.html).
 
 This library provides Typescript type definitions.
 
