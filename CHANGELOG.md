@@ -38,9 +38,20 @@ As `curly` is marked as experimental, this allows us to do a breaking change in 
 ### Added
 - Calling `curly.create(options)` will now return a new `curly` object that will use the passed `options` as defaults. [#247](https://github.com/JCMais/node-libcurl/issues/247)
 - TypeScript: `curly` (and `curly.<method>`) now accepts a generic type parameter which will be the type of the `data` returned. By default, this is set to `any`.
-- Added new option to `curly`: `curlyBaseUrl: string`, if set, their value will always be added as the prefix for the URL.
-- Added new options `curly`: `curlyLowerCaseHeaders: boolean`, if set to true, headers will be returned in lower case. Defaults to false. [#240](https://github.com/JCMais/node-libcurl/issues/240)
-
+- Added new options to the `curly` API:
+  - `curlyBaseUrl: string`, if set, their value will always be added as the prefix for the URL.
+  - `curlyLowerCaseHeaders: boolean`, if set to true, headers will be returned in lower case. Defaults to false. [#240](https://github.com/JCMais/node-libcurl/issues/240)
+- Added new methods and feature allow to use streams to upload and download data without having to set `WRITEFUNCTION` and/or `READFUNCTION` manually. [#237](https://github.com/JCMais/node-libcurl/issues/237)
+  - `Curl.setUploadStream`
+  - `Curl.setStreamProgress`
+  - `Curl.setStreamResponseHighWaterMark`
+  - `CurlFeature.StreamResponse`  
+  New options were also added to the `curly` API:
+  - `curlyProgressCallback`
+  - `curlyStreamResponse`
+  - `curlyStreamResponseHighWaterMark`
+  - `curlyStreamUpload`  
+  These new features related to streams are only reliable when using a libcurl version >= 7.69.1.
 ### Changed
 - `curly` now has 100% code coverage.
 
