@@ -35,12 +35,6 @@ export const allMethodsWithMultipleReqResTypes = (
             .end()
         })
         break
-
-      // return res
-      //   .set({ 'content-type': 'application/json;charset=utf-8' })
-      //   .json({
-      //     test: true,
-      //   })
       case 'no-content-type':
         res.writeHead(200)
         res.write('no content type :)')
