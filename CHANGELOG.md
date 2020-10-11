@@ -52,7 +52,8 @@ As `curly` is marked as experimental, this allows us to do a breaking change in 
   - `curlyStreamResponseHighWaterMark`
   - `curlyStreamUpload`  
   These new features related to streams are only reliable when using a libcurl version >= 7.69.1.
-- Add support for the libcurl info `CURLINFO_CERTINFO`. Can be retrieved using `getInfo("CERTINFO")`. Thanks to [@Sergey-Mityukov](https://github.com/Sergey-Mityukov) for most of the work on this.
+- Support libcurl info `CURLINFO_CERTINFO`. Can be retrieved using `getInfo("CERTINFO")`. Thanks to [@Sergey-Mityukov](https://github.com/Sergey-Mityukov) for most of the work on this.
+- Support libcurl info `CURLINFO_EFFECTIVE_METHOD`. Requires libcurl >= 7.72.0.
 
 ### Changed
 - `curly` now has 100% code coverage.

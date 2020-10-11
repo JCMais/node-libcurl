@@ -1693,6 +1693,8 @@ NAN_METHOD(Easy::GetInfo) {
 #if NODE_LIBCURL_VER_GE(7, 45, 0)
     curl_socket_t socket;
 #else
+    // this should never really used tho, as it's only possible to have
+    // an curlInfoSocket value with libcurl >= 7.45.0
     long socket;  // NOLINT(runtime/int)
 #endif
     code = curl_easy_getinfo(obj->ch, static_cast<CURLINFO>(infoId), &socket);
@@ -1701,6 +1703,7 @@ NAN_METHOD(Easy::GetInfo) {
       // curl_socket_t is of type SOCKET on Windows,
       //  casting it to int32_t can be dangerous, only if Microsoft ever decides
       //  to change the underlying architecture behind it.
+      // https://stackoverflow.com/a/26496808/710693
       retVal = Nan::New<v8::Integer>(static_cast<int32_t>(socket));
     }
 

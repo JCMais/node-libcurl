@@ -541,6 +541,11 @@ const std::vector<CurlConstant> curlInfoNotImplemented = {
 const std::vector<CurlConstant> curlInfoString = {
     {"CONTENT_TYPE", CURLINFO_CONTENT_TYPE},
     {"EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL},
+
+#if NODE_LIBCURL_VER_GE(7, 72, 0)
+    {"EFFECTIVE_METHOD", CURLINFO_EFFECTIVE_METHOD},
+#endif
+
     {"FTP_ENTRY_PATH", CURLINFO_FTP_ENTRY_PATH},
     {"LOCAL_IP", CURLINFO_LOCAL_IP},
     {"PRIMARY_IP", CURLINFO_PRIMARY_IP},
