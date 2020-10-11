@@ -1,16 +1,12 @@
 // This should be kept in sync with the options on src/Curl.cc curlOptionNotImplemented
 const curlOptionsBlacklist = [
-  // @TODO To implement when we bump libcurl version?
+  // TODO: add support for curl_blob - See https://github.com/JCMais/node-libcurl/issues/253
   'CURLOPT_ISSUERCERT_BLOB',
-  'CURLOPT_ISSUERCERT',
   'CURLOPT_SSLKEY_BLOB',
-  'CURLOPT_SSLKEY',
   'CURLOPT_SSLCERT_BLOB',
-  'CURLOPT_SSLCERT',
   'CURLOPT_PROXY_SSLCERT_BLOB',
   'CURLOPT_PROXY_SSLCERT',
   'CURLOPT_PROXY_SSLKEY_BLOB',
-  'CURLOPT_PROXY_SSLKEY',
 
   // probably will be implemented at some time in the future?
   'CURLOPT_STREAM_DEPENDS',
@@ -18,7 +14,6 @@ const curlOptionsBlacklist = [
   'CURLOPT_STREAM_WEIGHT',
   'CURLOPT_INTERLEAVEDATA',
   'CURLOPT_INTERLEAVEFUNCTION',
-  'CURLOPT_ISSUERCERT_BLOB',
   // maybe
   'CURLOPT_STDERR',
   // https://curl.haxx.se/libcurl/c/CURLOPT_CURLU.html
