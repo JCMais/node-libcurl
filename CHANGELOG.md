@@ -55,6 +55,7 @@ As `curly` is marked as experimental, this allows us to do a breaking change in 
 - Support libcurl info `CURLINFO_CERTINFO`. Can be retrieved using `getInfo("CERTINFO")`. Thanks to [@Sergey-Mityukov](https://github.com/Sergey-Mityukov) for most of the work on this.
 - Support libcurl info `CURLINFO_EFFECTIVE_METHOD`. Requires libcurl >= 7.72.0.
 - Support libcurl info `CURLINFO_PROXY_ERROR`. Use `CurlPx` for constants. Requires libcurl >= 7.73.0.
+- Support libcurl option `CURLOPT_SSL_EC_CURVES`. Requires libcurl >= 7.73.0.
 
 ### Changed
 - `curly` now has 100% code coverage.
