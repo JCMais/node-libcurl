@@ -124,7 +124,9 @@ orbs:
                 echo "$OPENSSL_RELEASE" >> _libs_versions
                 echo "$ZLIB_RELEASE" >> _libs_versions
           - restore_cache:
-              key: v2-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-nwjsV<<parameters.nwjs-version>>-deps-libs-{{ checksum "_libs_versions" }}-{{ checksum "yarn.lock" }}
+              keys:
+                - v2-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-nwjsV<<parameters.nwjs-version>>-deps-libs-{{ checksum "_libs_versions" }}-{{ checksum "yarn.lock" }}
+                - v2-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-nwjsV<<parameters.nwjs-version>>-deps-libs-{{ checksum "_libs_versions" }}-
 
           - steps: <<parameters.before-build>>
           ####

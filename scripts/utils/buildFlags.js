@@ -5,7 +5,7 @@ const path = require('path')
 let isGitRepo
 
 try {
-  fs.statSync(path.join(__dirname, '..', '.git'))
+  fs.statSync(path.resolve(__dirname, '..', '..', '.git'))
   isGitRepo = true
 } catch (e) {
   isGitRepo = false

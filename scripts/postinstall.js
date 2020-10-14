@@ -50,7 +50,7 @@ function printStandardLibError() {
 function cleanup() {
   // If we're using node-libcurl from a package manager then let's clean up after
   // ourselves when we install successfully - unless specified not to.
-  if (!buildFlags.mustBuild && !buildFlags.skipCleanup) {
+  if (!(buildFlags.mustBuild || buildFlags.skipCleanup)) {
     rimraf.sync(path.join(rootPath, 'build'))
     if (fs.existsSync(path.join(rootPath, 'curl-for-windows'))) {
       rimraf.sync(path.join(rootPath, 'curl-for-windows'))
