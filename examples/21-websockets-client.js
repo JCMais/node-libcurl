@@ -189,7 +189,7 @@ const onConnected = (easyHandle) => {
             } while (frame && frame.remaining)
 
             // we could do anything with the frames here...
-              
+
             // TODO: Handle extensions, compression, etc
 
             ///////////////////////
