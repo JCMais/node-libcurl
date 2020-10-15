@@ -40,7 +40,7 @@ const {
   WebSocketError,
 } = require('./21-websockets-client-helpers')
 
-// Two bad reads means a stale socket, and so the connection is going to be closed afte that.
+// Two bad reads means a stale socket, and so the connection is going to be closed after that.
 const BAD_READ_MAX = 2
 
 const getCleanState = () => ({
@@ -189,6 +189,8 @@ const onConnected = (easyHandle) => {
             } while (frame && frame.remaining)
 
             // we could do anything with the frames here...
+              
+            // TODO: Handle extensions, compression, etc
 
             ///////////////////////
             // Handle close opcode
@@ -202,7 +204,7 @@ const onConnected = (easyHandle) => {
                 // TODO: use code from req
                 sendData(easyHandle, packCloseFrame(1005))
               }
-              // closeHandle(easyHandle)
+              closeHandle(easyHandle)
               return
             }
 
@@ -238,6 +240,7 @@ const onConnected = (easyHandle) => {
       if (isWritable && !state.hasSentUpgradeRequest) {
         const initialBuffer = Buffer.from(
           [
+            // TODO: You probably want to make this dynamic based on the URL ;)
             'GET / HTTP/1.1',
             'Host: localhost:8080',
             'Upgrade: websocket',
