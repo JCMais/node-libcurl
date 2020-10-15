@@ -10,7 +10,7 @@
 // that are not currently handled, so keep that in mind :)
 // How to run this example:
 //  1. start the server (install the deps in there first)
-//    node 21-websockets-server/index.js
+//    node examples/21-websockets-server/index.js
 //  2. start the client
 //    node examples/21-websockets-client.js
 // type "connect" in the terminal running the client and hit enter
