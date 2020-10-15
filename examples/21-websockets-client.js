@@ -332,9 +332,6 @@ process.stdin.on(
 
       if (state.hasRequestBeenUpgraded && state.connectionOpen) {
         switch (dataStr) {
-          case 'connect':
-            easyHandle = connect()
-            break
           case 'big':
             sendData(
               easyHandle,
