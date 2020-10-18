@@ -41,7 +41,7 @@ As `curly` is marked as experimental, this allows us to do a breaking change in 
 - Added new options to the `curly` API:
   - `curlyBaseUrl: string`, if set, their value will always be added as the prefix for the URL.
   - `curlyLowerCaseHeaders: boolean`, if set to true, headers will be returned in lower case. Defaults to false. [#240](https://github.com/JCMais/node-libcurl/issues/240)
-- Added new methods and feature allow to use streams to upload and download data without having to set `WRITEFUNCTION` and/or `READFUNCTION` manually. [#237](https://github.com/JCMais/node-libcurl/issues/237)
+- Added new methods and `CurlFeature` allowing the use of streams to upload and download data without having to set `WRITEFUNCTION` and/or `READFUNCTION` manually. [#237](https://github.com/JCMais/node-libcurl/issues/237)
   - `Curl.setUploadStream`
   - `Curl.setStreamProgress`
   - `Curl.setStreamResponseHighWaterMark`

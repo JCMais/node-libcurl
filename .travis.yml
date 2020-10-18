@@ -71,6 +71,7 @@ branches:
   only:
     - master
     - develop
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 
 before_install:
   # Use latest yarn

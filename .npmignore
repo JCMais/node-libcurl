@@ -6,6 +6,7 @@
 .idea
 .travis.yml
 .circleci/
+.github/
 .nyc_output/
 .vscode/
 benchmark/
