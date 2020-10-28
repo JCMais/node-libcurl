@@ -144,10 +144,14 @@ describe('Callbacks', () => {
           wasCalled = true
           return ['x-random-header: random-value2']
         })
+
+        let finished = false
         curl.setOpt(Curl.option.READFUNCTION, (buffer, _size, _nmemb) => {
+          if (finished) return 0
+
           const data = 'HELLO'
-          buffer.write(data)
-          return 0
+          finished = true
+          return buffer.write(data)
         })
 
         curl.on('end', (statusCode, body) => {
@@ -185,10 +189,14 @@ describe('Callbacks', () => {
         curl.setOpt('TRAILERFUNCTION', () => {
           return false
         })
+
+        let finished = false
         curl.setOpt(Curl.option.READFUNCTION, (buffer, _size, _nmemb) => {
+          if (finished) return 0
+
           const data = 'HELLO'
-          buffer.write(data)
-          return 0
+          finished = true
+          return buffer.write(data)
         })
 
         curl.on('end', () => {
@@ -212,10 +220,13 @@ describe('Callbacks', () => {
           throw new Error('thrown error inside callback')
         })
 
+        let finished = false
         curl.setOpt(Curl.option.READFUNCTION, (buffer, _size, _nmemb) => {
+          if (finished) return 0
+
           const data = 'HELLO'
-          buffer.write(data)
-          return 0
+          finished = true
+          return buffer.write(data)
         })
 
         curl.on('end', () => {
@@ -240,10 +251,13 @@ describe('Callbacks', () => {
           return {}
         })
 
+        let finished = false
         curl.setOpt(Curl.option.READFUNCTION, (buffer, _size, _nmemb) => {
+          if (finished) return 0
+
           const data = 'HELLO'
-          buffer.write(data)
-          return 0
+          finished = true
+          return buffer.write(data)
         })
 
         curl.on('end', () => {

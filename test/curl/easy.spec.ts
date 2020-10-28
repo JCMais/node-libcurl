@@ -96,10 +96,13 @@ describe('easy', () => {
         curl.setOpt('TRAILERFUNCTION', () => {
           throw new Error('Error thrown on callback')
         })
-        curl.setOpt(Curl.option.READFUNCTION, (buffer) => {
+        let finished = false
+        curl.setOpt(Curl.option.READFUNCTION, (buffer, _size, _nmemb) => {
+          if (finished) return 0
+
           const data = 'HELLO'
-          buffer.write(data)
-          return 0
+          finished = true
+          return buffer.write(data)
         })
         const perform = () => curl.perform()
         perform.should.throw('Error thrown on callback')
@@ -111,10 +114,13 @@ describe('easy', () => {
         curl.setOpt('TRAILERFUNCTION', () => {
           return {}
         })
-        curl.setOpt(Curl.option.READFUNCTION, (buffer) => {
+        let finished = false
+        curl.setOpt(Curl.option.READFUNCTION, (buffer, _size, _nmemb) => {
+          if (finished) return 0
+
           const data = 'HELLO'
-          buffer.write(data)
-          return 0
+          finished = true
+          return buffer.write(data)
         })
         const perform = () => curl.perform()
         perform.should.throw(
