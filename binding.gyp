@@ -50,7 +50,10 @@
               # 4506 and 4838 -> about v8 inline function and narrowing
               # 4068 -> Unknown pragma (mostly GCC pragmas being used)
               # 4996 -> Declared wrongly Nan::Callback::Call
-              'DisableSpecificWarnings': ['4244', '4506', '4068', '4838', '4996']
+              'DisableSpecificWarnings': ['4244', '4506', '4068', '4838', '4996'],
+              'AdditionalOptions': [
+                '/MP', #compile across multiple CPUs
+              ],
             },
             'VCLinkerTool': {
               'GenerateDebugInformation': 'true',
@@ -68,7 +71,7 @@
                   'OmitFramePointers': 'true',
                   'EnableFunctionLevelLinking': 'true',
                   'EnableIntrinsicFunctions': 'true',
-                  'WarnAsError': 'true'
+                  'WarnAsError': 'true',
                 }
               }
             },
