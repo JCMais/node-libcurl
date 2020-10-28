@@ -140,6 +140,7 @@ async function replaceTokensOnFiles(dir) {
   const filesToCheck = [
     'libssh2.gyp',
     'openssl/openssl.gyp',
+    'cares/cares.gyp',
     'nghttp2/nghttp2.gyp',
     'zlib.gyp',
     'curl.gyp',
