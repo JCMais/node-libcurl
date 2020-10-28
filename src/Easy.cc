@@ -1154,6 +1154,9 @@ NAN_METHOD(Easy::SetOpt) {
 
   int optionId;
 
+  // See this: https://daniel.haxx.se/blog/2020/08/28/enabling-better-curl-bindings/
+  // we probably could use these here for newer libcurl versions...
+
   if ((optionId = IsInsideCurlConstantStruct(curlOptionNotImplemented, opt))) {
     Nan::ThrowError(
         "Unsupported option, probably because it's too complex to implement "
