@@ -57,6 +57,11 @@ cache:
 
 # Install scripts. (runs after repo cloning)
 install:
+  # We need this because we are building libcurl with c-ares
+  # instead of the system DNS resolver, and on Windows, this
+  # means that localhost is not handled by default
+  - echo 127.0.0.1       localhost >> C:\Windows\System32\drivers\etc\hosts
+  - echo ::1             localhost >> C:\Windows\System32\drivers\etc\hosts
   # Get nasm
   - cinst nasm -y
   - set PATH=%PROGRAMFILES%\NASM;%PATH%
