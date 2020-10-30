@@ -18,12 +18,12 @@ executors:
     environment:
       RECONFIGURE_NGHTTP2: 'true'
       BASH_ENV: '/home/circleci/.bashrc'
-      LATEST_LIBCURL_RELEASE: '7.69.1'
+      LATEST_LIBCURL_RELEASE: '7.73.0'
   alpine:
     docker:
       - image: jonathancardoso/alpine-ci
     environment:
-      LATEST_LIBCURL_RELEASE: '7.69.1'
+      LATEST_LIBCURL_RELEASE: '7.73.0'
 
 orbs:
   build-addon-alpine-and-publish:
@@ -45,6 +45,9 @@ orbs:
             type: string
           e:
             type: executor
+          cares-version:
+            type: string
+            default: '1.16.1'
           brotli-version:
             type: string
             default: '1.0.7'
@@ -97,6 +100,7 @@ orbs:
               command: |
                 echo 'export ELECTRON_VERSION="<<parameters.electron-version>>"' >> $BASH_ENV
                 echo 'export NWJS_VERSION="<<parameters.nwjs-version>>"' >> $BASH_ENV
+                echo 'export CARES_RELEASE="<<parameters.cares-version>>"' >> $BASH_ENV
                 echo 'export BROTLI_RELEASE="<<parameters.brotli-version>>"' >> $BASH_ENV
                 echo 'export LIBCURL_RELEASE="<<parameters.libcurl-version>>"' >> $BASH_ENV
                 echo 'export LIBIDN2_RELEASE="<<parameters.libidn2-version>>"' >> $BASH_ENV
@@ -113,6 +117,7 @@ orbs:
           - run:
               name: Create cache key file
               command: |
+                echo "$CARES_RELEASE" >> _libs_versions
                 echo "$BROTLI_RELEASE" >> _libs_versions
                 echo "$LIBCURL_RELEASE" >> _libs_versions
                 echo "$LIBIDN2_RELEASE" >> _libs_versions
@@ -147,6 +152,7 @@ orbs:
                 - ~/.cache/yarn
                 - ~/.node-gyp
                 - ~/.nw-gyp
+                - ~/deps/cares/build/<<parameters.cares-version>>
                 - ~/deps/brotli/build/<<parameters.brotli-version>>
                 - ~/deps/libcurl/build/<<parameters.libcurl-version>>
                 - ~/deps/libssh2/build/<<parameters.libssh2-version>>
@@ -177,9 +183,10 @@ workflows:
             tags:
               only: /^v.*/
           node-version: '10'
-          libcurl-version: '7.69.1'
-          nghttp2-version: '1.39.2'
-          openssl-version: '1.1.1e'
+          libcurl-version: '7.73.0'
+          cares-version: '1.15.0'
+          nghttp2-version: '1.41.0'
+          openssl-version: '1.1.1g'
           e:
             name: alpine
       ####
@@ -195,9 +202,10 @@ workflows:
             tags:
               only: /^v.*/
           node-version: '12'
-          libcurl-version: '7.69.1'
+          libcurl-version: '7.73.0'
+          cares-version: '1.16.0'
           nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1e'
+          openssl-version: '1.1.1g'
           e:
             name: alpine
       - build-addon-alpine-and-publish/build-addon:
@@ -211,8 +219,9 @@ workflows:
               only: /^v.*/
           node-version: '12'
           libcurl-version: '7.50.0'
+          cares-version: '1.16.0'
           nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1e'
+          openssl-version: '1.1.1g'
           e:
             name: alpine
       ####
@@ -228,9 +237,10 @@ workflows:
             tags:
               only: /^v.*/
           node-version: '14'
-          libcurl-version: '7.69.1'
-          nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1f'
+          libcurl-version: '7.73.0'
+          cares-version: '1.16.0'
+          nghttp2-version: '1.41.0'
+          openssl-version: '1.1.1g'
           e:
             name: alpine
       - build-addon-alpine-and-publish/build-addon:
@@ -244,10 +254,28 @@ workflows:
               only: /^v.*/
           node-version: '14'
           libcurl-version: '7.50.0'
-          nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1f'
+          nghttp2-version: '1.41.0'
+          openssl-version: '1.1.1g'
           e:
             name: alpine
+      ####
+      # Electron v10
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-electron-v10-libcurl-latest
+          context: general
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+            tags:
+              only: /^v.*/
+          electron-version: '10.1.5'
+          libcurl-version: '7.73.0'
+          nghttp2-version: '1.41.0'
+          openssl-version: '1.1.1g'
+          e:
+            name: debian
       ####
       # Electron v9
       ####
@@ -261,7 +289,7 @@ workflows:
             tags:
               only: /^v.*/
           electron-version: '9.1.0'
-          libcurl-version: '7.69.1'
+          libcurl-version: '7.73.0'
           nghttp2-version: '1.41.0'
           openssl-version: '1.1.1g'
           e:
@@ -279,7 +307,7 @@ workflows:
             tags:
               only: /^v.*/
           electron-version: '8.1.1'
-          libcurl-version: '7.69.1'
+          libcurl-version: '7.73.0'
           nghttp2-version: '1.40.0'
           openssl-version: '1.1.1g'
           e:
@@ -297,7 +325,7 @@ workflows:
             tags:
               only: /^v.*/
           electron-version: '7.1.14'
-          libcurl-version: '7.69.1'
+          libcurl-version: '7.73.0'
           nghttp2-version: '1.40.0'
           openssl-version: '1.1.1g'
           e:
@@ -315,7 +343,7 @@ workflows:
             tags:
               only: /^v.*/
           electron-version: '6.1.9'
-          libcurl-version: '7.69.1'
+          libcurl-version: '7.73.0'
           nghttp2-version: '1.40.0'
           openssl-version: '1.1.1g'
           e:
@@ -333,7 +361,7 @@ workflows:
             tags:
               only: /^v.*/
           electron-version: '5.0.13'
-          libcurl-version: '7.69.1'
+          libcurl-version: '7.73.0'
           nghttp2-version: '1.40.0'
           openssl-version: '1.1.1g'
           e:
@@ -351,25 +379,7 @@ workflows:
             tags:
               only: /^v.*/
           electron-version: '4.2.12'
-          libcurl-version: '7.69.1'
-          nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1g'
-          e:
-            name: debian
-      ####
-      # Electron v3
-      ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-electron-v3-libcurl-latest
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          electron-version: '3.1.13'
-          libcurl-version: '7.69.1'
+          libcurl-version: '7.73.0'
           nghttp2-version: '1.40.0'
           openssl-version: '1.1.1g'
           e:
@@ -389,7 +399,7 @@ workflows:
             tags:
               only: /^v.*/
           nwjs-version: '0.44.5'
-          libcurl-version: '7.69.1'
+          libcurl-version: '7.73.0'
           nghttp2-version: '1.40.0'
           openssl-version: '1.1.1g'
           e:
@@ -407,25 +417,7 @@ workflows:
             tags:
               only: /^v.*/
           nwjs-version: '0.43.6'
-          libcurl-version: '7.69.1'
-          nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1g'
-          e:
-            name: debian
-      ####
-      # Nw.js v0.42
-      ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-nwjs-v0.42-libcurl-latest
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          nwjs-version: '0.42.6'
-          libcurl-version: '7.69.1'
+          libcurl-version: '7.73.0'
           nghttp2-version: '1.40.0'
           openssl-version: '1.1.1g'
           e:
