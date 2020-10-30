@@ -190,7 +190,7 @@ workflows:
           e:
             name: alpine
       ####
-      # Node 12
+      # Node 12 - Just prebuilt binary for latest version
       ####
       - build-addon-alpine-and-publish/build-addon:
           name: build-addon-node-12-libcurl-latest
@@ -203,22 +203,6 @@ workflows:
               only: /^v.*/
           node-version: '12'
           libcurl-version: '7.73.0'
-          cares-version: '1.16.0'
-          nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1g'
-          e:
-            name: alpine
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-node-12-libcurl-old
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          node-version: '12'
-          libcurl-version: '7.50.0'
           cares-version: '1.16.0'
           nghttp2-version: '1.40.0'
           openssl-version: '1.1.1g'
@@ -288,7 +272,7 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          electron-version: '9.1.0'
+          electron-version: '9.3.3'
           libcurl-version: '7.73.0'
           nghttp2-version: '1.41.0'
           openssl-version: '1.1.1g'
@@ -306,7 +290,7 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          electron-version: '8.1.1'
+          electron-version: '8.5.3'
           libcurl-version: '7.73.0'
           nghttp2-version: '1.40.0'
           openssl-version: '1.1.1g'
@@ -324,7 +308,7 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          electron-version: '7.1.14'
+          electron-version: '7.3.3'
           libcurl-version: '7.73.0'
           nghttp2-version: '1.40.0'
           openssl-version: '1.1.1g'
@@ -342,7 +326,7 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          electron-version: '6.1.9'
+          electron-version: '6.1.12'
           libcurl-version: '7.73.0'
           nghttp2-version: '1.40.0'
           openssl-version: '1.1.1g'
@@ -366,26 +350,6 @@ workflows:
           openssl-version: '1.1.1g'
           e:
             name: debian
-      ####
-      # Electron v4
-      ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-electron-v4-libcurl-latest
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          electron-version: '4.2.12'
-          libcurl-version: '7.73.0'
-          nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1g'
-          e:
-            name: debian
-          # Just for reference
-          # before-build: *install-deps
       ####
       # Nwjs v0.44
       ####
