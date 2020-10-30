@@ -56,9 +56,14 @@ As `curly` is marked as experimental, this allows us to do a breaking change in 
 - Support libcurl info `CURLINFO_EFFECTIVE_METHOD`. Requires libcurl >= 7.72.0.
 - Support libcurl info `CURLINFO_PROXY_ERROR`. Use `CurlPx` for constants. Requires libcurl >= 7.73.0.
 - Support libcurl option `CURLOPT_SSL_EC_CURVES`. Requires libcurl >= 7.73.0.
-
+- Added prebuilt binaries for Electron v10.1
+- The libcurl version being used by prebuilt binaries is now 7.73.0 and it's not built with c-ares.
+  
 ### Changed
 - `curly` now has 100% code coverage.
+
+### Removed
+- Removed prebuilt binaries for: Electron v3, Electron v4, Nwjs v0.42, and Nwjs v0.43
 
 ## [2.2.0] - 2020-07-14
 ### Fixed
