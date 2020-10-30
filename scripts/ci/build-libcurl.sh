@@ -206,6 +206,11 @@ fi
 ####
 if [ ! -z "$CARES_BUILD_FOLDER" ]; then
   libcurl_args+=("--enable-ares=$CARES_BUILD_FOLDER")
+
+  if [ "$(uname)" == "Darwin" ]; then
+    # libcurl does not add this c-ares dependency automatically on macOS
+    LIBS="-lresolv $LIBS"
+  fi
 fi
 
 #####
