@@ -202,6 +202,13 @@ else
 fi
 
 #####
+# c-ares
+####
+if [ ! -z "$CARES_BUILD_FOLDER" ]; then
+  libcurl_args+=("--enable-ares=$CARES_BUILD_FOLDER")
+fi
+
+#####
 # Brotli
 ####
 if [ ! -z "$BROTLI_BUILD_FOLDER" ]; then
