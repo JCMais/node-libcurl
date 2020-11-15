@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+Probably the last release that `curly` is considered experimental.
+
 ### Breaking Change
 - `curly` (and `curly.<method>`) is now able to automatically parse the response body based on the content-type header of the response. [#240](https://github.com/JCMais/node-libcurl/issues/240)  
   Default parsers for `application/json` (calls `JSON.parse`) and `text/*` (converts the raw `Buffer` to a string with `utf8` encoding) were added. This means that for responses without a matching content-type the raw `Buffer` will be returned. This is different from the previous behavior where a string would always be returned.
