@@ -18,7 +18,7 @@
   "author": "Jonathan Cardoso Machado",
   "license": "MIT",
   "devDependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "benchmark": "^2.1.4",
     "benny": "^3.6.14",
     "http-server": "^0.12.1",
