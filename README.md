@@ -187,13 +187,13 @@ curl.on('error', close);
 
 When requesting binary data make sure to do one of these:
 - Pass your own `WRITEFUNCTION` (https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html):
-```
+```javascript
 curl.setOpt('WRITEFUNCTION', (buffer, size, nmemb) => {
   // something
 })
 ```
 - Enable one of the following flags:
-```
+```javascript
 curl.enable(CurlFeature.NoDataParsing)
 // or
 curl.enable(CurlFeature.Raw)
