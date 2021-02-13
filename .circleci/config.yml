@@ -243,6 +243,59 @@ workflows:
           e:
             name: alpine
       ####
+      # Node 15
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-node-15-libcurl-latest
+          context: general
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+            tags:
+              only: /^v.*/
+          node-version: '15'
+          libcurl-version: '7.73.0'
+          cares-version: '1.17.1'
+          nghttp2-version: '1.42.0'
+          openssl-version: '1.1.1i'
+          e:
+            name: alpine
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-node-15-libcurl-old
+          context: general
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+            tags:
+              only: /^v.*/
+          node-version: '15'
+          libcurl-version: '7.50.0'
+          nghttp2-version: '1.42.0'
+          openssl-version: '1.1.1i'
+          e:
+            name: alpine
+      ####
+      # Electron v11
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-electron-v11-libcurl-latest
+          context: general
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+            tags:
+              only: /^v.*/
+          electron-version: '11.2.3'
+          libcurl-version: '7.73.0'
+          cares-version: '1.17.1'
+          nghttp2-version: '1.42.0'
+          openssl-version: '1.1.1i'
+          e:
+            name: debian
+      ####
       # Electron v10
       ####
       - build-addon-alpine-and-publish/build-addon:

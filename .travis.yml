@@ -7,6 +7,7 @@ osx_image: xcode9.4
 dist: trusty
 language: node_js
 node_js:
+  - '15'
   - '14'
   - '12'
   - '10'
@@ -23,6 +24,8 @@ matrix:
   # allow_failures:
   #   - node_js: "11"
   include:
+    - os: osx
+      env: LIBCURL_RELEASE=7.73.0 LATEST_LIBCURL_RELEASE=7.73.0 ELECTRON_VERSION=11.2.3
     - os: osx
       env: LIBCURL_RELEASE=7.73.0 LATEST_LIBCURL_RELEASE=7.73.0 ELECTRON_VERSION=10.1.0
     - os: osx
