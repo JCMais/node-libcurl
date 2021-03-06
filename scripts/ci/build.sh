@@ -187,7 +187,7 @@ ls -al $ZLIB_BUILD_FOLDER/lib
 # Build zstd
 ###################
 # We could build this only if libcurl version >= 7.72
-ZSTD_RELEASE=${ZSTD_RELEASE:-1.4.9)}
+ZSTD_RELEASE=${ZSTD_RELEASE:-1.4.9}
 ZSTD_DEST_FOLDER=$PREFIX_DIR/deps/zstd
 echo "Building zstd v$ZSTD_RELEASE"
 ./scripts/ci/build-zstd.sh $ZSTD_RELEASE $ZSTD_DEST_FOLDER
