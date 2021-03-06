@@ -29,4 +29,4 @@ fi
 
 CFLAGS=${CFLAGS:-}
 
-CFLAGS="$CFLAGS -fPIC" make install PREFIX=$build_folder
+CFLAGS="$CFLAGS -fPIC" make install-static install-includes PREFIX=$build_folder
