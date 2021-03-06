@@ -53,6 +53,7 @@
               # 4309 -> 'static_cast': truncation of constant value on v8 header
               'DisableSpecificWarnings': ['4244', '4506', '4068', '4838', '4996', '4309'],
               'AdditionalOptions': [
+                '/std:c++17',
                 '/MP', #compile across multiple CPUs
               ],
             },
@@ -97,7 +98,7 @@
           ],
           'cflags_cc' : [
             '-O2',
-            '-std=c++11',
+            '-std=c++1z', # c++17
             '-Wno-narrowing',
           ],
             # Allow C++ exceptions
@@ -187,7 +188,7 @@
               }],
             ],
             'OTHER_CPLUSPLUSFLAGS':[
-              '-std=c++11','-stdlib=libc++',
+              '-std=c++1z','-stdlib=libc++',
             ],
             'OTHER_LDFLAGS':[
               '-Wl,-bind_at_load',
@@ -197,7 +198,7 @@
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
             'MACOSX_DEPLOYMENT_TARGET':'10.12',
             'CLANG_CXX_LIBRARY': 'libc++',
-            'CLANG_CXX_LANGUAGE_STANDARD':'c++11',
+            'CLANG_CXX_LANGUAGE_STANDARD':'c++1z',
             'OTHER_LDFLAGS': ['-stdlib=libc++'],
             'WARNING_CFLAGS':[
               '-Wno-c++11-narrowing',
