@@ -184,6 +184,17 @@ export ZLIB_BUILD_FOLDER=$ZLIB_DEST_FOLDER/build/$ZLIB_RELEASE
 ls -al $ZLIB_BUILD_FOLDER/lib
 
 ###################
+# Build zstd
+###################
+# We could build this only if libcurl version >= 7.72
+ZSTD_RELEASE=${ZSTD_RELEASE:-1.4.9)}
+ZSTD_DEST_FOLDER=$PREFIX_DIR/deps/zstd
+echo "Building zstd v$ZSTD_RELEASE"
+./scripts/ci/build-zstd.sh $ZSTD_RELEASE $ZSTD_DEST_FOLDER
+export ZSTD_BUILD_FOLDER=$ZSTD_DEST_FOLDER/build/$ZSTD_RELEASE
+ls -al $ZSTD_BUILD_FOLDER/lib
+
+###################
 # Build libssh2
 ###################
 LIBSSH2_RELEASE=${LIBSSH2_RELEASE:-1.9.0}

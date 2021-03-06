@@ -109,6 +109,18 @@ if [ "$is_less_than_7_53_0" == "0" ]; then
   fi
 fi
 
+# --with-zstd was added on 7.72.0
+# So this script only adds libidn2 for versions >= that one.
+is_less_than_7_72_0=0
+(printf '%s\n%s' "7.72.0" "$1" | $gsort -CV) || is_less_than_7_72_0=$?
+if [ "$is_less_than_7_72_0" == "0" ]; then
+  if [[ ! -z $ZSTD_BUILD_FOLDER ]]; then
+    libcurl_args+=("--with-zstd=$ZSTD_BUILD_FOLDER")
+  else
+    libcurl_args+=("--without-zstd")
+  fi
+fi
+
 #####
 # ssl
 ####
