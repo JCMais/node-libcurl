@@ -86,4 +86,4 @@ jobs:
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: 'Publish Binary'
         run: |
-          GIT_COMMIT=${{ github.sha }} ./scripts/ci/build.sh
+          GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
