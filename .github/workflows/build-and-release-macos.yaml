@@ -8,47 +8,47 @@ on:
       - master
       - develop
 
-strategy:
-  matrix:
-    node:
-      - 12
-      - 14
-      - 15
-    include:
-      - node: 14
-        libcurl-release: 7.73.0
-        electron-version: 12.0.0
-      - node: 14
-        libcurl-release: 7.73.0
-        electron-version: 11.2.3
-      - node: 14
-        libcurl-release: 7.73.0
-        electron-version: 10.1.0
-      - node: 14
-        libcurl-release: 7.73.0
-        electron-version: 9.3.3
-      - node: 14
-        libcurl-release: 7.73.0
-        electron-version: 8.5.3
-      - node: 14
-        libcurl-release: 7.73.0
-        nwjs-version: 0.52.0
-      - node: 14
-        libcurl-release: 7.73.0
-        nwjs-version: 0.51.2
-      - node: 14
-        libcurl-release: 7.73.0
-        nwjs-version: 0.49.2
-
-env:
-  LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-  ELECTRON_VERSION: ${{ matrix.electron-version }}
-  NWJS_VERSION: ${{ matrix.nwjs-version }}
-  NODE_LIBCURL_GITHUB_TOKEN: ${{ secrets.NODE_LIBCURL_GITHUB_TOKEN }}
-
 jobs:
   build-and-release-macos:
     runs-on: macos-latest
+
+    strategy:
+      matrix:
+        node:
+          - 12
+          - 14
+          - 15
+        include:
+          - node: 14
+            libcurl-release: 7.73.0
+            electron-version: 12.0.0
+          - node: 14
+            libcurl-release: 7.73.0
+            electron-version: 11.2.3
+          - node: 14
+            libcurl-release: 7.73.0
+            electron-version: 10.1.0
+          - node: 14
+            libcurl-release: 7.73.0
+            electron-version: 9.3.3
+          - node: 14
+            libcurl-release: 7.73.0
+            electron-version: 8.5.3
+          - node: 14
+            libcurl-release: 7.73.0
+            nwjs-version: 0.52.0
+          - node: 14
+            libcurl-release: 7.73.0
+            nwjs-version: 0.51.2
+          - node: 14
+            libcurl-release: 7.73.0
+            nwjs-version: 0.49.2
+
+    env:
+      LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
+      ELECTRON_VERSION: ${{ matrix.electron-version }}
+      NWJS_VERSION: ${{ matrix.nwjs-version }}
+      NODE_LIBCURL_GITHUB_TOKEN: ${{ secrets.NODE_LIBCURL_GITHUB_TOKEN }}
 
     steps:
       - name: Checkout
