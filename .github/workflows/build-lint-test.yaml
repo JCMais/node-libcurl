@@ -9,11 +9,6 @@ on:
 
 env:
   LIBCURL_RELEASE: 'LATEST'
-  LIBIDN2_RELEASE: '2.1.1'
-  LIBSSH2_RELEASE: '1.9.0'
-  LIBUNISTRING_RELEASE: '0.9.10'
-  NCURSES_RELEASE: '6.1'
-  OPENLDAP_RELEASE: '2.4.47'
 
 jobs:
   build-and-test:
@@ -38,12 +33,6 @@ jobs:
           restore-keys: |
             v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
             v1-${{ runner.os }}-yarn-cache-
-      - name: 'Set versions of dependencies based on the Node.js version'
-        run: |
-          echo "ZLIB_RELEASE=$(node -e "console.log(process.versions.zlib)")" >> $GITHUB_ENV
-          echo "BROTLI_RELEASE=$(node -e "console.log(process.versions.brotli)")" >> $GITHUB_ENV
-          echo "NGHTTP2_RELEASE=$(node -e "console.log(process.versions.nghttp2)")" >> $GITHUB_ENV
-          echo "OPENSSL_VERSION=$(node -e "console.log(process.versions.openssl)")" >> $GITHUB_ENV
       - name: Restore libcurl deps cache
         uses: actions/cache@v2
         id: libcurl-deps-cache
