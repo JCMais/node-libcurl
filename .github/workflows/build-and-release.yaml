@@ -1,9 +1,9 @@
 ## GitHub Actions is used to build:
 ## - Electron (macOs)
 ## - Nwjs (macOs)
-## - Node.js (macOs)
+## - Node.js (macOs, linux)
 
-name: build-and-release-macos
+name: build-and-release
 
 on:
   push:
@@ -17,10 +17,13 @@ env:
   NODE_LIBCURL_GITHUB_TOKEN: ${{ secrets.NODE_LIBCURL_GITHUB_TOKEN }}
 
 jobs:
-  build-and-release-macos-nodejs:
-    runs-on: macos-latest
+  build-and-release-nodejs:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os:
+          - macos-10.15
+          - ubuntu-20.04
         libcurl-release:
           - 7.73.0
         node:
@@ -68,8 +71,8 @@ jobs:
         run: |
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
 
-  build-and-release-macos-electron:
-    runs-on: macos-latest
+  build-and-release-electron:
+    runs-on: macos-10.15
     strategy:
       matrix:
         libcurl-release:
@@ -133,8 +136,8 @@ jobs:
         run: |
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
 
-  build-and-release-macos-nwjs:
-    runs-on: macos-latest
+  build-and-release-nwjs:
+    runs-on: macos-10.15
     strategy:
       matrix:
         libcurl-release:
