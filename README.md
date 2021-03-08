@@ -269,7 +269,7 @@ Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, NTLM_WB, SSL, libz, brotli, TLS
 Protocols: dict, file, ftp, ftps, gopher, http, https, imap, imaps, ldap, ldaps, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp
 ```
 
-If there is no prebuilt binary available that matches your system, or if the installation fails, then you will need an environment capable of compiling Node.js addons, which means [python 2.7](https://www.python.org/download/releases/2.7) installed and an updated C++ compiler able to compile C++11.
+If there is no prebuilt binary available that matches your system, or if the installation fails, then you will need an environment capable of compiling Node.js addons, which means [python 2.7](https://www.python.org/download/releases/2.7) installed and an updated C++ compiler able to compile C++17 (C++z).
 
 If you don't want to use the prebuilt binary even if it works on your system, you can pass a flag when installing:
 > With `npm`
@@ -285,7 +285,7 @@ npm_config_build_from_source=true yarn add node-libcurl
 
 > Those notes are not important when building on Windows
 
-The prebuilt binaries are statically linked with `brotli`, `libidn2`, `libssh2`, `openLDAP`, `OpenSSL` `nghttp2` and `zlib`.
+The prebuilt binaries are statically linked with `brotli`, `libidn2`, `libssh2`, `openLDAP`, `OpenSSL` `nghttp2`, `zstd` and `zlib`.
 
 The `brotli`, `nghttp2`, `OpenSSL` and `zlib` versions **must** match the version Node.js uses, this is necessary to avoid any possible issues by mixing library symbols of different versions, since Node.js also exports some of the symbols of their deps.
 
