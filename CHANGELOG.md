@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Breaking Change
+### Fixed
+### Added
+### Changed
+### Removed
+
+## [2.3.0] - 2020-11-15
+
+Probably the last release that `curly` is considered experimental.
+
+### Breaking Change
 - `curly` (and `curly.<method>`) is now able to automatically parse the response body based on the content-type header of the response. [#240](https://github.com/JCMais/node-libcurl/issues/240)  
   Default parsers for `application/json` (calls `JSON.parse`) and `text/*` (converts the raw `Buffer` to a string with `utf8` encoding) were added. This means that for responses without a matching content-type the raw `Buffer` will be returned. This is different from the previous behavior where a string would always be returned.
   The default parsers can be overwritten by setting `curly.defaultResponseBodyParsers` to an object with the format:
@@ -286,7 +296,8 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/JCMais/node-libcurl/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/JCMais/node-libcurl/compare/v2.1.3...v2.2.0
 [2.1.3]: https://github.com/JCMais/node-libcurl/compare/v2.1.2...v2.1.3
 [2.1.2]: https://github.com/JCMais/node-libcurl/compare/v2.1.1...v2.1.2

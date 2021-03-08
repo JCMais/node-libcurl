@@ -12,7 +12,9 @@ const URL = `http://${HOST}:${PORT}`
 axios.defaults.baseURL = URL
 
 const Benchmark = require('benchmark')
-const suite = new Benchmark.Suite()
+const suite = new Benchmark.Suite('node.js http request libraries', {
+  initCount: 5,
+})
 
 suite.add('node.js http.request - GET', {
   defer: true,
@@ -22,6 +24,7 @@ suite.add('node.js http.request - GET', {
         res.setEncoding('utf8')
         let rawData = ''
         res.on('data', (chunk) => {
+          // eslint-disable-next-line no-unused-vars
           rawData += chunk
         })
         res.on('end', () => {
@@ -67,7 +70,13 @@ suite.add('fetch - GET', {
 suite.add('node-libcurl curly - GET', {
   defer: true,
   fn: (defer) => {
-    curly.get(URL).then((_result) => defer.resolve())
+    curly
+      .get(URL, {
+        curlyResponseBodyParser(buffer) {
+          return buffer.toString('utf8')
+        },
+      })
+      .then((_result) => defer.resolve())
   },
 })
 
@@ -126,10 +135,12 @@ suite.add('node-libcurl Easy - GET', {
 
     easy.setOpt('URL', URL)
     easy.setOpt('HEADERFUNCTION', (data, size, nmemb) => {
+      // eslint-disable-next-line no-unused-vars
       headers += data.toString('utf8')
       return size * nmemb
     })
     easy.setOpt('WRITEFUNCTION', (data, size, nmemb) => {
+      // eslint-disable-next-line no-unused-vars
       body += data.toString('utf8')
       return size * nmemb
     })
@@ -151,10 +162,12 @@ suite.add('node-libcurl Easy - reusing instance - GET', {
     let body = ''
     easyReuse.setOpt('URL', URL)
     easyReuse.setOpt('HEADERFUNCTION', (data, size, nmemb) => {
+      // eslint-disable-next-line no-unused-vars
       headers += data.toString('utf8')
       return size * nmemb
     })
     easyReuse.setOpt('WRITEFUNCTION', (data, size, nmemb) => {
+      // eslint-disable-next-line no-unused-vars
       body += data.toString('utf8')
       return size * nmemb
     })
@@ -166,7 +179,7 @@ suite.add('node-libcurl Easy - reusing instance - GET', {
   },
 })
 
-suite.on('complete', function (defer) {
+suite.on('complete', function () {
   console.log('Fastest is ' + this.filter('fastest').map('name'))
 })
 
