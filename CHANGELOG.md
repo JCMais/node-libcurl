@@ -10,11 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed not building zstd lib statically. [#274](https://github.com/JCMais/node-libcurl/issues/274)
 
 ### Added
-- Added prebuilt binaries for: Electron v11, Electron v12, Nwjs 0.52.0, Nwjs 0.51.2, and Nwjs 0.49.2
+- Added prebuilt binaries for: Node.js 15, Electron v11, Electron v12, Nwjs 0.49.2, Nwjs 0.51.2, and Nwjs 0.52.0.
 
 ### Changed
 ### Removed
-- Removed prebuilt binaries for: Node.js 10, Electron v5, Electron v6, Electron v7, Nwjs v0.43, and Nwjs v0.44
+- Removed prebuilt binaries for: Node.js 10, Electron v5, Electron v6, Electron v7, Nwjs v0.43, and Nwjs v0.44.
 
 ## [2.3.0] - 2020-11-15
 
