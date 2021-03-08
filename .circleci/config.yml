@@ -1,3 +1,8 @@
+## CircleCI is used to build:
+## - Electron (linux)
+## - Nwjs (linux)
+## - Node.js (alpine)
+
 version: 2.1
 
 # aliases:
@@ -26,7 +31,7 @@ executors:
       LATEST_LIBCURL_RELEASE: '7.73.0'
 
 orbs:
-  build-addon-alpine-and-publish:
+  build-addon-unix-and-publish:
     jobs:
       build-addon:
         # https://circleci.com/docs/2.0/reusing-config/#parameter-syntax
@@ -171,28 +176,9 @@ workflows:
   build-test-deploy:
     jobs:
       ####
-      # Node 10 - Just prebuilt binary for latest version
+      # Node 12
       ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-node-10-libcurl-latest
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          node-version: '10'
-          libcurl-version: '7.73.0'
-          cares-version: '1.15.0'
-          nghttp2-version: '1.41.0'
-          openssl-version: '1.1.1g'
-          e:
-            name: alpine
-      ####
-      # Node 12 - Just prebuilt binary for latest version
-      ####
-      - build-addon-alpine-and-publish/build-addon:
+      - build-addon-unix-and-publish/build-addon:
           name: build-addon-node-12-libcurl-latest
           context: general
           filters:
@@ -211,7 +197,7 @@ workflows:
       ####
       # Node 14
       ####
-      - build-addon-alpine-and-publish/build-addon:
+      - build-addon-unix-and-publish/build-addon:
           name: build-addon-node-14-libcurl-latest
           context: general
           filters:
@@ -227,25 +213,10 @@ workflows:
           openssl-version: '1.1.1g'
           e:
             name: alpine
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-node-14-libcurl-old
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          node-version: '14'
-          libcurl-version: '7.50.0'
-          nghttp2-version: '1.41.0'
-          openssl-version: '1.1.1g'
-          e:
-            name: alpine
       ####
       # Node 15
       ####
-      - build-addon-alpine-and-publish/build-addon:
+      - build-addon-unix-and-publish/build-addon:
           name: build-addon-node-15-libcurl-latest
           context: general
           filters:
@@ -261,7 +232,7 @@ workflows:
           openssl-version: '1.1.1i'
           e:
             name: alpine
-      - build-addon-alpine-and-publish/build-addon:
+      - build-addon-unix-and-publish/build-addon:
           name: build-addon-node-15-libcurl-old
           context: general
           filters:
@@ -277,9 +248,28 @@ workflows:
           e:
             name: alpine
       ####
+      # Electron v12
+      ####
+      - build-addon-unix-and-publish/build-addon:
+          name: build-addon-electron-v12-libcurl-latest
+          context: general
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+            tags:
+              only: /^v.*/
+          electron-version: '12.0.0'
+          libcurl-version: '7.73.0'
+          cares-version: '1.17.1'
+          nghttp2-version: '1.42.0'
+          openssl-version: '1.1.1i'
+          e:
+            name: debian
+      ####
       # Electron v11
       ####
-      - build-addon-alpine-and-publish/build-addon:
+      - build-addon-unix-and-publish/build-addon:
           name: build-addon-electron-v11-libcurl-latest
           context: general
           filters:
@@ -298,7 +288,7 @@ workflows:
       ####
       # Electron v10
       ####
-      - build-addon-alpine-and-publish/build-addon:
+      - build-addon-unix-and-publish/build-addon:
           name: build-addon-electron-v10-libcurl-latest
           context: general
           filters:
@@ -316,7 +306,7 @@ workflows:
       ####
       # Electron v9
       ####
-      - build-addon-alpine-and-publish/build-addon:
+      - build-addon-unix-and-publish/build-addon:
           name: build-addon-electron-v9-libcurl-latest
           context: general
           filters:
@@ -334,7 +324,7 @@ workflows:
       ####
       # Electron v8
       ####
-      - build-addon-alpine-and-publish/build-addon:
+      - build-addon-unix-and-publish/build-addon:
           name: build-addon-electron-v8-libcurl-latest
           context: general
           filters:
@@ -350,10 +340,10 @@ workflows:
           e:
             name: debian
       ####
-      # Electron v7
+      # Nwjs v0.52
       ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-electron-v7-libcurl-latest
+      - build-addon-unix-and-publish/build-addon:
+          name: build-addon-nwjs-v0.52-libcurl-latest
           context: general
           filters:
             branches:
@@ -361,17 +351,18 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          electron-version: '7.3.3'
+          nwjs-version: '0.52.0'
           libcurl-version: '7.73.0'
-          nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1g'
+          cares-version: '1.17.1'
+          nghttp2-version: '1.42.0'
+          openssl-version: '1.1.1i'
           e:
             name: debian
       ####
-      # Electron v6
+      # Nwjs v0.51
       ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-electron-v6-libcurl-latest
+      - build-addon-unix-and-publish/build-addon:
+          name: build-addon-nwjs-v0.51-libcurl-latest
           context: general
           filters:
             branches:
@@ -379,17 +370,18 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          electron-version: '6.1.12'
+          nwjs-version: '0.51.2'
           libcurl-version: '7.73.0'
-          nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1g'
+          cares-version: '1.17.1'
+          nghttp2-version: '1.42.0'
+          openssl-version: '1.1.1i'
           e:
             name: debian
       ####
-      # Electron v5
+      # Nwjs v0.49
       ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-electron-v5-libcurl-latest
+      - build-addon-unix-and-publish/build-addon:
+          name: build-addon-nwjs-v0.49-libcurl-latest
           context: general
           filters:
             branches:
@@ -397,45 +389,10 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          electron-version: '5.0.13'
+          nwjs-version: '0.49.2'
           libcurl-version: '7.73.0'
-          nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1g'
-          e:
-            name: debian
-      ####
-      # Nwjs v0.44
-      ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-nwjs-v0.44-libcurl-latest
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          nwjs-version: '0.44.5'
-          libcurl-version: '7.73.0'
-          nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1g'
-          e:
-            name: debian
-      ####
-      # Nwjs v0.43
-      ####
-      - build-addon-alpine-and-publish/build-addon:
-          name: build-addon-nwjs-v0.43-libcurl-latest
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          nwjs-version: '0.43.6'
-          libcurl-version: '7.73.0'
-          nghttp2-version: '1.40.0'
-          openssl-version: '1.1.1g'
+          cares-version: '1.17.1'
+          nghttp2-version: '1.42.0'
+          openssl-version: '1.1.1i'
           e:
             name: debian

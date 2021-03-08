@@ -1,3 +1,8 @@
+## GitHub Actions is used to build:
+## - Electron (macOs)
+## - Nwjs (macOs)
+## - Node.js (macOs)
+
 name: build-and-release-macos
 
 on:

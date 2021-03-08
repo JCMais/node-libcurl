@@ -1,5 +1,9 @@
 # http://www.appveyor.com/docs/appveyor-yml
 # mostly copied from nan appveyor.yml
+## AppVeyor is used to build:
+## - Electron (Win64, Win32)
+## - Node.js (Win64, Win32)
+
 os: Visual Studio 2017
 
 # Set build version format here instead of in the admin panel.
@@ -12,10 +16,11 @@ environment:
   NODE_LIBCURL_POSTINSTALL_SKIP_CLEANUP: 'true'
   matrix:
     # node.js
-    - nodejs_version: '10'
     - nodejs_version: '12'
     - nodejs_version: '14'
     - nodejs_version: '15'
+    - nodejs_version: '14'
+      ELECTRON_VERSION: '12.0.0'
     - nodejs_version: '14'
       ELECTRON_VERSION: '11.2.3'
     - nodejs_version: '14'
@@ -24,12 +29,6 @@ environment:
       ELECTRON_VERSION: '9.3.3'
     - nodejs_version: '14'
       ELECTRON_VERSION: '8.5.3'
-    - nodejs_version: '14'
-      ELECTRON_VERSION: '7.3.3'
-    - nodejs_version: '14'
-      ELECTRON_VERSION: '6.1.12'
-    - nodejs_version: '14'
-      ELECTRON_VERSION: '5.0.13'
     # - nodejs_version: '12'
     #   NWJS_VERSION: '0.44.5'
     # - nodejs_version: '12'
