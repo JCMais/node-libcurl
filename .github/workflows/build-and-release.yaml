@@ -45,7 +45,7 @@ jobs:
         run: brew install coreutils wget automake autoconf cmake gnu-sed
       - if: runner.os == 'Linux'
         name: Install Needed packages on Linux
-        run: sudo apt-get install -y wget automake autoconf cmake
+        run: sudo apt-get install -y cmake
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "::set-output name=dir::$(yarn cache dir)"
