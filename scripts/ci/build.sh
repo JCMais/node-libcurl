@@ -281,7 +281,7 @@ if [ -n "$ELECTRON_VERSION" ]; then
   if [[ $is_electron_lt_5 -eq 1 && $has_display == "true" ]]; then
     run_tests_electron=true
 
-    yarn global add electron@${ELECTRON_VERSION}
+    yarn global add electron@${ELECTRON_VERSION} --network-timeout 300000
   fi
 
   # A possible solution to the above issue is the following,
@@ -329,7 +329,7 @@ export npm_config_dist_url="$dist_url"
 export npm_config_target="$target"
 export npm_config_target_arch="$target_arch"
 
-yarn install --frozen-lockfile
+yarn install --frozen-lockfile --network-timeout 300000
 
 if [ "$STOP_ON_INSTALL" == "true" ]; then
   set +uv
@@ -371,7 +371,7 @@ fi
 INSTALL_RESULT=0
 if [[ $PUBLISH_BINARY == true ]]; then
   echo "Publish binary is true - Testing if it was published correctly"
-  INSTALL_RESULT=$(npm_config_fallback_to_build=false yarn install --frozen-lockfile > /dev/null)$? || true
+  INSTALL_RESULT=$(npm_config_fallback_to_build=false yarn install --frozen-lockfile --network-timeout 300000 > /dev/null)$? || true
 fi
 if [[ $INSTALL_RESULT != 0 ]]; then
   echo "Failed to install package from npm after being published"
