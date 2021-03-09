@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Breaking Change
 ### Fixed
 - Fixed not building zstd lib statically. [#274](https://github.com/JCMais/node-libcurl/issues/274)
-
+- Fixed download streams not working with responses that did not include a body. [#271](https://github.com/JCMais/node-libcurl/issues/271)
+ 
 ### Added
 - Added prebuilt binaries for: Node.js 15, Electron v11, Electron v12, Nwjs 0.49.2, Nwjs 0.51.2, and Nwjs 0.52.0.
 
