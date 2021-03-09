@@ -44,6 +44,8 @@ export const allMethodsWithMultipleReqResTypes = (
           .cookie('test-a', 'abc', { httpOnly: true })
           .cookie('test-b', 'def')
           .send('')
+      case 'no-body':
+        return res.send()
       case 'method':
         return res.set({ 'x-req-method': method }).send(method)
       case 'json':

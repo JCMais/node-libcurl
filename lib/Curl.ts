@@ -306,7 +306,7 @@ class Curl extends EventEmitter {
    * @protected
    */
   onEnd() {
-    const isStreamResponse = this.features & CurlFeature.StreamResponse
+    const isStreamResponse = !!(this.features & CurlFeature.StreamResponse)
     const isDataStorageEnabled =
       !isStreamResponse && !(this.features & CurlFeature.NoDataStorage)
     const isDataParsingEnabled =
@@ -321,24 +321,49 @@ class Curl extends EventEmitter {
     const data = isDataParsingEnabled ? decoder.write(dataRaw) : dataRaw
     const headers = this.getHeaders()
 
-    // if this had the stream response flag and the writeFunction stream is enabled
-    // we need to signal the end of the stream by pushing null to it.
-    if (isStreamResponse && this.writeFunctionStream) {
-      this.writeFunctionStream.push(null)
-    }
-
-    this.resetInternalState()
-
     const { code, data: status } = this.handle.getInfo(Curl.info.RESPONSE_CODE)
 
-    // if is ignored because this should never happen under normal circumstances.
-    /* istanbul ignore if */
-    if (code !== CurlCode.CURLE_OK) {
-      const error = new Error('Could not get status code of request')
-      this.emit('error', error, code, this)
-    } else {
-      this.emit('end', status, data, headers, this)
+    // if this had the stream response flag we need to signal the end of the stream by pushing null to it.
+    if (isStreamResponse) {
+      // if the writeFunctionStream is still null here, this means the response had no body
+      // This may happen because the writeFunctionStream is created in the writeFunction callback, which is not called
+      // for requests that do not have a body
+      if (!this.writeFunctionStream) {
+        // we such cases we must call the on Stream event and immediately signal the end of the stream.
+        const noopStream = new Readable({
+          read() {
+            setImmediate(() => {
+              this.push(null)
+            })
+          },
+        })
+
+        // we are calling this with nextTick because it must run before the next event loop iteration (notice that the cleanup is called with setImmediate below).
+        // We are not just calling it directly to avoid errors in the on Stream callbacks causing this function to throw
+        process.nextTick(() =>
+          this.emit('stream', noopStream, status, headers, this),
+        )
+      } else {
+        this.writeFunctionStream.push(null)
+      }
     }
+
+    const wrapper = isStreamResponse
+      ? setImmediate
+      : (fn: (...args: any[]) => void) => fn()
+
+    wrapper(() => {
+      this.resetInternalState()
+
+      // if is ignored because this should never happen under normal circumstances.
+      /* istanbul ignore if */
+      if (code !== CurlCode.CURLE_OK) {
+        const error = new Error('Could not get status code of request')
+        this.emit('error', error, code, this)
+      } else {
+        this.emit('end', status, data, headers, this)
+      }
+    })
   }
 
   /**
