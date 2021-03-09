@@ -12,7 +12,7 @@ describe('issues', function () {
       new Promise((resolve, reject) => {
         const curl = new Curl()
 
-        curl.setOpt('URL', 'http://localhost:8080')
+        curl.setOpt('URL', '10.255.255.1')
         curl.setOpt('CONNECTTIMEOUT', 1)
         curl.setOpt('TIMEOUT', 1)
 
