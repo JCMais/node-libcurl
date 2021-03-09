@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added prebuilt binaries for: Node.js 15, Electron v11, Electron v12, Nwjs 0.49.2, Nwjs 0.51.2, and Nwjs 0.52.0.
 
 ### Changed
+- Building the addon from source now requires a C++ compiler with support for c++1z (c++17).
+
 ### Removed
 - Removed prebuilt binaries for: Node.js 10, Electron v5, Electron v6, Electron v7, Nwjs v0.43, and Nwjs v0.44.
 
