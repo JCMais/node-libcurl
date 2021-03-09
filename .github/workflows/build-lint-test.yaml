@@ -40,9 +40,9 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v1-${{ runner.os }}-libcurl-deps-cache
+          key: v1-${{ runner.os }}-libcurl-deps-cache-build-and-release
           restore-keys: |
-            v1-${{ runner.os }}-libcurl-deps-cache
+            v1-${{ runner.os }}-libcurl-deps-cache-build-and-release
       - name: 'Install all the stuff'
         run: |
           RUN_TESTS=false \
