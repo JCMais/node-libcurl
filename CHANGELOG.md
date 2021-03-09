@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Breaking Change
 ### Fixed
+### Added
+### Changed
+### Removed
+
+## [2.3.1] - 2021-03-09
+### Breaking Change
+
+The yes, `curly` is still experimental release. 😅
+
+If you are using `curly` in your project, and you want to share any feedback about it, please [post them in our Discord](https://discord.io/jonathancardoso). I would love to read and discuss it!
+
+### Fixed
 - Fixed not building zstd lib statically. [#274](https://github.com/JCMais/node-libcurl/issues/274)
 - Fixed download streams not working with responses that did not include a body. [#271](https://github.com/JCMais/node-libcurl/issues/271)
  
@@ -305,6 +317,7 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 ## [1.2.0] - 2017-08-28
 
 [Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.3.0...HEAD
+[2.3.1]: https://github.com/JCMais/node-libcurl/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/JCMais/node-libcurl/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/JCMais/node-libcurl/compare/v2.1.3...v2.2.0
 [2.1.3]: https://github.com/JCMais/node-libcurl/compare/v2.1.2...v2.1.3
