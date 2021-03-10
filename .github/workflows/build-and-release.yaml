@@ -23,7 +23,7 @@ jobs:
       matrix:
         os:
           - macos-10.15
-          - ubuntu-20.04
+          - ubuntu-18.04
         libcurl-release:
           - 7.73.0
         node:
