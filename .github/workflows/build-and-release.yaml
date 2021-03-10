@@ -105,7 +105,7 @@ jobs:
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
     steps:
-      - run: echo ::set-env name=NODE_LIBCURL_CPP_STD::${{ matrix.node-libcurl-cpp-std }}
+      - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
         if: matrix.node-libcurl-cpp-std
       - name: Checkout
         uses: actions/checkout@main
@@ -180,7 +180,7 @@ jobs:
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       NWJS_VERSION: ${{ matrix.nwjs-version }}
     steps:
-      - run: echo ::set-env name=NODE_LIBCURL_CPP_STD::${{ matrix.node-libcurl-cpp-std }}
+      - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
         if: matrix.node-libcurl-cpp-std
       - name: Checkout
         uses: actions/checkout@main
