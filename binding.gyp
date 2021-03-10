@@ -11,6 +11,7 @@
     'curl_static_build%': 'false',
     'curl_config_bin%': 'node <(module_root_dir)/scripts/curl-config.js',
     'node_libcurl_no_setlocale%': 'false',
+    'node_libcurl_cpp_std%': 'c++11',
   },
   'targets': [
     {
@@ -53,7 +54,7 @@
               # 4309 -> 'static_cast': truncation of constant value on v8 header
               'DisableSpecificWarnings': ['4244', '4506', '4068', '4838', '4996', '4309'],
               'AdditionalOptions': [
-                '/std:c++17',
+                '/std:<(node_libcurl_cpp_std)',
                 '/MP', #compile across multiple CPUs
               ],
             },
@@ -98,7 +99,7 @@
           ],
           'cflags_cc' : [
             '-O2',
-            '-std=c++1z', # c++17
+            '-std=<(node_libcurl_cpp_std)',
             '-Wno-narrowing',
           ],
             # Allow C++ exceptions
@@ -188,7 +189,7 @@
               }],
             ],
             'OTHER_CPLUSPLUSFLAGS':[
-              '-std=c++1z','-stdlib=libc++',
+              '-std=<(node_libcurl_cpp_std)','-stdlib=libc++',
             ],
             'OTHER_LDFLAGS':[
               '-Wl,-bind_at_load',
@@ -198,7 +199,7 @@
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
             'MACOSX_DEPLOYMENT_TARGET':'10.12',
             'CLANG_CXX_LIBRARY': 'libc++',
-            'CLANG_CXX_LANGUAGE_STANDARD':'c++1z',
+            'CLANG_CXX_LANGUAGE_STANDARD':'<(node_libcurl_cpp_std)',
             'OTHER_LDFLAGS': ['-stdlib=libc++'],
             'WARNING_CFLAGS':[
               '-Wno-c++11-narrowing',

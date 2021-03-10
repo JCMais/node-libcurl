@@ -50,6 +50,9 @@ orbs:
             type: string
           e:
             type: executor
+          node-libcurl-cpp-std:
+            type: string
+            default: 'c++11'
           cares-version:
             type: string
             default: '1.16.1'
@@ -116,6 +119,7 @@ orbs:
                 echo 'export OPENLDAP_RELEASE="<<parameters.openldap-version>>"' >> $BASH_ENV
                 echo 'export OPENSSL_RELEASE="<<parameters.openssl-version>>"' >> $BASH_ENV
                 echo 'export ZLIB_RELEASE="<<parameters.zlib-version>>"' >> $BASH_ENV
+                echo 'export NODE_LIBCURL_CPP_STD="<<parameters.node-libcurl-cpp-std>>"' >> $BASH_ENV
           ####
           # Restore caches
           ###
@@ -264,6 +268,7 @@ workflows:
           cares-version: '1.17.1'
           nghttp2-version: '1.42.0'
           openssl-version: '1.1.1i'
+          node-libcurl-cpp-std: 'c++17'
           e:
             name: debian
       ####
@@ -283,6 +288,7 @@ workflows:
           cares-version: '1.17.1'
           nghttp2-version: '1.42.0'
           openssl-version: '1.1.1i'
+          node-libcurl-cpp-std: 'c++17'
           e:
             name: debian
       ####
