@@ -12,7 +12,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Removed
 
 ## [2.3.1] - 2021-03-09
-### Breaking Change
 
 The yes, `curly` is still experimental release. 😅
 
