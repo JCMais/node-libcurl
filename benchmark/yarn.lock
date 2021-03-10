@@ -802,10 +802,10 @@ node-gyp@7.1.0:
     tar "^6.0.1"
     which "^2.0.2"
 
-node-libcurl@next:
-  version "2.3.0-0"
-  resolved "https://registry.npmjs.org/node-libcurl/-/node-libcurl-2.3.0-0.tgz#358c22bb4f243f9ad5660a6e3385b5ac2193320b"
-  integrity sha512-541BHaomEyvzLI/CldwKNb5Cowkx46WA3hTXmDV27iqHps1qQGtbif0JlVppEoXh0zxlFfo4rDMnrtP/BFCsRQ==
+node-libcurl@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/node-libcurl/-/node-libcurl-2.3.1.tgz#f7bdaeb3d70fd2c0ed985761942da4379303ca80"
+  integrity sha512-YUdCdDXky+XSfYSbKi4lMMtPBBkszqZ0DwAedQ9OgW10zBgjmtRnW4RyGfmyrpSTYza3hVy7JQYCHEVuxpNm9A==
   dependencies:
     env-paths "2.2.0"
     nan "2.14.1"
