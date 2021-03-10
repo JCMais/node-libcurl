@@ -1,3 +1,22 @@
+# Contributing<!-- omit in toc -->
+
+- [Contributing with Issues](#contributing-with-issues)
+- [Contributing with Code](#contributing-with-code)
+  - [C/C++](#cc)
+    - [Code Style](#code-style)
+    - [Linting](#linting)
+  - [Typescript / Javascript](#typescript--javascript)
+    - [Code Style](#code-style-1)
+    - [Linting](#linting-1)
+  - [Setup](#setup)
+  - [Adding New libcurl Options](#adding-new-libcurl-options)
+  - [Changing libcurl Version Used on Prebuilt Binaries for Windows](#changing-libcurl-version-used-on-prebuilt-binaries-for-windows)
+  - [Debugging with lldb](#debugging-with-lldb)
+  - [Publishing New Releases](#publishing-new-releases)
+    - [Semver Major / Minor / Patch](#semver-major--minor--patch)
+    - [Prereleases](#prereleases)
+    - [Build Matrix](#build-matrix)
+
 ## Contributing with Issues
 
 Before opening an issue try to search the existing ones for the same problem.
@@ -146,3 +165,28 @@ If for some reason np fails to run with Yarn, you can use this command to skip c
 ```shell
 $ yarn np prerelease --no-yarn --no-cleanup --any-branch --tag next
 ```
+
+#### Build Matrix
+
+We are using three CI providers:
+- CircleCI
+- GitHub Actions
+- AppVeyor
+
+Each CI provider is responsible for some builds:
+
+CircleCI:
+- Node.js (Alpine)
+- Electron (linux)
+- NW.js (linux)
+
+GitHub Actions:
+- Node.js (Linux, macOS)
+- Electron (macOS)
+- NW.js (macOS)
+
+AppVeyor:
+- Node.js (Win64, Win32)
+- Electron (Win64, Win32)
+
+GitHub Actions are also used to lint PRs, for that a build runs on Linux.
