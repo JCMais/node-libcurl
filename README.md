@@ -61,7 +61,8 @@
     - [Missing Packages](#missing-packages)
   - [Electron / NW.js](#electron--nwjs)
     - [NW.js (aka node-webkit)](#nwjs-aka-node-webkit)
-    - [electron (aka atom-shell)](#electron-aka-atom-shell)
+    - [Electron (aka atom-shell)](#electron-aka-atom-shell)
+    - [Electron >= 11 / NW.js >= 0.50](#electron--11--nwjs--050)
   - [Building on Linux](#building-on-linux)
   - [Building on macOS](#building-on-macos)
     - [Xcode >= 10 | macOS >= Mojave](#xcode--10--macos--mojave)
@@ -251,9 +252,9 @@ The maintainers of node-libcurl and thousands of other packages are working with
 
 The latest version of this package has prebuilt binaries (thanks to [node-pre-gyp](https://github.com/mapbox/node-pre-gyp/)) 
  available for:
-* node.js: Latest two versions on active LTS (see https://github.com/nodejs/Release)
-* electron: Latest 3 major versions
-* nw.js (node-webkit): Latest 3 major (minor for nw.js case) versions
+* Node.js: Latest two versions on active LTS (see https://github.com/nodejs/Release)
+* Electron: Latest 3 major versions
+* NW.js (node-webkit): Latest 3 major (minor for nw.js case) versions
 
 And on the following platforms:
 * Linux 64 bits
@@ -264,12 +265,14 @@ Installing with `yarn add node-libcurl` or `npm install node-libcurl` should dow
 
 The prebuilt binary is statically built with the following library versions, features and protocols (library versions may change between Node.js versions):
 ```
-Version: libcurl/7.64.1 OpenSSL/1.1.0j zlib/1.2.11 brotli/1.0.7 libidn2/2.1.1 libssh2/1.8.2 nghttp2/1.34.0
+Version: libcurl/7.73.0 OpenSSL/1.1.1g zlib/1.2.11 brotli/1.0.7 zstd/1.4.9 c-ares/1.16.1 libidn2/2.1.1 libssh2/1.9.0 nghttp2/1.41.0
+Protocols: dict, file, ftp, ftps, gopher, http, https, imap, imaps, ldap, ldaps, mqtt, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp
 Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, NTLM_WB, SSL, libz, brotli, TLS-SRP, HTTP2, UnixSockets, HTTPS-proxy
-Protocols: dict, file, ftp, ftps, gopher, http, https, imap, imaps, ldap, ldaps, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp
 ```
 
-If there is no prebuilt binary available that matches your system, or if the installation fails, then you will need an environment capable of compiling Node.js addons, which means [python 2.7](https://www.python.org/download/releases/2.7) installed and an updated C++ compiler able to compile C++17 (C++z).
+If there is no prebuilt binary available that matches your system, or if the installation fails, then you will need an environment capable of compiling Node.js addons, which means:
+- [python 2.7](https://www.python.org/download/releases/2.7) installed
+- updated C++ compiler able to compile C++11, or if building Electron >= 11 / NW.js >= 0.50, C++17 (see the [Electron >= 11 / NW.js >= 0.50](#electron--11--nwjs--050) section below).
 
 If you don't want to use the prebuilt binary even if it works on your system, you can pass a flag when installing:
 > With `npm`
@@ -342,7 +345,7 @@ npm install node-libcurl --runtime=node-webkit --target=0.38.2 --save
 
 where `--target` is the current version of NW.js you are using
 
-#### electron (aka atom-shell)
+#### Electron (aka atom-shell)
 
 > yarn
 ```bash
@@ -363,6 +366,19 @@ runtime = electron
 target = 5.0.1
 target_arch = x64
 dist_url = https://atom.io/download/atom-shell
+```
+
+#### Electron >= 11 / NW.js >= 0.50
+
+If you are building for Electron >= 11 or NW.js >= 0.50 you need to set the build process to use the C++17 std, you can do that by passing the variable `node_libcurl_cpp_std=c++17`. The way you do that depends if you are using `npm` or `yarn`:
+
+> If using `npm`:
+```sh
+npm install node-libcurl --build-from-source --node_libcurl_cpp_std=c++17
+```
+> If using `yarn`:
+```sh
+npm_config_build_from_source=true npm_config_node_libcurl_cpp_std=c++17 yarn add node-libcurl
 ```
 
 ### Building on Linux
