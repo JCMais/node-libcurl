@@ -362,6 +362,7 @@ workflows:
           cares-version: '1.17.1'
           nghttp2-version: '1.42.0'
           openssl-version: '1.1.1i'
+          node-libcurl-cpp-std: 'c++17'
           e:
             name: debian
       ####
@@ -381,6 +382,7 @@ workflows:
           cares-version: '1.17.1'
           nghttp2-version: '1.42.0'
           openssl-version: '1.1.1i'
+          node-libcurl-cpp-std: 'c++17'
           e:
             name: debian
       ####

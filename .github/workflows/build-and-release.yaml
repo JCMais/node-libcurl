@@ -92,9 +92,13 @@ jobs:
           - 9.3.3
           - 8.5.3
         include:
-          - electron-version: 12.0.0
+          - libcurl-release: 7.73.0
+            node: 14
+            electron-version: 12.0.0
             node-libcurl-cpp-std: c++17
-          - electron-version: 11.2.3
+          - libcurl-release: 7.73.0
+            node: 14
+            electron-version: 11.2.3
             node-libcurl-cpp-std: c++17
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -156,14 +160,26 @@ jobs:
           - 7.73.0
         node:
           - 14
+        node-libcurl-cpp-std:
+          - c++11
         nwjs-version:
           - 0.52.0
           - 0.51.2
           - 0.49.2
+        include:
+          - libcurl-release: 7.73.0
+            node: 14
+            nwjs-version: 0.52.0
+            node-libcurl-cpp-std: c++17
+          - libcurl-release: 7.73.0
+            node: 14
+            nwjs-version: 0.51.2
+            node-libcurl-cpp-std: c++17
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       NWJS_VERSION: ${{ matrix.nwjs-version }}
+      NODE_LIBCURL_CPP_STD: ${{ matrix.node-libcurl-cpp-std }}
     steps:
       - name: Checkout
         uses: actions/checkout@main
