@@ -180,6 +180,25 @@ workflows:
   build-test-deploy:
     jobs:
       ####
+      # Node 10
+      ####
+      - build-addon-alpine-and-publish/build-addon:
+          name: build-addon-node-10-libcurl-latest
+          context: general
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+            tags:
+              only: /^v.*/
+          node-version: '10'
+          libcurl-version: '7.73.0'
+          cares-version: '1.15.0'
+          nghttp2-version: '1.41.0'
+          openssl-version: '1.1.1g'
+          e:
+            name: alpine
+      ####
       # Node 12
       ####
       - build-addon-unix-and-publish/build-addon:
