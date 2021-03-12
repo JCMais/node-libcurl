@@ -182,7 +182,7 @@ workflows:
       ####
       # Node 10
       ####
-      - build-addon-alpine-and-publish/build-addon:
+      - build-addon-unix-and-publish/build-addon:
           name: build-addon-node-10-libcurl-latest
           context: general
           filters:
