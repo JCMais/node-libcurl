@@ -139,8 +139,8 @@ orbs:
                 echo "$ZLIB_RELEASE" >> _libs_versions
           - restore_cache:
               keys:
-                - v3-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-nwjsV<<parameters.nwjs-version>>-deps-libs-{{ checksum "_libs_versions" }}-{{ checksum "yarn.lock" }}
-                - v3-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-nwjsV<<parameters.nwjs-version>>-deps-libs-{{ checksum "_libs_versions" }}-
+                - v4-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-nwjsV<<parameters.nwjs-version>>-deps-libs-{{ checksum "_libs_versions" }}-{{ checksum "yarn.lock" }}
+                - v4-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-nwjsV<<parameters.nwjs-version>>-deps-libs-{{ checksum "_libs_versions" }}-
 
           - steps: <<parameters.before-build>>
           ####
@@ -154,7 +154,7 @@ orbs:
           # Cache
           ####
           - save_cache:
-              key: v3-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-nwjsV<<parameters.nwjs-version>>-deps-libs-{{ checksum "_libs_versions" }}-{{ checksum "yarn.lock" }}
+              key: v4-nodeV<<parameters.node-version>>-electronV<<parameters.electron-version>>-nwjsV<<parameters.nwjs-version>>-deps-libs-{{ checksum "_libs_versions" }}-{{ checksum "yarn.lock" }}
               paths:
                 - ~/.electron
                 - ~/.cache/electron
