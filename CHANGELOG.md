@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 ### Removed
 
+## [2.3.2] - 2021-03-24
+
+### Changed
+- The prebuilt binaries are not build with c-ares anymore, for reasoning see issue [#280](https://github.com/JCMais/node-libcurl/issues/280).
+  c-ares was included in the prebuilt binaries starting with `2.3.0`.
+
 ## [2.3.1] - 2021-03-09
 
 The yes, `curly` is still experimental release. 😅
@@ -86,7 +92,7 @@ As `curly` is marked as experimental, this allows us to do a breaking change in 
 - Support libcurl info `CURLINFO_PROXY_ERROR`. Use `CurlPx` for constants. Requires libcurl >= 7.73.0.
 - Support libcurl option `CURLOPT_SSL_EC_CURVES`. Requires libcurl >= 7.73.0.
 - Added prebuilt binaries for Electron v10.1
-- The libcurl version being used by prebuilt binaries is now 7.73.0 and it's not built with c-ares.
+- The libcurl version being used by prebuilt binaries is now 7.73.0 and it's now built with c-ares.
   
 ### Changed
 - `curly` now has 100% code coverage.
@@ -315,7 +321,8 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.3.2...HEAD
+[2.3.2]: https://github.com/JCMais/node-libcurl/compare/v2.3.1...v2.3.2
 [2.3.1]: https://github.com/JCMais/node-libcurl/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/JCMais/node-libcurl/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/JCMais/node-libcurl/compare/v2.1.3...v2.2.0

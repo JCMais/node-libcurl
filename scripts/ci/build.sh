@@ -54,12 +54,13 @@ GSS_LIBRARY=${GSS_LIBRARY:-kerberos}
 ###################
 # Build cares
 ###################
-CARES_RELEASE=${CARES_RELEASE:-$(node -e "console.log(process.versions.ares || '1.16.1')")}
-CARES_DEST_FOLDER=$PREFIX_DIR/deps/cares
-echo "Building cares v$CARES_RELEASE"
-./scripts/ci/build-cares.sh $CARES_RELEASE $CARES_DEST_FOLDER >/dev/null
-export CARES_BUILD_FOLDER=$CARES_DEST_FOLDER/build/$CARES_RELEASE
-ls -al $CARES_BUILD_FOLDER/lib
+# c-ares is disabled at the moment due to this: https://github.com/JCMais/node-libcurl/issues/280
+# CARES_RELEASE=${CARES_RELEASE:-$(node -e "console.log(process.versions.ares || '1.16.1')")}
+# CARES_DEST_FOLDER=$PREFIX_DIR/deps/cares
+# echo "Building cares v$CARES_RELEASE"
+# ./scripts/ci/build-cares.sh $CARES_RELEASE $CARES_DEST_FOLDER >/dev/null
+# export CARES_BUILD_FOLDER=$CARES_DEST_FOLDER/build/$CARES_RELEASE
+# ls -al $CARES_BUILD_FOLDER/lib
 
 ###################
 # Build libunistring
