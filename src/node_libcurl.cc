@@ -54,12 +54,15 @@ NAN_MODULE_INIT(Init) {
   CurlVersionInfo::Initialize(target);
   Http2PushFrameHeaders::Initialize(target);
 
-  // this will stay until Node.js v10 support is dropped
-  //  after this happens we will be able to get the environment by running
-  //  node::GetCurrentEnvironment
+#if NODE_VERSION_AT_LEAST(11, 0, 0)
+  auto context = Nan::GetCurrentContext();
+  node::AtExit(node::GetCurrentEnvironment(context), AtExitCallback, NULL);
+#else
+// this will stay until Node.js v10 support is dropped
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   node::AtExit(AtExitCallback, NULL);
 #pragma GCC diagnostic pop
+#endif
 }
 
 NODE_MODULE(node_libcurl, Init);
