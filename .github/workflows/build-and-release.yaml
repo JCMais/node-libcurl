@@ -31,7 +31,7 @@ jobs:
           - 10
           - 12
           - 14
-          - 15
+          - 16
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -85,7 +85,7 @@ jobs:
         libcurl-release:
           - 7.73.0
         node:
-          - 14
+          - 16
         electron-version:
           - 12.0.0
           - 11.2.3
@@ -94,17 +94,18 @@ jobs:
           - 8.5.3
         include:
           - libcurl-release: 7.73.0
-            node: 14
+            node: 16
             electron-version: 12.0.0
             node-libcurl-cpp-std: c++17
           - libcurl-release: 7.73.0
-            node: 14
+            node: 16
             electron-version: 11.2.3
             node-libcurl-cpp-std: c++17
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
+      NODE_LIBCURL_CPP_STD: c++11
     steps:
       - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
         if: matrix.node-libcurl-cpp-std
@@ -161,7 +162,7 @@ jobs:
         libcurl-release:
           - 7.73.0
         node:
-          - 14
+          - 16
         nwjs-version:
           - 0.52.0
           - 0.51.2
@@ -179,6 +180,7 @@ jobs:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       NWJS_VERSION: ${{ matrix.nwjs-version }}
+      NODE_LIBCURL_CPP_STD: c++11
     steps:
       - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
         if: matrix.node-libcurl-cpp-std

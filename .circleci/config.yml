@@ -237,7 +237,7 @@ workflows:
           e:
             name: alpine
       ####
-      # Node 15
+      # Node 16
       ####
       - build-addon-unix-and-publish/build-addon:
           name: build-addon-node-15-libcurl-latest
@@ -248,11 +248,11 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          node-version: '15'
+          node-version: '16'
           libcurl-version: '7.73.0'
           cares-version: '1.17.1'
           nghttp2-version: '1.42.0'
-          openssl-version: '1.1.1i'
+          openssl-version: '1.1.1k'
           e:
             name: alpine
       - build-addon-unix-and-publish/build-addon:
@@ -267,7 +267,7 @@ workflows:
           node-version: '15'
           libcurl-version: '7.50.0'
           nghttp2-version: '1.42.0'
-          openssl-version: '1.1.1i'
+          openssl-version: '1.1.1k'
           e:
             name: alpine
       ####
