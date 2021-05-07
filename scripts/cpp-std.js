@@ -11,6 +11,6 @@ if (process.env.NODE_LIBCURL_CPP_STD) {
     // 88 === Node.js v15
     console.log('c++17')
   } else {
-    console.log('c++16')
+    console.log('c++11')
   }
 }
