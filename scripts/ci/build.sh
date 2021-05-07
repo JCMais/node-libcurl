@@ -321,7 +321,7 @@ target=`echo $target | sed 's/^v//'`
 # ia32, x64, armv7, etc
 target_arch=${TARGET_ARCH:-"x64"}
 
-NODE_LIBCURL_CPP_STD=${NODE_LIBCURL_CPP_STD:-"c++11"}
+NODE_LIBCURL_CPP_STD=${NODE_LIBCURL_CPP_STD:-$(node $curr_dirname/../cpp-std.js)}
 
 # Build Addon
 export npm_config_curl_config_bin="$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin/curl-config"
