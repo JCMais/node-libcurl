@@ -44,7 +44,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
-        run: brew install coreutils wget automake autoconf@2.9 cmake gnu-sed
+        run: brew install coreutils wget automake autoconf cmake gnu-sed
       - if: runner.os == 'Linux'
         name: Install Needed packages on Linux
         run: sudo apt-get install -y cmake
@@ -67,9 +67,9 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v2-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
+          key: v3-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
           restore-keys: |
-            v2-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
+            v3-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
       - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
@@ -115,7 +115,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Install Needed packages
-        run: brew install coreutils wget automake autoconf@2.9 cmake gnu-sed m4
+        run: brew install coreutils wget automake autoconf cmake gnu-sed m4
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "::set-output name=dir::$(yarn cache dir)"
@@ -143,9 +143,9 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v2-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}
+          key: v3-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}
           restore-keys: |
-            v2-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}
+            v3-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}
       - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
@@ -189,7 +189,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Install Needed packages
-        run: brew install coreutils wget automake autoconf@2.9 cmake gnu-sed m4
+        run: brew install coreutils wget automake autoconf cmake gnu-sed m4
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "::set-output name=dir::$(yarn cache dir)"
@@ -209,9 +209,9 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v2-${{ runner.os }}-libcurl-deps-cache-nwjs-${{ matrix.nwjs-version }}
+          key: v3-${{ runner.os }}-libcurl-deps-cache-nwjs-${{ matrix.nwjs-version }}
           restore-keys: |
-            v2-${{ runner.os }}-libcurl-deps-cache-nwjs-${{ matrix.nwjs-version }}
+            v3-${{ runner.os }}-libcurl-deps-cache-nwjs-${{ matrix.nwjs-version }}
       - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
