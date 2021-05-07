@@ -85,7 +85,7 @@ ls -al $LIBIDN2_BUILD_FOLDER/lib
 # Build OpenSSL
 ###################
 # OpenSSL version must match Node.js one
-OPENSSL_RELEASE=${OPENSSL_RELEASE:-$(node -e "console.log(process.versions.openssl)")}
+OPENSSL_RELEASE=${OPENSSL_RELEASE:-$(node -e "console.log(process.versions.openssl.replace('+quic', ''))")}
 OPENSSL_DEST_FOLDER=$PREFIX_DIR/deps/openssl
 
 # We must pass KERNEL_BITS=64 on macOS to make sure a x86_64 lib is built, the default is to build an i386 one
