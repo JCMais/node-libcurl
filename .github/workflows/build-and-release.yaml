@@ -42,9 +42,20 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
+      # not using brew for that one as we need 2.69
+      - if: runner.os == 'macOS'
+        name: Install autoconf
+        run: |
+          curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
+          tar -xzf autoconf-2.69.tar.gz
+          cd autoconf-*
+          ./configure
+          make
+          make install
+          autoconf --version
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
-        run: brew install coreutils wget automake autoconf cmake gnu-sed
+        run: brew install coreutils wget automake cmake gnu-sed m4
       - if: runner.os == 'Linux'
         name: Install Needed packages on Linux
         run: sudo apt-get install -y cmake
@@ -115,8 +126,18 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
+      # not using brew for that one as we need 2.69
+      - name: Install autoconf
+        run: |
+          curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
+          tar -xzf autoconf-2.69.tar.gz
+          cd autoconf-*
+          ./configure
+          make
+          make install
+          autoconf --version
       - name: Install Needed packages
-        run: brew install coreutils wget automake autoconf cmake gnu-sed m4
+        run: brew install coreutils wget automake cmake gnu-sed m4
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "::set-output name=dir::$(yarn cache dir)"
@@ -190,8 +211,18 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
+      # not using brew for that one as we need 2.69
+      - name: Install autoconf
+        run: |
+          curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
+          tar -xzf autoconf-2.69.tar.gz
+          cd autoconf-*
+          ./configure
+          make
+          make install
+          autoconf --version
       - name: Install Needed packages
-        run: brew install coreutils wget automake autoconf cmake gnu-sed m4
+        run: brew install coreutils wget automake cmake gnu-sed m4
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "::set-output name=dir::$(yarn cache dir)"
