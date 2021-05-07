@@ -240,7 +240,7 @@ workflows:
       # Node 16
       ####
       - build-addon-unix-and-publish/build-addon:
-          name: build-addon-node-15-libcurl-latest
+          name: build-addon-node-16-libcurl-latest
           context: general
           filters:
             branches:
@@ -256,7 +256,7 @@ workflows:
           e:
             name: alpine
       - build-addon-unix-and-publish/build-addon:
-          name: build-addon-node-15-libcurl-old
+          name: build-addon-node-16-libcurl-old
           context: general
           filters:
             branches:
@@ -264,7 +264,7 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          node-version: '15'
+          node-version: '16'
           libcurl-version: '7.50.0'
           nghttp2-version: '1.42.0'
           openssl-version: '1.1.1k'
