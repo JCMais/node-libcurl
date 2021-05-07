@@ -23,13 +23,13 @@ if [ ! -d $2/source/$1 ]; then
   mv $2/libssh2-$1 $2/source/$1
   cd $2/source/$1
   
-  ./buildconf
+  autoreconf -fiv
 else
   cd $2/source/$1
   if [ -f ./configure ]; then
     make distclean || true;
   else
-    ./buildconf
+    autoreconf -fiv
   fi
 fi
 
