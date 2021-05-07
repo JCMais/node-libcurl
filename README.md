@@ -73,6 +73,10 @@
 
 ## Quick Start
 
+> **Note**:
+> - This library cannot be used in a browser, it depends on native code.
+> - There is no worker threads support at the moment. See [#169](https://github.com/JCMais/node-libcurl/issues/169)
+
 ### Install
 ```shell
 npm i node-libcurl --save
