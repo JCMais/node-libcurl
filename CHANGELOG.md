@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 ### Removed
 
+## [2.3.3] - 2021-05-09
+### Fixed
+- Fix support for Node.js v16
+
 ## [2.3.2] - 2021-03-24
 
 ### Changed
@@ -321,7 +325,8 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.3.2...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.3.3...HEAD
+[2.3.3]: https://github.com/JCMais/node-libcurl/compare/v2.3.2...v2.3.3
 [2.3.2]: https://github.com/JCMais/node-libcurl/compare/v2.3.1...v2.3.2
 [2.3.1]: https://github.com/JCMais/node-libcurl/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/JCMais/node-libcurl/compare/v2.2.0...v2.3.0
