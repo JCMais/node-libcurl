@@ -1,6 +1,6 @@
 {
   "name": "node-libcurl",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "description": "The fastest http(s) client (and much more) for Node.js - Node.js bindings for libcurl",
   "keywords": [
     "node-curl",
