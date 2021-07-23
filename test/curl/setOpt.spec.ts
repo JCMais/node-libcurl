@@ -11,6 +11,11 @@ import { Curl } from '../../lib'
 
 const url = `http://${host}:${port}/`
 
+const pemFormattedPrivateKey = `-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEILeQs78xyjaibQhUrMQJ1Fsxeb8LAaDPeat8SGEFEVQ+
+-----END PRIVATE KEY-----
+`
+
 let curl: Curl
 
 describe('setOpt()', () => {
@@ -55,6 +60,19 @@ describe('setOpt()', () => {
       return 0
     })
     curl.setOpt('WRITEFUNCTION', null)
+  })
+
+  it('should be able to set blob value back to null', () => {
+    curl.setOpt('SSLKEY_BLOB', Buffer.from([]))
+    curl.setOpt('SSLKEY_BLOB', null)
+  })
+
+  it('should be able to set blob value to buffer', () => {
+    curl.setOpt('SSLKEY_BLOB', Buffer.from(pemFormattedPrivateKey, 'utf-8'))
+  })
+
+  it('should be able to set blob value to string', () => {
+    curl.setOpt('SSLKEY_BLOB', pemFormattedPrivateKey)
   })
 
   it('should not accept invalid argument type', () => {

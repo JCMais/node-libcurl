@@ -656,6 +656,16 @@ const std::vector<CurlConstant> curlInfoLinkedList = {
     {"CERTINFO", CURLINFO_CERTINFO},
 };
 
+const std::vector<CurlConstant> curlOptionBlob = {
+#if NODE_LIBCURL_VER_GE(7, 71, 0)
+    {"ISSUERCERT_BLOB", CURLOPT_ISSUERCERT_BLOB},
+    {"PROXY_SSLCERT_BLOB", CURLOPT_PROXY_SSLCERT_BLOB},
+    {"PROXY_SSLKEY_BLOB", CURLOPT_PROXY_SSLKEY_BLOB},
+    {"SSLCERT_BLOB", CURLOPT_SSLCERT_BLOB},
+    {"SSLKEY_BLOB", CURLOPT_SSLKEY_BLOB},
+#endif
+};
+
 static void ExportConstants(v8::Local<v8::Object> obj,
                             const std::vector<NodeLibcurl::CurlConstant>& optionGroup,
                             v8::PropertyAttribute attributes) {
@@ -688,6 +698,7 @@ NAN_MODULE_INIT(Initialize) {
   ExportConstants(optionsObj, curlOptionFunction, attributes);
   ExportConstants(optionsObj, curlOptionLinkedList, attributes);
   ExportConstants(optionsObj, curlOptionSpecific, attributes);
+  ExportConstants(optionsObj, curlOptionBlob, attributes);
 
   // export infos
   v8::Local<v8::Object> infosObj = Nan::New<v8::Object>();

@@ -13,6 +13,14 @@ const optionKindMap = {
     'RESOLVE',
     'TELNETOPTIONS',
   ],
+  blobList: [
+    'ISSUERCERT_BLOB',
+    'SSLKEY_BLOB',
+    'SSLCERT_BLOB',
+    'PROXY_SSLCERT_BLOB',
+    'PROXY_SSLCERT',
+    'PROXY_SSLKEY_BLOB',
+  ],
   other: [
     'CHUNK_BGN_FUNCTION',
     'CHUNK_END_FUNCTION',
@@ -50,6 +58,7 @@ const optionKindValueMap = {
   progressCallback:
     '((this: EasyNativeBinding, dltotal: number,dlnow: number,ultotal: number,ulnow: number) => number | CurlProgressFunc)',
   stringList: 'string[]',
+  blob: 'ArrayBuffer | Buffer | string',
   /* @TODO Add type definitions, they are on Curl.chunk */
   CHUNK_BGN_FUNCTION:
     '((this: EasyNativeBinding, fileInfo: FileInfo, remains: number) => CurlChunk)',
