@@ -31,7 +31,7 @@ const run = async () => {
   )
 
   const allowedCurlOptions = await retrieveConstantList({
-    url: 'https://curl.haxx.se/libcurl/c/curl_easy_setopt.html',
+    url: 'https://curl.se/libcurl/c/curl_easy_setopt.html',
     constantPrefix: 'CURLOPT_',
     blacklist: curlOptionsBlacklist,
   })
@@ -66,7 +66,7 @@ const run = async () => {
   })
 
   const allowedCurlInfos = await retrieveConstantList({
-    url: 'https://curl.haxx.se/libcurl/c/curl_easy_getinfo.html',
+    url: 'https://curl.se/libcurl/c/curl_easy_getinfo.html',
     constantPrefix: 'CURLINFO_',
     blacklist: [
       // time constants at the bottom
@@ -86,7 +86,7 @@ const run = async () => {
   })
 
   const allowedMultiOptions = await retrieveConstantList({
-    url: 'https://curl.haxx.se/libcurl/c/curl_multi_setopt.html',
+    url: 'https://curl.se/libcurl/c/curl_multi_setopt.html',
     constantPrefix: 'CURLMOPT_',
     blacklist: multiOptionsBlacklist,
   })
