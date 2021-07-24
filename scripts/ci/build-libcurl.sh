@@ -123,6 +123,13 @@ if [ "$is_less_than_7_72_0" == "0" ]; then
   fi
 fi
 
+# metalink options were removed from libcurl on 7.78.0
+is_less_than_7_78_0=0
+(printf '%s\n%s' "7.78.0" "$1" | $gsort -CV) || is_less_than_7_78_0=$?
+if [ "$is_less_than_7_78_0" == "1" ]; then
+  libcurl_args+=("--without-libmetalink")
+fi
+
 #####
 # ssl
 ####
