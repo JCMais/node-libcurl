@@ -260,7 +260,6 @@ export LDFLAGS=$LDFLAGS
 ./configure \
     --without-nss \
     --without-libpsl \
-    --without-libmetalink \
     --without-librtmp \
     --without-libidn \
     --disable-manual \

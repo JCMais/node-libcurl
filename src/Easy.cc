@@ -1612,6 +1612,38 @@ NAN_METHOD(Easy::SetOpt) {
 
         break;
     }
+
+    // check if option is a blob, and the value is correct
+  } else if ((optionId = IsInsideCurlConstantStruct(curlOptionBlob, opt))) {
+#if NODE_LIBCURL_VER_GE(7, 71, 0)
+    if (value->IsNull()) {
+      setOptRetCode = curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), NULL);
+    } else if (value->IsString()) {
+      Nan::Utf8String utf8StringValue(value);
+
+      size_t length = static_cast<size_t>(utf8StringValue.length());
+
+      struct curl_blob blob;
+      blob.data = *utf8StringValue;
+      blob.len = length;
+      blob.flags = CURL_BLOB_COPY;
+
+      setOptRetCode = curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), &blob);
+    } else if (node::Buffer::HasInstance(value)) {
+      struct curl_blob blob;
+      blob.data = node::Buffer::Data(value);
+      blob.len = node::Buffer::Length(value);
+      blob.flags = CURL_BLOB_COPY;
+
+      setOptRetCode = curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), &blob);
+    } else {
+      Nan::ThrowTypeError("Option value must be a string or Buffer.");
+      return;
+    }
+#else
+    Nan::ThrowError("Blob options require curl 7.71 or newer.");
+    return;
+#endif
   }
 
   info.GetReturnValue().Set(setOptRetCode);

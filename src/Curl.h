@@ -44,6 +44,7 @@ extern const std::vector<CurlConstant> curlOptionFunction;
 extern const std::vector<CurlConstant> curlOptionLinkedList;
 extern const std::vector<CurlConstant> curlOptionHttpPost;
 extern const std::vector<CurlConstant> curlOptionSpecific;
+extern const std::vector<CurlConstant> curlOptionBlob;
 
 extern const std::vector<CurlConstant> curlInfoNotImplemented;
 extern const std::vector<CurlConstant> curlInfoString;

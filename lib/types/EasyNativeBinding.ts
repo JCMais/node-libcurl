@@ -9,6 +9,7 @@ import {
   CurlOptionName,
   DataCallbackOptions,
   ProgressCallbackOptions,
+  BlobListOptions,
   StringListOptions,
   SpecificOptions,
 } from '../generated/CurlOption'
@@ -147,6 +148,13 @@ export declare class EasyNativeBinding {
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: StringListOptions, value: string[] | null): CurlCode
+  /**
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: BlobListOptions, value: ArrayBuffer | string | null): CurlCode
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
