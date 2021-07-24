@@ -84,6 +84,7 @@ If you want to include a new libcurl option on the addon, those are the basic st
    Make sure to use a `#if` directive to include this option only if building against a libcurl version that supports it, otherwise there will be an compilation error on older versions.
 2. In case the option expects a value of type other than `number | string | boolean`, you must also add it to their respective key on the object `optionKindMap` inside [`./scripts/data/options.js`](./scripts/data/options.js). In case you add it to the `other` key, which means this option has a specific value, you must also add the option expected value type to the object `optionKindValueMap` right below, on that same file.
 3. Run `node ./scripts/build-constants.js`, this will generate an updated list of options on [`./lib/generated/`](./lib/generated), and also update the files [`./lib/Curl.ts`] and [`./lib/EasyNativeBinding.ts`] with overloads for the `setOpt` method. Make sure the options added are correct.
+4. If running the above adds extra options that you do not want to add / are not related to the options you are adding, please feel free to remove them manually from the generated output. We will try to improve this experience later, but for now you have to manually remove them.
 
 ### Changing libcurl Version Used on Prebuilt Binaries for Windows
 
