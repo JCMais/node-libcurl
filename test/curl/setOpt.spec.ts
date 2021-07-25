@@ -62,19 +62,6 @@ describe('setOpt()', () => {
     curl.setOpt('WRITEFUNCTION', null)
   })
 
-  it('should be able to set blob value back to null', () => {
-    curl.setOpt('SSLKEY_BLOB', Buffer.from([]))
-    curl.setOpt('SSLKEY_BLOB', null)
-  })
-
-  it('should be able to set blob value to buffer', () => {
-    curl.setOpt('SSLKEY_BLOB', Buffer.from(pemFormattedPrivateKey, 'utf-8'))
-  })
-
-  it('should be able to set blob value to string', () => {
-    curl.setOpt('SSLKEY_BLOB', pemFormattedPrivateKey)
-  })
-
   it('should not accept invalid argument type', () => {
     const optionsToTest = [
       ['URL', 0],
@@ -218,4 +205,21 @@ describe('setOpt()', () => {
       }
     })
   })
+
+  if (Curl.isVersionGreaterOrEqualThan(7, 71, 0)) {
+    describe('BLOB', () => {
+      it('should be able to set blob value back to null', () => {
+        curl.setOpt('SSLKEY_BLOB', Buffer.from([]))
+        curl.setOpt('SSLKEY_BLOB', null)
+      })
+
+      it('should be able to set blob value to buffer', () => {
+        curl.setOpt('SSLKEY_BLOB', Buffer.from(pemFormattedPrivateKey, 'utf-8'))
+      })
+
+      it('should be able to set blob value to string', () => {
+        curl.setOpt('SSLKEY_BLOB', pemFormattedPrivateKey)
+      })
+    })
+  }
 })
