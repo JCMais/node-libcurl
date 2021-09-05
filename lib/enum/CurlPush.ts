@@ -14,5 +14,9 @@
  */
 export enum CurlPush {
   Ok = 0,
-  Deny,
+  Deny = 1,
+  /**
+   * Added in 7.72.0
+   */
+  ErrorOut = 2,
 }

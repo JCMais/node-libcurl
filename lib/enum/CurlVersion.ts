@@ -120,4 +120,12 @@ export enum CurlVersion {
    * HTTP3 support built-in
    */
   Http3 = 1 << 25,
+  /**
+   * zstd features are present
+   */
+  Zstd = 1 << 26,
+  /**
+   * Unicode support on Windows
+   */
+  Unicode = 1 << 27,
 }
