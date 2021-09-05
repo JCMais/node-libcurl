@@ -32,4 +32,17 @@ export enum CurlSslOpt {
    * if possible. The OpenSSL backend has this ability.
    */
   NoPartialChain = 1 << 2,
+
+  /**
+   * Tells libcurl to ignore certificate revocation offline
+   * checks and ignore missing revocation list for those SSL backends where such
+   * behavior is present.
+   */
+  RevokeBestEffort = 1 << 3,
+
+  /**
+   * Tells libcurl to use standard certificate store of
+   * operating system. Currently implemented under MS-Windows.
+   */
+  NativeCa = 1 << 4,
 }
