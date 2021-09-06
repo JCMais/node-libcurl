@@ -28,7 +28,7 @@ import {
   DataCallbackOptions,
   ProgressCallbackOptions,
   StringListOptions,
-  BlobListOptions,
+  BlobOptions,
   CurlOptionName,
   SpecificOptions,
   CurlOptionValueType,
@@ -1233,7 +1233,7 @@ interface Curl {
    *
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
-  setOpt(option: BlobListOptions, value: Buffer | string | null): this
+  setOpt(option: BlobOptions, value: ArrayBuffer | Buffer | string | null): this
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
