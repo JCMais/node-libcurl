@@ -44,5 +44,6 @@ export enum CurlProtocol {
   SMB = 1 << 26,
   SMBS = 1 << 27,
   MQTT = 1 << 28,
+  GOPHERS = 1 << 29,
   ALL = ~0,
 }
