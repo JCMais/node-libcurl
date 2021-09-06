@@ -13,10 +13,12 @@ const optionKindMap = {
     'RESOLVE',
     'TELNETOPTIONS',
   ],
-  blobList: [
+  blob: [
+    'CAINFO_BLOB',
     'ISSUERCERT_BLOB',
     'SSLKEY_BLOB',
     'SSLCERT_BLOB',
+    'PROXY_CAINFO_BLOB',
     'PROXY_SSLCERT_BLOB',
     'PROXY_SSLCERT',
     'PROXY_SSLKEY_BLOB',

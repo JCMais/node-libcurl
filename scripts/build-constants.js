@@ -106,8 +106,8 @@ const run = async () => {
       optionKindMap.progressCallback,
     )}`,
     `export type StringListOptions = ${union(optionKindMap.stringList)}`,
-    `export type BlobListOptions = ${union(optionKindMap.blobList)}`,
-    `export type SpecificOptions = DataCallbackOptions | ProgressCallbackOptions | StringListOptions | BlobListOptions | ${union(
+    `export type BlobOptions = ${union(optionKindMap.blob)}`,
+    `export type SpecificOptions = DataCallbackOptions | ProgressCallbackOptions | StringListOptions | BlobOptions | ${union(
       optionKindMap.other,
     )}`,
   ]

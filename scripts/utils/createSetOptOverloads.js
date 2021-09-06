@@ -34,7 +34,7 @@ const createSetOptOverloads = (filePath, setOptReturnType = 'CurlCode') => {
       setOptReturnType,
     ),
     getSetOptDefinition(
-      'BlobListOptions',
+      'BlobOptions',
       optionKindValueMap.blob,
       setOptReturnType,
     ),
