@@ -45,4 +45,12 @@ export enum CurlSslOpt {
    * operating system. Currently implemented under MS-Windows.
    */
   NativeCa = 1 << 4,
+
+  /**
+   * Tells libcurl to automatically locate and use
+   * a client certificate for authentication. (Schannel)
+   *
+   * Added with libcurl 7.77 - This was the default in previous versions
+   */
+  AutoClientCert = 1 << 5,
 }

@@ -676,8 +676,17 @@ const std::vector<CurlConstant> curlInfoLinkedList = {
 };
 
 const std::vector<CurlConstant> curlOptionBlob = {
+#if NODE_LIBCURL_VER_GE(7, 77, 0)
+    {"CAINFO_BLOB", CURLOPT_CAINFO_BLOB},
+#endif
+
 #if NODE_LIBCURL_VER_GE(7, 71, 0)
     {"ISSUERCERT_BLOB", CURLOPT_ISSUERCERT_BLOB},
+
+#if NODE_LIBCURL_VER_GE(7, 77, 0)
+    {"PROXY_CAINFO_BLOB", CURLOPT_PROXY_CAINFO_BLOB},
+#endif
+
     {"PROXY_SSLCERT_BLOB", CURLOPT_PROXY_SSLCERT_BLOB},
     {"PROXY_SSLKEY_BLOB", CURLOPT_PROXY_SSLKEY_BLOB},
     {"SSLCERT_BLOB", CURLOPT_SSLCERT_BLOB},
