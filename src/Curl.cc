@@ -287,6 +287,11 @@ const std::vector<CurlConstant> curlOptionInteger = {
 
 const std::vector<CurlConstant> curlOptionString = {
     {"ACCEPT_ENCODING", CURLOPT_ACCEPT_ENCODING},
+
+#if NODE_LIBCURL_VER_GE(7, 75, 0)
+    {"AWS_SIGV4", CURLOPT_AWS_SIGV4},
+#endif
+
     {"CAINFO", CURLOPT_CAINFO},
     {"CAPATH", CURLOPT_CAPATH},
     {"COOKIE", CURLOPT_COOKIE},

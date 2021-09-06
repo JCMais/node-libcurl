@@ -36,6 +36,7 @@ export enum CurlAuth {
   DigestIe = 1 << 4,
   NtlmWb = 1 << 5,
   Bearer = 1 << 6,
+  AwsSigV4 = 1 << 7,
   // cannot use 1 << 31 like on libcurl, because bitwise operations on js are limited to 32 bits, so that would overflow
   Only = 2147483648,
   Any = ~DigestIe,
