@@ -28,6 +28,8 @@ const optionKindMap = {
     'CHUNK_END_FUNCTION',
     'DEBUGFUNCTION',
     'FNMATCH_FUNCTION',
+    'HSTSREADFUNCTION',
+    'HSTSWRITEFUNCTION',
     'SEEKFUNCTION',
     'TRAILERFUNCTION',
     'SHARE',
@@ -50,6 +52,7 @@ const optionKindMap = {
     'SSLVERSION',
     'TIMECONDITION',
     'USE_SSL',
+    'HSTS_CTRL',
     // @TODO ADD REMAINING OPTIONS WE HAVE ENUM FOR
   ],
 }
@@ -72,6 +75,10 @@ const optionKindValueMap = {
   /* @TODO Add type definitions, they are on Curl.fnmatchfunc */
   FNMATCH_FUNCTION:
     '((this: EasyNativeBinding, pattern: string, value: string) => CurlFnMatchFunc)',
+  HSTSREADFUNCTION:
+    '((this: EasyNativeBinding) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])',
+  HSTSWRITEFUNCTION:
+    '((this: EasyNativeBinding, cacheEntry: CurlHstsCacheEntry, cacheCount: CurlHstsCacheCount) => any)',
   HTTPPOST: 'HttpPostField[]',
   TRAILERFUNCTION: '((this: EasyNativeBinding) => string[] | false)',
   /* @TODO Add CURL_SEEKFUNC_* type definitions */
@@ -97,10 +104,31 @@ const optionKindValueMap = {
   SSLVERSION: 'CurlSslVersion',
   TIMECONDITION: 'CurlTimeCond',
   USE_SSL: 'CurlUseSsl',
+  HSTS_CTRL: 'CurlHsts',
   _: 'string | number | boolean',
 }
+
+const optionExtraDescriptionValueMap = Object.fromEntries(
+  Object.entries({
+    HSTSREADFUNCTION: [
+      '',
+      'You can either return a single `CurlHstsReadCallbackResult` object or an array of `CurlHstsReadCallbackResult` objects.',
+      'If returning an array, the callback will only be called once per request.',
+      'If returning a single object, the callback will be called multiple times until `null` is returned.',
+    ],
+  }).map(([key, value]) => {
+    return [
+      key,
+      `\n*\n${(Array.isArray(value)
+        ? value.join('\n * ')
+        : `* ${value}`
+      ).trim()}`,
+    ]
+  }),
+)
 
 module.exports = {
   optionKindMap,
   optionKindValueMap,
+  optionExtraDescriptionValueMap,
 }
