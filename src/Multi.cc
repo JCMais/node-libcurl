@@ -272,14 +272,15 @@ void Multi::CallOnMessageCallback(CURL* easy, CURLcode statusCode) {
   assert(ptr != nullptr && "Invalid handle returned from CURLINFO_PRIVATE.");
   Easy* obj = reinterpret_cast<Easy*>(ptr);
 
+  bool hasError = !obj->callbackError.IsEmpty();
+
   v8::Local<v8::Object> easyArg = obj->handle();
 
   v8::Local<v8::Value> err = Nan::Null();
-  v8::Local<v8::Int32> errCode = Nan::New(static_cast<int32_t>(statusCode));
+  v8::Local<v8::Int32> errCode = Nan::New(static_cast<int32_t>(
+      statusCode == CURLE_OK && hasError ? CURLE_ABORTED_BY_CALLBACK : statusCode));
 
-  if (statusCode != CURLE_OK) {
-    bool hasError = !obj->callbackError.IsEmpty();
-
+  if (statusCode != CURLE_OK || hasError) {
     err = hasError ? Nan::New(obj->callbackError) : Nan::Error(curl_easy_strerror(statusCode));
   }
 
@@ -541,6 +542,10 @@ NAN_METHOD(Multi::AddHandle) {
       Nan::ThrowError("Cannot add an Easy handle that is closed.");
       return;
     }
+
+    // reset callback error in case it is set
+    easy->callbackError.Reset();
+
     // Check comment on node_libcurl.cc
     SETLOCALE_WRAPPER(CURLMcode code =
                           curl_multi_add_handle(obj->mh, easy->ch););  // NOLINT(whitespace/newline)
