@@ -44,6 +44,11 @@ import { CurlFtpSsl } from './enum/CurlFtpSsl'
 import { CurlGlobalInit } from './enum/CurlGlobalInit'
 import { CurlGssApi } from './enum/CurlGssApi'
 import { CurlHeader } from './enum/CurlHeader'
+import {
+  CurlHsts,
+  CurlHstsCacheEntry,
+  CurlHstsCacheCount,
+} from './enum/CurlHsts'
 import { CurlHttpVersion } from './enum/CurlHttpVersion'
 import { CurlInfoDebug } from './enum/CurlInfoDebug'
 import { CurlIpResolve } from './enum/CurlIpResolve'
@@ -194,6 +199,15 @@ class Curl extends EventEmitter {
    * @protected
    */
   isRunning = false
+
+  /**
+   * Whether this instance is closed or not ({@link close | `close()`} was called).
+   *
+   * Make sure to not change their value, otherwise unexpected behavior would happen.
+   */
+  get isOpen() {
+    return this.handle.isOpen
+  }
 
   /**
    * Internal Easy handle being used
@@ -829,6 +843,7 @@ class Curl extends EventEmitter {
    * Official libcurl documentation: [`curl_easy_cleanup()`](http://curl.haxx.se/libcurl/c/curl_easy_cleanup.html)
    */
   close() {
+    // TODO(jonathan): on next semver major check if this.handle.isOpen is false and if it is, return immediately.
     curlInstanceMap.delete(this.handle)
 
     this.removeAllListeners()
@@ -1291,6 +1306,40 @@ interface Curl {
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
+   * You can either return a single `CurlHstsReadCallbackResult` object or an array of `CurlHstsReadCallbackResult` objects.
+   * If returning an array, the callback will only be called once per request.
+   * If returning a single object, the callback will be called multiple times until `null` is returned.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(
+    option: 'HSTSREADFUNCTION',
+    value:
+      | ((
+          this: EasyNativeBinding,
+        ) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])
+      | null,
+  ): this
+  /**
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(
+    option: 'HSTSWRITEFUNCTION',
+    value:
+      | ((
+          this: EasyNativeBinding,
+          cacheEntry: CurlHstsCacheEntry,
+          cacheCount: CurlHstsCacheCount,
+        ) => any)
+      | null,
+  ): this
+  /**
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
+   *
    *
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
@@ -1443,6 +1492,13 @@ interface Curl {
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'USE_SSL', value: CurlUseSsl | null): this
+  /**
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'HSTS_CTRL', value: CurlHsts | null): this
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *

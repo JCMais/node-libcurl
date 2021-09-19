@@ -22,6 +22,11 @@ import { CurlFtpMethod } from '../enum/CurlFtpMethod'
 import { CurlFtpSsl } from '../enum/CurlFtpSsl'
 import { CurlGssApi } from '../enum/CurlGssApi'
 import { CurlHeader } from '../enum/CurlHeader'
+import {
+  CurlHsts,
+  CurlHstsCacheEntry,
+  CurlHstsCacheCount,
+} from '../enum/CurlHsts'
 import { CurlHttpVersion } from '../enum/CurlHttpVersion'
 import { CurlInfoDebug } from '../enum/CurlInfoDebug'
 import { CurlIpResolve } from '../enum/CurlIpResolve'
@@ -97,6 +102,10 @@ export declare class EasyNativeBinding {
    * This will be `true` if {@link monitorSocketEvents | `monitorSocketEvents`} was called.
    */
   readonly isMonitoringSockets: boolean
+  /**
+   * This will be `true` if {@link close | `close`} was not called.
+   */
+  readonly isOpen: boolean
 
   /**
    * You can set this to anything - Use it to bind some data to this Easy instance.
@@ -210,6 +219,40 @@ export declare class EasyNativeBinding {
           pattern: string,
           value: string,
         ) => CurlFnMatchFunc)
+      | null,
+  ): CurlCode
+  /**
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
+   *
+   * You can either return a single `CurlHstsReadCallbackResult` object or an array of `CurlHstsReadCallbackResult` objects.
+   * If returning an array, the callback will only be called once per request.
+   * If returning a single object, the callback will be called multiple times until `null` is returned.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(
+    option: 'HSTSREADFUNCTION',
+    value:
+      | ((
+          this: EasyNativeBinding,
+        ) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])
+      | null,
+  ): CurlCode
+  /**
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(
+    option: 'HSTSWRITEFUNCTION',
+    value:
+      | ((
+          this: EasyNativeBinding,
+          cacheEntry: CurlHstsCacheEntry,
+          cacheCount: CurlHstsCacheCount,
+        ) => any)
       | null,
   ): CurlCode
   /**
@@ -367,6 +410,13 @@ export declare class EasyNativeBinding {
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'USE_SSL', value: CurlUseSsl | null): CurlCode
+  /**
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'HSTS_CTRL', value: CurlHsts | null): CurlCode
   /**
    * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
    *
