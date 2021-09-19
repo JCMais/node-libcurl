@@ -53,7 +53,7 @@ export interface CurlHstsWriteCallbackCount {
   count: number
 }
 
-export interface CurlHstsReadCallbackResult {
+export interface CurlHstsCacheEntry {
   /**
    * The host name.
    *
