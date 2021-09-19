@@ -13,9 +13,10 @@ mkdir -p $build_folder
 mkdir -p $2/source
 
 FORCE_REBUILD=${FORCE_REBUILD:-}
+FORCE_REBUILD_LIBCURL=${FORCE_REBUILD_LIBCURL:-}
 
 # @TODO We are explicitly checking the static lib
-if [[ -f $build_folder/lib/libcurl.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUILD != "true" ]]; then
+if [[ -f $build_folder/lib/libcurl.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUILD != "true" ]] && [[ -z $FORCE_REBUILD_LIBCURL || $FORCE_REBUILD_LIBCURL != "true" ]]; then
   echo "Skipping rebuild of libcurl because lib file already exists"
   exit 0
 fi
@@ -261,10 +262,11 @@ export CPPFLAGS=$CPPFLAGS
 export LDFLAGS=$LDFLAGS
 
 # Debug
-#     --enable-debug \
+    # --enable-debug \
 
 # Release - Static
 ./configure \
+    --enable-debug \
     --without-nss \
     --without-libpsl \
     --without-librtmp \

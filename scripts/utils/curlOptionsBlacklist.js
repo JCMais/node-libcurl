@@ -6,13 +6,6 @@ const curlOptionsBlacklist = [
   'CURLOPT_STREAM_WEIGHT',
   'CURLOPT_INTERLEAVEDATA',
   'CURLOPT_INTERLEAVEFUNCTION',
-  // HSTS is experimental - Remember to add all other symbols related to HSTS: CURL_VERSION_HSTS, CURLSTS_*, CURLHSTS_*
-  'CURLOPT_HSTS',
-  'CURLOPT_HSTS_CTRL',
-  'CURLOPT_HSTSREADDATA',
-  'CURLOPT_HSTSREADFUNCTION',
-  'CURLOPT_HSTSWRITEDATA',
-  'CURLOPT_HSTSWRITEFUNCTION',
   // maybe
   'CURLOPT_STDERR',
   // https://curl.haxx.se/libcurl/c/CURLOPT_CURLU.html
@@ -47,6 +40,8 @@ const curlOptionsBlacklist = [
   'CURLOPT_CHUNK_DATA',
   'CURLOPT_FNMATCH_DATA',
   'CURLOPT_TRAILERDATA',
+  'CURLOPT_HSTSREADDATA',
+  'CURLOPT_HSTSWRITEDATA',
   // Options that are used internally
   'CURLOPT_WRITEDATA',
   'CURLOPT_HEADERDATA',

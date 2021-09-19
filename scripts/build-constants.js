@@ -47,6 +47,7 @@ const run = async () => {
       import { CurlFtpSsl } from '../enum/CurlFtpSsl'
       import { CurlGssApi } from '../enum/CurlGssApi'
       import { CurlHeader } from '../enum/CurlHeader'
+      import { CurlHsts, CurlHstsCacheCount, CurlHstsCacheEntry } from '../enum/CurlHsts'
       import { CurlHttpVersion } from '../enum/CurlHttpVersion'
       import { CurlInfoDebug } from '../enum/CurlInfoDebug'
       import { CurlIpResolve } from '../enum/CurlIpResolve'

@@ -1,6 +1,7 @@
 const cheerio = require('cheerio')
 
 const { curly } = require('../../dist')
+const { optionExtraDescriptionValueMap } = require('../data/options')
 
 const {
   convertCurlConstantToCamelCase,
@@ -21,7 +22,7 @@ const retrieveConstantList = async ({ url, constantPrefix, blacklist }) => {
 
       $descriptionEl.find('a').remove()
 
-      const description = $descriptionEl
+      let description = $descriptionEl
         .text()
         .trim()
         .replace(/See$/, '')
@@ -32,6 +33,11 @@ const retrieveConstantList = async ({ url, constantPrefix, blacklist }) => {
       const constantName = constantOriginal.replace(constantPrefix, '')
 
       const url = `https://curl.haxx.se/libcurl/c/${constantOriginal}.html`
+
+      if (optionExtraDescriptionValueMap[constantName]) {
+        const extraDescription = optionExtraDescriptionValueMap[constantName]
+        description = `${description}${extraDescription}`
+      }
 
       return {
         constantOriginal,

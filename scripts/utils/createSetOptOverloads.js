@@ -1,15 +1,20 @@
 const fs = require('fs')
 const { inspect } = require('util')
 
-const { optionKindMap, optionKindValueMap } = require('../data/options')
+const {
+  optionKindMap,
+  optionKindValueMap,
+  optionExtraDescriptionValueMap,
+} = require('../data/options')
 
 const getSetOptDefinition = (
   optionNameType,
   optionValueType,
   setOptReturnType,
+  extraComments = '',
 ) =>
   `/**
- * Use {@link "Curl".Curl.option|\`Curl.option\`} for predefined constants.
+ * Use {@link "Curl".Curl.option|\`Curl.option\`} for predefined constants.${extraComments}
  *
  *
  * Official libcurl documentation: [\`curl_easy_setopt()\`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
@@ -47,6 +52,7 @@ const createSetOptOverloads = (filePath, setOptReturnType = 'CurlCode') => {
         inspect(specificOption),
         optionKindValueMap[specificOption],
         setOptReturnType,
+        optionExtraDescriptionValueMap[specificOption],
       ),
     ]
   }
