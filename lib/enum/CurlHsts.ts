@@ -41,7 +41,7 @@ export enum CurlHstsCallback {
   Fail = 2,
 }
 
-export interface CurlHstsWriteCallbackCount {
+export interface CurlHstsCacheCount {
   /**
    * The index for the current cache entry.
    */
