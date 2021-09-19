@@ -72,7 +72,7 @@ export interface CurlHstsCacheEntry {
    * 'YYYYMMDD HH:MM:SS'
    * ```
    *
-   * If not set defaults to a date far away in the future (currently `99991231 23:59:59`).
+   * If not set or if null, it will default to a date far away in the future (currently `99991231 23:59:59`).
    */
-  expire?: string
+  expire?: string | null
 }
