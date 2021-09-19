@@ -18,13 +18,15 @@
 // 36055 was allocated on Win64
 #define MEMORY_PER_HANDLE 30000
 
+#define TIME_IN_THE_FUTURE "99991231 23:59:59"
+
 namespace NodeLibcurl {
 
 class Easy::ToFree {
  public:
-  std::vector<std::vector<char> > str;
+  std::vector<std::vector<char>> str;
   std::vector<curl_slist*> slist;
-  std::vector<std::unique_ptr<CurlHttpPost> > post;
+  std::vector<std::unique_ptr<CurlHttpPost>> post;
 
   ~ToFree() {
     for (unsigned int i = 0; i < slist.size(); i++) {
@@ -79,6 +81,10 @@ Easy::Easy(Easy* orig) {
 #if NODE_LIBCURL_VER_GE(7, 64, 0)
   curl_easy_setopt(this->ch, CURLOPT_TRAILERDATA, this);
 #endif
+#if NODE_LIBCURL_VER_GE(7, 74, 0)
+  curl_easy_setopt(this->ch, CURLOPT_HSTSREADDATA, this);
+  curl_easy_setopt(this->ch, CURLOPT_HSTSWRITEDATA, this);
+#endif
   // no need to reset the _DATA option for the READ, SEEK and WRITE callbacks,
   // since they are reset on ResetRequiredHandleOptions()
 
@@ -130,6 +136,10 @@ Easy::Easy(CURL* easy) {
 #endif
 #if NODE_LIBCURL_VER_GE(7, 64, 0)
   curl_easy_setopt(this->ch, CURLOPT_TRAILERDATA, this);
+#endif
+#if NODE_LIBCURL_VER_GE(7, 74, 0)
+  curl_easy_setopt(this->ch, CURLOPT_HSTSREADDATA, this);
+  curl_easy_setopt(this->ch, CURLOPT_HSTSWRITEDATA, this);
 #endif
   // no need to reset the _DATA option for the READ, SEEK and WRITE callbacks,
   // since they are reset on ResetRequiredHandleOptions()
@@ -643,6 +653,25 @@ v8::Local<v8::Object> Easy::CreateV8ObjectFromCurlFileInfo(curl_fileinfo* fileIn
   return scope.Escape(obj);
 }
 
+v8::Local<v8::Object> Easy::CreateV8ObjectFromCurlHstsEntry(struct curl_hstsentry* sts) {
+  Nan::EscapableHandleScope scope;
+
+  auto hasExpire = !!sts->expire[0] && !!strcmp(sts->expire, TIME_IN_THE_FUTURE);
+
+  v8::Local<v8::String> host = Nan::New(sts->name).ToLocalChecked();
+  v8::Local<v8::Boolean> includeSubDomains = Nan::New(!!sts->includeSubDomains);
+  v8::Local<v8::Value> expire = hasExpire ? Nan::New(sts->expire).ToLocalChecked().As<v8::Value>()
+                                          : Nan::Null().As<v8::Value>();
+  v8::Local<v8::Value> time = Nan::Null().As<v8::Value>();
+
+  v8::Local<v8::Object> obj = Nan::New<v8::Object>();
+  Nan::Set(obj, Nan::New("host").ToLocalChecked(), host);
+  Nan::Set(obj, Nan::New("includeSubDomains").ToLocalChecked(), includeSubDomains);
+  Nan::Set(obj, Nan::New("expire").ToLocalChecked(), expire);
+
+  return scope.Escape(obj);
+}
+
 long Easy::CbChunkBgn(curl_fileinfo* transferInfo, void* ptr, int remains) {  // NOLINT(runtime/int)
   Easy* obj = static_cast<Easy*>(ptr);
 
@@ -825,6 +854,276 @@ int Easy::CbFnMatch(void* ptr, const char* pattern, const char* string) {
   }
 
   return returnValue;
+}
+
+int Easy::CbHstsRead(CURL* handle, struct curl_hstsentry* sts, void* userdata) {
+#if NODE_LIBCURL_VER_GE(7, 74, 0)
+  Nan::HandleScope scope;
+
+  Easy* obj = static_cast<Easy*>(userdata);
+
+  assert(obj);
+
+  CallbacksMap::iterator it = obj->callbacks.find(CURLOPT_HSTSREADFUNCTION);
+  assert(it != obj->callbacks.end() && "HSTSREADFUNCTION callback not set.");
+
+  int32_t returnValue = CURLSTS_FAIL;
+
+  Nan::TryCatch tryCatch;
+  v8::Local<v8::Value> cacheEntryObject;
+
+  v8::Local<v8::Value> typeError = Nan::TypeError(
+      "Return value from the HSTSREADFUNCTION callback must be one of the following:\n"
+      "  - Object matching the type CurlHstsEntry\n"
+      "  - An array matching the type CurlHstsEntry[]\n"
+      "  - null\n"
+      "Libcurl <= 7.79.0 does not stop requests from firing if there are errors in the HSTS "
+      "callback, thus you may be receiving an error while the request did in fact work. Please "
+      "fix "
+      "the HSTS callback to return the correct data to avoid this.");
+
+  if (obj->hstsReadCache.size() > 0) {
+    auto persistentValue = obj->hstsReadCache.back();
+    cacheEntryObject = Nan::New(obj->hstsReadCache.back());
+
+    // reset the persistent handler so we do not leak memory
+    persistentValue.Reset();
+    // remove it from the stack
+    obj->hstsReadCache.pop_back();
+  } else {
+    // if this is true, this means we got all the entries in the cache provided by the user
+    if (obj->wasHstsReadCacheSet) {
+      obj->wasHstsReadCacheSet = false;
+      return CURLSTS_DONE;
+    }
+
+    const int argc = 0;
+    v8::Local<v8::Value> argv[] = {};
+    Nan::AsyncResource asyncResource("Easy::CbHstsRead");
+    Nan::MaybeLocal<v8::Value> returnValueFromHstsReadCallback =
+        asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
+
+    if (tryCatch.HasCaught()) {
+      if (obj->isInsideMultiHandle) {
+        obj->callbackError.Reset(tryCatch.Exception());
+      } else {
+        tryCatch.ReThrow();
+      }
+      return returnValue;
+    }
+
+    if (returnValueFromHstsReadCallback.IsEmpty()) {
+      THROW_ERROR_OR_SET_MULTI_CALLBACK_ERROR_IF_INSIDE_MULTI(typeError)
+      return returnValue;
+    }
+
+    cacheEntryObject = returnValueFromHstsReadCallback.ToLocalChecked();
+  }
+
+  if (cacheEntryObject->IsNull()) {
+    return CURLSTS_DONE;
+  } else {
+    // returning an array from the callback can be used to avoid multiple
+    // context switches between v8 and js
+    if (cacheEntryObject->IsArray()) {
+      auto cacheArray = cacheEntryObject.As<v8::Array>();
+      auto cacheArrayLength = cacheArray->Length();
+
+      if (cacheArrayLength == 0) {
+        return CURLSTS_DONE;
+      }
+
+      // inserting in reverse order as we are processing the hstsReadCache stack from back to front
+      for (int i = cacheArrayLength - 1; i >= 0; i--) {
+        auto idxValue = Nan::Get(cacheArray, i);
+
+        assert(!idxValue.IsEmpty() &&
+               "Value inside array could not be found - Process may be running out of memory");
+
+        auto idxValueChecked = idxValue.ToLocalChecked();
+
+        // we check for an array here too to avoid passing a child array here.
+        // If that happens, the code would get to this condition again when we
+        // process this cache entry in a future iteration
+        if (!idxValueChecked->IsObject() || idxValueChecked->IsArray()) {
+          THROW_ERROR_OR_SET_MULTI_CALLBACK_ERROR_IF_INSIDE_MULTI(typeError)
+          return returnValue;
+        }
+
+        auto idxValueAsObject = idxValueChecked.As<v8::Object>();
+
+        Nan::CopyablePersistentTraits<v8::Object>::CopyablePersistent persistentValue;
+
+        persistentValue.Reset(Nan::GetCurrentContext()->GetIsolate(), idxValueAsObject);
+
+        obj->hstsReadCache.push_back(persistentValue);
+      }
+
+      auto persistentValue = obj->hstsReadCache.back();
+      cacheEntryObject = Nan::New(obj->hstsReadCache.back());
+
+      persistentValue.Reset();
+      obj->hstsReadCache.pop_back();
+      obj->wasHstsReadCacheSet = true;
+    }
+
+    if (cacheEntryObject->IsObject()) {
+      // napi would make this so much cleaner...
+
+      auto cacheEntry = cacheEntryObject.As<v8::Object>();
+
+      auto hostPropertyStr = Nan::New("host").ToLocalChecked();
+      auto includeSubDomainsPropertyStr = Nan::New("includeSubDomains").ToLocalChecked();
+      auto expirePropertyStr = Nan::New("expire").ToLocalChecked();
+
+      auto hostPropertyValue = Nan::Get(cacheEntry, hostPropertyStr);
+      auto includeSubDomainsPropertyValue = Nan::Get(cacheEntry, includeSubDomainsPropertyStr);
+      auto expirePropertyValue = Nan::Get(cacheEntry, expirePropertyStr);
+
+      if (hostPropertyValue.IsEmpty() || includeSubDomainsPropertyValue.IsEmpty() ||
+          expirePropertyValue.IsEmpty()) {
+        assert("Process ran out of memory - fields returned from HSTSREADFUNCTION were empty");
+      }
+
+      auto hostPropertyValueChecked = hostPropertyValue.ToLocalChecked();
+      auto includeSubDomainsPropertyValueChecked = includeSubDomainsPropertyValue.ToLocalChecked();
+      auto expirePropertyValueChecked = expirePropertyValue.ToLocalChecked();
+
+      // the validation here is pretty basic, and we are not really validating
+      // the format of the expire string - libcurl should do that
+
+      // make sure the provided data is valid
+      if (!hostPropertyValueChecked->IsString() ||
+          (!includeSubDomainsPropertyValueChecked->IsNullOrUndefined() &&
+           !includeSubDomainsPropertyValueChecked->IsBoolean()) ||
+          (!expirePropertyValueChecked->IsNullOrUndefined() &&
+           !expirePropertyValueChecked->IsString())) {
+        THROW_ERROR_OR_SET_MULTI_CALLBACK_ERROR_IF_INSIDE_MULTI(typeError)
+        return returnValue;
+      }
+
+      Nan::Utf8String hostStrValue(hostPropertyValueChecked);
+
+      // make sure str len is inside the given max length
+      if (static_cast<size_t>(hostStrValue.length()) > sts->namelen) {
+        v8::Local<v8::Value> typeError = Nan::TypeError(
+            "The host property value returned from the HSTSREADFUNCTION callback function was "
+            "invalid. The host string is too long.\n"
+            "Libcurl <= 7.79.0 does not stop requests from firing if there are errors in the HSTS "
+            "callback, thus you may be receiving an error while the request did in fact work. "
+            "Please fix the HSTS callback to return the correct data to avoid this.");
+        THROW_ERROR_OR_SET_MULTI_CALLBACK_ERROR_IF_INSIDE_MULTI(typeError)
+
+        return returnValue;
+      }
+
+      sts->name = *hostStrValue;
+      sts->includeSubDomains = Nan::To<bool>(includeSubDomainsPropertyValueChecked).FromJust();
+
+      if (expirePropertyValueChecked->IsString()) {
+        // make sure expire length is one expected by libcurl
+        // YYYYMMDD HH:MM:SS [null-terminated]
+        size_t currentSize =
+            static_cast<size_t>(expirePropertyValueChecked.As<v8::String>()->Length());
+        size_t expectedSize = sizeof(sts->expire) / sizeof(sts->expire[0]) - 1;
+
+        if (currentSize != expectedSize) {
+          v8::Local<v8::Value> typeError = Nan::TypeError(
+              "The expire property value returned from the HSTSREADFUNCTION callback function was "
+              "invalid. String is either too long, or too short.\n"
+              "Libcurl <= 7.79.0 does not stop requests from firing if there are errors in the "
+              "HSTS "
+              "callback, thus you may be receiving an error while the request did in fact work. "
+              "Please fix the HSTS callback to return the correct data to avoid this.");
+          THROW_ERROR_OR_SET_MULTI_CALLBACK_ERROR_IF_INSIDE_MULTI(typeError)
+
+          return returnValue;
+        }
+
+        Nan::Utf8String expireStrValue(expirePropertyValueChecked);
+        auto expireCharValue = *expireStrValue;
+
+        strcpy(sts->expire, expireCharValue);
+      } else {
+        // TODO(jonathan): libcurl <= 7.79 has a bug when expire is not set, see:
+        // https://github.com/curl/curl/issues/7720 - to avoid this bug we are setting it manually
+        // to a future date here
+        strcpy(sts->expire, TIME_IN_THE_FUTURE);
+      }
+      returnValue = CURLSTS_OK;
+    } else {
+      THROW_ERROR_OR_SET_MULTI_CALLBACK_ERROR_IF_INSIDE_MULTI(typeError)
+    }
+  }
+
+  return returnValue;
+#else
+  return 0;
+#endif
+}
+
+int Easy::CbHstsWrite(CURL* handle, struct curl_hstsentry* sts, struct curl_index* count,
+                      void* userdata) {
+#if NODE_LIBCURL_VER_GE(7, 74, 0)
+  Nan::HandleScope scope;
+
+  Easy* obj = static_cast<Easy*>(userdata);
+
+  assert(obj);
+
+  CallbacksMap::iterator it = obj->callbacks.find(CURLOPT_HSTSWRITEFUNCTION);
+  assert(it != obj->callbacks.end() && "HSTSWRITEFUNCTION callback not set.");
+
+  int32_t returnValue = CURLSTS_FAIL;
+
+  Nan::TryCatch tryCatch;
+  v8::Local<v8::Value> value;
+
+  v8::Local<v8::Value> typeError =
+      Nan::TypeError("Return value from the HSTSWRITEFUNCTION callback must be an integer.");
+
+  // TODO(jonathan): give the option to receive an array directly?
+
+  v8::Local<v8::Object> countObj = Nan::New<v8::Object>();
+  v8::Local<v8::Number> index = Nan::New(static_cast<uint32_t>(count->index));
+  v8::Local<v8::Number> total = Nan::New(static_cast<uint32_t>(count->total));
+  Nan::Set(countObj, Nan::New("index").ToLocalChecked(), index);
+  Nan::Set(countObj, Nan::New("total").ToLocalChecked(), total);
+
+  const int argc = 2;
+  v8::Local<v8::Value> argv[] = {Easy::CreateV8ObjectFromCurlHstsEntry(sts), countObj};
+
+  Nan::AsyncResource asyncResource("Easy::CbHstsWrite");
+  Nan::MaybeLocal<v8::Value> returnValueCallback =
+      asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
+
+  if (tryCatch.HasCaught()) {
+    if (obj->isInsideMultiHandle) {
+      obj->callbackError.Reset(tryCatch.Exception());
+    } else {
+      tryCatch.ReThrow();
+    }
+    return returnValue;
+  }
+
+  if (returnValueCallback.IsEmpty()) {
+    THROW_ERROR_OR_SET_MULTI_CALLBACK_ERROR_IF_INSIDE_MULTI(typeError)
+    return returnValue;
+  }
+
+  value = returnValueCallback.ToLocalChecked();
+
+  if (!value->IsNumber()) {
+    THROW_ERROR_OR_SET_MULTI_CALLBACK_ERROR_IF_INSIDE_MULTI(typeError)
+    return returnValue;
+  }
+
+  returnValue = Nan::To<int32_t>(value).FromJust();
+
+  return returnValue;
+#else
+  return 0;
+#endif
 }
 
 int Easy::CbProgress(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow) {
@@ -1078,6 +1377,8 @@ NAN_MODULE_INIT(Easy::Initialize) {
   Nan::SetAccessor(proto, Nan::New("isMonitoringSockets").ToLocalChecked(),
                    Easy::IsMonitoringSocketsGetter, 0, v8::Local<v8::Value>(), v8::DEFAULT,
                    v8::ReadOnly);
+  Nan::SetAccessor(proto, Nan::New("isOpen").ToLocalChecked(), Easy::IsOpenGetter, 0,
+                   v8::Local<v8::Value>(), v8::DEFAULT, v8::ReadOnly);
 
   Easy::constructor.Reset(tmpl);
 
@@ -1135,6 +1436,12 @@ NAN_GETTER(Easy::IsMonitoringSocketsGetter) {
   Easy* obj = Nan::ObjectWrap::Unwrap<Easy>(info.This());
 
   info.GetReturnValue().Set(Nan::New(obj->isMonitoringSockets));
+}
+
+NAN_GETTER(Easy::IsOpenGetter) {
+  Easy* obj = Nan::ObjectWrap::Unwrap<Easy>(info.This());
+
+  info.GetReturnValue().Set(Nan::New(obj->isOpen));
 }
 
 NAN_METHOD(Easy::SetOpt) {
@@ -1517,6 +1824,39 @@ NAN_METHOD(Easy::SetOpt) {
         }
 
         break;
+
+#if NODE_LIBCURL_VER_GE(7, 74, 0)
+      case CURLOPT_HSTSREADFUNCTION:
+        if (isNull) {
+          obj->callbacks.erase(CURLOPT_HSTSREADFUNCTION);
+
+          curl_easy_setopt(obj->ch, CURLOPT_HSTSREADDATA, NULL);
+          setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_HSTSREADFUNCTION, NULL);
+        } else {
+          obj->callbacks[CURLOPT_HSTSREADFUNCTION].reset(
+              new Nan::Callback(value.As<v8::Function>()));
+
+          curl_easy_setopt(obj->ch, CURLOPT_HSTSREADDATA, obj);
+          setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_HSTSREADFUNCTION, Easy::CbHstsRead);
+        }
+
+        break;
+      case CURLOPT_HSTSWRITEFUNCTION:
+        if (isNull) {
+          obj->callbacks.erase(CURLOPT_HSTSWRITEFUNCTION);
+
+          curl_easy_setopt(obj->ch, CURLOPT_HSTSWRITEDATA, NULL);
+          setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_HSTSWRITEFUNCTION, NULL);
+        } else {
+          obj->callbacks[CURLOPT_HSTSWRITEFUNCTION].reset(
+              new Nan::Callback(value.As<v8::Function>()));
+
+          curl_easy_setopt(obj->ch, CURLOPT_HSTSWRITEDATA, obj);
+          setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_HSTSWRITEFUNCTION, Easy::CbHstsWrite);
+        }
+
+        break;
+#endif
 
       case CURLOPT_PROGRESSFUNCTION:
 

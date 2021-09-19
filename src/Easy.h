@@ -50,6 +50,8 @@ class Easy : public Nan::ObjectWrap {
       cbOnSocketEvent;  // still required since it's not related to any CURLOption
 
   // members
+  std::vector<Nan::CopyablePersistentTraits<v8::Object>::CopyablePersistent> hstsReadCache;
+  uint32_t wasHstsReadCacheSet = false;
   uv_poll_t* socketPollHandle = nullptr;
   std::shared_ptr<ToFree> toFree = nullptr;
 
@@ -66,12 +68,14 @@ class Easy : public Nan::ObjectWrap {
   template <typename TResultType, typename Tv8MappingType>
   static v8::Local<v8::Value> GetInfoTmpl(const Easy* obj, int infoId);
   static v8::Local<v8::Object> CreateV8ObjectFromCurlFileInfo(curl_fileinfo* fileInfo);
+  static v8::Local<v8::Object> CreateV8ObjectFromCurlHstsEntry(struct curl_hstsentry* sts);
 
   // js available methods
   static NAN_METHOD(New);
   static NAN_GETTER(IdGetter);
   static NAN_GETTER(IsInsideMultiHandleGetter);
   static NAN_GETTER(IsMonitoringSocketsGetter);
+  static NAN_GETTER(IsOpenGetter);
   static NAN_METHOD(SetOpt);
   static NAN_METHOD(GetInfo);
   static NAN_METHOD(Send);
@@ -97,6 +101,9 @@ class Easy : public Nan::ObjectWrap {
   static long CbChunkEnd(void* ptr);  // NOLINT(runtime/int)
   static int CbDebug(CURL* handle, curl_infotype type, char* data, size_t size, void* userptr);
   static int CbFnMatch(void* ptr, const char* pattern, const char* string);
+  static int CbHstsRead(CURL* handle, struct curl_hstsentry* sts, void* userdata);
+  static int CbHstsWrite(CURL* handle, struct curl_hstsentry* sts, struct curl_index* count,
+                         void* userdata);
   static int CbProgress(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow);
   static int CbTrailer(struct curl_slist** list, void* userdata);
   static int CbXferinfo(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal,

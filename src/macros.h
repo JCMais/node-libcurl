@@ -51,4 +51,11 @@
 #define SETLOCALE_WRAPPER(code) code
 #endif
 
+#define THROW_ERROR_OR_SET_MULTI_CALLBACK_ERROR_IF_INSIDE_MULTI(typeError) \
+  if (obj->isInsideMultiHandle) {                                          \
+    obj->callbackError.Reset(typeError);                                   \
+  } else {                                                                 \
+    Nan::ThrowError(typeError);                                            \
+    tryCatch.ReThrow();                                                    \
+  }
 #endif
