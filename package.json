@@ -31,6 +31,9 @@
   },
   "scripts": {
     "ae": "api-extractor run --local --verbose",
+    "brute-force-leak-test:run": "node --inspect --expose_gc -r ts-node/register ./tools/brute-force-leak-test.ts",
+    "brute-force-leak-test:run:debug:gdb": "gdb --args node --inspect --expose_gc -r ts-node/register ./tools/brute-force-leak-test.ts",
+    "brute-force-leak-test:server": "http-server ./tools/brute-force-server-static-folder -p 8080 -s",
     "build:dist": "tsc",
     "clean": "yarn clean:build && yarn clean:dist",
     "clean:build": "rimraf build",
@@ -47,6 +50,7 @@
     "prettier:all": "yarn prettier lib/**/*.ts tools/**/*.js scripts/**/*.js test/**/*.ts examples/**/*.js",
     "test": "mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
     "test:coverage": "nyc yarn test",
+    "test:debug:gdb": "gdb --args node ./node_modules/.bin/mocha -r ts-node/register test/curl/hsts.spec.ts",
     "test:electron": "electron-mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
     "test:watch": "yarn test --watch --watch-files lib/*.ts lib/**/*.ts test/**/*.spec.ts",
     "preversion": "yarn lint && yarn clean:dist && yarn build:dist"
