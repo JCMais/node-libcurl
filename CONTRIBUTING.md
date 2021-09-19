@@ -83,8 +83,12 @@ If you want to include a new libcurl option on the addon, those are the basic st
    There are different vectors there for the expected type of the option's value, like `curlOptionInteger`, `curlOptionString`, etc.
    Make sure to use a `#if` directive to include this option only if building against a libcurl version that supports it, otherwise there will be an compilation error on older versions.
 2. In case the option expects a value of type other than `number | string | boolean`, you must also add it to their respective key on the object `optionKindMap` inside [`./scripts/data/options.js`](./scripts/data/options.js). In case you add it to the `other` key, which means this option has a specific value, you must also add the option expected value type to the object `optionKindValueMap` right below, on that same file.
-3. Run `node ./scripts/build-constants.js`, this will generate an updated list of options on [`./lib/generated/`](./lib/generated), and also update the files [`./lib/Curl.ts`] and [`./lib/EasyNativeBinding.ts`] with overloads for the `setOpt` method. Make sure the options added are correct.
-4. If running the above adds extra options that you do not want to add / are not related to the options you are adding, please feel free to remove them manually from the generated output. We will try to improve this experience later, but for now you have to manually remove them.
+3. If the option may use an `enum`, you should also create or update the existing enum. For example, libcurl 7.75.0 added [AWS Sig v4 authentication method](https://curl.se/bug/?i=5703), for that a new option and constant were added in libcurl, [`CURLOPT_AWS_SIGV4`](https://curl.se/libcurl/c/CURLOPT_AWS_SIGV4.html) and `CURLAUTH_AWS_SIGV4`. To add support for that option we:
+   - Added the `CURLOPT_AWS_SIGV4` constant as the `AwsSigV4` member in the `CurlAuth` enum. To get the value we looked at the libcurl source code.
+   - Added the `CURLOPT_AWS_SIGV4` as a string option.
+  [Full commit with the above changes is available here](https://github.com/JCMais/node-libcurl/commit/a38dd73db6f47a11197b7e1550111cc8ffd9ec2b).
+4. Run `node ./scripts/build-constants.js`, this will generate an updated list of options on [`./lib/generated/`](./lib/generated), and also update the files [`./lib/Curl.ts`] and [`./lib/EasyNativeBinding.ts`] with overloads for the `setOpt` method. Make sure the options added are correct.
+5. If running the above adds extra options that you do not want to add / are not related to the options you are adding, please feel free to remove them manually from the generated output. We will try to improve this experience later, but for now you have to manually remove them.
 
 ### Changing libcurl Version Used on Prebuilt Binaries for Windows
 
