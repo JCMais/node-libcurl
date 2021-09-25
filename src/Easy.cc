@@ -662,7 +662,6 @@ v8::Local<v8::Object> Easy::CreateV8ObjectFromCurlHstsEntry(struct curl_hstsentr
   v8::Local<v8::Boolean> includeSubDomains = Nan::New(!!sts->includeSubDomains);
   v8::Local<v8::Value> expire = hasExpire ? Nan::New(sts->expire).ToLocalChecked().As<v8::Value>()
                                           : Nan::Null().As<v8::Value>();
-  v8::Local<v8::Value> time = Nan::Null().As<v8::Value>();
 
   v8::Local<v8::Object> obj = Nan::New<v8::Object>();
   Nan::Set(obj, Nan::New("host").ToLocalChecked(), host);
