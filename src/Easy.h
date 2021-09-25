@@ -8,6 +8,7 @@
 #define NODELIBCURL_EASY_H
 
 #include "Multi.h"
+#include "libcurl_compat.h"
 
 #include <curl/curl.h>
 #include <nan.h>
