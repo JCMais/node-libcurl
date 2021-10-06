@@ -28,23 +28,54 @@ else
   make distclean || true;
 fi
 
-# Debug:
-#./config -fPIC --prefix=$build_folder --openssldir=$build_folder no-shared \
-#  no-asm -g3 -O0 -fno-omit-frame-pointer -fno-inline-functions "${@:3}"
+if [ "$MACOS_UNIVERSAL_BUILD" == "true" ]; then
+  # OpenSSL depends on assembly snippets, so a proper universal build requires
+  # two separate builds.
 
-# Release - Static
-./config \
-   -fPIC \
-   --prefix=$build_folder \
-   --openssldir=$build_folder \
-   no-shared "${@:3}"
+  build_arch() {
+    CFLAGS="$MACOS_TARGET_FLAGS -arch $1" \
+    LDFLAGS="$MACOS_TARGET_FLAGS -arch $1" \
 
-# Release - Both
-# ./config \
-#    -Wl,-rpath=$build_folder/lib \
-#    -fPIC \
-#    --prefix=$build_folder \
-#    --openssldir=$build_folder \
-#    shared "${@:3}"
+    ./Configure \
+      darwin64-$1-cc \
+      -fPIC \
+      --prefix=$build_folder \
+      --openssldir=$build_folder \
+      no-shared "${@:2}"
 
-make && make install_sw
+    make && make install_sw
+    mv $build_folder/lib/libcrypto{,-$1}.a
+    mv $build_folder/lib/libssl{,-$1}.a
+  }
+
+  build_arch x86_64 "${@:3}"
+  make distclean || true;
+  build_arch arm64 "${@:3}"
+
+  lipo -create -output $build_folder/lib/libcrypto.a \
+    $build_folder/lib/libcrypto-{x86_64,arm64}.a
+
+  lipo -create -output $build_folder/lib/libssl.a \
+    $build_folder/lib/libssl-{x86_64,arm64}.a
+else
+  # Debug:
+  #./config -fPIC --prefix=$build_folder --openssldir=$build_folder no-shared \
+  #  no-asm -g3 -O0 -fno-omit-frame-pointer -fno-inline-functions $1
+
+  # Release - Static
+  ./config \
+    -fPIC \
+    --prefix=$build_folder \
+    --openssldir=$build_folder \
+    no-shared "${@:3}"
+
+  # Release - Both
+  # ./config \
+  #    -Wl,-rpath=$build_folder/lib \
+  #    -fPIC \
+  #    --prefix=$build_folder \
+  #    --openssldir=$build_folder \
+  #    shared $1
+
+  make && make install_sw
+fi
