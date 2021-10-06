@@ -12,6 +12,7 @@
     'curl_config_bin%': 'node <(module_root_dir)/scripts/curl-config.js',
     'node_libcurl_no_setlocale%': 'false',
     'node_libcurl_cpp_std%': '<!(node <(module_root_dir)/scripts/cpp-std.js)',
+    'macos_universal_build%': 'false',
   },
   'targets': [
     {
@@ -181,6 +182,22 @@
                   '/usr/local/lib',
                   '/usr/lib'
                 ],
+              }
+            }],
+            ['macos_universal_build=="true"', {
+              'xcode_settings': {
+                'OTHER_CPLUSPLUSFLAGS' : [
+                  '-arch x86_64',
+                  '-arch arm64'
+                ],
+                'OTHER_CFLAGS': [
+                  '-arch x86_64',
+                  '-arch arm64'
+                ],
+                'OTHER_LDFLAGS': [
+                  '-arch x86_64',
+                  '-arch arm64'
+                ]
               }
             }]
           ],
