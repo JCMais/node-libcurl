@@ -95,9 +95,9 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v3-${{ runner.os }}-libcurl-deps-cache-build-and-release
+          key: v3-build-lint-test-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
           restore-keys: |
-            v3-${{ runner.os }}-libcurl-deps-cache-build-and-release
+            v3-build-lint-test-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
       - name: 'Install all the stuff'
         run: |
           RUN_TESTS=false \
