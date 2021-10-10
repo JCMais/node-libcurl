@@ -119,3 +119,9 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage/**
           fail_ci_if_error: false
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-logs
+          path: ./logs/
+          retention-days: 3

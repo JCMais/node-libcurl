@@ -267,3 +267,9 @@ jobs:
       - name: 'Publish Binary'
         run: |
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-logs
+          path: ./logs/
+          retention-days: 5

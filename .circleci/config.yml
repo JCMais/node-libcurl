@@ -172,7 +172,8 @@ orbs:
                 - ~/deps/openldap/build/<<parameters.openldap-version>>
                 - ~/deps/openssl/build/<<parameters.openssl-version>>
                 - ~/deps/zlib/build/<<parameters.zlib-version>>
-
+          - store_artifacts:
+              path: ./logs/
 # Great docs
 # https://circleci.com/docs/2.0/reusing-config/#getting-started-with-config-reuse
 
