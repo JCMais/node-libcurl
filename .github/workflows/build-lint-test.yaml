@@ -1,10 +1,6 @@
 name: build-lint-test
 
 on:
-  push:
-    branches-ignore:
-      - master
-      - develop
   pull_request:
 
 env:
