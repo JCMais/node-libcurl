@@ -6,6 +6,10 @@ on:
 env:
   LIBCURL_RELEASE: 'LATEST'
 
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-test:
     # this must match the matrix inside build-and-release.yaml
@@ -15,7 +19,8 @@ jobs:
       matrix:
         os:
           - macos-10.15
-          - ubuntu-16.04 # TODO(jonathan): bump this to a more recent version when we do a major version bump
+          # removed as we enabled CircleCI to run on PRs
+          # - ubuntu-16.04 # TODO(jonathan): bump this to a more recent version when we do a major version bump
         libcurl-release:
           - 7.73.0
         node:
@@ -29,14 +34,20 @@ jobs:
             libcurl-release: 7.73.0
             node: 16
             run-lint-and-tsc: true
+          # Node.js 16 needs a different cpp std
           - os: macos-10.15
             libcurl-release: 7.73.0
             node: 16
             node-libcurl-cpp-std: c++17
-          - os: ubuntu-16.04
-            libcurl-release: 7.73.0
+          # This is disabled as CircleCI is now running on PRs - we may add this back if build times are too slow with just CircleCI
+          # - os: ubuntu-16.04
+          #   libcurl-release: 7.73.0
+          #   node: 16
+          #   node-libcurl-cpp-std: c++17
+          # we also want to build a job for old libcurl versions
+          - os: macos-10.15
+            libcurl-release: 7.50.0
             node: 16
-            node-libcurl-cpp-std: c++17
 
     steps:
       - name: Checkout
