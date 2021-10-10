@@ -12,7 +12,35 @@ env:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    # this must match the matrix inside build-and-release.yaml
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-10.15
+          - ubuntu-16.04 # TODO(jonathan): bump this to a more recent version when we do a major version bump
+        libcurl-release:
+          - 7.73.0
+        node:
+          - 10
+          - 12
+          - 14
+          - 16
+        include:
+          # we only want to run lint in one of the jobs
+          - os: macos-10.15
+            libcurl-release: 7.73.0
+            node: 16
+            run-lint-and-tsc: true
+          - os: macos-10.15
+            libcurl-release: 7.73.0
+            node: 16
+            node-libcurl-cpp-std: c++17
+          - os: ubuntu-16.04
+            libcurl-release: 7.73.0
+            node: 16
+            node-libcurl-cpp-std: c++17
 
     steps:
       - name: Checkout
@@ -20,7 +48,27 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: '14.x'
+          node-version: ${{ matrix.node }}
+      - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
+        if: matrix.node-libcurl-cpp-std
+      - if: runner.os == 'macOS'
+        name: Install Needed packages on macOS
+        run: brew install coreutils wget automake libtool cmake gnu-sed m4
+      # not using brew for that one as we need 2.69
+      - if: runner.os == 'macOS'
+        name: Install autoconf
+        run: |
+          curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
+          tar -xzf autoconf-2.69.tar.gz
+          cd autoconf-*
+          ./configure
+          make
+          make install
+          autoconf --version
+          ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
+      - if: runner.os == 'Linux'
+        name: Install Needed packages on Linux
+        run: sudo apt-get install -y cmake
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "::set-output name=dir::$(yarn cache dir)"
@@ -40,9 +88,9 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v2-${{ runner.os }}-libcurl-deps-cache-build-and-release
+          key: v3-${{ runner.os }}-libcurl-deps-cache-build-and-release
           restore-keys: |
-            v2-${{ runner.os }}-libcurl-deps-cache-build-and-release
+            v3-${{ runner.os }}-libcurl-deps-cache-build-and-release
       - name: 'Install all the stuff'
         run: |
           RUN_TESTS=false \
@@ -52,8 +100,10 @@ jobs:
       # We could have used lerna to run only on changed here...
       - name: 'Run lint'
         run: yarn lint
+        if: matrix.run-lint-and-tsc
       - name: 'Run tsc'
         run: yarn build:dist
+        if: matrix.run-lint-and-tsc
       - name: 'Run tests'
         run: yarn test:coverage
       - name: Upload coverage to Codecov
