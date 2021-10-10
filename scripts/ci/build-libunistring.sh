@@ -18,7 +18,7 @@ if [[ -f $build_folder/lib/libunistring.a ]] && [[ -z $FORCE_REBUILD || $FORCE_R
 fi
 
 if [ ! -d $2/source/$1 ]; then
-  $curr_dirname/download-and-unpack.sh https://ftp.gnu.org/gnu/libunistring/libunistring-$1.tar.gz $2
+  $curr_dirname/download-and-unpack.sh https://mirrors.kernel.org/gnu/libunistring/libunistring-$1.tar.gz $2
 
   mv $2/libunistring-$1 $2/source/$1
   cd $2/source/$1
@@ -42,7 +42,7 @@ CFLAGS=${CFLAGS:-}
 #   + Homepage:
 #     https://www.gnu.org/software/libiconv/
 #   + Download:
-#     https://ftp.gnu.org/gnu/libiconv/
+#     https://mirrors.kernel.org/gnu/libiconv/
 #   + If it is installed in a nonstandard directory, pass the option
 #     --with-libiconv-prefix=DIR to 'configure'.
 

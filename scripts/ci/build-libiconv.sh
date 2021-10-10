@@ -18,7 +18,7 @@ if [[ -f $build_folder/lib/libiconv.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUI
 fi
 
 if [ ! -d $2/source/$1 ]; then
-  $curr_dirname/download-and-unpack.sh https://ftp.gnu.org/gnu/libiconv/libiconv-$1.tar.gz $2
+  $curr_dirname/download-and-unpack.sh https://mirrors.kernel.org/gnu/libiconv/libiconv-$1.tar.gz $2
 
   mv $2/libiconv-$1 $2/source/$1
   cd $2/source/$1
