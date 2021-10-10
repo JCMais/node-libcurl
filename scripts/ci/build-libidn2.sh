@@ -17,7 +17,7 @@ if [[ -f $build_folder/lib/libidn2.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUIL
 fi
 
 if [ ! -d $2/source/$1 ]; then
-  $curr_dirname/download-and-unpack.sh https://ftp.gnu.org/gnu/libidn/libidn2-$1.tar.gz $2
+  $curr_dirname/download-and-unpack.sh https://mirrors.kernel.org/gnu/libidn/libidn2-$1.tar.gz $2
 
   mv $2/libidn2-$1 $2/source/$1
   cd $2/source/$1
