@@ -9,6 +9,7 @@ lib/binding
 # docs override
 lib/**/*.doc.ts
 
+logs/
 
 debug/
 Debug/

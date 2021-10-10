@@ -48,6 +48,10 @@ HAS_GSS_API=${HAS_GSS_API:-0}
 # addon built with kerberos ~= 3,73 mb
 GSS_LIBRARY=${GSS_LIBRARY:-kerberos}
 
+LOGS_FOLDER=${BUILD_LOGS_FOLDER:-./logs}
+
+mkdir -p $LOGS_FOLDER
+
 # The following two, libunistring and libidn2, are only necessary if building libcurl >= 7.53
 # However we are going to build then anyway, they are not that slow to build.
 
@@ -58,7 +62,7 @@ GSS_LIBRARY=${GSS_LIBRARY:-kerberos}
 # CARES_RELEASE=${CARES_RELEASE:-$(node -e "console.log(process.versions.ares || '1.16.1')")}
 # CARES_DEST_FOLDER=$PREFIX_DIR/deps/cares
 # echo "Building cares v$CARES_RELEASE"
-# ./scripts/ci/build-cares.sh $CARES_RELEASE $CARES_DEST_FOLDER >/dev/null
+# ./scripts/ci/build-cares.sh $CARES_RELEASE $CARES_DEST_FOLDER >$LOGS_FOLDER/build-cares.log 2>&1
 # export CARES_BUILD_FOLDER=$CARES_DEST_FOLDER/build/$CARES_RELEASE
 # ls -al $CARES_BUILD_FOLDER/lib
 
@@ -68,7 +72,7 @@ GSS_LIBRARY=${GSS_LIBRARY:-kerberos}
 LIBUNISTRING_RELEASE=${LIBUNISTRING_RELEASE:-0.9.10}
 LIBUNISTRING_DEST_FOLDER=$PREFIX_DIR/deps/libunistring
 echo "Building libunistring v$LIBUNISTRING_RELEASE"
-./scripts/ci/build-libunistring.sh $LIBUNISTRING_RELEASE $LIBUNISTRING_DEST_FOLDER >/dev/null 2>&1
+./scripts/ci/build-libunistring.sh $LIBUNISTRING_RELEASE $LIBUNISTRING_DEST_FOLDER >$LOGS_FOLDER/build-libunistring.log 2>&1
 export LIBUNISTRING_BUILD_FOLDER=$LIBUNISTRING_DEST_FOLDER/build/$LIBUNISTRING_RELEASE
 ls -al $LIBUNISTRING_BUILD_FOLDER/lib
 
@@ -77,7 +81,7 @@ ls -al $LIBUNISTRING_BUILD_FOLDER/lib
 ###################
 LIBIDN2_RELEASE=${LIBIDN2_RELEASE:-2.1.1}
 LIBIDN2_DEST_FOLDER=$PREFIX_DIR/deps/libidn2
-./scripts/ci/build-libidn2.sh $LIBIDN2_RELEASE $LIBIDN2_DEST_FOLDER >/dev/null 2>&1
+./scripts/ci/build-libidn2.sh $LIBIDN2_RELEASE $LIBIDN2_DEST_FOLDER >$LOGS_FOLDER/build-libidn2.log 2>&1
 export LIBIDN2_BUILD_FOLDER=$LIBIDN2_DEST_FOLDER/build/$LIBIDN2_RELEASE
 ls -al $LIBIDN2_BUILD_FOLDER/lib
 
@@ -101,7 +105,7 @@ echo "Building openssl v$OPENSSL_RELEASE"
 # Weird concatenation of the array with itself is needed
 #  because on bash <= 4, using [@] to access an array with 0 elements
 #  gives an error with set -o pipefail
-./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER ${openssl_params+"${openssl_params[@]}"} >/dev/null 2>&1
+./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER ${openssl_params+"${openssl_params[@]}"} >$LOGS_FOLDER/build-openssl.log 2>&1
 export OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build/$OPENSSL_RELEASE
 ls -al $OPENSSL_BUILD_FOLDER/lib
 unset KERNEL_BITS
@@ -113,7 +117,7 @@ unset KERNEL_BITS
 NGHTTP2_RELEASE=${NGHTTP2_RELEASE:-$(node -e "console.log(process.versions.nghttp2)")}
 NGHTTP2_DEST_FOLDER=$PREFIX_DIR/deps/nghttp2
 echo "Building nghttp2 v$NGHTTP2_RELEASE"
-./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER
+./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER >$LOGS_FOLDER/build-nghttp2.log 2>&1
 export NGHTTP2_BUILD_FOLDER=$NGHTTP2_DEST_FOLDER/build/$NGHTTP2_RELEASE
 ls -al $NGHTTP2_BUILD_FOLDER/lib
 
@@ -131,7 +135,7 @@ if [ "$HAS_GSS_API" == "1" ]; then
     KERBEROS_RELEASE=${KERBEROS_RELEASE:-1.17}
     KERBEROS_DEST_FOLDER=$PREFIX_DIR/deps/kerberos
     echo "Building kerberos v$KERBEROS_RELEASE"
-    ./scripts/ci/build-kerberos.sh $KERBEROS_RELEASE $KERBEROS_DEST_FOLDER
+    ./scripts/ci/build-kerberos.sh $KERBEROS_RELEASE $KERBEROS_DEST_FOLDER >$LOGS_FOLDER/build-kerberos.log 2>&1
     export KERBEROS_BUILD_FOLDER=$KERBEROS_DEST_FOLDER/build/$KERBEROS_RELEASE
     ls -al $KERBEROS_BUILD_FOLDER/lib
 
@@ -143,7 +147,7 @@ if [ "$HAS_GSS_API" == "1" ]; then
     NCURSES_RELEASE=${NCURSES_RELEASE:-6.1}
     NCURSES_DEST_FOLDER=$PREFIX_DIR/deps/ncurses
     echo "Building ncurses v$NCURSES_RELEASE"
-    ./scripts/ci/build-ncurses.sh $NCURSES_RELEASE $NCURSES_DEST_FOLDER
+    ./scripts/ci/build-ncurses.sh $NCURSES_RELEASE $NCURSES_DEST_FOLDER >$LOGS_FOLDER/build-ncurses.log 2>&1
     export NCURSES_BUILD_FOLDER=$NCURSES_DEST_FOLDER/build/$NCURSES_RELEASE
     ls -al $NCURSES_BUILD_FOLDER/lib
 
@@ -153,7 +157,7 @@ if [ "$HAS_GSS_API" == "1" ]; then
     HEIMDAL_RELEASE=${HEIMDAL_RELEASE:-7.5.0}
     HEIMDAL_DEST_FOLDER=$PREFIX_DIR/deps/heimdal
     echo "Building heimdal v$HEIMDAL_RELEASE"
-    ./scripts/ci/build-heimdal.sh $HEIMDAL_RELEASE $HEIMDAL_DEST_FOLDER
+    ./scripts/ci/build-heimdal.sh $HEIMDAL_RELEASE $HEIMDAL_DEST_FOLDER >$LOGS_FOLDER/build-heimdal.log 2>&1
     export HEIMDAL_BUILD_FOLDER=$HEIMDAL_DEST_FOLDER/build/$HEIMDAL_RELEASE
     ls -al $HEIMDAL_BUILD_FOLDER/lib
   fi
@@ -169,7 +173,7 @@ BROTLI_DEFAULT_RELEASE=${BROTLI_NODEJS:-1.0.7}
 BROTLI_RELEASE=${BROTLI_RELEASE:-$BROTLI_DEFAULT_RELEASE}
 BROTLI_DEST_FOLDER=$PREFIX_DIR/deps/brotli
 echo "Building brotli v$BROTLI_RELEASE"
-./scripts/ci/build-brotli.sh $BROTLI_RELEASE $BROTLI_DEST_FOLDER
+./scripts/ci/build-brotli.sh $BROTLI_RELEASE $BROTLI_DEST_FOLDER >$LOGS_FOLDER/build-brotli.log 2>&1
 export BROTLI_BUILD_FOLDER=$BROTLI_DEST_FOLDER/build/$BROTLI_RELEASE
 ls -al $BROTLI_BUILD_FOLDER/lib
 
@@ -180,7 +184,7 @@ ls -al $BROTLI_BUILD_FOLDER/lib
 ZLIB_RELEASE=${ZLIB_RELEASE:-$(node -e "console.log(process.versions.zlib)")}
 ZLIB_DEST_FOLDER=$PREFIX_DIR/deps/zlib
 echo "Building zlib v$ZLIB_RELEASE"
-./scripts/ci/build-zlib.sh $ZLIB_RELEASE $ZLIB_DEST_FOLDER
+./scripts/ci/build-zlib.sh $ZLIB_RELEASE $ZLIB_DEST_FOLDER >$LOGS_FOLDER/build-zlib.log 2>&1
 export ZLIB_BUILD_FOLDER=$ZLIB_DEST_FOLDER/build/$ZLIB_RELEASE
 ls -al $ZLIB_BUILD_FOLDER/lib
 
@@ -191,7 +195,7 @@ ls -al $ZLIB_BUILD_FOLDER/lib
 ZSTD_RELEASE=${ZSTD_RELEASE:-1.4.9}
 ZSTD_DEST_FOLDER=$PREFIX_DIR/deps/zstd
 echo "Building zstd v$ZSTD_RELEASE"
-./scripts/ci/build-zstd.sh $ZSTD_RELEASE $ZSTD_DEST_FOLDER
+./scripts/ci/build-zstd.sh $ZSTD_RELEASE $ZSTD_DEST_FOLDER >$LOGS_FOLDER/build-zstd.log 2>&1
 export ZSTD_BUILD_FOLDER=$ZSTD_DEST_FOLDER/build/$ZSTD_RELEASE
 ls -al $ZSTD_BUILD_FOLDER/lib
 
@@ -201,7 +205,7 @@ ls -al $ZSTD_BUILD_FOLDER/lib
 LIBSSH2_RELEASE=${LIBSSH2_RELEASE:-1.9.0}
 LIBSSH2_DEST_FOLDER=$PREFIX_DIR/deps/libssh2
 echo "Building libssh2 v$LIBSSH2_RELEASE"
-./scripts/ci/build-libssh2.sh $LIBSSH2_RELEASE $LIBSSH2_DEST_FOLDER
+./scripts/ci/build-libssh2.sh $LIBSSH2_RELEASE $LIBSSH2_DEST_FOLDER >$LOGS_FOLDER/build-libssh2.log 2>&1
 export LIBSSH2_BUILD_FOLDER=$LIBSSH2_DEST_FOLDER/build/$LIBSSH2_RELEASE
 ls -al $LIBSSH2_BUILD_FOLDER/lib
 
@@ -211,7 +215,7 @@ ls -al $LIBSSH2_BUILD_FOLDER/lib
 OPENLDAP_RELEASE=${OPENLDAP_RELEASE:-2.4.47}
 OPENLDAP_DEST_FOLDER=$PREFIX_DIR/deps/openldap
 echo "Building openldap v$OPENLDAP_RELEASE"
-./scripts/ci/build-openldap.sh $OPENLDAP_RELEASE $OPENLDAP_DEST_FOLDER
+./scripts/ci/build-openldap.sh $OPENLDAP_RELEASE $OPENLDAP_DEST_FOLDER >$LOGS_FOLDER/build-openldap.log 2>&1
 export OPENLDAP_BUILD_FOLDER=$OPENLDAP_DEST_FOLDER/build/$OPENLDAP_RELEASE
 ls -al $OPENLDAP_BUILD_FOLDER/lib
 
