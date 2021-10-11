@@ -97,7 +97,7 @@ orbs:
           # temporary fix to solve certificates issues - main docker image must be updated instead
           - when:
               condition:
-                equal: [ "debian", << parameters.e >> ]
+                equal: ['debian', << parameters.e >>]
               steps:
                 - run: sudo apt-get update && sudo apt-get upgrade
           - when:
@@ -154,7 +154,7 @@ orbs:
           ####
           - run:
               command: GIT_TAG=$CIRCLE_TAG GIT_COMMIT=$CIRCLE_SHA1 ./scripts/ci/build.sh
-              no_output_timeout: 20m
+              no_output_timeout: 40m
           - steps: <<parameters.after-build>>
           ####
           # Cache
