@@ -13,7 +13,7 @@ concurrency:
 # all jobs here must have a matrix identical to the ones inside build-and-release.yaml
 
 jobs:
-  build-and-test:
+  build-and-test-nodejs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -128,7 +128,7 @@ jobs:
           path: ./logs/
           retention-days: 3
 
-  build-and-release-electron:
+  build-and-test-electron:
     runs-on: macos-10.15
     strategy:
       fail-fast: false
@@ -225,7 +225,7 @@ jobs:
           path: ./logs/
           retention-days: 5
 
-  build-and-release-nwjs:
+  build-and-test-nwjs:
     runs-on: macos-10.15
     strategy:
       fail-fast: false
