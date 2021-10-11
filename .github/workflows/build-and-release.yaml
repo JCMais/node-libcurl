@@ -16,9 +16,10 @@ on:
 env:
   NODE_LIBCURL_GITHUB_TOKEN: ${{ secrets.NODE_LIBCURL_GITHUB_TOKEN }}
 
+# all jobs here must have a matrix identical to the ones inside build-lint-test.yaml
+
 jobs:
   build-and-release-nodejs:
-    # this must match the matrix inside build-lint-test.yaml
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -101,6 +102,12 @@ jobs:
       - name: 'Publish Binary'
         run: |
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-logs
+          path: ./logs/
+          retention-days: 5
 
   build-and-release-electron:
     runs-on: macos-10.15
@@ -189,6 +196,12 @@ jobs:
       - name: 'Publish Binary'
         run: |
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-logs
+          path: ./logs/
+          retention-days: 5
 
   build-and-release-nwjs:
     runs-on: macos-10.15

@@ -283,9 +283,8 @@ if [ -n "$ELECTRON_VERSION" ]; then
   # if it's lower, we can run tests against it
   # we cannot run tests against version 5 because it has issues:
   # https://github.com/electron/electron/issues/17972
-  if [[ $is_electron_lt_5 -eq 1 && $has_display == "true" ]]; then
+  if [[ "$(uname)" == "Darwin" || $is_electron_lt_5 -eq 1 && $has_display == "true" ]]; then
     run_tests_electron=true
-
     yarn global add electron@${ELECTRON_VERSION} --network-timeout 300000
   fi
 
