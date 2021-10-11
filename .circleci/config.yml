@@ -99,7 +99,7 @@ orbs:
               condition:
                 equal: [ "debian", << parameters.e >> ]
               steps:
-                - sudo apt-get update && sudo apt-get upgrade
+                - run: sudo apt-get update && sudo apt-get upgrade
           - when:
               condition: <<parameters.node-version>>
               steps:
