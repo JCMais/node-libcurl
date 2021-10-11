@@ -94,6 +94,12 @@ orbs:
         executor: << parameters.e >>
         steps:
           - checkout
+          # temporary fix to solve certificates issues - main docker image must be updated instead
+          - when:
+              condition:
+                equal: [ "debian", << parameters.e >> ]
+              steps:
+                - sudo apt-get update && sudo apt-get upgrade
           - when:
               condition: <<parameters.node-version>>
               steps:
