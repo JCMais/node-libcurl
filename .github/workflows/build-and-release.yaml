@@ -103,6 +103,7 @@ jobs:
         run: |
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
       - name: Upload artifacts
+        if: always()
         uses: actions/upload-artifact@v2
         with:
           name: build-logs
@@ -197,6 +198,7 @@ jobs:
         run: |
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
       - name: Upload artifacts
+        if: always()
         uses: actions/upload-artifact@v2
         with:
           name: build-logs
@@ -281,6 +283,7 @@ jobs:
         run: |
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
       - name: Upload artifacts
+        if: always()
         uses: actions/upload-artifact@v2
         with:
           name: build-logs

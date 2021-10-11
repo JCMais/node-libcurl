@@ -122,6 +122,7 @@ jobs:
           file: ./coverage/**
           fail_ci_if_error: false
       - name: Upload artifacts
+        if: always()
         uses: actions/upload-artifact@v2
         with:
           name: build-logs
@@ -219,6 +220,7 @@ jobs:
           PUBLISH_BINARY=false \
             ./scripts/ci/build.sh
       - name: Upload artifacts
+        if: always()
         uses: actions/upload-artifact@v2
         with:
           name: build-logs
@@ -306,6 +308,7 @@ jobs:
           PUBLISH_BINARY=false \
             ./scripts/ci/build.sh
       - name: Upload artifacts
+        if: always()
         uses: actions/upload-artifact@v2
         with:
           name: build-logs
