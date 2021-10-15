@@ -1,5 +1,5 @@
 {
-  "name": "node-libcurl",
+  "name": "@getinsomnia/node-libcurl",
   "version": "2.3.4-0",
   "description": "The fastest http(s) client (and much more) for Node.js - Node.js bindings for libcurl",
   "keywords": [
@@ -10,13 +10,13 @@
     "axios",
     "request"
   ],
-  "homepage": "https://github.com/JCMais/node-libcurl",
+  "homepage": "https://github.com/Kong/node-libcurl",
   "bugs": {
-    "url": "https://github.com/JCMais/node-libcurl/issues"
+    "url": "https://github.com/Kong/node-libcurl/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/JCMais/node-libcurl.git"
+    "url": "git://github.com/Kong/node-libcurl.git"
   },
   "license": "MIT",
   "author": "Jonathan Cardoso <me@jonathancardoso.com>",
@@ -27,7 +27,7 @@
     "module_path": "./lib/binding/",
     "remote_path": "./v{version}/",
     "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}-{libc}.tar.gz",
-    "host": "https://github.com/JCMais/node-libcurl/releases/download"
+    "host": "https://github.com/Kong/node-libcurl/releases/download"
   },
   "scripts": {
     "ae": "api-extractor run --local --verbose",
