@@ -11,6 +11,8 @@ mkdir -p $2/source
 
 FORCE_REBUILD=${FORCE_REBUILD:-}
 
+MACOS_UNIVERSAL_BUILD=${MACOS_UNIVERSAL_BUILD:-}
+
 # @TODO We are explicitly checking the static lib
 if [[ -f $build_folder/lib/libunistring.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUILD != "true" ]]; then
   echo "Skipping rebuild of libunistring because lib file already exists"
