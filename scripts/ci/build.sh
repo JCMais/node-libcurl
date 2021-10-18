@@ -406,12 +406,14 @@ if [[ $PUBLISH_BINARY == true && $LIBCURL_RELEASE == $LATEST_LIBCURL_RELEASE ]];
     # Build and publish x64 package
     lipo build/Release/node_libcurl.node -thin x86_64 -output lib/binding/node_libcurl.node
     npm_config_target_arch=x64 yarn pregyp package testpackage --verbose
-    npm_config_target_arch=x64 node scripts/module-packaging.js --publish "$(yarn --silent pregyp reveal staged_tarball --silent)"
+    npm_config_target_arch=x64 node scripts/module-packaging.js --publish \
+      "$(npm_config_target_arch=x64 yarn --silent pregyp reveal staged_tarball --silent)"
   
     # Build and publish arm64 package.
     lipo build/Release/node_libcurl.node -thin arm64 -output lib/binding/node_libcurl.node
-    npm_config_target_arch=x64 yarn pregyp package --verbose  # Can't testpackage for arm64 yet.
-    npm_config_target_arch=arm64 node scripts/module-packaging.js --publish "$(yarn --silent pregyp reveal staged_tarball --silent)"
+    npm_config_target_arch=arm64 yarn pregyp package --verbose  # Can't testpackage for arm64 yet.
+    npm_config_target_arch=arm64 node scripts/module-packaging.js --publish \
+      "$(npm_config_target_arch=arm64 yarn --silent pregyp reveal staged_tarball --silent)"
   else
     yarn pregyp package testpackage --verbose
     node scripts/module-packaging.js --publish "$(yarn --silent pregyp reveal staged_tarball --silent)"
