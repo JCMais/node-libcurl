@@ -23,33 +23,33 @@ jobs:
           # removed as we enabled CircleCI to run on PRs
           # - ubuntu-16.04 # TODO(jonathan): bump this to a more recent version when we do a major version bump
         libcurl-release:
-          - 7.73.0
+          - 7.79.1
         node:
           - 10
           - 12
           - 14
           - 16
+          - 17
         include:
           # we only want to run lint in one of the jobs
           - os: macos-11
-            libcurl-release: 7.73.0
-            node: 16
-            run-lint-and-tsc: true
-          # Node.js 16 needs a different cpp std
-          - os: macos-11
-            libcurl-release: 7.73.0
+            libcurl-release: 7.79.1
             node: 16
             node-libcurl-cpp-std: c++17
-          # This is disabled as CircleCI is now running on PRs - we may add this back if build times are too slow with just CircleCI
-          # - os: ubuntu-16.04
-          #   libcurl-release: 7.73.0
-          #   node: 16
-          #   node-libcurl-cpp-std: c++17
+            run-lint-and-tsc: true
+          - os: macos-11
+            libcurl-release: 7.79.1
+            node: 17
+            node-libcurl-cpp-std: c++17
           # we also want to build a job for old libcurl versions
           - os: macos-11
             libcurl-release: 7.50.0
             node: 16
-
+            node-libcurl-cpp-std: c++17
+    env:
+      LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
+      LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
+      NODE_LIBCURL_CPP_STD: c++11
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -134,30 +134,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        node-libcurl-cpp-std:
+          - c++17
         libcurl-release:
-          - 7.73.0
+          - 7.79.1
         node:
           - 16
         electron-version:
-          - 12.0.0
-          - 11.2.3
-          - 10.1.0
-          - 9.3.3
-          - 8.5.3
-        include:
-          - libcurl-release: 7.73.0
-            node: 16
-            electron-version: 12.0.0
-            node-libcurl-cpp-std: c++17
-          - libcurl-release: 7.73.0
-            node: 16
-            electron-version: 11.2.3
-            node-libcurl-cpp-std: c++17
+          - 15.3.0
+          - 14.2.0
+          - 13.6.1
+          - 12.2.2
+          - 11.5.0
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
-      NODE_LIBCURL_CPP_STD: c++11
     steps:
       - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
         if: matrix.node-libcurl-cpp-std
@@ -233,30 +225,21 @@ jobs:
       fail-fast: false
       matrix:
         libcurl-release:
-          - 7.73.0
+          - 7.79.1
+        node-libcurl-cpp-std:
+          - c++17
         node:
           - 16
         nwjs-version:
-          - 0.52.0
-          - 0.51.2
-          - 0.49.2
-        include:
-          - libcurl-release: 7.73.0
-            node: 16
-            nwjs-version: 0.52.0
-            node-libcurl-cpp-std: c++17
-          - libcurl-release: 7.73.0
-            node: 16
-            nwjs-version: 0.51.2
-            node-libcurl-cpp-std: c++17
+          - 0.58.0
+          - 0.57.1
+          - 0.56.1
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       NWJS_VERSION: ${{ matrix.nwjs-version }}
-      NODE_LIBCURL_CPP_STD: c++11
     steps:
       - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
-        if: matrix.node-libcurl-cpp-std
       - name: Checkout
         uses: actions/checkout@main
       - name: Setup Node.js
