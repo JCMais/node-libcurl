@@ -5,10 +5,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
 ### Breaking Change
 ### Fixed
 ### Added
+
+- support curl_blob options [#300](https://github.com/JCMais/node-libcurl/issues/300) by @johnwchadwick 
+- added arm64 builds for macOS [#312](https://github.com/JCMais/node-libcurl/issues/312) by @johnwchadwick 
+- added most options that were missing up to libcurl version 7.79.1, including HSTS support.
+
 ### Changed
+- Upgraded prebuild binaries to use libcurl 7.79.1. On Windows, OpenSSL 3.0.0 will be used.
+
 ### Removed
 
 ## [2.3.3] - 2021-05-09
