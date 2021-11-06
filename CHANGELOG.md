@@ -10,12 +10,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 ### Added
 
-- support curl_blob options [#300](https://github.com/JCMais/node-libcurl/issues/300) by @johnwchadwick 
+- support `curl_blob` options [#300](https://github.com/JCMais/node-libcurl/issues/300) by @johnwchadwick 
 - added arm64 builds for macOS [#312](https://github.com/JCMais/node-libcurl/issues/312) by @johnwchadwick 
 - added most options that were missing up to libcurl version 7.79.1, including HSTS support.
+- added prebuilt binaries for Node.js v17.
 
 ### Changed
 - Upgraded prebuild binaries to use libcurl 7.79.1. On Windows, OpenSSL 3.0.0 will be used.
+- The **only** Electron versions with prebuilt binaries are: `15`, `14`, `13`, `12`, and `11`.
+- The **only** Nwjs versions with prebuilt binaries are: `0.58`, `0.57`, and `0.56`.
 
 ### Removed
 
