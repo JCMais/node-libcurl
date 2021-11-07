@@ -53,7 +53,11 @@ if (Curl.isVersionGreaterOrEqualThan(7, 74, 0)) {
     beforeEach(() => {
       curl = new Curl()
       curl.setOpt('URL', url)
-      curl.setOpt('CAINFO_BLOB', tls.rootCertificates.join('\n'))
+      if (process.version.startsWith('v10.')) {
+        curl.setOpt('SSL_VERIFYPEER', false)
+      } else {
+        curl.setOpt('CAINFO_BLOB', tls.rootCertificates.join('\n'))
+      }
     })
 
     afterEach(() => {
