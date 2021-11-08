@@ -115,15 +115,18 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v2
         with:
-          name: build-logs
+          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.node }}
           path: ./logs/
           retention-days: 5
 
   build-and-release-electron:
-    runs-on: macos-11
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        # we use CircleCI for linux binaries
+        os:
+          - macos-11
         node-libcurl-cpp-std:
           - c++17
         libcurl-release:
@@ -201,15 +204,18 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v2
         with:
-          name: build-logs
+          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}
           path: ./logs/
           retention-days: 5
 
   build-and-release-nwjs:
-    runs-on: macos-11
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        # we use CircleCI for linux binaries
+        os:
+          - macos-11
         libcurl-release:
           - 7.79.1
         node-libcurl-cpp-std:
@@ -277,6 +283,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v2
         with:
-          name: build-logs
+          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.nwjs-version }}
           path: ./logs/
           retention-days: 5
