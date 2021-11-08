@@ -308,7 +308,7 @@ void Easy::CallSocketEvent(int status, int events) {
   }
 
   const int argc = 2;
-  v8::Local<v8::Value> argv[] = {err, Nan::New<v8::Integer>(events)};
+  v8::Local<v8::Value> argv[argc] = {err, Nan::New<v8::Integer>(events)};
 
   // **(this->cbOnSocketEvent.get()) is the same than this->cbOnSocketEvent->GetFunction()
   Nan::AsyncResource asyncResource("Easy::CallSocketEvent");
@@ -770,7 +770,7 @@ int Easy::CbDebug(CURL* handle, curl_infotype type, char* data, size_t size, voi
 
   const int argc = 2;
   v8::Local<v8::Object> buf = Nan::CopyBuffer(data, static_cast<uint32_t>(size)).ToLocalChecked();
-  v8::Local<v8::Value> argv[] = {
+  v8::Local<v8::Value> argv[argc] = {
       Nan::New<v8::Integer>(type),
       buf,
   };
@@ -896,11 +896,9 @@ int Easy::CbHstsRead(CURL* handle, struct curl_hstsentry* sts, void* userdata) {
       return CURLSTS_DONE;
     }
 
-    const int argc = 0;
-    v8::Local<v8::Value> argv[] = {};
     Nan::AsyncResource asyncResource("Easy::CbHstsRead");
     Nan::MaybeLocal<v8::Value> returnValueFromHstsReadCallback =
-        asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
+        asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), 0, NULL);
 
     if (tryCatch.HasCaught()) {
       if (obj->isInsideMultiHandle) {
@@ -1090,7 +1088,7 @@ int Easy::CbHstsWrite(CURL* handle, struct curl_hstsentry* sts, struct curl_inde
   Nan::Set(countObj, Nan::New("total").ToLocalChecked(), total);
 
   const int argc = 2;
-  v8::Local<v8::Value> argv[] = {Easy::CreateV8ObjectFromCurlHstsEntry(sts), countObj};
+  v8::Local<v8::Value> argv[argc] = {Easy::CreateV8ObjectFromCurlHstsEntry(sts), countObj};
 
   Nan::AsyncResource asyncResource("Easy::CbHstsWrite");
   Nan::MaybeLocal<v8::Value> returnValueCallback =
@@ -1146,10 +1144,10 @@ int Easy::CbProgress(void* clientp, double dltotal, double dlnow, double ultotal
   assert(it != obj->callbacks.end() && "PROGRESS callback not set.");
 
   const int argc = 4;
-  v8::Local<v8::Value> argv[] = {Nan::New<v8::Number>(static_cast<double>(dltotal)),
-                                 Nan::New<v8::Number>(static_cast<double>(dlnow)),
-                                 Nan::New<v8::Number>(static_cast<double>(ultotal)),
-                                 Nan::New<v8::Number>(static_cast<double>(ulnow))};
+  v8::Local<v8::Value> argv[argc] = {Nan::New<v8::Number>(static_cast<double>(dltotal)),
+                                     Nan::New<v8::Number>(static_cast<double>(dlnow)),
+                                     Nan::New<v8::Number>(static_cast<double>(ultotal)),
+                                     Nan::New<v8::Number>(static_cast<double>(ulnow))};
 
   Nan::TryCatch tryCatch;
 
@@ -1296,10 +1294,10 @@ int Easy::CbXferinfo(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_o
   assert(it != obj->callbacks.end() && "XFERINFO callback not set.");
 
   const int argc = 4;
-  v8::Local<v8::Value> argv[] = {Nan::New<v8::Number>(static_cast<double>(dltotal)),
-                                 Nan::New<v8::Number>(static_cast<double>(dlnow)),
-                                 Nan::New<v8::Number>(static_cast<double>(ultotal)),
-                                 Nan::New<v8::Number>(static_cast<double>(ulnow))};
+  v8::Local<v8::Value> argv[argc] = {Nan::New<v8::Number>(static_cast<double>(dltotal)),
+                                     Nan::New<v8::Number>(static_cast<double>(dlnow)),
+                                     Nan::New<v8::Number>(static_cast<double>(ultotal)),
+                                     Nan::New<v8::Number>(static_cast<double>(ulnow))};
 
   Nan::TryCatch tryCatch;
 
