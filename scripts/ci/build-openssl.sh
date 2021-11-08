@@ -60,19 +60,20 @@ if [ "$MACOS_UNIVERSAL_BUILD" == "true" ]; then
       no-shared "${@:2}"
 
     make && make install_sw
-    mv $build_folder/$lib_folder/libcrypto{,-$1}.a
-    mv $build_folder/$lib_folder/libssl{,-$1}.a
+
+    mv $build_folder/lib/libcrypto{,-$1}.a
+    mv $build_folder/lib/libssl{,-$1}.a
   }
 
   build_arch x86_64 "${@:3}"
   make distclean || true;
   build_arch arm64 "${@:3}"
 
-  lipo -create -output $build_folder/$lib_folder/libcrypto.a \
-    $build_folder/$lib_folder/libcrypto-{x86_64,arm64}.a
+  lipo -create -output $build_folder/lib/libcrypto.a \
+    $build_folder/lib/libcrypto-{x86_64,arm64}.a
 
-  lipo -create -output $build_folder/$lib_folder/libssl.a \
-    $build_folder/$lib_folder/libssl-{x86_64,arm64}.a
+  lipo -create -output $build_folder/lib/libssl.a \
+    $build_folder/lib/libssl-{x86_64,arm64}.a
 else
   # Debug:
   #./config -fPIC --prefix=$build_folder --openssldir=$build_folder no-shared \
