@@ -69,7 +69,7 @@ if [ "$MACOS_UNIVERSAL_BUILD" == "true" ]; then
   build_arch arm64 "${@:3}"
 
   lipo -create -output $build_folder/$lib_folder/libcrypto.a \
-    $build_folder/li$lib_folderb/libcrypto-{x86_64,arm64}.a
+    $build_folder/li$lib_folder/libcrypto-{x86_64,arm64}.a
 
   lipo -create -output $build_folder/$lib_folder/libssl.a \
     $build_folder/$lib_folder/libssl-{x86_64,arm64}.a
