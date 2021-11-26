@@ -18,7 +18,7 @@
 // 36055 was allocated on Win64
 #define MEMORY_PER_HANDLE 30000
 
-#define TIME_IN_THE_FUTURE "99991231 23:59:59"
+#define TIME_IN_THE_FUTURE "30001231 23:59:59"
 
 namespace NodeLibcurl {
 
