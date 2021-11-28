@@ -51,6 +51,18 @@ jobs:
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       NODE_LIBCURL_CPP_STD: c++11
     steps:
+      - id: timestamp
+        run: echo "::set-output name=timestamp::$(timestamp +%s)"
+      - name: Restore the previous run result
+        uses: actions/cache@v2
+        with:
+          path: |
+            run_result
+          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
+          restore-keys: |
+            ${{ github.run_id }}-${{ github.job }}-
+      - id: run_result
+        run: cat run_result 2>/dev/null || echo 'default'
       - name: Checkout
         uses: actions/checkout@main
       - name: Setup Node.js
@@ -99,35 +111,39 @@ jobs:
           key: v4-build-lint-test-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
           restore-keys: |
             v4-build-lint-test-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
-      - name: 'Install all the stuff'
+      - name: 'Build node-libcurl'
+        if: steps.run_result.outputs.run_result != 'success'
         run: |
           RUN_TESTS=false \
           RUN_PREGYP_CLEAN=false \
           PUBLISH_BINARY=false \
             ./scripts/ci/build.sh
-      # We could have used lerna to run only on changed here...
       - name: 'Run lint'
+        if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
         run: yarn lint
-        if: matrix.run-lint-and-tsc
       - name: 'Run tsc'
+        if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
         run: yarn build:dist
-        if: matrix.run-lint-and-tsc
+      # we do run tests in all matrix jobs
       - name: 'Run tests'
+        if: steps.run_result.outputs.run_result != 'success'
         run: yarn test:coverage
+      # but coverage is only sent for the run-lint-and-tsc job
       - name: Upload coverage to Codecov
-        if: matrix.run-lint-and-tsc
+        if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage/**
           fail_ci_if_error: false
       - name: Upload artifacts
-        if: always()
+        if: always() && steps.run_result.outputs.run_result != 'success'
         uses: actions/upload-artifact@v2
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.node }}
           path: ./logs/
           retention-days: 3
+      - run: echo "::set-output name=run_result::success" > run_result
 
   build-and-test-electron:
     runs-on: ${{ matrix.os }}
@@ -154,6 +170,18 @@ jobs:
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
     steps:
+      - id: timestamp
+        run: echo "::set-output name=timestamp::$(timestamp +%s)"
+      - name: Restore the previous run result
+        uses: actions/cache@v2
+        with:
+          path: |
+            run_result
+          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
+          restore-keys: |
+            ${{ github.run_id }}-${{ github.job }}-
+      - id: run_result
+        run: cat run_result 2>/dev/null || echo 'default'
       - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
         if: matrix.node-libcurl-cpp-std
       - name: Checkout
@@ -208,19 +236,21 @@ jobs:
       - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: 'Publish Binary'
+      - name: 'Build node-libcurl'
+        if: steps.run_result.outputs.run_result != 'success'
         run: |
           RUN_TESTS=true \
           RUN_PREGYP_CLEAN=false \
           PUBLISH_BINARY=false \
             ./scripts/ci/build.sh
       - name: Upload artifacts
-        if: always()
+        if: always() && steps.run_result.outputs.run_result != 'success'
         uses: actions/upload-artifact@v2
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}
           path: ./logs/
           retention-days: 5
+      - run: echo "::set-output name=run_result::success" > run_result
 
   build-and-test-nwjs:
     runs-on: ${{ matrix.os }}
@@ -245,6 +275,18 @@ jobs:
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       NWJS_VERSION: ${{ matrix.nwjs-version }}
     steps:
+      - id: timestamp
+        run: echo "::set-output name=timestamp::$(timestamp +%s)"
+      - name: Restore the previous run result
+        uses: actions/cache@v2
+        with:
+          path: |
+            run_result
+          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
+          restore-keys: |
+            ${{ github.run_id }}-${{ github.job }}-
+      - id: run_result
+        run: cat run_result 2>/dev/null || echo 'default'
       - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
       - name: Checkout
         uses: actions/checkout@main
@@ -290,16 +332,18 @@ jobs:
       - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: 'Publish Binary'
+      - name: 'Build node-libcurl'
+        if: steps.run_result.outputs.run_result != 'success'
         run: |
           RUN_TESTS=false \
           RUN_PREGYP_CLEAN=false \
           PUBLISH_BINARY=false \
             ./scripts/ci/build.sh
       - name: Upload artifacts
-        if: always()
+        if: always() && steps.run_result.outputs.run_result != 'success'
         uses: actions/upload-artifact@v2
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.nwjs-version }}
           path: ./logs/
           retention-days: 5
+      - run: echo "::set-output name=run_result::success" > run_result

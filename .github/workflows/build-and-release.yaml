@@ -57,6 +57,18 @@ jobs:
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       NODE_LIBCURL_CPP_STD: c++11
     steps:
+      - id: timestamp
+        run: echo "::set-output name=timestamp::$(timestamp +%s)"
+      - name: Restore the previous run result
+        uses: actions/cache@v2
+        with:
+          path: |
+            run_result
+          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
+          restore-keys: |
+            ${{ github.run_id }}-${{ github.job }}-
+      - id: run_result
+        run: cat run_result 2>/dev/null || echo 'default'
       - name: Checkout
         uses: actions/checkout@main
       - name: Setup Node.js
@@ -109,15 +121,17 @@ jobs:
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: 'Publish Binary'
+        if: steps.run_result.outputs.run_result != 'success'
         run: |
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
       - name: Upload artifacts
-        if: always()
+        if: always() && steps.run_result.outputs.run_result != 'success'
         uses: actions/upload-artifact@v2
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.node }}
           path: ./logs/
           retention-days: 5
+      - run: echo "::set-output name=run_result::success" > run_result
 
   build-and-release-electron:
     runs-on: ${{ matrix.os }}
@@ -144,6 +158,18 @@ jobs:
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
     steps:
+      - id: timestamp
+        run: echo "::set-output name=timestamp::$(timestamp +%s)"
+      - name: Restore the previous run result
+        uses: actions/cache@v2
+        with:
+          path: |
+            run_result
+          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
+          restore-keys: |
+            ${{ github.run_id }}-${{ github.job }}-
+      - id: run_result
+        run: cat run_result 2>/dev/null || echo 'default'
       - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
       - name: Checkout
         uses: actions/checkout@main
@@ -198,15 +224,17 @@ jobs:
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: 'Publish Binary'
+        if: steps.run_result.outputs.run_result != 'success'
         run: |
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
       - name: Upload artifacts
-        if: always()
+        if: always() && steps.run_result.outputs.run_result != 'success'
         uses: actions/upload-artifact@v2
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}
           path: ./logs/
           retention-days: 5
+      - run: echo "::set-output name=run_result::success" > run_result
 
   build-and-release-nwjs:
     runs-on: ${{ matrix.os }}
@@ -231,6 +259,18 @@ jobs:
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       NWJS_VERSION: ${{ matrix.nwjs-version }}
     steps:
+      - id: timestamp
+        run: echo "::set-output name=timestamp::$(timestamp +%s)"
+      - name: Restore the previous run result
+        uses: actions/cache@v2
+        with:
+          path: |
+            run_result
+          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
+          restore-keys: |
+            ${{ github.run_id }}-${{ github.job }}-
+      - id: run_result
+        run: cat run_result 2>/dev/null || echo 'default'
       - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
       - name: Checkout
         uses: actions/checkout@main
@@ -277,12 +317,14 @@ jobs:
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: 'Publish Binary'
+        if: steps.run_result.outputs.run_result != 'success'
         run: |
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
       - name: Upload artifacts
-        if: always()
+        if: always() && steps.run_result.outputs.run_result != 'success'
         uses: actions/upload-artifact@v2
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.nwjs-version }}
           path: ./logs/
           retention-days: 5
+      - run: echo "::set-output name=run_result::success" > run_result
