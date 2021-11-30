@@ -26,7 +26,7 @@ jobs:
       matrix:
         os:
           - macos-11
-          - ubuntu-16.04 # TODO(jonathan): bump this to a more recent version when we do a major version bump
+          - ubuntu-18.04 # TODO(jonathan): bump this to a more recent version when we do a major version bump
         libcurl-release:
           - 7.79.1
         node:
@@ -44,11 +44,11 @@ jobs:
             libcurl-release: 7.79.1
             node: 16
             node-libcurl-cpp-std: c++17
-          - os: ubuntu-16.04
+          - os: ubuntu-18.04
             libcurl-release: 7.79.1
             node: 17
             node-libcurl-cpp-std: c++17
-          - os: ubuntu-16.04
+          - os: ubuntu-18.04
             libcurl-release: 7.79.1
             node: 16
             node-libcurl-cpp-std: c++17
