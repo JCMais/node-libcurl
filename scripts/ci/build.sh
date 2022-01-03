@@ -398,19 +398,12 @@ if [[ $PUBLISH_BINARY == true && $LIBCURL_RELEASE == $LATEST_LIBCURL_RELEASE ]];
   echo "Publish binary is true - Testing and publishing package with pregyp"
   if [[ "$MACOS_UNIVERSAL_BUILD" == "true" ]]; then
     # Need to publish two binaries when doing a universal build.
-    #
-    # Could also publish the universal build twice instead, but it might not
-    # play well with electron-builder which will try to lipo native add-ons
-    # for different architectures.
     # --
-    # Build and publish x64 package
-    lipo build/Release/node_libcurl.node -thin x86_64 -output lib/binding/node_libcurl.node
+    # Publish x64 package
     npm_config_target_arch=x64 yarn pregyp package testpackage --verbose
     npm_config_target_arch=x64 node scripts/module-packaging.js --publish \
       "$(npm_config_target_arch=x64 yarn --silent pregyp reveal staged_tarball --silent)"
-  
-    # Build and publish arm64 package.
-    lipo build/Release/node_libcurl.node -thin arm64 -output lib/binding/node_libcurl.node
+    # Publish arm64 package.
     npm_config_target_arch=arm64 yarn pregyp package --verbose  # Can't testpackage for arm64 yet.
     npm_config_target_arch=arm64 node scripts/module-packaging.js --publish \
       "$(npm_config_target_arch=arm64 yarn --silent pregyp reveal staged_tarball --silent)"
