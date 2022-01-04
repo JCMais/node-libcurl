@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - Upgraded prebuild binaries to use libcurl 7.79.1. On Windows, OpenSSL 3.0.0 will be used.
-- The **only** Electron versions with prebuilt binaries are: `15`, `14`, `13`, `12`, and `11`.
+- The **only** Electron versions with prebuilt binaries are: `16`, `15`, `14`, `13`, `12`, and `11`.
 - The **only** Nwjs versions with prebuilt binaries are: `0.58`, `0.57`, and `0.56`.
 
 ### Removed
