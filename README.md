@@ -378,11 +378,11 @@ If you are building for Electron >= 11 or NW.js >= 0.50 you need to set the buil
 
 > If using `npm`:
 ```sh
-npm install node-libcurl --build-from-source --node_libcurl_cpp_std=c++17
+npm install node-libcurl --node_libcurl_cpp_std=c++17 <...other args...>
 ```
 > If using `yarn`:
 ```sh
-npm_config_build_from_source=true npm_config_node_libcurl_cpp_std=c++17 yarn add node-libcurl
+npm_config_node_libcurl_cpp_std=c++17 <...other args...> yarn add node-libcurl
 ```
 
 ### Building on Linux

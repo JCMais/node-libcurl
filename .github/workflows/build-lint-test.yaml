@@ -160,6 +160,7 @@ jobs:
         node:
           - 16
         electron-version:
+          - 16.0.2
           - 15.3.0
           - 14.2.0
           - 13.6.1

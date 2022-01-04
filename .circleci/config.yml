@@ -300,6 +300,26 @@ workflows:
           e:
             name: alpine
       ####
+      # Electron v16
+      ####
+      - build-addon-unix-and-publish/build-addon:
+          name: build-addon-electron-v16-libcurl-latest
+          context: general
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+            tags:
+              only: /^v.*/
+          electron-version: '16.0.2'
+          libcurl-version: '7.79.1'
+          cares-version: '1.17.2'
+          nghttp2-version: '1.45.1'
+          openssl-version: '3.0.0'
+          node-libcurl-cpp-std: 'c++17'
+          e:
+            name: debian
+      ####
       # Electron v15
       ####
       - build-addon-unix-and-publish/build-addon:

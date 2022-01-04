@@ -22,6 +22,8 @@ environment:
     - nodejs_version: '16'
     - nodejs_version: '17'
     - nodejs_version: '16'
+      ELECTRON_VERSION: '16.0.2'
+    - nodejs_version: '16'
       ELECTRON_VERSION: '15.3.0'
     - nodejs_version: '16'
       ELECTRON_VERSION: '14.2.0'
