@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Breaking Change
 ### Fixed
 ### Added
+### Changed
+### Removed
 
+## [2.3.4] - 2022-01-29
+
+### Added
 - support `curl_blob` options [#300](https://github.com/JCMais/node-libcurl/issues/300) by @johnwchadwick 
 - added arm64 builds for macOS [#312](https://github.com/JCMais/node-libcurl/issues/312) by @johnwchadwick 
 - added most options that were missing up to libcurl version 7.79.1, including HSTS support.
@@ -19,8 +24,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Upgraded prebuild binaries to use libcurl 7.79.1. On Windows, OpenSSL 3.0.0 will be used.
 - The **only** Electron versions with prebuilt binaries are: `16`, `15`, `14`, `13`, `12`, and `11`.
 - The **only** Nwjs versions with prebuilt binaries are: `0.58`, `0.57`, and `0.56`.
-
-### Removed
 
 ## [2.3.3] - 2021-05-09
 ### Fixed
@@ -336,7 +339,8 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.3.3...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.3.4...HEAD
+[2.3.4]: https://github.com/JCMais/node-libcurl/compare/v2.3.3...v2.3.4
 [2.3.3]: https://github.com/JCMais/node-libcurl/compare/v2.3.2...v2.3.3
 [2.3.2]: https://github.com/JCMais/node-libcurl/compare/v2.3.1...v2.3.2
 [2.3.1]: https://github.com/JCMais/node-libcurl/compare/v2.3.0...v2.3.1
