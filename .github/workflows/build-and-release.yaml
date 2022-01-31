@@ -98,9 +98,9 @@ jobs:
         name: Install Needed packages on Linux
         run: |
           if command -v sudo; then
-            sudo apt-get install -y cmake
+            sudo apt-get update && sudo apt-get install -y cmake
           else
-            apt-get install -y cmake
+            apt-get update && apt-get install -y cmake
           fi
       - name: Output yarn cache dir
         id: yarn-cache-dir
