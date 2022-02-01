@@ -29,7 +29,7 @@ env:
 jobs:
   build-and-release-nodejs:
     runs-on: ${{ matrix.os }}
-    container: ${{ matrix.os == 'ubuntu-18.04' && 'ubuntu:xenial' }}
+    container: ${{ matrix.os == 'ubuntu-18.04' && 'ubuntu:xenial' || '' }}
     strategy:
       fail-fast: false
       matrix:
