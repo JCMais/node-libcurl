@@ -38,6 +38,9 @@ jobs:
           - os: macos-11
             node: 16
             node-libcurl-cpp-std: c++17
+          - os: ubuntu-18.04
+            node: 16
+            node-libcurl-cpp-std: c++17
 
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
