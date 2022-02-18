@@ -10,7 +10,6 @@ on:
     tags:
       - '*'
     branches:
-      - master
       - develop
 
 env:
@@ -29,13 +28,21 @@ jobs:
           - ubuntu-18.04
         libcurl-release:
           - 7.79.1
+        node-libcurl-cpp-std:
+          - c++11
         node:
           - 12
           - 14
+          - 16
+        include:
+          - os: macos-11
+            node: 16
+            node-libcurl-cpp-std: c++17
+
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-      NODE_LIBCURL_CPP_STD: c++11
+      NODE_LIBCURL_CPP_STD: ${{ matrix.node-libcurl-cpp-std }}
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -108,10 +115,9 @@ jobs:
         libcurl-release:
           - 7.79.1
         node:
-          - 12
+          - 16
         electron-version:
-          - 11.2.3
-          - 12.2.2
+          - 15.3.7
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -194,6 +200,7 @@ jobs:
         node:
           - 12
           - 14
+          - 16
     env:
       npm_config_msvs_version: 2017
       npm_config_build_from_source: true
@@ -235,10 +242,9 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 12
+          - 16
         electron-version:
-          - 11.2.3
-          - 12.2.2
+          - 15.3.7
     env:
       ELECTRON_VERSION: ${{ matrix.electron-version }}
       npm_config_msvs_version: 2017
