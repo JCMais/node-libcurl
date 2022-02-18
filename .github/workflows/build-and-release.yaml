@@ -33,7 +33,6 @@ jobs:
         node:
           - 12
           - 14
-          - 16
         include:
           - os: macos-11
             node: 16
