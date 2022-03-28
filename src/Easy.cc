@@ -26,6 +26,11 @@
 
 // OpenSSL declarations, to avoid needing to muck with the include path.
 extern "C" {
+#ifdef _WIN32
+#define DLLIMPORT __declspec(dllimport)
+#else
+#define DLLIMPORT
+#endif
 #ifndef SSL_OP_LEGACY_SERVER_CONNECT
 #define SSL_OP_LEGACY_SERVER_CONNECT 0x00000004U
 #endif
@@ -33,7 +38,7 @@ extern "C" {
 #define SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION 0x00040000U
 #endif
 typedef struct ssl_ctx_st SSL_CTX;
-unsigned long SSL_CTX_set_options(SSL_CTX* ctx, unsigned long op);
+unsigned long DLLIMPORT SSL_CTX_set_options(SSL_CTX* ctx, unsigned long op);
 }
 
 namespace NodeLibcurl {

@@ -54,7 +54,8 @@ const execConfig = {
   cwd: path.resolve(__dirname + '/..'),
 }
 
-const depsGypTarget = 'curl-for-windows/curl.gyp:libcurl'
+const depsGypTarget = `curl-for-windows/curl.gyp:libcurl
+curl-for-windows/openssl/openssl.gyp:openssl`
 
 const fileWithDepsTag = 'LIBCURL_VERSION_WIN_DEPS'
 const depsRepo = 'https://github.com/JCMais/curl-for-windows.git'
