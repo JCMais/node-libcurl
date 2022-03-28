@@ -64,6 +64,9 @@ class Easy : public Nan::ObjectWrap {
   int32_t readDataFileDescriptor = -1;  // READDATA sets that
   curl_off_t readDataOffset = -1;       // SEEKDATA sets that
   uint32_t id = counter++;
+  CURLU* url = nullptr;
+  std::vector<char> urlData;
+  bool pathAsIs = false;
 
   // static methods
   template <typename TResultType, typename Tv8MappingType>
@@ -115,6 +118,9 @@ class Easy : public Nan::ObjectWrap {
   static void OnSocketClose(uv_handle_t* handle);
 
  public:
+  bool SetUrlOpts();
+  static CURLcode SslCtxFunction(CURL* curl, void* sslctx, void* userdata);
+
   // operators
   bool operator==(const Easy& easy) const;
   bool operator!=(const Easy& other) const;

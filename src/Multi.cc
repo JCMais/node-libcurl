@@ -543,6 +543,8 @@ NAN_METHOD(Multi::AddHandle) {
       return;
     }
 
+    easy->SetUrlOpts();
+
     // reset callback error in case it is set
     easy->callbackError.Reset();
 

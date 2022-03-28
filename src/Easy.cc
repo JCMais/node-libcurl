@@ -10,6 +10,10 @@
 #include "CurlHttpPost.h"
 #include "Share.h"
 #include "make_unique.h"
+#include "nan.h"
+
+#include <curl/curl.h>
+#include <curl/urlapi.h>
 
 #include <cctype>
 #include <iostream>
@@ -19,6 +23,18 @@
 #define MEMORY_PER_HANDLE 30000
 
 #define TIME_IN_THE_FUTURE "30001231 23:59:59"
+
+// OpenSSL declarations, to avoid needing to muck with the include path.
+extern "C" {
+#ifndef SSL_OP_LEGACY_SERVER_CONNECT
+#define SSL_OP_LEGACY_SERVER_CONNECT 0x00000004U
+#endif
+#ifndef SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION
+#define SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION 0x00040000U
+#endif
+typedef struct ssl_ctx_st SSL_CTX;
+unsigned long SSL_CTX_set_options(SSL_CTX* ctx, unsigned long op);
+}
 
 namespace NodeLibcurl {
 
@@ -47,6 +63,7 @@ Easy::Easy() {
   NODE_LIBCURL_ADJUST_MEM(MEMORY_PER_HANDLE);
 
   this->toFree = std::make_shared<Easy::ToFree>();
+  this->url = curl_url();
 
   this->ResetRequiredHandleOptions();
 
@@ -89,6 +106,9 @@ Easy::Easy(Easy* orig) {
   // since they are reset on ResetRequiredHandleOptions()
 
   this->toFree = orig->toFree;
+  this->url = curl_url();
+  this->urlData = orig->urlData;
+  this->pathAsIs = orig->pathAsIs;
 
   this->ResetRequiredHandleOptions();
 
@@ -145,6 +165,7 @@ Easy::Easy(CURL* easy) {
   // since they are reset on ResetRequiredHandleOptions()
 
   this->toFree = orig->toFree;
+  this->url = curl_url();
 
   this->ResetRequiredHandleOptions();
 
@@ -175,6 +196,10 @@ Easy::~Easy(void) {
   if (this->isOpen) {
     this->Dispose();
   }
+
+  if (this->url) {
+    curl_url_cleanup(this->url);
+  }
 }
 
 void Easy::ResetRequiredHandleOptions() {
@@ -192,6 +217,43 @@ void Easy::ResetRequiredHandleOptions() {
 
   curl_easy_setopt(this->ch, CURLOPT_WRITEFUNCTION, Easy::WriteFunction);
   curl_easy_setopt(this->ch, CURLOPT_WRITEDATA, this);
+
+#if NODE_LIBCURL_VER_GE(7, 11, 0)
+  curl_easy_setopt(this->ch, CURLOPT_SSL_CTX_FUNCTION, Easy::SslCtxFunction);
+  curl_easy_setopt(this->ch, CURLOPT_SSL_CTX_DATA, this);
+#endif
+}
+
+bool Easy::SetUrlOpts() {
+  if (this->urlData.empty()) {
+    return true;
+  }
+
+  unsigned int flags = CURLU_GUESS_SCHEME | CURLU_NON_SUPPORT_SCHEME;
+
+  flags |= this->pathAsIs ? CURLU_PATH_AS_IS : 0;
+
+#if NODE_LIBCURL_VER_GE(7, 78, 0)
+  flags |= CURLU_ALLOW_SPACE;
+#endif
+
+  CURLUcode status;
+  if ((status = curl_url_set(this->url, CURLUPART_URL, &this->urlData[0], flags)) != CURLUE_OK) {
+    return false;
+  }
+
+  curl_easy_setopt(this->ch, CURLOPT_CURLU, this->url);
+  return true;
+}
+
+CURLcode Easy::SslCtxFunction(CURL* curl, void* sslctx, void* userdata) {
+  Easy* obj = static_cast<Easy*>(userdata);
+  (void)obj;
+
+  SSL_CTX_set_options(static_cast<SSL_CTX*>(sslctx), SSL_OP_LEGACY_SERVER_CONNECT);
+  SSL_CTX_set_options(static_cast<SSL_CTX*>(sslctx), SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION);
+
+  return CURLE_OK;
 }
 
 // Dispose persistent objects and references stored during the life of this obj.
@@ -1694,6 +1756,10 @@ NAN_METHOD(Easy::SetOpt) {
           obj->toFree->str.push_back(std::move(valueChar));
         }
 
+      } else if (static_cast<CURLoption>(optionId) == CURLOPT_URL) {
+        obj->urlData = std::vector<char>(valueStr.begin(), valueStr.end());
+        obj->urlData.push_back(0);
+        setOptRetCode = CURLE_OK;
       } else {
         setOptRetCode =
             curl_easy_setopt(obj->ch, static_cast<CURLoption>(optionId), valueStr.c_str());
@@ -1717,6 +1783,10 @@ NAN_METHOD(Easy::SetOpt) {
       // and not overwrite the READDATA already set in the handle.
       case CURLOPT_READDATA:
         obj->readDataFileDescriptor = Nan::To<int32_t>(value).FromJust();
+        setOptRetCode = CURLE_OK;
+        break;
+      case CURLOPT_PATH_AS_IS:
+        obj->pathAsIs = Nan::To<int32_t>(value).FromJust();
         setOptRetCode = CURLE_OK;
         break;
       default:
@@ -2258,6 +2328,12 @@ NAN_METHOD(Easy::Perform) {
     return;
   }
 
+  if (!obj->SetUrlOpts()) {
+    v8::Local<v8::Integer> ret = Nan::New<v8::Integer>(static_cast<int32_t>(CURLE_URL_MALFORMAT));
+    info.GetReturnValue().Set(ret);
+    return;
+  }
+
   SETLOCALE_WRAPPER(CURLcode code = curl_easy_perform(obj->ch););
 
   v8::Local<v8::Integer> ret = Nan::New<v8::Integer>(static_cast<int32_t>(code));
@@ -2324,9 +2400,11 @@ NAN_METHOD(Easy::Reset) {
 
   curl_easy_reset(obj->ch);
 
-  // reset the URL,
-  // https://github.com/bagder/curl/commit/ac6da721a3740500cc0764947385eb1c22116b83
-  curl_easy_setopt(obj->ch, CURLOPT_URL, "");
+  curl_easy_setopt(obj->ch, CURLOPT_CURLU, nullptr);
+  curl_url_cleanup(obj->url);
+  obj->url = curl_url();
+  obj->urlData.clear();
+  obj->pathAsIs = false;
 
   obj->callbacks.clear();
   obj->ResetRequiredHandleOptions();
