@@ -19,27 +19,15 @@
 #include <iostream>
 #include <string>
 
+extern "C" {
+
+void node_libcurl_ssl_ctx_set_legacy_opts(void* sslctx);
+}
+
 // 36055 was allocated on Win64
 #define MEMORY_PER_HANDLE 30000
 
 #define TIME_IN_THE_FUTURE "30001231 23:59:59"
-
-// OpenSSL declarations, to avoid needing to muck with the include path.
-extern "C" {
-#ifdef _WIN32
-#define DLLIMPORT __declspec(dllimport)
-#else
-#define DLLIMPORT
-#endif
-#ifndef SSL_OP_LEGACY_SERVER_CONNECT
-#define SSL_OP_LEGACY_SERVER_CONNECT 0x00000004U
-#endif
-#ifndef SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION
-#define SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION 0x00040000U
-#endif
-typedef struct ssl_ctx_st SSL_CTX;
-unsigned long DLLIMPORT SSL_CTX_set_options(SSL_CTX* ctx, unsigned long op);
-}
 
 namespace NodeLibcurl {
 
@@ -255,8 +243,7 @@ CURLcode Easy::SslCtxFunction(CURL* curl, void* sslctx, void* userdata) {
   Easy* obj = static_cast<Easy*>(userdata);
   (void)obj;
 
-  SSL_CTX_set_options(static_cast<SSL_CTX*>(sslctx), SSL_OP_LEGACY_SERVER_CONNECT);
-  SSL_CTX_set_options(static_cast<SSL_CTX*>(sslctx), SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION);
+  node_libcurl_ssl_ctx_set_legacy_opts(sslctx);
 
   return CURLE_OK;
 }

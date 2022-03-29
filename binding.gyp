@@ -16,6 +16,20 @@
   },
   'targets': [
     {
+      'target_name': 'sslctx',
+      'type': 'static_library',
+      'sources': [
+        'src/sslctx.c',
+      ],
+      'conditions': [
+        ['OS=="win"', {
+          'dependencies': [
+            'deps/curl-for-windows/openssl/openssl.gyp:openssl',
+          ],
+        }]
+      ]
+    },
+    {
       'target_name': '<(module_name)',
       'type': 'loadable_module',
       'sources': [
@@ -30,6 +44,9 @@
       ],
       'include_dirs' : [
         "<!(node -e \"require('nan')\")",
+      ],
+      'dependencies': [
+        ':sslctx',
       ],
       'conditions': [
         ['node_libcurl_no_setlocale=="true"', {
