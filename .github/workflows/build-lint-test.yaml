@@ -235,3 +235,85 @@ jobs:
           path: ./logs/
           retention-days: 5
       - run: echo "::set-output name=run_result::success" > run_result
+
+  build-and-test-nodejs-windows:
+    runs-on: windows-2019
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - 12
+          - 14
+          - 16
+    env:
+      npm_config_msvs_version: 2019
+      npm_config_build_from_source: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          submodules: recursive
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install dependencies
+        run: |
+          cinst nasm -y
+          $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
+          python deps\curl-for-windows\configure.py
+      - name: Build
+        run: |
+          $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
+          yarn install --frozen-lockfile
+      - name: Test
+        run: |
+          yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())"
+          yarn test
+
+          if ($LASTEXITCODE -eq 0) {
+            $host.SetShouldExit(0)
+          }
+
+  build-and-test-electron-windows:
+    runs-on: windows-2019
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - 16
+        electron-version:
+          - 17.1.0
+    env:
+      ELECTRON_VERSION: ${{ matrix.electron-version }}
+      npm_config_msvs_version: 2019
+      npm_config_build_from_source: true
+      npm_config_runtime: "electron"
+      npm_config_dist_url: "https://atom.io/download/electron"
+      npm_config_target: ${{ matrix.electron-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          submodules: recursive
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install dependencies
+        run: |
+          cinst nasm -y
+          $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
+          python deps\curl-for-windows\configure.py
+          yarn global add electron@${env:ELECTRON_VERSION}
+      - name: Build
+        run: |
+          $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
+          yarn install --frozen-lockfile
+      - name: Test
+        run: |
+          yarn test:electron
+
+          if ($LASTEXITCODE -eq 0) {
+            $host.SetShouldExit(0)
+          }

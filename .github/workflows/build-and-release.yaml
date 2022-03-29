@@ -197,7 +197,7 @@ jobs:
           retention-days: 5
 
   build-and-release-nodejs-windows:
-    runs-on: windows-2016
+    runs-on: windows-2019
     strategy:
       fail-fast: false
       matrix:
@@ -206,7 +206,7 @@ jobs:
           - 14
           - 16
     env:
-      npm_config_msvs_version: 2017
+      npm_config_msvs_version: 2019
       npm_config_build_from_source: true
     steps:
       - name: Checkout
@@ -241,7 +241,7 @@ jobs:
           node scripts\module-packaging.js --publish $(yarn -s node-pre-gyp reveal staged_tarball --silent)
 
   build-and-release-electron-windows:
-    runs-on: windows-2016
+    runs-on: windows-2019
     strategy:
       fail-fast: false
       matrix:
@@ -251,7 +251,7 @@ jobs:
           - 17.1.0
     env:
       ELECTRON_VERSION: ${{ matrix.electron-version }}
-      npm_config_msvs_version: 2017
+      npm_config_msvs_version: 2019
       npm_config_build_from_source: true
       npm_config_runtime: "electron"
       npm_config_dist_url: "https://atom.io/download/electron"
