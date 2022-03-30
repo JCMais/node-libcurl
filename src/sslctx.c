@@ -1,5 +1,4 @@
 
-#include <openssl/opensslconf.h>
 #include <openssl/ssl.h>
 
 void node_libcurl_ssl_ctx_set_legacy_opts(void* sslctx) {
