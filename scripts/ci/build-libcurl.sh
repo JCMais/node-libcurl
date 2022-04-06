@@ -266,7 +266,6 @@ export LDFLAGS=$LDFLAGS
 
 # Release - Static
 ./configure \
-    --enable-debug \
     --without-nss \
     --without-libpsl \
     --without-librtmp \
