@@ -18,7 +18,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "benchmark": "^2.1.4",
     "benny": "^3.6.14",
     "http-server": "^0.12.1",
