@@ -258,7 +258,7 @@ jobs:
       npm_config_msvs_version: 2019
       npm_config_build_from_source: true
       npm_config_runtime: "electron"
-      npm_config_dist_url: "https://atom.io/download/electron"
+      npm_config_dist_url: "https://electronjs.org/headers"
       npm_config_target: ${{ matrix.electron-version }}
     steps:
       - name: Checkout

@@ -288,9 +288,9 @@ has_display=$(xdpyinfo -display $DISPLAY >/dev/null 2>&1 && echo "true" || echo 
 
 if [ -n "$ELECTRON_VERSION" ]; then
   runtime='electron'
-  dist_url='https://atom.io/download/electron'
+  dist_url='https://electronjs.org/headers'
   target="$ELECTRON_VERSION"
-  
+
   # enabled always temporarily
   is_electron_lt_5=1
   # is_electron_lt_5=0
@@ -309,8 +309,8 @@ if [ -n "$ELECTRON_VERSION" ]; then
   # yarn_global_dir=$(yarn global dir)
 
   # # Below is to fix the following error:
-  # # [19233:0507/005247.965078:FATAL:setuid_sandbox_host.cc(157)] The SUID sandbox helper binary was found, but is not 
-  # #  configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that 
+  # # [19233:0507/005247.965078:FATAL:setuid_sandbox_host.cc(157)] The SUID sandbox helper binary was found, but is not
+  # #  configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that
   # # /home/circleci/node-libcurl/node_modules/electron/dist/chrome-sandbox is owned by root and has mode 4755.
   # if [[ -x "$(command -v sudo)" && "$EUID" -ne 0 && -f $yarn_global_dir/node_modules/electron/dist/chrome-sandbox ]]; then
   #   echo "Changing owner of chrome-sandbox"

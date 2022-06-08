@@ -95,7 +95,7 @@ install:
 
       if ($null -ne $env:ELECTRON_VERSION) {
         $runtime = "electron"
-        $dist_url = "https://atom.io/download/electron"
+        $dist_url = "https://electronjs.org/headers"
         $target = $env:ELECTRON_VERSION
 
         yarn global add electron@${env:ELECTRON_VERSION}
@@ -124,7 +124,7 @@ install:
 
         if (![System.IO.File]::Exists("$outputFolder/nw.exe")) {
           Write-Host "nw.exe not found on $outputFolder - Downloading it"
-          
+
           $url = "https://dl.nwjs.io/v$target/$nwName.zip"
           $output = "$rootFolder/$nwName.zip"
 
