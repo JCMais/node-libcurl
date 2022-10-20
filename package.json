@@ -1,6 +1,6 @@
 {
   "name": "@getinsomnia/node-libcurl",
-  "version": "2.3.5-2",
+  "version": "2.3.5-4",
   "description": "The fastest http(s) client (and much more) for Node.js - Node.js bindings for libcurl",
   "keywords": [
     "node-curl",
@@ -77,8 +77,8 @@
   "dependencies": {
     "@mapbox/node-pre-gyp": "1.0.5",
     "env-paths": "2.2.0",
-    "nan": "2.15.0",
-    "node-gyp": "7.1.2",
+    "nan": "2.17.0",
+    "node-gyp": "8.4.0",
     "npmlog": "4.1.2",
     "rimraf": "^3.0.2",
     "tslib": "2.0.1"

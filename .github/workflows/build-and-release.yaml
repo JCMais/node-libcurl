@@ -24,24 +24,14 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-11
-          - ubuntu-18.04
+          - macos-latest
+          - ubuntu-latest
         libcurl-release:
           - 7.79.1
         node-libcurl-cpp-std:
-          - c++11
+          - c++17
         node:
-          - 12
-          - 14
-        include:
-          - os: macos-11
-            node: 16
-            node-libcurl-cpp-std: c++17
-            libcurl-release: 7.79.1
-          - os: ubuntu-18.04
-            node: 16
-            node-libcurl-cpp-std: c++17
-            libcurl-release: 7.79.1
+          - 16.16.0
 
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -74,7 +64,7 @@ jobs:
         run: sudo apt-get install -y cmake
       - name: Output yarn cache dir
         id: yarn-cache-dir
-        run: echo "::set-output name=dir::$(yarn cache dir)"
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
       - name: Restore Yarn Cache
         uses: actions/cache@v2
         id: yarn-cache
@@ -114,14 +104,14 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-11
-          - ubuntu-18.04
+          - macos-latest
+          - ubuntu-latest
         libcurl-release:
           - 7.79.1
         node:
-          - 16
+          - 16.16.0
         electron-version:
-          - 19.0.0
+          - 21.0.0
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -154,7 +144,7 @@ jobs:
         run: sudo apt-get install -y cmake
       - name: Output yarn cache dir
         id: yarn-cache-dir
-        run: echo "::set-output name=dir::$(yarn cache dir)"
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
       - name: Restore Yarn Cache
         uses: actions/cache@v2
         id: yarn-cache
@@ -197,16 +187,14 @@ jobs:
           retention-days: 5
 
   build-and-release-nodejs-windows:
-    runs-on: windows-2019
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         node:
-          - 12
-          - 14
-          - 16
+          - 16.16.0
     env:
-      npm_config_msvs_version: 2019
+      npm_config_msvs_version: 2022
       npm_config_build_from_source: true
     steps:
       - name: Checkout
@@ -241,17 +229,17 @@ jobs:
           node scripts\module-packaging.js --publish $(yarn -s node-pre-gyp reveal staged_tarball --silent)
 
   build-and-release-electron-windows:
-    runs-on: windows-2019
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         node:
-          - 16
+          - 16.16.0
         electron-version:
-          - 19.0.0
+          - 21.0.0
     env:
       ELECTRON_VERSION: ${{ matrix.electron-version }}
-      npm_config_msvs_version: 2019
+      npm_config_msvs_version: 2022
       npm_config_build_from_source: true
       npm_config_runtime: "electron"
       npm_config_dist_url: "https://electronjs.org/headers"

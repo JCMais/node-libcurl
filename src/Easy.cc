@@ -2162,7 +2162,7 @@ NAN_METHOD(Easy::GetInfo) {
             curr = linkedList;
 
             while (curr) {
-              auto value = arr->Set(arr->CreationContext(), arr->Length(),
+              auto value = arr->Set(arr->GetCreationContext().ToLocalChecked(), arr->Length(),
                                     Nan::New<v8::String>(curr->data).ToLocalChecked());
               if (value.IsJust()) {
                 curr = curr->next;
@@ -2196,7 +2196,7 @@ NAN_METHOD(Easy::GetInfo) {
           curr = linkedList;
 
           while (curr) {
-            auto value = arr->Set(arr->CreationContext(), arr->Length(),
+            auto value = arr->Set(arr->GetCreationContext().ToLocalChecked(), arr->Length(),
                                   Nan::New<v8::String>(curr->data).ToLocalChecked());
             if (value.IsJust()) {
               curr = curr->next;

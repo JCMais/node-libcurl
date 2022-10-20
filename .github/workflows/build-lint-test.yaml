@@ -19,32 +19,22 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-11
-          - ubuntu-18.04
+          - macos-latest
+          - ubuntu-latest
         libcurl-release:
           - 7.79.1
         node-libcurl-cpp-std:
-          - c++11
+          - c++17
         node:
-          - 12
-          - 14
-        include:
-          - os: macos-11
-            node: 16
-            node-libcurl-cpp-std: c++17
-            libcurl-release: 7.79.1
-          - os: ubuntu-18.04
-            node: 16
-            node-libcurl-cpp-std: c++17
-            libcurl-release: 7.79.1
-            run-lint-and-tsc: true # Run lint
+          - 16.16.0
+
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       NODE_LIBCURL_CPP_STD: ${{ matrix.node-libcurl-cpp-std }}
     steps:
       - id: timestamp
-        run: echo "::set-output name=timestamp::$(timestamp +%s)"
+        run: echo "timestamp=$(timestamp +%s)" >> $GITHUB_OUTPUT
       - name: Restore the previous run result
         uses: actions/cache@v2
         with:
@@ -81,7 +71,7 @@ jobs:
         run: sudo apt-get install -y cmake
       - name: Output yarn cache dir
         id: yarn-cache-dir
-        run: echo "::set-output name=dir::$(yarn cache dir)"
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
       - name: Restore Yarn Cache
         uses: actions/cache@v1
         id: yarn-cache
@@ -133,6 +123,7 @@ jobs:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.node }}
           path: ./logs/
           retention-days: 3
+      # TODO(Filipe) - fix this set-output
       - run: echo "::set-output name=run_result::success" > run_result
 
   build-and-test-electron:
@@ -141,14 +132,14 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-11
-          - ubuntu-18.04
+          - macos-latest
+          - ubuntu-latest
         libcurl-release:
           - 7.79.1
         node:
-          - 16
+          - 16.16.0
         electron-version:
-          - 19.0.0
+          - 21.0.0
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -156,7 +147,7 @@ jobs:
       NODE_LIBCURL_CPP_STD: c++17
     steps:
       - id: timestamp
-        run: echo "::set-output name=timestamp::$(timestamp +%s)"
+        run: echo "timestamp=$(timestamp +%s)" >> $GITHUB_OUTPUT
       - name: Restore the previous run result
         uses: actions/cache@v2
         with:
@@ -173,6 +164,9 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
       - name: Install Needed packages
         run: brew install coreutils wget automake libtool cmake gnu-sed m4
       # not using brew for that one as we need 2.69
@@ -189,7 +183,7 @@ jobs:
           ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
       - name: Output yarn cache dir
         id: yarn-cache-dir
-        run: echo "::set-output name=dir::$(yarn cache dir)"
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
       - name: Restore Yarn Cache
         uses: actions/cache@v2
         id: yarn-cache
@@ -234,19 +228,18 @@ jobs:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}
           path: ./logs/
           retention-days: 5
+      # TODO(Filipe) - fix this set-output
       - run: echo "::set-output name=run_result::success" > run_result
 
   build-and-test-nodejs-windows:
-    runs-on: windows-2019
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         node:
-          - 12
-          - 14
-          - 16
+          - 16.16.0
     env:
-      npm_config_msvs_version: 2019
+      npm_config_msvs_version: 2022
       npm_config_build_from_source: true
     steps:
       - name: Checkout
@@ -276,17 +269,17 @@ jobs:
           }
 
   build-and-test-electron-windows:
-    runs-on: windows-2019
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         node:
-          - 16
+          - 16.16.0
         electron-version:
-          - 19.0.0
+          - 21.0.0
     env:
       ELECTRON_VERSION: ${{ matrix.electron-version }}
-      npm_config_msvs_version: 2019
+      npm_config_msvs_version: 2022
       npm_config_build_from_source: true
       npm_config_runtime: "electron"
       npm_config_dist_url: "https://electronjs.org/headers"

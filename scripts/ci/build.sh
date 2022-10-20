@@ -105,7 +105,11 @@ ls -al $LIBIDN2_BUILD_FOLDER/lib
 # Build OpenSSL
 ###################
 # OpenSSL version must match Node.js one
-OPENSSL_RELEASE=${OPENSSL_RELEASE:-$(node -e "console.log(process.versions.openssl.replace('+quic', ''))")}
+## OPENSSL_RELEASE=${OPENSSL_RELEASE:-$(node -e "console.log(process.versions.openssl.replace('+quic', ''))")}
+
+# Forcing release to be 1.1.1r
+OPENSSL_RELEASE=1.1.1r
+
 OPENSSL_DEST_FOLDER=$PREFIX_DIR/deps/openssl
 
 # We must pass KERNEL_BITS=64 on macOS to make sure a x86_64 lib is built, the default is to build an i386 one
@@ -121,6 +125,7 @@ echo "Building openssl v$OPENSSL_RELEASE"
 # Weird concatenation of the array with itself is needed
 #  because on bash <= 4, using [@] to access an array with 0 elements
 #  gives an error with set -o pipefail
+echo "[DEBUG] ./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER ${openssl_params+\"${openssl_params[@]}\"} >$LOGS_FOLDER/build-openssl.log 2>&1"
 ./scripts/ci/build-openssl.sh $OPENSSL_RELEASE $OPENSSL_DEST_FOLDER ${openssl_params+"${openssl_params[@]}"} >$LOGS_FOLDER/build-openssl.log 2>&1
 export OPENSSL_BUILD_FOLDER=$OPENSSL_DEST_FOLDER/build/$OPENSSL_RELEASE
 ls -al $OPENSSL_BUILD_FOLDER/lib*
