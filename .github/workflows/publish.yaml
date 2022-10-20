@@ -7,22 +7,17 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-18.04
-    permissions: 
+    runs-on: ubuntu-latest
+    permissions:
       contents: read
       packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        node:
-          - 12
     steps:
       - name: Checkout
-        uses: actions/checkout@main
+        uses: actions/checkout@v3
       - name: Setup Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 16
           registry-url: 'https://registry.npmjs.org'
       - name: Install
         run: yarn install --ignore-scripts
