@@ -41,16 +41,6 @@ if [ "$(uname)" == "Darwin" ]; then
   export LDFLAGS="$MACOS_TARGET_FLAGS $MACOS_ARCH_FLAGS"
 fi
 
-function cat_slower() {
-  echo "cat_slower called"
-  # Disabled, only really interesting if we need to debug something
-  # # hacky way to slow down the output of cat
-  # CI=${CI:-}
-  # # the grep is to ignore lines starting with |
-  # # which for config.log files are the source used to test something
-  # [ "$CI" == "true" ] && (cat $1 | grep "^[^|]" | perl -pe 'select undef,undef,undef,0.0033333333') || true
-}
-
 PREFIX_DIR=${PREFIX_DIR:-$HOME}
 STOP_ON_INSTALL=${STOP_ON_INSTALL:-false}
 RUN_PREGYP_CLEAN=${RUN_PREGYP_CLEAN:-true}
@@ -105,10 +95,7 @@ ls -al $LIBIDN2_BUILD_FOLDER/lib
 # Build OpenSSL
 ###################
 # OpenSSL version must match Node.js one
-## OPENSSL_RELEASE=${OPENSSL_RELEASE:-$(node -e "console.log(process.versions.openssl.replace('+quic', ''))")}
-
-# Forcing release to be 1.1.1r
-OPENSSL_RELEASE=1.1.1r
+OPENSSL_RELEASE=${OPENSSL_RELEASE:-$(node -e "console.log(process.versions.openssl.replace('+quic', ''))")}
 
 OPENSSL_DEST_FOLDER=$PREFIX_DIR/deps/openssl
 
@@ -251,9 +238,9 @@ if [[ $LIBCURL_RELEASE == "LATEST" ]]; then
 fi
 LIBCURL_DEST_FOLDER=$PREFIX_DIR/deps/libcurl
 echo "Building libcurl v$LIBCURL_RELEASE - Latest is v$LATEST_LIBCURL_RELEASE"
-./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER || (echo "libcurl failed build log:" && cat_slower $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log && exit 1)
+./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER || (echo "libcurl failed build log:" && cat $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log && exit 1)
 echo "libcurl successful build log:"
-cat_slower $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log
+cat $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log
 
 export LIBCURL_BUILD_FOLDER=$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE
 ls -al $LIBCURL_BUILD_FOLDER/lib

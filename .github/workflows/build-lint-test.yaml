@@ -43,7 +43,7 @@ jobs:
       - id: timestamp
         run: echo "timestamp=$(timestamp +%s)" >> $GITHUB_OUTPUT
       - name: Restore the previous run result
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             run_result
@@ -89,7 +89,7 @@ jobs:
             v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
             v1-${{ runner.os }}-yarn-cache-
       - name: Restore libcurl deps cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: libcurl-deps-cache
         with:
           path: |
@@ -125,7 +125,7 @@ jobs:
           fail_ci_if_error: false
       - name: Upload artifacts
         if: always() && steps.run_result.outputs.run_result != 'success'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.node }}
           path: ./logs/
@@ -156,7 +156,7 @@ jobs:
       - id: timestamp
         run: echo "timestamp=$(timestamp +%s)" >> $GITHUB_OUTPUT
       - name: Restore the previous run result
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             run_result
@@ -192,7 +192,7 @@ jobs:
         id: yarn-cache-dir
         run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
       - name: Restore Yarn Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir.outputs.dir }}
@@ -201,7 +201,7 @@ jobs:
             v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
             v1-${{ runner.os }}-yarn-cache-
       - name: Restore Electron Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/Library/Caches/electron
           key: v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
@@ -209,7 +209,7 @@ jobs:
             v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
             v1-${{ runner.os }}-electron-cache-
       - name: Restore libcurl deps cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: libcurl-deps-cache
         with:
           path: |
@@ -230,7 +230,7 @@ jobs:
             ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always() && steps.run_result.outputs.run_result != 'success'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}
           path: ./logs/

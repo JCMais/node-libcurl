@@ -66,7 +66,7 @@ jobs:
         id: yarn-cache-dir
         run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
       - name: Restore Yarn Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir.outputs.dir }}
@@ -75,7 +75,7 @@ jobs:
             v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
             v1-${{ runner.os }}-yarn-cache-
       - name: Restore libcurl deps cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: libcurl-deps-cache
         with:
           path: |
@@ -92,7 +92,7 @@ jobs:
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.node }}
           path: ./logs/
@@ -146,7 +146,7 @@ jobs:
         id: yarn-cache-dir
         run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
       - name: Restore Yarn Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir.outputs.dir }}
@@ -155,7 +155,7 @@ jobs:
             v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
             v1-${{ runner.os }}-yarn-cache-
       - name: Restore Electron Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/Library/Caches/electron
           key: v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
@@ -163,7 +163,7 @@ jobs:
             v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
             v1-${{ runner.os }}-electron-cache-
       - name: Restore libcurl deps cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: libcurl-deps-cache
         with:
           path: |
@@ -180,7 +180,7 @@ jobs:
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}
           path: ./logs/

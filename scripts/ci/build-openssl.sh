@@ -57,7 +57,7 @@ if [ "$MACOS_UNIVERSAL_BUILD" == "true" ]; then
       -fPIC \
       --prefix=$build_folder \
       --openssldir=$build_folder \
-      no-shared "${@:2}"
+      no-tests no-shared "${@:2}"
 
     make && make install_sw
 
