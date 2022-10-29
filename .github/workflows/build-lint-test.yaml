@@ -107,8 +107,8 @@ jobs:
           key: v4-build-lint-test-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
           restore-keys: |
             v4-build-lint-test-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
       - name: 'Build node-libcurl'
         if: steps.run_result.outputs.run_result != 'success'
         run: |
