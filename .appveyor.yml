@@ -4,7 +4,7 @@
 ## - Electron (Win64, Win32)
 ## - Node.js (Win64, Win32)
 
-os: Visual Studio 2017
+os: Visual Studio 2019
 
 # Set build version format here instead of in the admin panel.
 version: '{build}'
@@ -16,23 +16,20 @@ environment:
   NODE_LIBCURL_POSTINSTALL_SKIP_CLEANUP: 'true'
   matrix:
     # node.js
-    - nodejs_version: '10'
-    - nodejs_version: '12'
     - nodejs_version: '14'
     - nodejs_version: '16'
-    - nodejs_version: '17'
-    - nodejs_version: '16'
-      ELECTRON_VERSION: '16.0.2'
-    - nodejs_version: '16'
-      ELECTRON_VERSION: '15.3.0'
-    - nodejs_version: '16'
-      ELECTRON_VERSION: '14.2.0'
-    - nodejs_version: '16'
-      ELECTRON_VERSION: '13.6.1'
-    - nodejs_version: '16'
-      ELECTRON_VERSION: '12.2.2'
-    - nodejs_version: '16'
-      ELECTRON_VERSION: '11.5.0'
+    - nodejs_version: '18'
+    - nodejs_version: '19'
+    - nodejs_version: '18'
+      ELECTRON_VERSION: '21.0.1'
+    - nodejs_version: '18'
+      ELECTRON_VERSION: '20.0.3'
+    - nodejs_version: '18'
+      ELECTRON_VERSION: '19.1.1'
+    - nodejs_version: '18'
+      ELECTRON_VERSION: '18.3.15'
+    - nodejs_version: '18'
+      ELECTRON_VERSION: '17.4.11'
     # - nodejs_version: '12'
     #   NWJS_VERSION: '0.44.5'
     # - nodejs_version: '12'
@@ -40,9 +37,9 @@ environment:
     # - nodejs_version: '12'
     #   NWJS_VERSION: '0.42.6'
 
-# matrix:
-#   allow_failures:
-#     - nodejs_version: "11"
+matrix:
+  allow_failures:
+    - nodejs_version: '19'
 
 platform:
   - x86

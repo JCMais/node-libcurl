@@ -16,13 +16,14 @@ on:
     inputs:
       publish-binary:
         type: boolean
-        default: 'false'
+        default: false
         description: Publish binary?
         required: true
 
 env:
   NODE_LIBCURL_GITHUB_TOKEN: ${{ secrets.NODE_LIBCURL_GITHUB_TOKEN }}
   PUBLISH_BINARY: ${{ github.event.inputs.publish-binary }}
+  NODE_LIBCURL_CPP_STD: c++17
 
 # all jobs here must have a matrix identical to the ones inside build-lint-test.yaml
 
@@ -35,36 +36,17 @@ jobs:
       matrix:
         os:
           - macos-11
-          - ubuntu-18.04 # TODO(jonathan): bump this to a more recent version when we do a major version bump
+          - ubuntu-20.04
         libcurl-release:
-          - 7.79.1
+          - 7.86.0
         node:
-          - 10
-          - 12
           - 14
           - 16
-          - 17
-        include:
-          - os: macos-11
-            libcurl-release: 7.79.1
-            node: 17
-            node-libcurl-cpp-std: c++17
-          - os: macos-11
-            libcurl-release: 7.79.1
-            node: 16
-            node-libcurl-cpp-std: c++17
-          - os: ubuntu-18.04
-            libcurl-release: 7.79.1
-            node: 17
-            node-libcurl-cpp-std: c++17
-          - os: ubuntu-18.04
-            libcurl-release: 7.79.1
-            node: 16
-            node-libcurl-cpp-std: c++17
+          - 18
+          - 19
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-      NODE_LIBCURL_CPP_STD: c++11
     steps:
       - id: timestamp
         run: echo "::set-output name=timestamp::$(timestamp +%s)"
@@ -171,19 +153,16 @@ jobs:
         # we use CircleCI for linux binaries
         os:
           - macos-11
-        node-libcurl-cpp-std:
-          - c++17
         libcurl-release:
-          - 7.79.1
+          - 7.86.0
         node:
-          - 16
+          - 18
         electron-version:
-          - 16.0.2
-          - 15.3.0
-          - 14.2.0
-          - 13.6.1
-          - 12.2.2
-          - 11.5.0
+          - 21.0.1
+          - 20.0.3
+          - 19.1.1
+          - 18.3.15
+          - 17.4.11
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -276,15 +255,13 @@ jobs:
         os:
           - macos-11
         libcurl-release:
-          - 7.79.1
-        node-libcurl-cpp-std:
-          - c++17
+          - 7.86.0
         node:
-          - 16
+          - 18
         nwjs-version:
-          - 0.58.0
-          - 0.57.1
-          - 0.56.1
+          - 0.69.1
+          - 0.68.1
+          - 0.67.1
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}

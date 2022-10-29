@@ -75,13 +75,13 @@
     ]
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "1.0.5",
+    "@mapbox/node-pre-gyp": "1.0.10",
     "env-paths": "2.2.0",
-    "nan": "2.15.0",
-    "node-gyp": "7.1.2",
-    "npmlog": "4.1.2",
-    "rimraf": "^3.0.2",
-    "tslib": "2.0.1"
+    "nan": "2.17.0",
+    "node-gyp": "9.3.0",
+    "npmlog": "6.0.2",
+    "rimraf": "3.0.2",
+    "tslib": "2.4.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
@@ -100,6 +100,7 @@
     "cheerio": "^1.0.0-rc.3",
     "clang-format": "^1.4.0",
     "cookie-parser": "^1.4.5",
+    "electron": "21.2.0",
     "electron-mocha": "^8.2.1",
     "eslint": "^7.11.0",
     "eslint-config-prettier": "^6.12.0",
@@ -129,7 +130,7 @@
     "typescript": "^4.0.3"
   },
   "engines": {
-    "node": ">= 8"
+    "node": "^14.14 || >=16"
   },
   "np": {
     "cleanup": false

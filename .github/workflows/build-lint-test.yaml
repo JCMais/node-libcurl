@@ -5,6 +5,7 @@ on:
 
 env:
   LIBCURL_RELEASE: 'LATEST'
+  NODE_LIBCURL_CPP_STD: c++17
 
 concurrency:
   group: ${{ github.head_ref }}
@@ -21,35 +22,27 @@ jobs:
         os:
           - macos-11
           # removed as we enabled CircleCI to run on PRs
-          # - ubuntu-18.04 # TODO(jonathan): bump this to a more recent version when we do a major version bump
+          # - ubuntu-20.04
         libcurl-release:
-          - 7.79.1
+          - 7.86.0
         node:
-          - 10
-          - 12
           - 14
           - 16
-          - 17
+          - 18
+          - 19
         include:
-          # we only want to run lint in one of the jobs
+          # we only want to run lint in one of the jobs, in this case, the one for the latest stable Node.js version
           - os: macos-11
-            libcurl-release: 7.79.1
-            node: 16
-            node-libcurl-cpp-std: c++17
+            libcurl-release: 7.86.0
+            node: 18
             run-lint-and-tsc: true
-          - os: macos-11
-            libcurl-release: 7.79.1
-            node: 17
-            node-libcurl-cpp-std: c++17
           # we also want to build a job for old libcurl versions
           - os: macos-11
             libcurl-release: 7.50.0
-            node: 16
-            node-libcurl-cpp-std: c++17
+            node: 18
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-      NODE_LIBCURL_CPP_STD: c++11
     steps:
       - id: timestamp
         run: echo "::set-output name=timestamp::$(timestamp +%s)"
@@ -153,19 +146,16 @@ jobs:
         # we use CircleCI for linux binaries
         os:
           - macos-11
-        node-libcurl-cpp-std:
-          - c++17
         libcurl-release:
-          - 7.79.1
+          - 7.86.0
         node:
-          - 16
+          - 18
         electron-version:
-          - 16.0.2
-          - 15.3.0
-          - 14.2.0
-          - 13.6.1
-          - 12.2.2
-          - 11.5.0
+          - 21.0.1
+          - 20.0.3
+          - 19.1.1
+          - 18.3.15
+          - 17.4.11
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -262,15 +252,13 @@ jobs:
         os:
           - macos-11
         libcurl-release:
-          - 7.79.1
-        node-libcurl-cpp-std:
-          - c++17
+          - 7.86.0
         node:
-          - 16
+          - 18
         nwjs-version:
-          - 0.58.0
-          - 0.57.1
-          - 0.56.1
+          - 0.69.1
+          - 0.68.1
+          - 0.67.1
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -289,6 +277,7 @@ jobs:
       - id: run_result
         run: cat run_result 2>/dev/null || echo 'default'
       - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
+        if: matrix.node-libcurl-cpp
       - name: Checkout
         uses: actions/checkout@main
       - name: Setup Node.js
