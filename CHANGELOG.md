@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Breaking Change
+- The supported engines of Node.js were bumped to: `^14.14 || >=16`.
+- The supported versions of Electron now are: `v21`, `v20`, `v19`, `v18`, and `v17`.
+- The supported versions of NW.js now are: `v0.69`, `v0.68`, and `v0.67`.
+- The node-gyp package has been bumped, which means Python 3.0 is now required to build from source.
+- Minimum c++ version your compiler needs to support is now `c++17`.
+- The prebuilt binaries on Linux are now built on Ubuntu 20.04.
+- The prebuilt binaries on Windows are now built with Visual Studio 2019.
+
 ### Fixed
 ### Added
 ### Changed

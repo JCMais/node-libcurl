@@ -353,12 +353,12 @@ where `--target` is the current version of NW.js you are using
 
 > yarn
 ```bash
-npm_config_runtime=electron npm_config_target=$(yarn --silent electron --version) npm_config_disturl=https://www.electronjs.org/headers yarn add node-libcurl
+npm_config_runtime=electron npm_config_target=X.Y.Z npm_config_disturl=https://www.electronjs.org/headers yarn add node-libcurl
 ```
 
 > npm
 ```bash
-npm install node-libcurl --runtime=electron --target=$(yarn --silent electron --version) --disturl=https://www.electronjs.org/headers --save
+npm install node-libcurl --runtime=electron --target=X.Y.Z --disturl=https://www.electronjs.org/headers --save
 ```
 
 Where `--target` is the version of electron you are using, in our case, we are just using the version returned by the locally installed `electron` binary.
