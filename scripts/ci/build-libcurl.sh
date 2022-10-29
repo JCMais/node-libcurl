@@ -226,10 +226,12 @@ if [ ! -z "$NGHTTP2_BUILD_FOLDER" ]; then
   major=`echo $NGHTTP2_RELEASE |cut -d. -f1 | sed -e "s/[^0-9]//g"`
   minor=`echo $NGHTTP2_RELEASE |cut -d. -f2 | sed -e "s/[^0-9]//g"`
   patch=`echo $NGHTTP2_RELEASE |cut -d. -f3 | cut -d- -f1 | sed -e "s/[^0-9]//g"`
-  PACKAGE_VERSION_NUM=`printf "0x%02x%02x%02x" "$major" "$minor" "$patch"`
+  NGHTTP2_VERSION_NUM=`printf "0x%02x%02x%02x" "$major" "$minor" "$patch"`
 
-  echo "The correct version: $PACKAGE_VERSION_NUM"
-
+  echo "The correct value of NGHTTP2_VERSION_NUM=$NGHTTP2_VERSION_NUM"
+  CPPFLAGS="$CPPFLAGS -DNGHTTP2_VERSION_NUM=$NGHTTP2_VERSION_NUM"
+  # CPPFLAGS="$CPPFLAGS -I$NGHTTP2_BUILD_FOLDER/include"
+  # LDFLAGS="$LDFLAGS -L$NGHTTP2_BUILD_FOLDER/lib -Wl,-rpath,$NGHTTP2_BUILD_FOLDER/lib"
   libcurl_args+=("--with-nghttp2=$NGHTTP2_BUILD_FOLDER")
 else
   libcurl_args+=("--without-nghttp2")
