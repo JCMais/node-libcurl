@@ -22,14 +22,12 @@ is_less_than_3_0_0=0
 
 if [[ $is_less_than_3_0_0 -eq 0 ]]; then
   openssl_tarball_name="openssl-$1"
-  lib_folder="lib64"
 else
   openssl_tarball_name="OpenSSL_$version_with_dashes"
-  lib_folder="lib"
 fi
 
 # @TODO We are explicitly checking the static lib
-if [[ -f $build_folder/$lib_folder/libcrypto.a && -f $build_folder/$lib_folder/libssl.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUILD != "true" ]]; then
+if [[ -f $build_folder/lib/libcrypto.a && -f $build_folder/lib/libssl.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUILD != "true" ]]; then
   echo "Skipping rebuild of openssl because lib files already exists"
   exit 0
 fi
@@ -49,12 +47,14 @@ if [ "$MACOS_UNIVERSAL_BUILD" == "true" ]; then
   # two separate builds.
 
   build_arch() {
-    CFLAGS="$MACOS_TARGET_FLAGS -arch $1" \
+    # the no-error is due to https://github.com/openssl/openssl/issues/18720 
+    CFLAGS="-Wno-error=implicit-function-declaration $MACOS_TARGET_FLAGS -arch $1" \
     LDFLAGS="$MACOS_TARGET_FLAGS -arch $1" \
 
     ./Configure \
       darwin64-$1-cc \
       -fPIC \
+      --libdir=lib \
       --prefix=$build_folder \
       --openssldir=$build_folder \
       no-shared "${@:2}"
@@ -82,6 +82,7 @@ else
   # Release - Static
   ./config \
     -fPIC \
+    --libdir=lib \
     --prefix=$build_folder \
     --openssldir=$build_folder \
     no-shared "${@:3}"
@@ -90,6 +91,7 @@ else
   # ./config \
   #    -Wl,-rpath=$build_folder/lib \
   #    -fPIC \
+  #    --libdir=lib \
   #    --prefix=$build_folder \
   #    --openssldir=$build_folder \
   #    shared $1
