@@ -27,8 +27,8 @@ jobs:
           - 7.86.0
         node:
           # TODO(jonathan): uncomment later
-          - 14
-          - 16
+          # - 14
+          # - 16
           - 18
           # TODO(jonathan): uncomment later
           # - 19

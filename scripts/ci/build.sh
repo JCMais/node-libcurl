@@ -157,7 +157,7 @@ unset KERNEL_BITS
 # Build nghttp2
 ###################
 # nghttp2 version must match Node.js one
-NGHTTP2_RELEASE=${NGHTTP2_RELEASE:-$(node -e "console.log(process.versions.nghttp2)")}
+export NGHTTP2_RELEASE=${NGHTTP2_RELEASE:-$(node -e "console.log(process.versions.nghttp2)")}
 NGHTTP2_DEST_FOLDER=$PREFIX_DIR/deps/nghttp2
 echo "Building nghttp2 v$NGHTTP2_RELEASE"
 ./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER >$LOGS_FOLDER/build-nghttp2.log 2>&1
