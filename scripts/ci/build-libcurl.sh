@@ -218,6 +218,18 @@ fi
 # nghttp2
 ####
 if [ ! -z "$NGHTTP2_BUILD_FOLDER" ]; then
+  # for some stupid reason, libcurl is not detecting the nghttp2 version correctly
+
+  echo "The file:"
+  cat $NGHTTP2_BUILD_FOLDER/include/nghttp2/nghttp2ver.h || false
+
+  major=`echo $NGHTTP2_RELEASE |cut -d. -f1 | sed -e "s/[^0-9]//g"`
+  minor=`echo $NGHTTP2_RELEASE |cut -d. -f2 | sed -e "s/[^0-9]//g"`
+  patch=`echo $NGHTTP2_RELEASE |cut -d. -f3 | cut -d- -f1 | sed -e "s/[^0-9]//g"`
+  PACKAGE_VERSION_NUM=`printf "0x%02x%02x%02x" "$major" "$minor" "$patch"`
+
+  echo "The correct version: $PACKAGE_VERSION_NUM"
+
   libcurl_args+=("--with-nghttp2=$NGHTTP2_BUILD_FOLDER")
 else
   libcurl_args+=("--without-nghttp2")
