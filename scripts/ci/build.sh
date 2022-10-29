@@ -293,7 +293,7 @@ has_display=$(xdpyinfo -display $DISPLAY >/dev/null 2>&1 && echo "true" || echo 
 
 if [ -n "$ELECTRON_VERSION" ]; then
   runtime='electron'
-  dist_url='https://atom.io/download/electron'
+  dist_url='https://electronjs.org/headers'
   target="$ELECTRON_VERSION"
   
   # enabled always temporarily

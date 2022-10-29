@@ -94,7 +94,7 @@ install:
 
       if ($null -ne $env:ELECTRON_VERSION) {
         $runtime = "electron"
-        $dist_url = "https://atom.io/download/electron"
+        $dist_url = "https://electronjs.org/headers"
         $target = $env:ELECTRON_VERSION
 
         yarn global add electron@${env:ELECTRON_VERSION}
