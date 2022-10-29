@@ -44,6 +44,7 @@ fi
 # Release - Static
 ./configure \
   --prefix=$build_folder \
+  --disable-app \
   --enable-lib-only \
   --without-libxml2 \
   --disable-shared

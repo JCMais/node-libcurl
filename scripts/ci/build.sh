@@ -37,7 +37,7 @@ if [ "$(uname)" == "Darwin" ]; then
     export MACOS_ARCH_FLAGS=""
   fi
 
-  export MACOSX_DEPLOYMENT_TARGET=10.12
+  export MACOSX_DEPLOYMENT_TARGET=11.6
   export MACOS_TARGET_FLAGS="-mmacosx-version-min=$MACOSX_DEPLOYMENT_TARGET"
 
   export CFLAGS="$MACOS_TARGET_FLAGS $MACOS_ARCH_FLAGS"
@@ -72,6 +72,28 @@ GSS_LIBRARY=${GSS_LIBRARY:-kerberos}
 LOGS_FOLDER=${BUILD_LOGS_FOLDER:-./logs}
 
 mkdir -p $LOGS_FOLDER
+
+# check for some common missing deps
+if [ "$(uname)" == "Darwin" ]; then
+  if ! command -v cmake &>/dev/null; then
+    (>&2 echo "Could not find cmake, we need it to build some dependencies (such as brotli)")
+    (>&2 echo "You can get it by installing the cmake package:")
+    (>&2 echo "brew install cmake")
+    exit 1
+  fi
+  if ! command -v autoreconf &>/dev/null; then
+    (>&2 echo "Could not find autoreconf, we need it to build some dependencies (such as libssh2)")
+    (>&2 echo "You can get it by installing the autoconf package:")
+    (>&2 echo "brew install autoconf")
+    exit 1
+  fi
+  if ! command -v aclocal &>/dev/null; then
+    (>&2 echo "Could not find aclocal, we need it to build some dependencies (such as libssh2)")
+    (>&2 echo "You can get it by installing the automake package:")
+    (>&2 echo "brew install automake")
+    exit 1
+  fi
+fi
 
 # The following two, libunistring and libidn2, are only necessary if building libcurl >= 7.53
 # However we are going to build then anyway, they are not that slow to build.

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The supported versions of Electron now are: `v21`, `v20`, `v19`, `v18`, and `v17`.
 - The node-gyp package has been bumped, which means Python 3.0 is now required to build from source.
 - Minimum c++ version your compiler needs to support is now `c++17`.
+- The minimum macOS version is now Big Sur (11.6)
 - The prebuilt binaries on glibc Linux are now built on Ubuntu 20.04.
 - The prebuilt binaries on musl Linux (Alpine) are now built on Alpine 3.16.
 - The prebuilt binaries on Windows are now built with Visual Studio 2019.
