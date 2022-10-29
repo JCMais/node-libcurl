@@ -247,6 +247,7 @@ jobs:
   #         retention-days: 5
   #     - run: echo "::set-output name=run_result::success" > run_result
 
+  # disabled until nwjs supports newer node-gyp versions + python 3
   # build-and-test-nwjs:
   #   runs-on: ${{ matrix.os }}
   #   strategy:
