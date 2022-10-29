@@ -30,6 +30,7 @@ environment:
       ELECTRON_VERSION: '18.3.15'
     - nodejs_version: '18'
       ELECTRON_VERSION: '17.4.11'
+    # disabled until nwjs supports newer node-gyp versions + python 3
     # - nodejs_version: '12'
     #   NWJS_VERSION: '0.44.5'
     # - nodejs_version: '12'

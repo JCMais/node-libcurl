@@ -107,10 +107,10 @@ orbs:
               condition: <<parameters.node-version>>
               steps:
                 - run: |
-                    if [ -x "$(command -v nvm)" ]; then
+                    if [[ -n "$(command -v nvm)" ]]; then
                       nvm use <<parameters.node-version>>
                     else
-                      [ -f /usr/local/bin/node<<parameters.node-version>> ] && ln -s /usr/local/bin/node<<parameters.node-version>> /usr/local/bin/node || true
+                      [[ -f /usr/local/bin/node<<parameters.node-version>> ]] && ln -s /usr/local/bin/node<<parameters.node-version>> /usr/local/bin/node || true
                     fi
           - run:
               name: Setup Environment Variables
@@ -352,48 +352,50 @@ workflows:
           electron-version: '17.4.11'
           e:
             name: debian
-      ####
-      # Nwjs v0.69
-      ####
-      - build-addon-unix-and-publish/build-addon:
-          name: build-addon-nwjs-v0.69-libcurl-latest
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          nwjs-version: '0.69.1'
-          e:
-            name: debian
-      ####
-      # Nwjs v0.68
-      ####
-      - build-addon-unix-and-publish/build-addon:
-          name: build-addon-nwjs-v0.68-libcurl-latest
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          nwjs-version: '0.68.1'
-          e:
-            name: debian
-      ####
-      # Nwjs v0.67
-      ####
-      - build-addon-unix-and-publish/build-addon:
-          name: build-addon-nwjs-v0.67-libcurl-latest
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          nwjs-version: '0.67.1'
-          e:
-            name: debian
+
+      # disabled until nwjs supports newer node-gyp versions + python 3
+      # ####
+      # # Nwjs v0.69
+      # ####
+      # - build-addon-unix-and-publish/build-addon:
+      #     name: build-addon-nwjs-v0.69-libcurl-latest
+      #     context: general
+      #     filters:
+      #       branches:
+      #         ignore:
+      #           - gh-pages
+      #       tags:
+      #         only: /^v.*/
+      #     nwjs-version: '0.69.1'
+      #     e:
+      #       name: debian
+      # ####
+      # # Nwjs v0.68
+      # ####
+      # - build-addon-unix-and-publish/build-addon:
+      #     name: build-addon-nwjs-v0.68-libcurl-latest
+      #     context: general
+      #     filters:
+      #       branches:
+      #         ignore:
+      #           - gh-pages
+      #       tags:
+      #         only: /^v.*/
+      #     nwjs-version: '0.68.1'
+      #     e:
+      #       name: debian
+      # ####
+      # # Nwjs v0.67
+      # ####
+      # - build-addon-unix-and-publish/build-addon:
+      #     name: build-addon-nwjs-v0.67-libcurl-latest
+      #     context: general
+      #     filters:
+      #       branches:
+      #         ignore:
+      #           - gh-pages
+      #       tags:
+      #         only: /^v.*/
+      #     nwjs-version: '0.67.1'
+      #     e:
+      #       name: debian
