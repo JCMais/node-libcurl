@@ -38,7 +38,7 @@ orbs:
         parameters:
           node-version:
             description: Version of Node.js
-            default: ''
+            default: '18'
             type: string
           electron-version:
             description: Version of Node.js

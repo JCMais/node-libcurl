@@ -19,6 +19,11 @@ export FORCE_REBUILD=$FORCE_REBUILD
 
 MACOS_UNIVERSAL_BUILD=${MACOS_UNIVERSAL_BUILD:-}
 
+echo "Checking python version"
+python -V || true
+echo "Checking python3 version"
+python3 -V || true
+
 if [ "$(uname)" == "Darwin" ]; then
   # Default to universal build, if possible.
   if [ -z "$MACOS_UNIVERSAL_BUILD" ]; then
