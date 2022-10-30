@@ -32,7 +32,7 @@ mkdir -p out && cd out
 
 # Release - Static
 
-# We set those to -mmacosx-version-min=10.12 by default on macOS
+# We set those to -mmacosx-version-min=x.y by default on macOS
 # But cmake does not like it
 if [ "$(uname)" == "Darwin" ]; then
   export CFLAGS=""

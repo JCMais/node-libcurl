@@ -157,7 +157,7 @@ if [ ! -z "$KERBEROS_BUILD_FOLDER" ]; then
     #  and even if it did, it would return more flags than needed
     #  because the bin there is built with shared libraries:
     # -L/Users/jcm/deps/kerberos/build/1.17/lib -dynamic \
-    #  -mmacosx-version-min=10.12 -L/Users/jcm/deps/openssl/build/1.1.0j/lib \
+    #  -mmacosx-version-min=x.y -L/Users/jcm/deps/openssl/build/1.1.0j/lib \
     #  -Wl,-rpath,/Users/jcm/deps/openssl/build/1.1.0j/lib -Wl,-search_paths_first \
     #  -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err
     # Currently it only links against -lgssapi_krb5 -lresolv
