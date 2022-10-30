@@ -40,9 +40,9 @@ jobs:
         libcurl-release:
           - 7.86.0
         node:
-          # - 14
-          # - 16
-          # - 18
+          - 14
+          - 16
+          - 18
           - 19
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -159,10 +159,10 @@ jobs:
           - 18
         electron-version:
           - 21.0.1
-          # - 20.0.3
-          # - 19.1.1
-          # - 18.3.15
-          # - 17.4.11
+          - 20.0.3
+          - 19.1.1
+          - 18.3.15
+          - 17.4.11
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
