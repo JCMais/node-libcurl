@@ -1918,6 +1918,7 @@ NAN_METHOD(Easy::SetOpt) {
         break;
 #endif
 
+#if NODE_LIBCURL_VER_GE(7, 80, 0)
       case CURLOPT_PREREQFUNCTION:
 
         if (isNull) {
@@ -1933,6 +1934,7 @@ NAN_METHOD(Easy::SetOpt) {
         }
 
         break;
+#endif
 
       case CURLOPT_PROGRESSFUNCTION:
 
