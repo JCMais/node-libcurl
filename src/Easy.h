@@ -105,6 +105,8 @@ class Easy : public Nan::ObjectWrap {
   static int CbHstsRead(CURL* handle, struct curl_hstsentry* sts, void* userdata);
   static int CbHstsWrite(CURL* handle, struct curl_hstsentry* sts, struct curl_index* count,
                          void* userdata);
+  static int CbPreReq(void* clientp, char* conn_primary_ip, char* conn_local_ip,
+                      int conn_primary_port, int conn_local_port);
   static int CbProgress(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow);
   static int CbTrailer(struct curl_slist** list, void* userdata);
   static int CbXferinfo(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal,
