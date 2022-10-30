@@ -13,24 +13,25 @@ const fs = require('fs')
 const { curly, CurlCode } = require('../dist')
 
 const run = async () => {
-  const {
-    data: stream
-  } = await curly.get('https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4', {
-    // we want the unparsed binary response to be returned as a stream to us
-    curlyStreamResponse: true,
-    curlyResponseBodyParsers: false
-  })
+  const { data: stream } = await curly.get(
+    'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
+    {
+      // we want the unparsed binary response to be returned as a stream to us
+      curlyStreamResponse: true,
+      curlyResponseBodyParsers: false,
+    },
+  )
 
   // we are going to write the response stream to this file
   const writableStream = fs.createWriteStream('big_buck_bunny_720p_1mb.mp4')
 
-  let count = 0;
+  let count = 0
   stream.on('data', (chunk) => {
     count += chunk.length
-    console.info("downloaded", Math.floor(count / 1000), "KB")
+    console.info('downloaded', Math.floor(count / 1000), 'KB')
     // abort after 50KB
     if (count >= 65536) {
-      console.info("abort download")
+      console.info('abort download')
       stream.destroy()
     }
   })
