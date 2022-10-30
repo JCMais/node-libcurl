@@ -54,6 +54,7 @@ import { CurlInfoDebug } from './enum/CurlInfoDebug'
 import { CurlIpResolve } from './enum/CurlIpResolve'
 import { CurlNetrc } from './enum/CurlNetrc'
 import { CurlPause } from './enum/CurlPause'
+import { CurlPreReqFunc } from './enum/CurlPreReqFunc'
 import { CurlProgressFunc } from './enum/CurlProgressFunc'
 import { CurlProtocol } from './enum/CurlProtocol'
 import { CurlProxy } from './enum/CurlProxy'
@@ -269,7 +270,8 @@ class Curl extends EventEmitter {
   protected streamPauseNext = false
   protected streamContinueNext = false
   protected streamError: false | Error = false
-  protected streamUserSuppliedProgressFunction: CurlOptionValueType['xferInfoFunction'] = null
+  protected streamUserSuppliedProgressFunction: CurlOptionValueType['xferInfoFunction'] =
+    null
 
   /**
    * @param cloneHandle {@link "Easy".Easy | `Easy`} handle that should be used instead of creating a new one.
@@ -1335,6 +1337,24 @@ interface Curl {
           cacheEntry: CurlHstsCacheEntry,
           cacheCount: CurlHstsCacheCount,
         ) => any)
+      | null,
+  ): this
+  /**
+   * Use {@link "Curl".Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(
+    option: 'PREREQFUNCTION',
+    value:
+      | ((
+          this: EasyNativeBinding,
+          connPrimaryIp: string,
+          connLocalIp: string,
+          connPrimaryPort: number,
+          conLocalPort: number,
+        ) => CurlPreReqFunc)
       | null,
   ): this
   /**

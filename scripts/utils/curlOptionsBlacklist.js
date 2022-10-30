@@ -1,5 +1,17 @@
 // This should be kept in sync with the options on src/Curl.cc curlOptionNotImplemented
 const curlOptionsBlacklist = [
+  // to add next
+  'CURLOPT_MAXLIFETIME_CONN',
+  'CURLOPT_PROTOCOLS_STR',
+  'CURLOPT_REDIR_PROTOCOLS_STR',
+  'CURLOPT_SERVER_RESPONSE_TIMEOUT',
+  'CURLOPT_SSH_HOST_PUBLIC_KEY_SHA256',
+  'CURLOPT_SSH_HOSTKEYFUNCTION',
+  // ws related options - to be added later(?)
+  'CURLOPT_WS_OPTIONS',
+  // mime related options - to be added later(?)
+  'CURLOPT_MIME_OPTIONS',
+  'CURLOPT_MIMEPOST',
   // probably will be implemented at some time in the future?
   'CURLOPT_STREAM_DEPENDS',
   'CURLOPT_STREAM_DEPENDS_E',
@@ -33,6 +45,7 @@ const curlOptionsBlacklist = [
   'CURLOPT_ERRORBUFFER',
   'CURLOPT_COPYPOSTFIELDS',
   'CURLOPT_PRIVATE',
+  'CURLOPT_PREREQDATA',
   'CURLOPT_PROGRESSDATA',
   'CURLOPT_XFERINFODATA',
   'CURLOPT_DEBUGDATA',

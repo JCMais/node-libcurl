@@ -1123,6 +1123,69 @@ int Easy::CbHstsWrite(CURL* handle, struct curl_hstsentry* sts, struct curl_inde
 #endif
 }
 
+int Easy::CbPreReq(void* clientp, char* conn_primary_ip, char* conn_local_ip, int conn_primary_port,
+                   int conn_local_port) {
+#if NODE_LIBCURL_VER_GE(7, 80, 0)
+  Nan::HandleScope scope;
+
+  Easy* obj = static_cast<Easy*>(clientp);
+
+  assert(obj);
+
+  CallbacksMap::iterator it;
+
+  // make sure the callback was set
+  it = obj->callbacks.find(CURLOPT_PREREQFUNCTION);
+  assert(it != obj->callbacks.end() && "Pre req callback not set.");
+
+  Nan::TryCatch tryCatch;
+
+  auto connPrimaryIp = Nan::New<v8::String>(conn_primary_ip).ToLocalChecked();
+  auto connLocalIp = Nan::New<v8::String>(conn_local_ip).ToLocalChecked();
+  auto connPrimaryPort = Nan::New<v8::Int32>(conn_primary_port);
+  auto conLocalPort = Nan::New<v8::Int32>(conn_local_port);
+
+  const int argc = 4;
+  v8::Local<v8::Value> argv[argc] = {connPrimaryIp, connLocalIp, connPrimaryPort, conLocalPort};
+
+  Nan::AsyncResource asyncResource("Easy::CbPreReq");
+  Nan::MaybeLocal<v8::Value> returnValueCallback =
+      asyncResource.runInAsyncScope(obj->handle(), it->second->GetFunction(), argc, argv);
+
+  if (tryCatch.HasCaught()) {
+    if (obj->isInsideMultiHandle) {
+      obj->callbackError.Reset(tryCatch.Exception());
+    } else {
+      tryCatch.ReThrow();
+    }
+    return CURL_PREREQFUNC_ABORT;
+  }
+
+  v8::Local<v8::Value> returnValueCbTypeError =
+      Nan::TypeError("Return value from the PREREQ callback must be a number.");
+
+  bool isInvalid =
+      returnValueCallback.IsEmpty() || !returnValueCallback.ToLocalChecked()->IsNumber();
+
+  if (isInvalid) {
+    if (obj->isInsideMultiHandle) {
+      obj->callbackError.Reset(returnValueCbTypeError);
+    } else {
+      Nan::ThrowError(returnValueCbTypeError);
+      tryCatch.ReThrow();
+    }
+
+    return CURL_PREREQFUNC_ABORT;
+  }
+
+  v8::Local<v8::Value> returnValueCallbackChecked = returnValueCallback.ToLocalChecked();
+  int returnValue = Nan::To<int32_t>(returnValueCallbackChecked).FromJust();
+  return returnValue;
+#else
+  return 0;
+#endif
+}
+
 int Easy::CbProgress(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow) {
   Nan::HandleScope scope;
 
@@ -1854,6 +1917,22 @@ NAN_METHOD(Easy::SetOpt) {
 
         break;
 #endif
+
+      case CURLOPT_PREREQFUNCTION:
+
+        if (isNull) {
+          obj->callbacks.erase(CURLOPT_PREREQFUNCTION);
+
+          curl_easy_setopt(obj->ch, CURLOPT_PREREQDATA, NULL);
+          setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_PREREQFUNCTION, NULL);
+        } else {
+          obj->callbacks[CURLOPT_PREREQFUNCTION].reset(new Nan::Callback(value.As<v8::Function>()));
+
+          curl_easy_setopt(obj->ch, CURLOPT_PREREQDATA, obj);
+          setOptRetCode = curl_easy_setopt(obj->ch, CURLOPT_PREREQFUNCTION, Easy::CbPreReq);
+        }
+
+        break;
 
       case CURLOPT_PROGRESSFUNCTION:
 

@@ -8,6 +8,7 @@ import 'should'
 
 import { app, host, port, server } from '../helper/server'
 import { Curl, CurlCode } from '../../lib'
+import { CurlPreReqFunc } from '../../lib/enum/CurlPreReqFunc'
 
 let curl: Curl
 
@@ -267,6 +268,102 @@ describe('Callbacks', () => {
         curl.on('error', (error, errorCode) => {
           error.message.should.be.equal(
             'Return value from the Trailer callback must be an array of strings or false.',
+          )
+          errorCode.should.be.equal(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+          done()
+        })
+
+        curl.perform()
+      })
+    })
+  }
+
+  if (Curl.isVersionGreaterOrEqualThan(7, 80, 0)) {
+    describe('prereq', function () {
+      this.timeout(5000)
+
+      it('should work', (done) => {
+        let wasCalled = false
+
+        curl.setOpt('URL', `${url}/headers`)
+        curl.setOpt('PREREQFUNCTION', () => {
+          wasCalled = true
+          return CurlPreReqFunc.Ok
+        })
+
+        curl.on('end', () => {
+          wasCalled.should.be.equal(true)
+          done()
+        })
+
+        curl.on('error', done)
+
+        curl.perform()
+      })
+
+      it('should abort request on Abort return value', (done) => {
+        let wasCalled = false
+
+        curl.setOpt('URL', `${url}/headers`)
+        curl.setOpt('PREREQFUNCTION', () => {
+          wasCalled = true
+          return CurlPreReqFunc.Abort
+        })
+
+        curl.on('end', () => {
+          done(new Error('end called - request wast not aborted by request'))
+        })
+
+        curl.on('error', (_error, errorCode) => {
+          wasCalled.should.be.equal(true)
+          errorCode.should.be.equal(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+          done()
+        })
+
+        curl.perform()
+      })
+
+      it('should rethrow error thrown inside callback', (done) => {
+        let wasCalled = false
+
+        curl.setOpt('URL', `${url}/headers`)
+        curl.setOpt('PREREQFUNCTION', () => {
+          wasCalled = true
+          throw new Error('thrown error inside callback')
+        })
+
+        curl.on('end', () => {
+          done(new Error('end called - request wast not aborted by request'))
+        })
+
+        curl.on('error', (error, errorCode) => {
+          wasCalled.should.be.equal(true)
+          error.message.should.be.equal('thrown error inside callback')
+          errorCode.should.be.equal(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+          done()
+        })
+
+        curl.perform()
+      })
+
+      it('should throw an error on invalid return value', (done) => {
+        let wasCalled = false
+
+        curl.setOpt('URL', `${url}/headers`)
+        // @ts-expect-error this should require the fn to return an enum value!
+        curl.setOpt('PREREQFUNCTION', () => {
+          wasCalled = true
+          return '123'
+        })
+
+        curl.on('end', () => {
+          done(new Error('end called - request wast not aborted by request'))
+        })
+
+        curl.on('error', (error, errorCode) => {
+          wasCalled.should.be.equal(true)
+          error.message.should.be.equal(
+            'Return value from the PREREQ callback must be a number.',
           )
           errorCode.should.be.equal(CurlCode.CURLE_ABORTED_BY_CALLBACK)
           done()

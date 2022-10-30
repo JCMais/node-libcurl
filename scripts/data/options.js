@@ -30,6 +30,7 @@ const optionKindMap = {
     'FNMATCH_FUNCTION',
     'HSTSREADFUNCTION',
     'HSTSWRITEFUNCTION',
+    'PREREQFUNCTION',
     'SEEKFUNCTION',
     'TRAILERFUNCTION',
     'SHARE',
@@ -79,6 +80,8 @@ const optionKindValueMap = {
     '((this: EasyNativeBinding) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])',
   HSTSWRITEFUNCTION:
     '((this: EasyNativeBinding, cacheEntry: CurlHstsCacheEntry, cacheCount: CurlHstsCacheCount) => any)',
+  PREREQFUNCTION:
+    '((this: EasyNativeBinding, connPrimaryIp: string, connLocalIp: string, connPrimaryPort: number, conLocalPort: number) => CurlPreReqFunc)',
   HTTPPOST: 'HttpPostField[]',
   TRAILERFUNCTION: '((this: EasyNativeBinding) => string[] | false)',
   /* @TODO Add CURL_SEEKFUNC_* type definitions */
