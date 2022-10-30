@@ -40,9 +40,9 @@ jobs:
         libcurl-release:
           - 7.86.0
         node:
-          - 14
-          - 16
-          - 18
+          # - 14
+          # - 16
+          # - 18
           - 19
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -51,7 +51,7 @@ jobs:
       - id: timestamp
         run: echo "::set-output name=timestamp::$(timestamp +%s)"
       - name: Restore the previous run result
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             run_result
@@ -111,7 +111,7 @@ jobs:
         id: yarn-cache-dir
         run: echo "::set-output name=dir::$(yarn cache dir)"
       - name: Restore Yarn Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir.outputs.dir }}
@@ -120,7 +120,7 @@ jobs:
             v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
             v1-${{ runner.os }}-yarn-cache-
       - name: Restore libcurl deps cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: libcurl-deps-cache
         with:
           path: |
@@ -159,10 +159,10 @@ jobs:
           - 18
         electron-version:
           - 21.0.1
-          - 20.0.3
-          - 19.1.1
-          - 18.3.15
-          - 17.4.11
+          # - 20.0.3
+          # - 19.1.1
+          # - 18.3.15
+          # - 17.4.11
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -171,7 +171,7 @@ jobs:
       - id: timestamp
         run: echo "::set-output name=timestamp::$(timestamp +%s)"
       - name: Restore the previous run result
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             run_result
@@ -204,7 +204,7 @@ jobs:
         id: yarn-cache-dir
         run: echo "::set-output name=dir::$(yarn cache dir)"
       - name: Restore Yarn Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir.outputs.dir }}
@@ -213,7 +213,7 @@ jobs:
             v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
             v1-${{ runner.os }}-yarn-cache-
       - name: Restore Electron Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/Library/Caches/electron
           key: v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
@@ -221,7 +221,7 @@ jobs:
             v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
             v1-${{ runner.os }}-electron-cache-
       - name: Restore libcurl deps cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: libcurl-deps-cache
         with:
           path: |
@@ -271,7 +271,7 @@ jobs:
   #     - id: timestamp
   #       run: echo "::set-output name=timestamp::$(timestamp +%s)"
   #     - name: Restore the previous run result
-  #       uses: actions/cache@v2
+  #       uses: actions/cache@v3
   #       with:
   #         path: |
   #           run_result
@@ -304,7 +304,7 @@ jobs:
   #       id: yarn-cache-dir
   #       run: echo "::set-output name=dir::$(yarn cache dir)"
   #     - name: Restore Yarn Cache
-  #       uses: actions/cache@v2
+  #       uses: actions/cache@v3
   #       id: yarn-cache
   #       with:
   #         path: ${{ steps.yarn-cache-dir.outputs.dir }}
@@ -313,7 +313,7 @@ jobs:
   #           v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
   #           v1-${{ runner.os }}-yarn-cache-
   #     - name: Restore libcurl deps cache
-  #       uses: actions/cache@v2
+  #       uses: actions/cache@v3
   #       id: libcurl-deps-cache
   #       with:
   #         path: |
