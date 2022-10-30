@@ -218,23 +218,8 @@ fi
 # nghttp2
 ####
 if [ ! -z "$NGHTTP2_BUILD_FOLDER" ]; then
-  # for some stupid reason, libcurl is not detecting the nghttp2 version correctly
-
-  echo "The file:"
-  cat $NGHTTP2_BUILD_FOLDER/include/nghttp2/nghttp2ver.h || false
-
-  major=`echo $NGHTTP2_RELEASE |cut -d. -f1 | sed -e "s/[^0-9]//g"`
-  minor=`echo $NGHTTP2_RELEASE |cut -d. -f2 | sed -e "s/[^0-9]//g"`
-  patch=`echo $NGHTTP2_RELEASE |cut -d. -f3 | cut -d- -f1 | sed -e "s/[^0-9]//g"`
-  NGHTTP2_VERSION_NUM=`printf "0x%02x%02x%02x" "$major" "$minor" "$patch"`
-  echo "The correct value of NGHTTP2_VERSION_NUM=$NGHTTP2_VERSION_NUM"
-  # this shows it is being included somewhere else
-  # CPPFLAGS="$CPPFLAGS -DNGHTTP2_VERSION_NUM=$NGHTTP2_VERSION_NUM"
-  # In file included from /usr/local/include/nghttp2/nghttp2.h:55:
-  # /usr/local/include/nghttp2/nghttp2ver.h:40:9: warning: 'NGHTTP2_VERSION_NUM' macro redefined [-Wmacro-redefined]
-
-  CPPFLAGS="$CPPFLAGS -I$NGHTTP2_BUILD_FOLDER/include"
-  LDFLAGS="$LDFLAGS -L$NGHTTP2_BUILD_FOLDER/lib -Wl,-rpath,$NGHTTP2_BUILD_FOLDER/lib"
+  # CPPFLAGS="$CPPFLAGS -I$NGHTTP2_BUILD_FOLDER/include"
+  # LDFLAGS="$LDFLAGS -L$NGHTTP2_BUILD_FOLDER/lib -Wl,-rpath,$NGHTTP2_BUILD_FOLDER/lib"
   libcurl_args+=("--with-nghttp2=$NGHTTP2_BUILD_FOLDER")
 else
   libcurl_args+=("--without-nghttp2")
