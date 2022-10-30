@@ -26,12 +26,10 @@ jobs:
         libcurl-release:
           - 7.86.0
         node:
-          # TODO(jonathan): uncomment later
-          # - 14
-          # - 16
+          - 14
+          - 16
           - 18
-          # TODO(jonathan): uncomment later
-          # - 19
+          - 19
         include:
           # we only want to run lint in one of the jobs, in this case, the one for the latest stable Node.js version
           - os: macos-11
@@ -39,10 +37,9 @@ jobs:
             node: 18
             run-lint-and-tsc: true
           # we also want to build a job for old libcurl versions
-          # TODO(jonathan): uncomment later
-          # - os: macos-11
-          #   libcurl-release: 7.50.0
-          #   node: 18
+          - os: macos-11
+            libcurl-release: 7.50.0
+            node: 18
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -143,111 +140,110 @@ jobs:
           retention-days: 3
       - run: echo "::set-output name=run_result::success" > run_result
 
-  # TODO(jonathan): uncomment later
-  # build-and-test-electron:
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       # we use CircleCI for linux binaries
-  #       os:
-  #         - macos-11
-  #       libcurl-release:
-  #         - 7.86.0
-  #       node:
-  #         - 18
-  #       electron-version:
-  #         - 21.0.1
-  #         - 20.0.3
-  #         - 19.1.1
-  #         - 18.3.15
-  #         - 17.4.11
-  #   env:
-  #     LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-  #     LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-  #     ELECTRON_VERSION: ${{ matrix.electron-version }}
-  #   steps:
-  #     - id: timestamp
-  #       run: echo "::set-output name=timestamp::$(timestamp +%s)"
-  #     - name: Restore the previous run result
-  #       uses: actions/cache@v2
-  #       with:
-  #         path: |
-  #           run_result
-  #         key: ${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
-  #         restore-keys: |
-  #           ${{ github.run_id }}-${{ github.job }}-
-  #     - id: run_result
-  #       run: cat run_result 2>/dev/null || echo 'default'
-  #     - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
-  #       if: matrix.node-libcurl-cpp-std
-  #     - name: Checkout
-  #       uses: actions/checkout@main
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v1
-  #       with:
-  #         node-version: ${{ matrix.node }}
-  #     - name: Install Needed packages
-  #       run: brew install coreutils wget automake libtool cmake gnu-sed m4
-  #     # not using brew for that one as we need 2.69
-  #     - name: Install autoconf
-  #       run: |
-  #         curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
-  #         tar -xzf autoconf-2.69.tar.gz
-  #         cd autoconf-*
-  #         ./configure
-  #         make
-  #         make install
-  #         autoconf --version
-  #         ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
-  #     - name: Output yarn cache dir
-  #       id: yarn-cache-dir
-  #       run: echo "::set-output name=dir::$(yarn cache dir)"
-  #     - name: Restore Yarn Cache
-  #       uses: actions/cache@v2
-  #       id: yarn-cache
-  #       with:
-  #         path: ${{ steps.yarn-cache-dir.outputs.dir }}
-  #         key: v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
-  #         restore-keys: |
-  #           v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
-  #           v1-${{ runner.os }}-yarn-cache-
-  #     - name: Restore Electron Cache
-  #       uses: actions/cache@v2
-  #       with:
-  #         path: ~/Library/Caches/electron
-  #         key: v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
-  #         restore-keys: |
-  #           v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
-  #           v1-${{ runner.os }}-electron-cache-
-  #     - name: Restore libcurl deps cache
-  #       uses: actions/cache@v2
-  #       id: libcurl-deps-cache
-  #       with:
-  #         path: |
-  #           ~/.node-gyp
-  #           ~/deps
-  #         key: v4-build-lint-test-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}
-  #         restore-keys: |
-  #           v4-build-lint-test-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}
-  #     - name: 'Set GIT_TAG'
-  #       if: startsWith(github.ref, 'refs/tags')
-  #       run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-  #     - name: 'Build node-libcurl'
-  #       if: steps.run_result.outputs.run_result != 'success'
-  #       run: |
-  #         RUN_TESTS=true \
-  #         RUN_PREGYP_CLEAN=false \
-  #         PUBLISH_BINARY=false \
-  #           ./scripts/ci/build.sh
-  #     - name: Upload artifacts
-  #       if: always() && steps.run_result.outputs.run_result != 'success'
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}
-  #         path: ./logs/
-  #         retention-days: 5
-  #     - run: echo "::set-output name=run_result::success" > run_result
+  build-and-test-electron:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # we use CircleCI for linux binaries
+        os:
+          - macos-11
+        libcurl-release:
+          - 7.86.0
+        node:
+          - 18
+        electron-version:
+          - 21.0.1
+          - 20.0.3
+          - 19.1.1
+          - 18.3.15
+          - 17.4.11
+    env:
+      LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
+      LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
+      ELECTRON_VERSION: ${{ matrix.electron-version }}
+    steps:
+      - id: timestamp
+        run: echo "::set-output name=timestamp::$(timestamp +%s)"
+      - name: Restore the previous run result
+        uses: actions/cache@v2
+        with:
+          path: |
+            run_result
+          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
+          restore-keys: |
+            ${{ github.run_id }}-${{ github.job }}-
+      - id: run_result
+        run: cat run_result 2>/dev/null || echo 'default'
+      - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
+        if: matrix.node-libcurl-cpp-std
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install Needed packages
+        run: brew install coreutils wget automake libtool cmake gnu-sed m4
+      # not using brew for that one as we need 2.69
+      - name: Install autoconf
+        run: |
+          curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
+          tar -xzf autoconf-2.69.tar.gz
+          cd autoconf-*
+          ./configure
+          make
+          make install
+          autoconf --version
+          ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
+      - name: Output yarn cache dir
+        id: yarn-cache-dir
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - name: Restore Yarn Cache
+        uses: actions/cache@v2
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir.outputs.dir }}
+          key: v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
+            v1-${{ runner.os }}-yarn-cache-
+      - name: Restore Electron Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/Library/Caches/electron
+          key: v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
+          restore-keys: |
+            v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
+            v1-${{ runner.os }}-electron-cache-
+      - name: Restore libcurl deps cache
+        uses: actions/cache@v2
+        id: libcurl-deps-cache
+        with:
+          path: |
+            ~/.node-gyp
+            ~/deps
+          key: v4-build-lint-test-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}
+          restore-keys: |
+            v4-build-lint-test-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}
+      - name: 'Set GIT_TAG'
+        if: startsWith(github.ref, 'refs/tags')
+        run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: 'Build node-libcurl'
+        if: steps.run_result.outputs.run_result != 'success'
+        run: |
+          RUN_TESTS=true \
+          RUN_PREGYP_CLEAN=false \
+          PUBLISH_BINARY=false \
+            ./scripts/ci/build.sh
+      - name: Upload artifacts
+        if: always() && steps.run_result.outputs.run_result != 'success'
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}
+          path: ./logs/
+          retention-days: 5
+      - run: echo "::set-output name=run_result::success" > run_result
 
   # disabled until nwjs supports newer node-gyp versions + python 3
   # build-and-test-nwjs:
