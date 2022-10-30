@@ -404,7 +404,7 @@ In case you want some examples check the CI configuration files ([`.travis.yml`]
 ### Building on macOS
 
 On macOS you must have:
-- macOS >= 10.12 (Sierra)
+- macOS >= 11.6 (Big Sur)
 - Xcode Command Line Tools
 
 You can check if you have Xcode Command Line Tools be running:

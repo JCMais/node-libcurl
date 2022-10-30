@@ -74,6 +74,14 @@ In case you need to rebuild:
 $ yarn pregyp rebuild
 ```
 
+If on unix and using the build.sh scripts, you also need to provide the path to the curl config file:
+
+```bash
+npm_config_macos_universal_build=true \
+npm_config_curl_config_bin=~/deps/libcurl/build/x.y.z/bin/curl-config \
+yarn pregyp build --debug
+```
+
 If you have any issues with the build process, please refer to a [readme build troubleshooting section](https://github.com/JCMais/node-libcurl#important-notes-on-prebuilt-binaries--direct-installation).
 
 ### Adding New libcurl Options

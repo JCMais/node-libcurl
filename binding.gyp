@@ -221,7 +221,7 @@
             ],
             'GCC_ENABLE_CPP_RTTI': 'YES',
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
-            'MACOSX_DEPLOYMENT_TARGET':'10.12',
+            'MACOSX_DEPLOYMENT_TARGET':'11.6',
             'CLANG_CXX_LIBRARY': 'libc++',
             'CLANG_CXX_LANGUAGE_STANDARD':'<(node_libcurl_cpp_std)',
             'OTHER_LDFLAGS': ['-stdlib=libc++'],
