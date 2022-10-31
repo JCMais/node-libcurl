@@ -372,6 +372,10 @@ const std::vector<CurlConstant> curlOptionString = {
     {"PRE_PROXY", CURLOPT_PRE_PROXY},
 #endif
 
+#if NODE_LIBCURL_VER_GE(7, 85, 0)
+    {"PROTOCOLS_STR", CURLOPT_PROTOCOLS_STR},
+#endif
+
     {"PROXY", CURLOPT_PROXY},
 
 #if NODE_LIBCURL_VER_GE(7, 52, 0)
@@ -408,6 +412,11 @@ const std::vector<CurlConstant> curlOptionString = {
     {"QUOTE", CURLOPT_QUOTE},
     {"RANDOM_FILE", CURLOPT_RANDOM_FILE},
     {"RANGE", CURLOPT_RANGE},
+
+#if NODE_LIBCURL_VER_GE(7, 85, 0)
+    {"REDIR_PROTOCOLS_STR", CURLOPT_REDIR_PROTOCOLS_STR},
+#endif
+
     {"REFERER", CURLOPT_REFERER},
 
 #if NODE_LIBCURL_VER_GE(7, 55, 0)
