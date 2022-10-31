@@ -52,6 +52,7 @@ const run = async () => {
       import { CurlInfoDebug } from '../enum/CurlInfoDebug'
       import { CurlIpResolve } from '../enum/CurlIpResolve'
       import { CurlNetrc } from '../enum/CurlNetrc'
+      import { CurlPreReqFunc } from '../enum/CurlPreReqFunc'
       import { CurlProgressFunc } from '../enum/CurlProgressFunc'
       import { CurlProtocol } from '../enum/CurlProtocol'
       import { CurlProxy } from '../enum/CurlProxy'

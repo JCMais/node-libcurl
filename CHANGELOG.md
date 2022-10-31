@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 ### Added
 - Add support for the [`CURLOPT_PREREQFUNCTION`](https://curl.haxx.se/libcurl/c/CURLOPT_MAIL_RCPT_ALLLOWFAILS) option.
+- Add support for the [`CURLOPT_MAXLIFETIME_CONN`](https://curl.haxx.se/libcurl/c/CURLOPT_MAXLIFETIME_CONN) option.
 - Add support for the `CAINFO` and `CAPATH` info options.
 
 ### Changed
