@@ -3,7 +3,6 @@ const curlOptionsBlacklist = [
   // to add next
   'CURLOPT_PROTOCOLS_STR',
   'CURLOPT_REDIR_PROTOCOLS_STR',
-  'CURLOPT_SERVER_RESPONSE_TIMEOUT',
   'CURLOPT_SSH_HOST_PUBLIC_KEY_SHA256',
   'CURLOPT_SSH_HOSTKEYFUNCTION',
   // ws related options - to be added later(?)
