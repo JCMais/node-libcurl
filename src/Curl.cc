@@ -577,6 +577,11 @@ const std::vector<CurlConstant> curlInfoNotImplemented = {
 };
 
 const std::vector<CurlConstant> curlInfoString = {
+#if NODE_LIBCURL_VER_GE(7, 84, 0)
+    {"CAINFO", CURLINFO_CAINFO},
+    {"CAPATH", CURLINFO_CAPATH},
+#endif
+
     {"CONTENT_TYPE", CURLINFO_CONTENT_TYPE},
     {"EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL},
 

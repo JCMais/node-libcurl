@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 ### Added
 - Add support for the [`CURLOPT_PREREQFUNCTION`](https://curl.haxx.se/libcurl/c/CURLOPT_MAIL_RCPT_ALLLOWFAILS) option.
+- Add support for the `CAINFO` and `CAPATH` info options.
 
 ### Changed
 ### Removed
@@ -30,7 +31,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - support `curl_blob` options [#300](https://github.com/JCMais/node-libcurl/issues/300) by @johnwchadwick 
 - added arm64 builds for macOS [#312](https://github.com/JCMais/node-libcurl/issues/312) by @johnwchadwick 
-- added most options that were missing up to libcurl version 7.79.1, including HSTS support.
+- added most options that were missing up xto libcurl version 7.79.1, including HSTS support.
 - added prebuilt binaries for Node.js v17.
 
 ### Changed
