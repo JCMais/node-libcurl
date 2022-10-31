@@ -1,7 +1,6 @@
 // This should be kept in sync with the options on src/Curl.cc curlOptionNotImplemented
 const curlOptionsBlacklist = [
   // to add next
-  'CURLOPT_MAXLIFETIME_CONN',
   'CURLOPT_PROTOCOLS_STR',
   'CURLOPT_REDIR_PROTOCOLS_STR',
   'CURLOPT_SERVER_RESPONSE_TIMEOUT',
