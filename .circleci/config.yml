@@ -82,7 +82,7 @@ orbs:
             default: '2.4.47'
           openssl-version:
             type: string
-            default: '3.0.5'
+            default: '3.0.7'
           zlib-version:
             type: string
             default: '1.2.11'
@@ -204,7 +204,7 @@ workflows:
           node-version: '19'
           cares-version: '1.18.1'
           nghttp2-version: '1.47.0'
-          openssl-version: '3.0.5'
+          openssl-version: '3.0.7'
           e:
             name: alpine
       ####
@@ -222,7 +222,7 @@ workflows:
           node-version: '18'
           cares-version: '1.18.1'
           nghttp2-version: '1.47.0'
-          openssl-version: '3.0.5'
+          openssl-version: '3.0.7'
           e:
             name: alpine
       - build-addon-unix-and-publish/build-addon:
@@ -238,7 +238,7 @@ workflows:
           libcurl-version: '7.50.0'
           cares-version: '1.18.1'
           nghttp2-version: '1.47.0'
-          openssl-version: '3.0.5'
+          openssl-version: '3.0.7'
           e:
             name: alpine
       ####
