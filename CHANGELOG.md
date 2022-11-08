@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - [`CAPATH`](https://curl.se/libcurl/c/CURLINFO_CAPATH.html)
 
 ### Changed
+- Upgraded prebuild binaries to use libcurl 7.86.0. On Windows, OpenSSL 3.0.7 will be used.
 ### Removed
 
 ## [2.3.4] - 2022-01-29
