@@ -26,8 +26,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - There are no prebuilt binaries for NW.js anymore. This is because nw-gyp does not support Python 3 currently.
 - Option types for `CURLOPT_FTP_RESPONSE_TIMEOUT` has been removed, since libcurl 7.20 it was the same as `CURLOPT_SERVER_RESPONSE_TIMEOUT`.
 
-### Fixed  
-
 ### Added  
 - Add support for the following options:
   - [`PREREQFUNCTION`](https://curl.haxx.se/libcurl/c/CURLOPT_MAIL_RCPT_ALLLOWFAILS)
