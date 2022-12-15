@@ -388,9 +388,10 @@ npm_config_node_libcurl_cpp_std=c++17 <...other args...> yarn add node-libcurl
 ### Building on Linux
 
 To build the addon on linux based systems you must have:
-- gcc >= 4.8
+- gcc >= 7
 - libcurl dev files
-- python 2.7
+- python >= 3
+- OS that is not past their EOL.
 
 If you are on a debian based system, you can get those by running:
 ```bash
