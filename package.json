@@ -1,6 +1,6 @@
 {
   "name": "@getinsomnia/node-libcurl",
-  "version": "2.3.5-13",
+  "version": "2.3.5-14",
   "description": "The fastest http(s) client (and much more) for Node.js - Node.js bindings for libcurl",
   "keywords": [
     "node-curl",
@@ -129,7 +129,7 @@
     "typescript": "^4.0.3"
   },
   "engines": {
-    "node": ">= 8"
+    "node": ">= 18.15.0"
   },
   "np": {
     "cleanup": false
