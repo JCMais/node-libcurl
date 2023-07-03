@@ -74,18 +74,24 @@
 ## Quick Start
 
 > **Note**:
+>
 > - This library cannot be used in a browser, it depends on native code.
 > - There is no worker threads support at the moment. See [#169](https://github.com/JCMais/node-libcurl/issues/169)
 
 ### Install
+
 ```shell
 npm i node-libcurl --save
 ```
+
 or
+
 ```shell
 yarn add node-libcurl
 ```
+
 ### Simple Request - Async / Await using curly
+>
 > this API is experimental and is subject to changes without a major version bump
 
 ```javascript
@@ -95,6 +101,7 @@ const { statusCode, data, headers } = await curly.get('http://www.google.com')
 ```
 
 Any option can be passed using their `FULLNAME` or a `lowerPascalCase` format:
+
 ```javascript
 const querystring = require('querystring');
 const { curly } = require('node-libcurl');
@@ -108,6 +115,7 @@ const { statusCode, data, headers } = await curly.post('http://httpbin.com/post'
 ```
 
 JSON POST example:
+
 ```javascript
 const { curly } = require('node-libcurl')
 const { data } = await curly.post('http://httpbin.com/post', {
@@ -122,6 +130,7 @@ console.log(data)
 ```
 
 ### Simple Request - Using Curl class
+
 ```javascript
 const { Curl } = require('node-libcurl');
 
@@ -147,12 +156,14 @@ curl.perform();
 ### Setting HTTP headers
 
 Pass an array of strings specifying headers
+
 ```javascript
 curl.setOpt(Curl.option.HTTPHEADER,
   ['Content-Type: application/x-amz-json-1.1'])
 ```
 
 ### Form Submission (Content-Type: application/x-www-form-urlencoded)
+
 ```javascript
 const querystring = require('querystring');
 const { Curl } = require('node-libcurl');
@@ -191,20 +202,24 @@ curl.on('error', close);
 ### Binary Data
 
 When requesting binary data make sure to do one of these:
-- Pass your own `WRITEFUNCTION` (https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html):
+
+- Pass your own `WRITEFUNCTION` (<https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html>):
+
 ```javascript
 curl.setOpt('WRITEFUNCTION', (buffer, size, nmemb) => {
   // something
 })
 ```
+
 - Enable one of the following flags:
+
 ```javascript
 curl.enable(CurlFeature.NoDataParsing)
 // or
 curl.enable(CurlFeature.Raw)
 ```
 
-The reasoning behind this is that by default, the `Curl` instance will try to decode the received data and headers to utf8 strings, as can be seen here: https://github.com/JCMais/node-libcurl/blob/b55b13529c9d11fdcdd7959137d8030b39427800/lib/Curl.ts#L391
+The reasoning behind this is that by default, the `Curl` instance will try to decode the received data and headers to utf8 strings, as can be seen here: <https://github.com/JCMais/node-libcurl/blob/b55b13529c9d11fdcdd7959137d8030b39427800/lib/Curl.ts#L391>
 
 For more examples check the [examples folder](./examples).
 
@@ -224,7 +239,7 @@ For more usage examples check the [examples folder](./examples).
 
 ### `READFUNCTION` option
 
-The buffer passed as first parameter to the callback set with the [`READFUNCTION`](https://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html) option is initialized with the size libcurl is using in their upload buffer (which can be set with [`UPLOAD_BUFFERSIZE`](https://curl.haxx.se/libcurl/c/CURLOPT_UPLOAD_BUFFERSIZE.html)), this is initialized using `node::Buffer::Data(buf);` which is basically the same than `Buffer#allocUnsafe` and therefore, it has all the implications as to its correct usage: https://nodejs.org/pt-br/docs/guides/buffer-constructor-deprecation/#regarding-buffer-allocunsafe
+The buffer passed as first parameter to the callback set with the [`READFUNCTION`](https://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html) option is initialized with the size libcurl is using in their upload buffer (which can be set with [`UPLOAD_BUFFERSIZE`](https://curl.haxx.se/libcurl/c/CURLOPT_UPLOAD_BUFFERSIZE.html)), this is initialized using `node::Buffer::Data(buf);` which is basically the same than `Buffer#allocUnsafe` and therefore, it has all the implications as to its correct usage: <https://nodejs.org/pt-br/docs/guides/buffer-constructor-deprecation/#regarding-buffer-allocunsafe>
 
 So, be careful, make sure to return **exactly** the amount of data you have written to the buffer on this callback. Only that specific amount is going to be copied and handed over to libcurl.
 
@@ -254,20 +269,21 @@ The maintainers of node-libcurl and thousands of other packages are working with
 
 ## Detailed Installation
 
-The latest version of this package has prebuilt binaries (thanks to [node-pre-gyp](https://github.com/mapbox/node-pre-gyp/)) 
+The latest version of this package has prebuilt binaries (thanks to [node-pre-gyp](https://github.com/mapbox/node-pre-gyp/))
  available for:
-* Node.js: Latest two versions on active LTS (see https://github.com/nodejs/Release)
-* Electron: Latest 3 major versions
-* NW.js (node-webkit): Latest 3 major (minor for nw.js case) versions
+- Node.js: Latest two versions on active LTS (see <https://github.com/nodejs/Release>)
+- Electron: Latest 3 major versions
+- NW.js (node-webkit): Latest 3 major (minor for nw.js case) versions
 
 And on the following platforms:
-* Linux 64 bits
-* Mac OS X 64 bits
-* Windows 32 and 64 bits
+- Linux 64 bits
+- Mac OS X 64 bits
+- Windows 32 and 64 bits
 
 Installing with `yarn add node-libcurl` or `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed. However if you are trying to install on `nw.js` or `electron` additional steps will be required, check their corresponding section below.
 
 The prebuilt binary is statically built with the following library versions, features and protocols (library versions may change between Node.js versions):
+
 ```
 Version: libcurl/7.73.0 OpenSSL/1.1.1g zlib/1.2.11 brotli/1.0.7 zstd/1.4.9 c-ares/1.16.1 libidn2/2.1.1 libssh2/1.9.0 nghttp2/1.41.0
 Protocols: dict, file, ftp, ftps, gopher, http, https, imap, imaps, ldap, ldaps, mqtt, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp
@@ -275,15 +291,19 @@ Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, NTLM_WB, SSL, libz, brotli, TLS
 ```
 
 If there is no prebuilt binary available that matches your system, or if the installation fails, then you will need an environment capable of compiling Node.js addons, which means:
+
 - [python 2.7](https://www.python.org/download/releases/2.7) installed
 - updated C++ compiler able to compile C++11, or if building Electron >= 11 / NW.js >= 0.50, C++17 (see the [Electron >= 11 / NW.js >= 0.50](#electron--11--nwjs--050) section below).
 
 If you don't want to use the prebuilt binary even if it works on your system, you can pass a flag when installing:
 > With `npm`
+
 ```sh
 npm install node-libcurl --build-from-source
 ```
+
 > With `yarn`
+
 ```sh
 npm_config_build_from_source=true yarn add node-libcurl
 ```
@@ -301,10 +321,13 @@ In case you are building the addon yourself with the libraries mentioned above, 
 If you want to build a statically linked version of the addon yourself, you need to pass the `curl_static_build=true` flag when calling install.
 
 > If using `npm`:
+
 ```sh
 npm install node-libcurl --build-from-source --curl_static_build=true
 ```
+
 > If using `yarn`:
+
 ```sh
 npm_config_build_from_source=true npm_config_curl_static_build=true yarn add node-libcurl
 ```
@@ -312,6 +335,7 @@ npm_config_build_from_source=true npm_config_curl_static_build=true yarn add nod
 The build process will use `curl-config` available on path, if you want to overwrite it to your own libcurl installation one, you can set the `curl_config_bin` variable, like mentioned above for `curl_static_build`.
 
 And if you don't want to use `curl-config`, you can pass two extra variables to control the build process:
+
 - `curl_include_dirs`
     Space separated list of directories to search for header files
 - `curl_libraries`
@@ -322,6 +346,7 @@ And if you don't want to use `curl-config`, you can pass two extra variables to 
 The statically linked version currently does not have support for `GSS-API`, `SPNEGO`, `KERBEROS`, `RTMP`, `Metalink`, `PSL` and `Alt-svc`.
 
 The scripts to build Kerberos exists on the `./scripts/ci` folder, but it was removed for two reasons:
+
 - If built with Heimdal, the addon becomes too big
 - If built with MIT Kerberos, the addon would be bound to their licensing terms.
 
@@ -332,6 +357,7 @@ If building for a `Electron` or `NW.js` you need to pass additional parameters t
 If you do not want to use the prebuilt binary, pass the `npm_config_build_from_source=true` / `--build-from-source` flag to the install command.
 
 #### NW.js (aka node-webkit)
+
 For building from source on NW.js you first need to make sure you have nw-gyp installed globally:
 `yarn global add nw-gyp` or `npm i -g nw-gyp`
 
@@ -339,10 +365,13 @@ For building from source on NW.js you first need to make sure you have nw-gyp in
 
 Then:
 > yarn
+
 ```
 npm_config_runtime=node-webkit npm_config_target=0.38.2 yarn add node-libcurl
 ```
+
 > npm
+
 ```bash
 npm install node-libcurl --runtime=node-webkit --target=0.38.2 --save
 ```
@@ -352,11 +381,13 @@ where `--target` is the current version of NW.js you are using
 #### Electron (aka atom-shell)
 
 > yarn
+
 ```bash
 npm_config_runtime=electron npm_config_target=$(yarn --silent electron --version) npm_config_disturl=https://www.electronjs.org/headers yarn add node-libcurl
 ```
 
 > npm
+
 ```bash
 npm install node-libcurl --runtime=electron --target=$(yarn --silent electron --version) --disturl=https://www.electronjs.org/headers --save
 ```
@@ -377,10 +408,13 @@ dist_url = https://atom.io/download/atom-shell
 If you are building for Electron >= 11 or NW.js >= 0.50 you need to set the build process to use the C++17 std, you can do that by passing the variable `node_libcurl_cpp_std=c++17`. The way you do that depends if you are using `npm` or `yarn`:
 
 > If using `npm`:
+
 ```sh
 npm install node-libcurl --build-from-source --node_libcurl_cpp_std=c++17
 ```
+
 > If using `yarn`:
+
 ```sh
 npm_config_build_from_source=true npm_config_node_libcurl_cpp_std=c++17 yarn add node-libcurl
 ```
@@ -388,11 +422,13 @@ npm_config_build_from_source=true npm_config_node_libcurl_cpp_std=c++17 yarn add
 ### Building on Linux
 
 To build the addon on linux based systems you must have:
+
 - gcc >= 4.8
 - libcurl dev files
 - python 2.7
 
 If you are on a debian based system, you can get those by running:
+
 ```bash
 sudo apt-get install python libcurl4-openssl-dev build-essential
 ```
@@ -404,21 +440,26 @@ In case you want some examples check the CI configuration files ([`.travis.yml`]
 ### Building on macOS
 
 On macOS you must have:
+
 - macOS >= 10.12 (Sierra)
 - Xcode Command Line Tools
 
 You can check if you have Xcode Command Line Tools be running:
+
 ```sh
 xcode-select -p
 ```
 
 It should return their path, in case it returns nothing, you must install it by running:
+
 ```sh
 xcode-select --install
 ```
 
 #### Xcode >= 10 | macOS >= Mojave
+
 In case you have errors installing the addon from source, and you are using macOS version >= Mojave, check if the error you are receiving is the following one:
+
 ```
   CXX(target) Release/obj.target/node_libcurl/src/node_libcurl.o
   clang: error: no such file or directory: '/usr/include'
@@ -427,6 +468,7 @@ In case you have errors installing the addon from source, and you are using macO
 If that is the case, it's because newer versions of the Command Line Tools does not add the `/usr/include` folder by default. Check [Xcode 10 release notes](https://developer.apple.com/documentation/xcode_release_notes/xcode_10_release_notes#3035624) for details.
 
 The `/usr/include` is now available on `$(xcrun --show-sdk-path)/usr/include`. To correctly build libcurl you then need to pass that path to the `npm_config_curl_include_dirs` environment variable:
+
 ```
 npm_config_curl_include_dirs="$(xcrun --show-sdk-path)/usr/include" yarn add node-libcurl
 ```
@@ -436,18 +478,21 @@ npm_config_curl_include_dirs="$(xcrun --show-sdk-path)/usr/include" yarn add nod
 If installing using a prebuilt binary you only need to have the [visual c++ 2017 runtime library](https://visualstudio.microsoft.com/downloads/#microsoft-visual-c-redistributable-for-visual-studio-2017).
 
 If building from source, you must have:
+
 - Python 2.7
 - [Visual Studio >= 2017](https://visualstudio.microsoft.com/downloads/)
 - [nasm](https://www.nasm.us/)
 
 Python 2.7 and the Visual Studio compiler can be installed by running:
+
 ```sh
 npm install --global --production windows-build-tools
 ```
 
 `nasm` can be obtained from their website, which is linked above, or using chocolatey:
+
 ```
-cinst nasm
+choco install nasm
 ```
 
 Currently there is no support to use other libcurl version than the one provided by the [curl-for-windows](https://github.com/JCMais/curl-for-windows) submodule (help is appreciated on adding this feature).
@@ -457,6 +502,7 @@ An important note about building the addon on Windows is that we have to do some
 ## Getting Help
 
 If your question is directly related to the addon or their usage, you can get help the following ways:
+
 - Post a question on `stack-overflow` and use the `node-libcurl` tag.
 - [Join our Discord server](https://discord.gg/3vacxRY) and send your question there.
 
@@ -466,9 +512,9 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## Donations / Patreon
 
-Some people have been asking if there are any means to support my work, I've created a patreon page for that: https://www.patreon.com/jonathancardoso
+Some people have been asking if there are any means to support my work, I've created a patreon page for that: <https://www.patreon.com/jonathancardoso>
 
-If you want to donate via PayPal, use the same e-mail that is available on my GitHub profile: https://github.com/JCMais
+If you want to donate via PayPal, use the same e-mail that is available on my GitHub profile: <https://github.com/JCMais>
 
 And thanks for reading till here! 😄
 

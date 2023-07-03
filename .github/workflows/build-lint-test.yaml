@@ -26,11 +26,11 @@ jobs:
         node-libcurl-cpp-std:
           - c++17
         node:
-          - 18.12.0
+          - 18.15.0
         include:
           # Lint
           - os: ubuntu-latest
-            node: 18.12.0
+            node: 18.15.0
             node-libcurl-cpp-std: c++17
             libcurl-release: 7.79.1
             run-lint-and-tsc: true
@@ -144,9 +144,9 @@ jobs:
         libcurl-release:
           - 7.79.1
         node:
-          - 18.12.0
+          - 18.15.0
         electron-version:
-          - 23.0.0
+          - 25.0.0
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -244,7 +244,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 18.12.0
+          - 18.15.0
     env:
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
@@ -259,7 +259,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - name: Install dependencies
         run: |
-          cinst nasm -y
+          choco install nasm -y
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
           python deps\curl-for-windows\configure.py
       - name: Build
@@ -281,9 +281,9 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 18.12.0
+          - 18.15.0
         electron-version:
-          - 23.0.0
+          - 25.0.0
     env:
       ELECTRON_VERSION: ${{ matrix.electron-version }}
       npm_config_msvs_version: 2022
@@ -302,7 +302,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - name: Install dependencies
         run: |
-          cinst nasm -y
+          choco install nasm -y
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
           python deps\curl-for-windows\configure.py
           yarn global add electron@${env:ELECTRON_VERSION}
