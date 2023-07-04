@@ -11,9 +11,9 @@ curr_dirname=$(dirname "$0")
 . $curr_dirname/utils/gsort.sh
 
 FORCE_REBUILD=false
-# if [[ ! -z "$GIT_TAG" ]]; then
-#   FORCE_REBUILD=true
-# fi
+if [[ ! -z "$GIT_TAG" ]]; then
+  FORCE_REBUILD=true
+fi
 
 export FORCE_REBUILD=$FORCE_REBUILD
 
