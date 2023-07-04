@@ -44,7 +44,7 @@ jobs:
       # ✏️ If the Autobuild fails above, remove it and uncomment the following three lines
       #    and modify them (or add more) to build your code if your project
       #    uses a compiled language
-      # - uses: actions/setup-node@v1
+      # - uses: actions/setup-node@v3
       #   with:
       #     node-version: '12'
       - name: Get yarn cache directory path

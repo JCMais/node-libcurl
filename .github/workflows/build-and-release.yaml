@@ -39,9 +39,9 @@ jobs:
       NODE_LIBCURL_CPP_STD: ${{ matrix.node-libcurl-cpp-std }}
     steps:
       - name: Checkout
-        uses: actions/checkout@main
-      - name: Setup Node.js
-        uses: actions/setup-node@v1
+        uses: actions/checkout@v3
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - if: runner.os == 'macOS'
@@ -119,9 +119,9 @@ jobs:
       NODE_LIBCURL_CPP_STD: c++17
     steps:
       - name: Checkout
-        uses: actions/checkout@main
-      - name: Setup Node.js
-        uses: actions/setup-node@v1
+        uses: actions/checkout@v3
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - if: runner.os == 'macOS'
@@ -198,11 +198,11 @@ jobs:
       npm_config_build_from_source: true
     steps:
       - name: Checkout
-        uses: actions/checkout@main
+        uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: Setup Node.js
-        uses: actions/setup-node@v1
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - name: Install dependencies
@@ -246,11 +246,11 @@ jobs:
       npm_config_target: ${{ matrix.electron-version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@main
+        uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: Setup Node.js
-        uses: actions/setup-node@v1
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - name: Install dependencies
