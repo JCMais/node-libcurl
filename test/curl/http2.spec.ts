@@ -14,7 +14,7 @@ import {
 
 import { host, portHttp2, serverHttp2 } from '../helper/server'
 import { Curl, CurlHttpVersion } from '../../lib'
-
+console.log(process.versions)
 type OnSessionFn = (session: ServerHttp2Session) => void
 type OnStreamFn = (
   stream: ServerHttp2Stream,
