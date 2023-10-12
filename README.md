@@ -65,7 +65,7 @@
     - [Electron >= 11 / NW.js >= 0.50](#electron--11--nwjs--050)
   - [Building on Linux](#building-on-linux)
   - [Building on macOS](#building-on-macos)
-    - [Xcode >= 10 | macOS >= Mojave](#xcode--10--macos--mojave)
+    - [Xcode >= 10 | macOS >= Catalina](#xcode--10--macos--catalina)
   - [Building on Windows](#building-on-windows)
 - [Getting Help](#getting-help)
 - [Contributing](#contributing)
@@ -271,11 +271,13 @@ The maintainers of node-libcurl and thousands of other packages are working with
 
 The latest version of this package has prebuilt binaries (thanks to [node-pre-gyp](https://github.com/mapbox/node-pre-gyp/))
  available for:
+
 - Node.js: Latest two versions on active LTS (see <https://github.com/nodejs/Release>)
 - Electron: Latest 3 major versions
 - NW.js (node-webkit): Latest 3 major (minor for nw.js case) versions
 
 And on the following platforms:
+
 - Linux 64 bits
 - Mac OS X 64 bits
 - Windows 32 and 64 bits
@@ -441,7 +443,7 @@ In case you want some examples check the CI configuration files ([`.travis.yml`]
 
 On macOS you must have:
 
-- macOS >= 10.12 (Sierra)
+- macOS >= 10.15 (Catalina)
 - Xcode Command Line Tools
 
 You can check if you have Xcode Command Line Tools be running:
@@ -456,9 +458,9 @@ It should return their path, in case it returns nothing, you must install it by 
 xcode-select --install
 ```
 
-#### Xcode >= 10 | macOS >= Mojave
+#### Xcode >= 10 | macOS >= Catalina
 
-In case you have errors installing the addon from source, and you are using macOS version >= Mojave, check if the error you are receiving is the following one:
+In case you have errors installing the addon from source, and you are using macOS version >= Catalina, check if the error you are receiving is the following one:
 
 ```
   CXX(target) Release/obj.target/node_libcurl/src/node_libcurl.o

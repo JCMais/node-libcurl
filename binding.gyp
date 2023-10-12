@@ -3,7 +3,7 @@
   #  npm install --curl-extra_link_args=true
   # or if using yarn:
   #  npm_config_curl_extra_link_args=true yarn install
-  # 
+  #
   'variables': {
     # Comma separated list
     'curl_include_dirs%': '',
@@ -61,7 +61,7 @@
           'libraries': ['<@(curl_libraries)']
         }],
         # Windows is only build statically
-        # In the future we can add support for other build types 
+        # In the future we can add support for other build types
         ['OS=="win"', {
           'msvs_settings': {
             'VCCLCompilerTool': {
@@ -238,7 +238,7 @@
             ],
             'GCC_ENABLE_CPP_RTTI': 'YES',
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
-            'MACOSX_DEPLOYMENT_TARGET':'10.12',
+            'MACOSX_DEPLOYMENT_TARGET':'10.15',
             'CLANG_CXX_LIBRARY': 'libc++',
             'CLANG_CXX_LANGUAGE_STANDARD':'<(node_libcurl_cpp_std)',
             'OTHER_LDFLAGS': ['-stdlib=libc++'],
