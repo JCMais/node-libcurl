@@ -44,6 +44,7 @@ jobs:
           - 16
           - 18
           - 19
+          - 20
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
