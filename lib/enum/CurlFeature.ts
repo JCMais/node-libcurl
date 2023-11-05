@@ -11,6 +11,11 @@
  */
 export enum CurlFeature {
   /**
+   * Initial state
+   */
+  Empty = 0,
+
+  /**
    * Data received is passed as a Buffer to the end event.
    */
   NoDataParsing = 1 << 0,

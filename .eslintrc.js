@@ -25,7 +25,7 @@ module.exports = {
         'eslint:recommended',
         'plugin:@typescript-eslint/recommended',
         'plugin:prettier/recommended',
-        'prettier/@typescript-eslint',
+        'prettier',
       ],
       plugins: ['@typescript-eslint', 'prettier'],
       rules: {
@@ -36,6 +36,8 @@ module.exports = {
         '@typescript-eslint/no-explicit-any': 0,
         '@typescript-eslint/no-non-null-assertion': 0,
         '@typescript-eslint/ban-ts-ignore': 0,
+        '@typescript-eslint/no-duplicate-enum-values': 0,
+        '@typescript-eslint/no-unsafe-declaration-merging': 0,
         '@typescript-eslint/ban-ts-comment': 0,
         '@typescript-eslint/member-ordering': [
           2,

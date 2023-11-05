@@ -58,7 +58,6 @@ describe('Option HTTPAUTH', () => {
     curl.close()
 
     app._router.stack.pop()
-    app._router.stack.pop()
   })
 
   before((done) => {
@@ -70,8 +69,7 @@ describe('Option HTTPAUTH', () => {
   })
 
   it('should authenticate using basic auth', (done) => {
-    app.use(httpAuthConnect(basic))
-    app.get('/', (req, res) => {
+    app.get('/', httpAuthConnect(basic), (req, res) => {
       // @ts-ignore
       res.send(req.user)
     })
@@ -105,8 +103,7 @@ describe('Option HTTPAUTH', () => {
       user = `${realmDigest}/${username}`
     }
 
-    app.use(httpAuthConnect(digest))
-    app.get('/', (req, res) => {
+    app.get('/', httpAuthConnect(digest), (req, res) => {
       // @ts-ignore
       res.send(req.user)
     })
@@ -131,8 +128,7 @@ describe('Option HTTPAUTH', () => {
   })
 
   it('should not authenticate using basic', (done) => {
-    app.use(httpAuthConnect(basic))
-    app.get('/', (req, res) => {
+    app.get('/', httpAuthConnect(basic), (req, res) => {
       // @ts-ignore
       res.send(req.user)
     })

@@ -46,7 +46,7 @@ import { SocketState } from '../enum/SocketState'
 
 import { FileInfo, HttpPostField } from './'
 
-export interface GetInfoReturn<DataType extends any = number | string | null> {
+export interface GetInfoReturn<DataType = number | string | null> {
   data: DataType
   code: CurlCode
 }

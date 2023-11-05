@@ -22,7 +22,7 @@ import { CurlFeature } from './enum/CurlFeature'
  *
  * @public
  */
-export interface CurlyResult<ResultData extends any = any> {
+export interface CurlyResult<ResultData = any> {
   /**
    * Data will be the body of the requested URL
    */
@@ -79,7 +79,7 @@ const methods = [
   'unsubscribe',
 ] as const
 
-type HttpMethod = typeof methods[number]
+type HttpMethod = (typeof methods)[number]
 
 export type CurlyResponseBodyParser = (
   data: Buffer,
@@ -216,9 +216,10 @@ interface CurlyHttpMethodCall {
    *
    * @typeParam ResultData You can use this to specify the type of the `data` property returned from this call.
    */
-  <ResultData extends any = any>(url: string, options?: CurlyOptions): Promise<
-    CurlyResult<ResultData>
-  >
+  <ResultData = any>(
+    url: string,
+    options?: CurlyOptions,
+  ): Promise<CurlyResult<ResultData>>
 }
 
 // type HttpMethodCalls = { readonly [K in HttpMethod]: CurlyHttpMethodCall }
@@ -238,9 +239,10 @@ export interface CurlyFunction extends HttpMethodCalls {
    * ```
    * @typeParam ResultData You can use this to specify the type of the `data` property returned from this call.
    */
-  <ResultData extends any = any>(url: string, options?: CurlyOptions): Promise<
-    CurlyResult<ResultData>
-  >
+  <ResultData = any>(
+    url: string,
+    options?: CurlyOptions,
+  ): Promise<CurlyResult<ResultData>>
 
   /**
    * **EXPERIMENTAL** This API can change between minor releases
@@ -262,7 +264,7 @@ export interface CurlyFunction extends HttpMethodCalls {
 }
 
 const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
-  function curly<ResultData extends any>(
+  function curly<ResultData>(
     url: string,
     options: CurlyOptions = {},
   ): Promise<CurlyResult<ResultData>> {
@@ -339,6 +341,7 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
           const entries = Object.entries(headersReq)
           for (const [headerKey, headerValue] of entries) {
             delete headersReq[headerKey]
+            // @ts-expect-error ignoring this for now
             headersReq[headerKey.toLowerCase()] = headerValue
           }
         }
@@ -381,7 +384,9 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
             headers[headers.length - 1],
           ).find(([k]) => k.toLowerCase() === 'content-type')
 
-          let contentType = contentTypeEntry ? contentTypeEntry[1] : ''
+          let contentType = (
+            contentTypeEntry ? contentTypeEntry[1] : ''
+          ) as string
 
           // remove the metadata of the content-type, like charset
           // See https://tools.ietf.org/html/rfc7231#section-3.1.1.5
