@@ -85,7 +85,7 @@ orbs:
             default: '3.0.7'
           zlib-version:
             type: string
-            default: '1.2.11'
+            default: '1.2.13'
           before-build:
             description: 'Steps that will be executed before the build'
             type: steps
