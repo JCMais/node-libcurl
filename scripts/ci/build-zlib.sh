@@ -22,10 +22,23 @@ if [ ! -d $2/source/$1 ]; then
   git_version_full=$(echo $1 | sed -E 's/([0-9]+\.[0-9]+\.[0-9]+)\..*/\1/')
   git_version_major_minor=$(echo $git_version_full | sed -E 's/([0-9]+\.[0-9]+).*/\1/')
 
-  $curr_dirname/download-and-unpack.sh https://github.com/madler/zlib/archive/v${git_version_full}.tar.gz $2 || \
+  $curr_dirname/download-and-unpack.sh https://github.com/madler/zlib/archive/v$1.tar.gz $2 || \
+    $curr_dirname/download-and-unpack.sh https://github.com/madler/zlib/archive/v${git_version_full}.tar.gz $2 || \
     $curr_dirname/download-and-unpack.sh https://github.com/madler/zlib/archive/v${git_version_major_minor}.tar.gz $2 || 
 
-  mv $2/zlib-$git_version_full $2/source/$1
+  ls -al $2/
+
+  if [ -d "$2/zlib-$git_version_full" ]; then
+    mv $2/zlib-$git_version_full $2/source/$1
+  elif [ -d "$2/zlib-$git_version_major_minor" ]; then
+    mv $2/zlib-$git_version_major_minor $2/source/$1
+  elif [ -d "$2/zlib-$1" ]; then
+    mv $2/zlib-$1 $2/source/$1
+  else
+    echo "Could not find source folder for zlib"
+    exit 1
+  fi
+
   cd $2/source/$1
 else
   cd $2/source/$1
