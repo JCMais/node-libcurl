@@ -74,6 +74,9 @@ LOGS_FOLDER=${BUILD_LOGS_FOLDER:-./logs}
 
 mkdir -p $LOGS_FOLDER
 
+# install setuptools if distutils cannot be imported on pythong
+python -c "import distutils" || pip install setuptools
+
 # on gh actions it is including this file for some reason: /usr/local/include/nghttp2/nghttp2.h:55:
 # so we are making sure we remove those so they do not mess with our build
 if [[ -n "$CI" && "$(uname)" == "Darwin" ]]; then
