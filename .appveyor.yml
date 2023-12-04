@@ -86,6 +86,10 @@ install:
   - IF EXIST "publish" SET PUBLISH_BINARY=true
   # Install the curl-for-windows dependencies.
   - git submodule update --init --recursive
+  - ps: |
+      if (-not (python -c "import distutils")) {
+        pip install setuptools
+      }
   - python deps\curl-for-windows\configure.py
   - ps: |
       # $ErrorActionPreference = "Stop"
