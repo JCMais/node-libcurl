@@ -104,7 +104,7 @@
     "formidable": "3.5.1",
     "http-auth": "4.2.0",
     "http-auth-connect": "1.0.6",
-    "husky": "^8.0.0",
+    "husky": "8.0.3",
     "lint-staged": "15.2.0",
     "mocha": "10.2.0",
     "np": "9.0.0",
