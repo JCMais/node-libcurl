@@ -16,20 +16,18 @@ environment:
   NODE_LIBCURL_POSTINSTALL_SKIP_CLEANUP: 'true'
   matrix:
     # node.js
-    - nodejs_version: '14'
-    - nodejs_version: '16'
     - nodejs_version: '18'
-    - nodejs_version: '19'
     - nodejs_version: '20'
-    - nodejs_version: '18'
+    - nodejs_version: '21'
+    - nodejs_version: '20'
       ELECTRON_VERSION: '21.0.1'
-    - nodejs_version: '18'
+    - nodejs_version: '20'
       ELECTRON_VERSION: '20.0.3'
-    - nodejs_version: '18'
+    - nodejs_version: '20'
       ELECTRON_VERSION: '19.1.1'
-    - nodejs_version: '18'
+    - nodejs_version: '20'
       ELECTRON_VERSION: '18.3.15'
-    - nodejs_version: '18'
+    - nodejs_version: '20'
       ELECTRON_VERSION: '17.4.11'
     # disabled until nwjs supports newer node-gyp versions + python 3
     # - nodejs_version: '12'
@@ -41,7 +39,7 @@ environment:
 
 matrix:
   allow_failures:
-    - nodejs_version: '19'
+    - nodejs_version: '21'
 
 skip_branch_with_pr: true
 
