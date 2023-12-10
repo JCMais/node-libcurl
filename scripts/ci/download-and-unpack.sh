@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # https://stackoverflow.com/a/13350100/710693
 set -euo pipefail
 
