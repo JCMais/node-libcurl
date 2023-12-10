@@ -76,7 +76,7 @@ mkdir -p $LOGS_FOLDER
 
 # the alias to use for python (python or python3, based on which one is available)
 PYTHON=${PYTHON:-$(command -v python || command -v python3)}
-PIP=${PYTHON:-$(command -v pip || command -v pip3)}
+PIP=${PIP:-$(command -v pip || command -v pip3)}
 
 # install setuptools if distutils cannot be imported on python
 $PYTHON -c "import distutils" || $PIP install setuptools
