@@ -5472,10 +5472,10 @@ normalize-url@^8.0.0:
   resolved "https://registry.yarnpkg.com/normalize-url/-/normalize-url-8.0.0.tgz#593dbd284f743e8dcf6a5ddf8fadff149c82701a"
   integrity sha512-uVFpKhj5MheNBJRTiMZ9pE/7hD1QTeEvugSJW/OmLzAp78PB5O6adfMNTvmfKhXBkvCzC+rqifWcVYpGFwTjnw==
 
-np@9.0.0:
-  version "9.0.0"
-  resolved "https://registry.yarnpkg.com/np/-/np-9.0.0.tgz#f93e27951069cf3cb715cb9e7f1b6665cc91be1c"
-  integrity sha512-i6s+p2+Ur2QxfN7fWp3j2/mW8DiIvseYKMH8mXUjHCfTmJTosx+G5bgFlws6P/H4XYyt9NFGCbspWe3W/MUIpA==
+np@9.2.0:
+  version "9.2.0"
+  resolved "https://registry.yarnpkg.com/np/-/np-9.2.0.tgz#93323e1535b47317f02885e726f2aa0f41c14ac8"
+  integrity sha512-VYA8IKyx5XJqROr2vu8NAstfgBznrnOu3PUByFl3TBwzQVkeGC+gzOPzGbvYKM1QwlX6Gt7kVSPMzDP4qkSs1g==
   dependencies:
     chalk "^5.3.0"
     chalk-template "^1.1.0"
