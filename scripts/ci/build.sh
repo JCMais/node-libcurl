@@ -74,8 +74,12 @@ LOGS_FOLDER=${BUILD_LOGS_FOLDER:-./logs}
 
 mkdir -p $LOGS_FOLDER
 
-# install setuptools if distutils cannot be imported on pythong
-python -c "import distutils" || pip install setuptools
+# the alias to use for python (python or python3, based on which one is available)
+PYTHON=${PYTHON:-$(command -v python || command -v python3)}
+PIP=${PYTHON:-$(command -v pip || command -v pip3)}
+
+# install setuptools if distutils cannot be imported on python
+$PYTHON -c "import distutils" || $PIP install setuptools
 
 # on gh actions it is including this file for some reason: /usr/local/include/nghttp2/nghttp2.h:55:
 # so we are making sure we remove those so they do not mess with our build
