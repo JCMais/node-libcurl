@@ -47,16 +47,13 @@ describe('HTTP2', () => {
     })
   })
 
-  after((done) => {
+  after(function (done) {
+    this.timeout(5000)
     serverHttp2.removeListener('error', onError)
     serverHttp2.removeListener('session', onSession)
     serverHttp2.removeListener('stream', onStream)
-    session
-      ? session.close(() => {
-          session.destroy()
-          serverHttp2.close(done)
-        })
-      : serverHttp2.close(done)
+    session.destroy()
+    serverHttp2.close(done)
   })
 
   it('should work with https2 site', (done) => {

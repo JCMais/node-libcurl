@@ -13,6 +13,7 @@ import formidable from 'formidable'
 
 import { app, host, port, server } from '../helper/server'
 import { Curl } from '../../lib'
+import assert from 'assert'
 
 const url = `http://${host}:${port}/`
 
@@ -51,12 +52,13 @@ describe('Option HTTPPOST', () => {
           return
         }
 
-        const file = files.file
+        const file = files.file?.[0]
+        assert(file)
 
         const response = {
           size: file.size,
-          name: file.name,
-          type: file.type,
+          name: file.originalFilename,
+          type: file.mimetype,
         }
 
         res.json(response)

@@ -32,8 +32,8 @@ const createConstantsFile = async ({
       (option) =>
         `
       ${getDescriptionCommentForOption(option)}readonly ${
-          option.constantName
-        }: "${option.constantName}",
+        option.constantName
+      }: "${option.constantName}",
       `,
     ),
     `}`,

@@ -12,7 +12,6 @@ import path from 'path'
 import { Socket } from 'net'
 
 import express from 'express'
-import bodyParser from 'body-parser'
 import cookieParser from 'cookie-parser'
 
 const file = path.resolve.bind(this, __dirname)
@@ -49,8 +48,9 @@ export const serverHttp2 = http2.createSecureServer({
 })
 
 app
-  .use(bodyParser.urlencoded({ extended: true }))
-  .use(bodyParser.raw({ limit: '100MB', type: 'application/node-libcurl.raw' }))
+  .use(express.urlencoded({ extended: true }))
+  .use(express.raw({ limit: '100MB', type: 'application/node-libcurl.raw' }))
+  // @ts-expect-error - no time for fixing this right now
   .use(cookieParser())
 
 app.disable('etag')

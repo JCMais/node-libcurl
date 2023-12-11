@@ -85,7 +85,7 @@ orbs:
             default: '3.0.7'
           zlib-version:
             type: string
-            default: '1.2.11'
+            default: '1.2.13'
           before-build:
             description: 'Steps that will be executed before the build'
             type: steps
@@ -190,10 +190,10 @@ workflows:
   build-test-deploy:
     jobs:
       ####
-      # Node v19
+      # Node v21
       ####
       - build-addon-unix-and-publish/build-addon:
-          name: build-addon-node-v19-libcurl-latest
+          name: build-addon-node-v21-libcurl-latest
           context: general
           filters:
             branches:
@@ -201,10 +201,28 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          node-version: '19'
-          cares-version: '1.18.1'
-          nghttp2-version: '1.47.0'
-          openssl-version: '3.0.7'
+          node-version: '21'
+          cares-version: '1.20.1'
+          nghttp2-version: '1.58.0'
+          openssl-version: '3.0.12'
+          e:
+            name: alpine
+      ####
+      # Node v20
+      ####
+      - build-addon-unix-and-publish/build-addon:
+          name: build-addon-node-v20-libcurl-latest
+          context: general
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+            tags:
+              only: /^v.*/
+          node-version: '20'
+          cares-version: '1.19.1'
+          nghttp2-version: '1.57.0'
+          openssl-version: '3.0.10'
           e:
             name: alpine
       ####
@@ -242,10 +260,10 @@ workflows:
           e:
             name: alpine
       ####
-      # Node v16
+      # Electron v28
       ####
       - build-addon-unix-and-publish/build-addon:
-          name: build-addon-node-v16-libcurl-latest
+          name: build-addon-electron-v28-libcurl-latest
           context: general
           filters:
             branches:
@@ -253,50 +271,14 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          node-version: '16'
-          cares-version: '1.18.1'
-          nghttp2-version: '1.47.0'
-          openssl-version: '1.1.1q'
-          e:
-            name: alpine
-      ####
-      # Node v14
-      ####
-      - build-addon-unix-and-publish/build-addon:
-          name: build-addon-node-v14-libcurl-latest
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          node-version: '14'
-          cares-version: '1.17.2'
-          nghttp2-version: '1.42.0'
-          openssl-version: '1.1.1l'
-          e:
-            name: alpine
-      ####
-      # Electron v21
-      ####
-      - build-addon-unix-and-publish/build-addon:
-          name: build-addon-electron-v21-libcurl-latest
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          electron-version: '21.0.1'
+          electron-version: '28.0.0'
           e:
             name: debian
       ####
-      # Electron v20
+      # Electron v27
       ####
       - build-addon-unix-and-publish/build-addon:
-          name: build-addon-electron-v20-libcurl-latest
+          name: build-addon-electron-v27-libcurl-latest
           context: general
           filters:
             branches:
@@ -304,14 +286,14 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          electron-version: '20.0.3'
+          electron-version: '27.1.3'
           e:
             name: debian
       ####
-      # Electron v19
+      # Electron v26
       ####
       - build-addon-unix-and-publish/build-addon:
-          name: build-addon-electron-v19-libcurl-latest
+          name: build-addon-electron-v26-libcurl-latest
           context: general
           filters:
             branches:
@@ -319,37 +301,7 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          electron-version: '19.1.1'
-          e:
-            name: debian
-      ####
-      # Electron v18
-      ####
-      - build-addon-unix-and-publish/build-addon:
-          name: build-addon-electron-v18-libcurl-latest
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          electron-version: '18.3.15'
-          e:
-            name: debian
-      ####
-      # Electron v17
-      ####
-      - build-addon-unix-and-publish/build-addon:
-          name: build-addon-electron-v17-libcurl-latest
-          context: general
-          filters:
-            branches:
-              ignore:
-                - gh-pages
-            tags:
-              only: /^v.*/
-          electron-version: '17.4.11'
+          electron-version: '26.6.2'
           e:
             name: debian
 

@@ -248,10 +248,7 @@
           {
             'postbuild_name': '@rpath for libcurl',
             'action': [
-              'install_name_tool',
-              '-change',
-              '<!@(otool -D `curl-config --prefix`/lib/libcurl.dylib | sed -n 2p)',
-              '@rpath/libcurl.dylib',
+              '<(module_root_dir)/scripts/gyp-macos-postbuild.sh',
               '<(module_path)/<(module_name).node'
             ],
           },
