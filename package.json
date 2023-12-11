@@ -109,7 +109,7 @@
     "mocha": "10.2.0",
     "np": "9.2.0",
     "nyc": "15.1.0",
-    "octonode": "0.10.2",
+    "octonode": "0.9.5",
     "prettier": "3.1.0",
     "progress": "2.0.3",
     "should": "13.2.3",
