@@ -134,7 +134,9 @@ fi
 #####
 # ssl
 ####
-if [ ! -z "$OPENSSL_BUILD_FOLDER" ]; then
+if [ "${RUNNER_OS}" == "macOS" ]; then
+  libcurl_args+=("--with-secure-transport")
+elif [ ! -z "$OPENSSL_BUILD_FOLDER" ]; then
   CPPFLAGS="$CPPFLAGS -I$OPENSSL_BUILD_FOLDER/include"
   LDFLAGS="$LDFLAGS -L$OPENSSL_BUILD_FOLDER/lib -Wl,-rpath,$OPENSSL_BUILD_FOLDER/lib"
 

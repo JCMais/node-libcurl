@@ -8,7 +8,7 @@ name: build-and-release
 on:
   push:
     tags:
-      - '*'
+      - "*"
     branches:
       - develop
 
@@ -84,12 +84,13 @@ jobs:
           key: v4-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}-fork
           restore-keys: |
             v4-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}-fork
-      - name: 'Set GIT_TAG'
+      - name: "Set GIT_TAG"
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: 'Publish Binary'
+      - name: "Publish Binary"
         run: |
-          GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
+          pip install setuptools
+          GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG RUNNER_OS=${{ runner.os }} ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v3
@@ -172,11 +173,12 @@ jobs:
           key: v4-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}-fork
           restore-keys: |
             v4-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}-fork
-      - name: 'Set GIT_TAG'
+      - name: "Set GIT_TAG"
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: 'Publish Binary'
+      - name: "Publish Binary"
         run: |
+          pip install setuptools
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always()
@@ -225,6 +227,7 @@ jobs:
       - name: Publish binary
         if: startsWith(github.ref, 'refs/tags/')
         run: |
+          pip install setuptools
           yarn node-pre-gyp package testpackage --verbose
           node scripts\module-packaging.js --publish $(yarn -s node-pre-gyp reveal staged_tarball --silent)
 
@@ -241,8 +244,8 @@ jobs:
       ELECTRON_VERSION: ${{ matrix.electron-version }}
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
-      npm_config_runtime: 'electron'
-      npm_config_dist_url: 'https://electronjs.org/headers'
+      npm_config_runtime: "electron"
+      npm_config_dist_url: "https://electronjs.org/headers"
       npm_config_target: ${{ matrix.electron-version }}
     steps:
       - name: Checkout
@@ -273,5 +276,6 @@ jobs:
       - name: Publish binary
         if: startsWith(github.ref, 'refs/tags/')
         run: |
+          pip install setuptools
           yarn node-pre-gyp package testpackage --verbose
           node scripts\module-packaging.js --publish $(yarn -s node-pre-gyp reveal staged_tarball --silent)
