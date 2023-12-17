@@ -11,6 +11,8 @@
 #include "Share.h"
 #include "make_unique.h"
 
+#include <node_api.h>
+
 #include <cctype>
 #include <iostream>
 #include <string>

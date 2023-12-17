@@ -57,7 +57,7 @@ app.disable('etag')
 
 export const port = process.env.TEST_PORT
   ? parseInt(process.env.TEST_PORT, 10)
-  : 3000
+  : 3332
 export const portHttps = 3443
 export const portHttp2 = 3333
 export const host = 'localhost'
