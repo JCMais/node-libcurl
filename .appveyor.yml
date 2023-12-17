@@ -11,8 +11,6 @@ version: '{build}'
 
 environment:
   DEBUG: 'node-libcurl'
-  NODE_LIBCURL_GITHUB_TOKEN:
-    secure: o8iCZIMbaOR5HKy9Q/ArQ6N+5LRepyRVYRtLTrxyCo2gCEXUp8xhUYjLMJmZgNu9
   NODE_LIBCURL_POSTINSTALL_SKIP_CLEANUP: 'true'
   matrix:
     # node.js
