@@ -31,7 +31,7 @@ jobs:
         node-libcurl-cpp-std:
           - c++17
         node:
-          - 18.17.1
+          - 18.18.2
 
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -89,7 +89,7 @@ jobs:
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: "Publish Binary"
         run: |
-          pip install setuptools
+          pip install packaging
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG RUNNER_OS=${{ runner.os }} ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always()
@@ -110,9 +110,9 @@ jobs:
         libcurl-release:
           - 7.79.1
         node:
-          - 18.17.1
+          - 18.18.2
         electron-version:
-          - 27.0.0
+          - 28.0.0
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -178,7 +178,7 @@ jobs:
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: "Publish Binary"
         run: |
-          pip install setuptools
+          pip install packaging
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always()
@@ -194,7 +194,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 18.17.1
+          - 18.18.2
     env:
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
@@ -227,7 +227,7 @@ jobs:
       - name: Publish binary
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          pip install setuptools
+          pip install packaging
           yarn node-pre-gyp package testpackage --verbose
           node scripts\module-packaging.js --publish $(yarn -s node-pre-gyp reveal staged_tarball --silent)
 
@@ -237,9 +237,9 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 18.17.1
+          - 18.18.2
         electron-version:
-          - 27.0.0
+          - 28.0.0
     env:
       ELECTRON_VERSION: ${{ matrix.electron-version }}
       npm_config_msvs_version: 2022
@@ -276,6 +276,6 @@ jobs:
       - name: Publish binary
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          pip install setuptools
+          pip install packaging
           yarn node-pre-gyp package testpackage --verbose
           node scripts\module-packaging.js --publish $(yarn -s node-pre-gyp reveal staged_tarball --silent)
