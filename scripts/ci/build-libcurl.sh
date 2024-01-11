@@ -15,6 +15,11 @@ mkdir -p $2/source
 FORCE_REBUILD=${FORCE_REBUILD:-}
 FORCE_REBUILD_LIBCURL=${FORCE_REBUILD_LIBCURL:-}
 
+# @TODO force rebuild on macOS, remove this later
+if [ "${RUNNER_OS}" == "macOS" ]; then
+  FORCE_REBUILD_LIBCURL="true"
+fi
+
 # @TODO We are explicitly checking the static lib
 if [[ -f $build_folder/lib/libcurl.a ]] && [[ -z $FORCE_REBUILD || $FORCE_REBUILD != "true" ]] && [[ -z $FORCE_REBUILD_LIBCURL || $FORCE_REBUILD_LIBCURL != "true" ]]; then
   echo "Skipping rebuild of libcurl because lib file already exists"
@@ -134,9 +139,7 @@ fi
 #####
 # ssl
 ####
-if [ "${RUNNER_OS}" == "macOS" ]; then
-  libcurl_args+=("--with-secure-transport")
-elif [ ! -z "$OPENSSL_BUILD_FOLDER" ]; then
+if [ ! -z "$OPENSSL_BUILD_FOLDER" ]; then
   CPPFLAGS="$CPPFLAGS -I$OPENSSL_BUILD_FOLDER/include"
   LDFLAGS="$LDFLAGS -L$OPENSSL_BUILD_FOLDER/lib -Wl,-rpath,$OPENSSL_BUILD_FOLDER/lib"
 
