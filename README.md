@@ -62,10 +62,10 @@
   - [Electron / NW.js](#electron--nwjs)
     - [NW.js (aka node-webkit)](#nwjs-aka-node-webkit)
     - [Electron (aka atom-shell)](#electron-aka-atom-shell)
-    - [Electron >= 11 / NW.js >= 0.50](#electron--11--nwjs--050)
+    - [Electron \>= 11 / NW.js \>= 0.50](#electron--11--nwjs--050)
   - [Building on Linux](#building-on-linux)
   - [Building on macOS](#building-on-macos)
-    - [Xcode >= 10 | macOS >= Mojave](#xcode--10--macos--mojave)
+    - [Xcode \>= 10 | macOS \>= Mojave](#xcode--10--macos--mojave)
   - [Building on Windows](#building-on-windows)
 - [Getting Help](#getting-help)
 - [Contributing](#contributing)
@@ -262,7 +262,7 @@ The latest version of this package has prebuilt binaries (thanks to [node-pre-gy
 
 And on the following platforms:
 * Linux 64 bits
-* Mac OS X 64 bits
+* macOS Intel & ARM64 (M1+)
 * Windows 32 and 64 bits
 
 Installing with `yarn add node-libcurl` or `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed. However if you are trying to install on `nw.js` or `electron` additional steps will be required, check their corresponding section below.
@@ -275,7 +275,7 @@ Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, NTLM_WB, SSL, libz, brotli, TLS
 ```
 
 If there is no prebuilt binary available that matches your system, or if the installation fails, then you will need an environment capable of compiling Node.js addons, which means:
-- [python 2.7](https://www.python.org/download/releases/2.7) installed
+- [python 3.x](https://www.python.org/downloads/) installed
 - updated C++ compiler able to compile C++11, or if building Electron >= 11 / NW.js >= 0.50, C++17 (see the [Electron >= 11 / NW.js >= 0.50](#electron--11--nwjs--050) section below).
 
 If you don't want to use the prebuilt binary even if it works on your system, you can pass a flag when installing:
@@ -437,11 +437,11 @@ npm_config_curl_include_dirs="$(xcrun --show-sdk-path)/usr/include" yarn add nod
 If installing using a prebuilt binary you only need to have the [visual c++ 2017 runtime library](https://visualstudio.microsoft.com/downloads/#microsoft-visual-c-redistributable-for-visual-studio-2017).
 
 If building from source, you must have:
-- Python 2.7
+- Python 3.x
 - [Visual Studio >= 2017](https://visualstudio.microsoft.com/downloads/)
 - [nasm](https://www.nasm.us/)
 
-Python 2.7 and the Visual Studio compiler can be installed by running:
+Python 3.x and the Visual Studio compiler can be installed by running:
 ```sh
 npm install --global --production windows-build-tools
 ```
