@@ -26,7 +26,8 @@
     "binding.gyp",
     "dist",
     "scripts",
-    "src"
+    "src",
+    "LIBCURL_VERSION_WIN_DEPS"
   ],
   "binary": {
     "module_name": "node_libcurl",
