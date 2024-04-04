@@ -26,11 +26,11 @@ jobs:
         node-libcurl-cpp-std:
           - c++17
         node:
-          - 18.18.2
+          - 20.9.0
         include:
           # Lint
           - os: ubuntu-latest
-            node: 18.18.2
+            node: 20.9.0
             node-libcurl-cpp-std: c++17
             libcurl-release: 7.79.1
             run-lint-and-tsc: true
@@ -52,12 +52,6 @@ jobs:
             ${{ github.run_id }}-${{ github.job }}-
       - id: run_result
         run: cat run_result 2>/dev/null || echo 'default'
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node }}
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
         run: brew install coreutils wget automake libtool cmake gnu-sed m4
@@ -76,18 +70,24 @@ jobs:
       - if: runner.os == 'Linux'
         name: Install Needed packages on Linux
         run: sudo apt-get install -y cmake
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-      - name: Restore Yarn Cache
+      - name: Restore Yarn Cache ${{ matrix.node }}-${{ github.ref }}
         uses: actions/cache@v1
         id: yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir.outputs.dir }}
-          key: v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
+          key: v1-${{ runner.os }}-yarn-cache-${{ matrix.node }}-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
-            v1-${{ runner.os }}-yarn-cache-
+            v1-${{ runner.os }}-yarn-cache-${{ matrix.node }}-${{ github.ref }}-
+            v1-${{ runner.os }}-yarn-cache-${{ matrix.node }}-
       - name: Restore libcurl deps cache
         uses: actions/cache@v3
         id: libcurl-deps-cache
@@ -98,7 +98,7 @@ jobs:
           key: v4-build-lint-test-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
           restore-keys: |
             v4-build-lint-test-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
-      - name: 'Build node-libcurl'
+      - name: Build node-libcurl ${{ matrix.node }}
         if: steps.run_result.outputs.run_result != 'success'
         run: |
           RUN_TESTS=false \
@@ -144,9 +144,9 @@ jobs:
         libcurl-release:
           - 7.79.1
         node:
-          - 18.18.2
+          - 20.9.0
         electron-version:
-          - 28.0.0
+          - 29.0.0
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -165,12 +165,6 @@ jobs:
             ${{ github.run_id }}-${{ github.job }}-
       - id: run_result
         run: cat run_result 2>/dev/null || echo 'default'
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node }}
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
@@ -188,18 +182,24 @@ jobs:
           make install
           autoconf --version
           ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-      - name: Restore Yarn Cache
+      - name: Restore Yarn Cache ${{ matrix.node }}-${{ github.ref }}
         uses: actions/cache@v3
         id: yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir.outputs.dir }}
-          key: v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
+          key: v1-${{ runner.os }}-yarn-cache-${{ matrix.node }}-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
-            v1-${{ runner.os }}-yarn-cache-
+            v1-${{ runner.os }}-yarn-cache-${{ matrix.node }}-${{ github.ref }}-
+            v1-${{ runner.os }}-yarn-cache-${{ matrix.node }}-
       - name: Restore Electron Cache
         uses: actions/cache@v3
         with:
@@ -221,7 +221,7 @@ jobs:
       - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: 'Build node-libcurl'
+      - name: Build node-libcurl ${{ matrix.node }} ${{ matrix.electron-version }}
         if: steps.run_result.outputs.run_result != 'success'
         run: |
           RUN_TESTS=true \
@@ -244,7 +244,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 18.18.2
+          - 20.9.0
     env:
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
@@ -262,7 +262,7 @@ jobs:
           choco install nasm -y
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
           python deps\curl-for-windows\configure.py
-      - name: Build
+      - name: Build ${{ matrix.node }}
         run: |
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
           yarn install --frozen-lockfile
@@ -281,9 +281,9 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 18.18.2
+          - 20.9.0
         electron-version:
-          - 28.0.0
+          - 29.0.0
     env:
       ELECTRON_VERSION: ${{ matrix.electron-version }}
       npm_config_msvs_version: 2022
@@ -306,7 +306,7 @@ jobs:
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
           python deps\curl-for-windows\configure.py
           yarn global add electron@${env:ELECTRON_VERSION}
-      - name: Build
+      - name: Build ${{ matrix.node }}
         run: |
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
           yarn install --frozen-lockfile

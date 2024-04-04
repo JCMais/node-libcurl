@@ -31,19 +31,13 @@ jobs:
         node-libcurl-cpp-std:
           - c++17
         node:
-          - 18.18.2
+          - 20.9.0
 
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       NODE_LIBCURL_CPP_STD: ${{ matrix.node-libcurl-cpp-std }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node }}
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
         run: brew install coreutils wget automake libtool cmake gnu-sed m4
@@ -62,6 +56,12 @@ jobs:
       - if: runner.os == 'Linux'
         name: Install Needed packages on Linux
         run: sudo apt-get install -y cmake
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
@@ -110,21 +110,15 @@ jobs:
         libcurl-release:
           - 7.79.1
         node:
-          - 18.18.2
+          - 20.9.0
         electron-version:
-          - 28.0.0
+          - 29.0.0
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
       NODE_LIBCURL_CPP_STD: c++17
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node }}
       - if: runner.os == 'macOS'
         name: Install Needed packages
         run: brew install coreutils wget automake libtool cmake gnu-sed m4
@@ -143,6 +137,12 @@ jobs:
       - if: runner.os == 'Linux'
         name: Install Needed packages on Linux
         run: sudo apt-get install -y cmake
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
@@ -194,7 +194,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 18.18.2
+          - 20.9.0
     env:
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
@@ -237,9 +237,9 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 18.18.2
+          - 20.9.0
         electron-version:
-          - 28.0.0
+          - 29.0.0
     env:
       ELECTRON_VERSION: ${{ matrix.electron-version }}
       npm_config_msvs_version: 2022
