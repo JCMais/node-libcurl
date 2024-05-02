@@ -1,6 +1,6 @@
 {
   "name": "@getinsomnia/node-libcurl",
-  "version": "2.4.29-1",
+  "version": "2.4.30-1",
   "description": "The fastest http(s) client (and much more) for Node.js - Node.js bindings for libcurl",
   "keywords": [
     "node-curl",
@@ -75,10 +75,10 @@
     ]
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "1.0.11",
+    "@mapbox/node-pre-gyp": "1.0.5",
     "env-paths": "2.2.0",
-    "nan": "2.19.0",
-    "node-gyp": "10.0.1",
+    "nan": "2.17.0",
+    "node-gyp": "9.4.0",
     "npmlog": "4.1.2",
     "rimraf": "^3.0.2",
     "tslib": "2.0.1"
@@ -100,7 +100,7 @@
     "cheerio": "^1.0.0-rc.3",
     "clang-format": "^1.4.0",
     "cookie-parser": "^1.4.5",
-    "electron-mocha": "^12.2.0",
+    "electron-mocha": "^8.2.1",
     "eslint": "^7.11.0",
     "eslint-config-prettier": "^6.12.0",
     "eslint-formatter-friendly": "^7.0.0",
@@ -129,7 +129,7 @@
     "typescript": "^4.0.3"
   },
   "engines": {
-    "node": ">= 20"
+    "node": ">= 18"
   },
   "np": {
     "cleanup": false
