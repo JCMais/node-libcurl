@@ -8,7 +8,7 @@ name: build-and-release
 on:
   push:
     tags:
-      - "*"
+      - '*'
     branches:
       - develop
 
@@ -31,7 +31,7 @@ jobs:
         node-libcurl-cpp-std:
           - c++17
         node:
-          - 20.9.0
+          - 20.11.1
 
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -84,10 +84,10 @@ jobs:
           key: v4-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}-fork
           restore-keys: |
             v4-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}-fork
-      - name: "Set GIT_TAG"
+      - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: "Publish Binary"
+      - name: 'Publish Binary'
         run: |
           pip install packaging
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG RUNNER_OS=${{ runner.os }} ./scripts/ci/build.sh
@@ -110,9 +110,9 @@ jobs:
         libcurl-release:
           - 7.79.1
         node:
-          - 20.9.0
+          - 20.11.1
         electron-version:
-          - 29.0.0
+          - 20.0.0
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -173,10 +173,10 @@ jobs:
           key: v4-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}-fork
           restore-keys: |
             v4-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}-fork
-      - name: "Set GIT_TAG"
+      - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: "Publish Binary"
+      - name: 'Publish Binary'
         run: |
           pip install packaging
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
@@ -194,7 +194,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 20.9.0
+          - 20.11.1
     env:
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
@@ -237,15 +237,15 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 20.9.0
+          - 20.11.1
         electron-version:
-          - 29.0.0
+          - 30.0.0
     env:
       ELECTRON_VERSION: ${{ matrix.electron-version }}
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
-      npm_config_runtime: "electron"
-      npm_config_dist_url: "https://electronjs.org/headers"
+      npm_config_runtime: 'electron'
+      npm_config_dist_url: 'https://electronjs.org/headers'
       npm_config_target: ${{ matrix.electron-version }}
     steps:
       - name: Checkout
