@@ -107,14 +107,14 @@ jobs:
             ./scripts/ci/build.sh
       - name: 'Run lint'
         if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
-        run: yarn lint
+        run: npm run lint
       - name: 'Run tsc'
         if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
-        run: yarn build:dist
+        run: npm run build:dist
       # we do run tests in all matrix jobs
       - name: 'Run tests'
         if: steps.run_result.outputs.run_result != 'success'
-        run: yarn test:coverage
+        run: npm run test:coverage
       # but coverage is only sent for the run-lint-and-tsc job
       - name: Upload coverage to Codecov
         if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
@@ -265,11 +265,11 @@ jobs:
       - name: Build ${{ matrix.node }}
         run: |
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
-          yarn install --frozen-lockfile
+          npm ci
       - name: Test
         run: |
-          yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())"
-          yarn test
+          npm run ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())"
+          npm run test
 
           if ($LASTEXITCODE -eq 0) {
             $host.SetShouldExit(0)
@@ -305,14 +305,14 @@ jobs:
           choco install nasm -y
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
           python deps\curl-for-windows\configure.py
-          yarn global add electron@${env:ELECTRON_VERSION}
+          npm install -g electron@${env:ELECTRON_VERSION}
       - name: Build ${{ matrix.node }}
         run: |
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
-          yarn install --frozen-lockfile
+          npm ci
       - name: Test
         run: |
-          yarn test:electron
+          npm run test:electron
 
           if ($LASTEXITCODE -eq 0) {
             $host.SetShouldExit(0)

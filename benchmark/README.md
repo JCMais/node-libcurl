@@ -1,4 +1,5 @@
 ## Benchmarks
+>
 > Disclaimer: Those benchmarks are probably far from real world usage scenarios and should not be taken too seriously before doing tests with your use-case in mind first.
 
 If you feel any of the code available is wrong, please open a PR with a suggested fix.
@@ -7,13 +8,16 @@ The idea is just to hit some webpage  doing a GET request to `/` and receiving t
 
 For libraries that do not return the data as string, code to do that should be added, as is the case with Node.js `http.request`, `node-fetch` and `node-libcurl.Easy`.
 
-A local server can be started with `yarn start-server`.
+A local server can be started with `npm run start-server`.
 
-Benchmark can be started with `yarn start`.
+Benchmark can be started with `npm run start`.
 
 ### Results
+
 #### Win64 i7-7700HQ 3.4GHz
+
 ##### local server
+
 ```
 node.js http.request - GET x 395 ops/sec ±3.92% (68 runs sampled)
 axios - GET x 328 ops/sec ±5.84% (64 runs sampled)
@@ -28,7 +32,9 @@ node-libcurl Easy - reusing instance - GET x 532 ops/sec ±5.42% (63 runs sample
 Fastest is node-libcurl Curl - GET
 Done in 61.27s
 ```
+
 ##### example.com
+
 ```
 node.js http.request - GET x 3.62 ops/sec ±1.87% (22 runs sampled)
 axios - GET x 3.65 ops/sec ±2.60% (22 runs sampled)
@@ -43,8 +49,11 @@ node-libcurl Easy - reusing instance - GET x 3.62 ops/sec ±1.25% (22 runs sampl
 Fastest is node-libcurl Curl - GET,node-libcurl Curl - reusing instance - GET,node-libcurl curly - GET
 Done in 64.24s.
 ```
+
 #### macOS i7-7820HQ 2.9GHz
+
 ##### local server
+
 ```
 node.js http.request - GET x 851 ops/sec ±6.15% (64 runs sampled)
 axios - GET x 709 ops/sec ±17.13% (66 runs sampled)
@@ -59,7 +68,9 @@ node-libcurl Easy - reusing instance - GET x 1,333 ops/sec ±3.19% (76 runs samp
 Fastest is node-libcurl Easy - reusing instance - GET
 ✨  Done in 77.74s
 ```
+
 ##### example.com
+
 ```
 node.js http.request - GET x 3.55 ops/sec ±6.69% (22 runs sampled)
 axios - GET x 3.69 ops/sec ±1.05% (22 runs sampled)
@@ -76,7 +87,9 @@ Fastest is node-libcurl Curl - reusing instance - GET,node-libcurl curly - GET
 ```
 
 #### Ubuntu 19.10 i7-5500U 2.4GHz - Linux 5.3.0-42 - Node v12.16.2
+
 ##### local server
+
 ```node.js http.request - GET x 720 ops/sec ±2.65% (74 runs sampled)
 axios - GET x 611 ops/sec ±2.14% (78 runs sampled)
 superagent - GET x 681 ops/sec ±1.80% (77 runs sampled)
@@ -89,11 +102,13 @@ node-libcurl Easy - GET x 887 ops/sec ±1.61% (81 runs sampled)
 node-libcurl Easy - reusing instance - GET x 1,007 ops/sec ±1.62% (78 runs sampled)
 Fastest is node-libcurl Easy - reusing instance - GET
 
-real	0m59,502s
-user	0m19,020s
-sys	0m3,756s
+real 0m59,502s
+user 0m19,020s
+sys 0m3,756s
 ```
+
 ##### example.com
+
 ```
 node.js http.request - GET x 3.42 ops/sec ±0.95% (21 runs sampled)
 axios - GET x 3.44 ops/sec ±1.16% (21 runs sampled)
@@ -107,7 +122,7 @@ node-libcurl Easy - GET x 3.46 ops/sec ±1.18% (13 runs sampled)
 node-libcurl Easy - reusing instance - GET x 3.44 ops/sec ±1.02% (21 runs sampled)
 Fastest is node-libcurl Curl - GET
 
-real	1m5,417s
-user	0m3,469s
-sys	0m0,229s
+real 1m5,417s
+user 0m3,469s
+sys 0m0,229s
 ```

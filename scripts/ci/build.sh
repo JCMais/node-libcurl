@@ -273,9 +273,9 @@ fi
 
 echo "Publish binary is: $PUBLISH_BINARY"
 
-# Configure Yarn cache
-mkdir -p ~/.cache/yarn
-yarn config set cache-folder ~/.cache/yarn
+# Configure npm run cache
+mkdir -p ~/.cache/npm run
+npm run config set cache-folder ~/.cache/npm run
 
 run_tests_electron=false
 has_display=$(xdpyinfo -display $DISPLAY >/dev/null 2>&1 && echo "true" || echo "false")
@@ -295,33 +295,33 @@ if [ -n "$ELECTRON_VERSION" ]; then
   # https://github.com/electron/electron/issues/17972
   if [[ "$(uname)" == "Darwin" || $is_electron_lt_5 -eq 1 && $has_display == "true" ]]; then
     run_tests_electron=true
-    yarn global add electron@${ELECTRON_VERSION} --network-timeout 300000
+    npm run global add electron@${ELECTRON_VERSION} --network-timeout 300000
   fi
 
   # A possible solution to the above issue is the following,
   #  but it kinda does not work because it requires running docker with --privileged flag
-  # yarn_global_dir=$(yarn global dir)
+  # npm run_global_dir=$(npm run global dir)
 
   # # Below is to fix the following error:
   # # [19233:0507/005247.965078:FATAL:setuid_sandbox_host.cc(157)] The SUID sandbox helper binary was found, but is not
   # #  configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that
   # # /home/circleci/node-libcurl/node_modules/electron/dist/chrome-sandbox is owned by root and has mode 4755.
-  # if [[ -x "$(command -v sudo)" && "$EUID" -ne 0 && -f $yarn_global_dir/node_modules/electron/dist/chrome-sandbox ]]; then
+  # if [[ -x "$(command -v sudo)" && "$EUID" -ne 0 && -f $npm run_global_dir/node_modules/electron/dist/chrome-sandbox ]]; then
   #   echo "Changing owner of chrome-sandbox"
-  #   sudo chown root $yarn_global_dir/node_modules/electron/dist/chrome-sandbox
-  #   sudo chmod 4755 $yarn_global_dir/node_modules/electron/dist/chrome-sandbox
+  #   sudo chown root $npm run_global_dir/node_modules/electron/dist/chrome-sandbox
+  #   sudo chmod 4755 $npm run_global_dir/node_modules/electron/dist/chrome-sandbox
   # fi
 elif [ -n "$NWJS_VERSION" ]; then
   runtime='node-webkit'
   dist_url=''
   target="$NWJS_VERSION"
 
-  yarn global add nw-gyp nw@$target
+  npm run global add nw-gyp nw@$target
 
   # On macOS node-pre-gyp uses node-webkit instead of nw, see:
   # https://github.com/mapbox/node-pre-gyp/blob/d60bc992d20500e8ceb6fe3242df585a28c56413/lib/testbinary.js#L43
   if [ "$(uname)" == "Darwin" ]; then
-    ln -s $(yarn global bin)/nw $(yarn global bin)/node-webkit
+    ln -s $(npm run global bin)/nw $(npm run global bin)/node-webkit
   fi
 
 else
@@ -358,9 +358,9 @@ echo "npm_config_target=$npm_config_target"
 echo "npm_config_target_arch=$npm_config_target_arch"
 
 echo "node version: $(node -v)"
-echo "yarn version: $(yarn -v)"
+echo "npm run version: $(npm run -v)"
 
-yarn install --frozen-lockfile --network-timeout 300000
+npm run install --frozen-lockfile --network-timeout 300000
 
 if [ "$STOP_ON_INSTALL" == "true" ]; then
   set +uv
@@ -380,12 +380,12 @@ fi
 
 if [ "$RUN_TESTS" == "true" ]; then
   if [ -n "$ELECTRON_VERSION" ]; then
-    [ $run_tests_electron == "true" ] && yarn test:electron || echo "Tests for this version of electron were disabled"
+    [ $run_tests_electron == "true" ] && npm run test:electron || echo "Tests for this version of electron were disabled"
   elif [ -n "$NWJS_VERSION" ]; then
     echo "No tests available for node-webkit (nw.js)"
   else
-    yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
-    yarn test
+    npm run ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
+    npm run test
   fi
 fi
 
@@ -397,37 +397,36 @@ if [[ $PUBLISH_BINARY == true && $LIBCURL_RELEASE == $LATEST_LIBCURL_RELEASE ]];
     # Need to publish two binaries when doing a universal build.
     # --
     # Publish x64 package
-    npm_config_target_arch=x64 yarn pregyp package testpackage --verbose
+    npm_config_target_arch=x64 npm run pregyp package testpackage --verbose
     npm_config_target_arch=x64 node scripts/module-packaging.js --publish \
-      "$(npm_config_target_arch=x64 yarn --silent pregyp reveal staged_tarball --silent)"
+      "$(npm_config_target_arch=x64 npm run --silent pregyp reveal staged_tarball --silent)"
     # Publish arm64 package.
-    npm_config_target_arch=arm64 yarn pregyp package --verbose  # Can't testpackage for arm64 yet.
+    npm_config_target_arch=arm64 npm run pregyp package --verbose  # Can't testpackage for arm64 yet.
     npm_config_target_arch=arm64 node scripts/module-packaging.js --publish \
-      "$(npm_config_target_arch=arm64 yarn --silent pregyp reveal staged_tarball --silent)"
+      "$(npm_config_target_arch=arm64 npm run --silent pregyp reveal staged_tarball --silent)"
   else
-    yarn pregyp package testpackage --verbose
-    node scripts/module-packaging.js --publish "$(yarn --silent pregyp reveal staged_tarball --silent)"
+    npm run pregyp package testpackage --verbose
+    node scripts/module-packaging.js --publish "$(npm run --silent pregyp reveal staged_tarball --silent)"
   fi
 fi
 echo "node version: $(node -v)"
-echo "yarn version: $(yarn -v)"
 # In case we published the binaries, verify if we can download them, and that they work
 # Otherwise, unpublish them
 INSTALL_RESULT=0
 if [[ $PUBLISH_BINARY == true ]]; then
   echo "Publish binary is true - Testing if it was published correctly"
 
-  INSTALL_RESULT=$(npm_config_fallback_to_build=false yarn install --frozen-lockfile --network-timeout 300000 > /dev/null)$? || true
+  INSTALL_RESULT=$(npm_config_fallback_to_build=false npm install --frozen-lockfile --network-timeout 300000 > /dev/null)$? || true
 fi
 if [[ $INSTALL_RESULT != 0 ]]; then
   echo "Failed to install package from npm after being published"
-  node scripts/module-packaging.js --unpublish "$(yarn --silent pregyp reveal hosted_tarball --silent)"
+  node scripts/module-packaging.js --unpublish "$(npm run --silent pregyp reveal hosted_tarball --silent)"
   false
 fi
 
 # Clean everything
 if [[ $RUN_PREGYP_CLEAN == true ]]; then
-  yarn pregyp clean
+  npm run pregyp clean
 fi
 
 set +uv

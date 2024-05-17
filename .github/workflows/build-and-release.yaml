@@ -215,7 +215,7 @@ jobs:
       - name: Build
         run: |
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
-          yarn install --frozen-lockfile
+          npm ci
       - name: Test
         run: |
           yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())"
@@ -265,7 +265,7 @@ jobs:
       - name: Build
         run: |
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
-          yarn install --frozen-lockfile
+          npm ci
       - name: Test
         run: |
           yarn test:electron

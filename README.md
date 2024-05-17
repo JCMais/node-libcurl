@@ -84,12 +84,6 @@
 npm i node-libcurl --save
 ```
 
-or
-
-```shell
-yarn add node-libcurl
-```
-
 ### Simple Request - Async / Await using curly
 >
 > this API is experimental and is subject to changes without a major version bump
@@ -282,7 +276,7 @@ And on the following platforms:
 - Mac OS X 64 bits
 - Windows 32 and 64 bits
 
-Installing with `yarn add node-libcurl` or `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed. However if you are trying to install on `nw.js` or `electron` additional steps will be required, check their corresponding section below.
+Installing with `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed. However if you are trying to install on `nw.js` or `electron` additional steps will be required, check their corresponding section below.
 
 The prebuilt binary is statically built with the following library versions, features and protocols (library versions may change between Node.js versions):
 
@@ -304,12 +298,6 @@ If you don't want to use the prebuilt binary even if it works on your system, yo
 npm install node-libcurl --build-from-source
 ```
 
-> With `yarn`
-
-```sh
-npm_config_build_from_source=true yarn add node-libcurl
-```
-
 ### Important Notes on Prebuilt Binaries / Direct Installation
 
 > Those notes are not important when building on Windows
@@ -326,12 +314,6 @@ If you want to build a statically linked version of the addon yourself, you need
 
 ```sh
 npm install node-libcurl --build-from-source --curl_static_build=true
-```
-
-> If using `yarn`:
-
-```sh
-npm_config_build_from_source=true npm_config_curl_static_build=true yarn add node-libcurl
 ```
 
 The build process will use `curl-config` available on path, if you want to overwrite it to your own libcurl installation one, you can set the `curl_config_bin` variable, like mentioned above for `curl_static_build`.
@@ -361,16 +343,11 @@ If you do not want to use the prebuilt binary, pass the `npm_config_build_from_s
 #### NW.js (aka node-webkit)
 
 For building from source on NW.js you first need to make sure you have nw-gyp installed globally:
-`yarn global add nw-gyp` or `npm i -g nw-gyp`
+`npm i -g nw-gyp`
 
 > If on Windows, you also need addition steps, currently the available win_delay_load_hook.cc on `nw-gyp` is not working with this addon, so it's necessary to apply a patch to it. The patch can be found on `./scripts/ci/patches/win_delay_load_hook.cc.patch`, and should be applied to the file on `<nw-gyp-folder>/src/win_delay_load_hook.cc`.
 
 Then:
-> yarn
-
-```
-npm_config_runtime=node-webkit npm_config_target=0.38.2 yarn add node-libcurl
-```
 
 > npm
 
@@ -382,16 +359,10 @@ where `--target` is the current version of NW.js you are using
 
 #### Electron (aka atom-shell)
 
-> yarn
-
-```bash
-npm_config_runtime=electron npm_config_target=$(yarn --silent electron --version) npm_config_disturl=https://www.electronjs.org/headers yarn add node-libcurl
-```
-
 > npm
 
 ```bash
-npm install node-libcurl --runtime=electron --target=$(yarn --silent electron --version) --disturl=https://www.electronjs.org/headers --save
+npm install node-libcurl --runtime=electron --target=$(npm v --silent electron --version) --disturl=https://www.electronjs.org/headers --save
 ```
 
 Where `--target` is the version of electron you are using, in our case, we are just using the version returned by the locally installed `electron` binary.
@@ -407,18 +378,12 @@ dist_url = https://atom.io/download/atom-shell
 
 #### Electron >= 11 / NW.js >= 0.50
 
-If you are building for Electron >= 11 or NW.js >= 0.50 you need to set the build process to use the C++17 std, you can do that by passing the variable `node_libcurl_cpp_std=c++17`. The way you do that depends if you are using `npm` or `yarn`:
+If you are building for Electron >= 11 or NW.js >= 0.50 you need to set the build process to use the C++17 std, you can do that by passing the variable `node_libcurl_cpp_std=c++17`.
 
 > If using `npm`:
 
 ```sh
 npm install node-libcurl --build-from-source --node_libcurl_cpp_std=c++17
-```
-
-> If using `yarn`:
-
-```sh
-npm_config_build_from_source=true npm_config_node_libcurl_cpp_std=c++17 yarn add node-libcurl
 ```
 
 ### Building on Linux
@@ -472,7 +437,7 @@ If that is the case, it's because newer versions of the Command Line Tools does 
 The `/usr/include` is now available on `$(xcrun --show-sdk-path)/usr/include`. To correctly build libcurl you then need to pass that path to the `npm_config_curl_include_dirs` environment variable:
 
 ```
-npm_config_curl_include_dirs="$(xcrun --show-sdk-path)/usr/include" yarn add node-libcurl
+npm_config_curl_include_dirs="$(xcrun --show-sdk-path)/usr/include" npm install node-libcurl
 ```
 
 ### Building on Windows

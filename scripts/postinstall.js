@@ -77,7 +77,7 @@ module.exports = function install() {
   // this is ternary will almost always fall into the first condition.
   // If we are using TS it probably means we have the git repo setup too.
   // But who knows, someone may be trying the code from a zip archive or something lol
-  const executable = distIndexExists ? 'node' : 'yarn ts-node'
+  const executable = distIndexExists ? 'node' : 'npm run ts-node'
 
   const file = distIndexExists
     ? distIndexPath

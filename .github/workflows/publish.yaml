@@ -20,10 +20,10 @@ jobs:
           node-version: 20.9.0
           registry-url: 'https://registry.npmjs.org'
       - name: Install
-        run: yarn install --ignore-scripts
+        run: npm install --ignore-scripts
       - name: Build
-        run: yarn build:dist
+        run: npm run build:dist
       - name: Publish Package
-        run: yarn publish --access public
+        run: npm run publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
