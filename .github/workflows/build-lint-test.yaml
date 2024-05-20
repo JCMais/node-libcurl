@@ -13,6 +13,27 @@ concurrency:
 # all jobs here must have a matrix identical to the ones inside build-and-release.yaml
 
 jobs:
+  scan:
+    permissions:
+      packages: write
+      contents: write # publish sbom to GH releases/tag assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: ${{ github.repository }}
+
+      # Perform SCA analysis for the code repository
+      # Produces SBOM and CVE report
+      # Helps understand vulnerabilities / license compliance across third party dependencies
+      # Drift: Doesn't track any yarn global or OS specific packages that involves scanning entire root file system.
+      # (TODO): Produce OS specific SBOM to detect build time depdencies. 
+      - id: sca-project
+        uses: Kong/public-shared-actions/security-actions/sca@2f02738ecb1670f01391162e43fe3f5d4e7942a1 # v2.2.2
+        with:
+          dir: ${{ github.repository }}
+
   build-and-test-nodejs:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -54,19 +75,7 @@ jobs:
         run: cat run_result 2>/dev/null || echo 'default'
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4
-      # not using brew for that one as we need 2.69
-      - if: runner.os == 'macOS'
-        name: Install autoconf
-        run: |
-          curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
-          tar -xzf autoconf-2.69.tar.gz
-          cd autoconf-*
-          ./configure
-          make
-          make install
-          autoconf --version
-          ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
+        run: brew install coreutils wget automake libtool cmake gnu-sed m4 autoconf@2.69 groff
       - if: runner.os == 'Linux'
         name: Install Needed packages on Linux
         run: sudo apt-get install -y cmake
@@ -169,19 +178,7 @@ jobs:
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
       - name: Install Needed packages
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4
-      # not using brew for that one as we need 2.69
-      - if: runner.os == 'macOS'
-        name: Install autoconf
-        run: |
-          curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
-          tar -xzf autoconf-2.69.tar.gz
-          cd autoconf-*
-          ./configure
-          make
-          make install
-          autoconf --version
-          ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
+        run: brew install coreutils wget automake libtool cmake gnu-sed m4 autoconf@2.69 groff
       - name: Checkout
         uses: actions/checkout@v3
       - name: Setup Node.js ${{ matrix.node }}
