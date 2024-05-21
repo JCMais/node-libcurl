@@ -1,4 +1,4 @@
-name: Release node-libcurl
+name: Release new version of node-libcurl
 
 on:
   workflow_dispatch:
@@ -42,10 +42,10 @@ jobs:
           git tag --list
           git remote -v
 
-      - name: Merge version commit into master
+      - name: Merge version commit into develop
         run: |
           git push origin v${{ env.TAG }}
-          git push origin master
+          git push origin develop
 
       - name: Create Tag and Release
         uses: ncipollo/release-action@v1
