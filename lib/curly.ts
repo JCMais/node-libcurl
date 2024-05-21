@@ -79,7 +79,7 @@ const methods = [
   'unsubscribe',
 ] as const
 
-type HttpMethod = typeof methods[number]
+type HttpMethod = (typeof methods)[number]
 
 export type CurlyResponseBodyParser = (
   data: Buffer,
@@ -338,8 +338,13 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
         for (const headersReq of headers) {
           const entries = Object.entries(headersReq)
           for (const [headerKey, headerValue] of entries) {
-            delete headersReq[headerKey]
-            headersReq[headerKey.toLowerCase()] = headerValue
+            if (
+              typeof headerKey === 'string' &&
+              typeof headerValue === 'string'
+            ) {
+              delete headersReq[headerKey]
+              headersReq[headerKey.toLowerCase()] = headerValue
+            }
           }
         }
       }
@@ -368,7 +373,7 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
 
       curlHandle.on(
         'end',
-        (statusCode, data: Buffer, headers: HeaderInfo[]) => {
+        (statusCode: any, data: Buffer, headers: HeaderInfo[]) => {
           curlHandle.close()
 
           // only need to the remaining here if we did not enabled
@@ -380,8 +385,16 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
           const contentTypeEntry = Object.entries(
             headers[headers.length - 1],
           ).find(([k]) => k.toLowerCase() === 'content-type')
-
-          let contentType = contentTypeEntry ? contentTypeEntry[1] : ''
+          const firstHeader = contentTypeEntry && contentTypeEntry[1]
+          if (typeof firstHeader !== 'string') {
+            return resolve({
+              statusCode: statusCode,
+              // @ts-ignore
+              data: data,
+              headers: headers,
+            })
+          }
+          let contentType = firstHeader
 
           // remove the metadata of the content-type, like charset
           // See https://tools.ietf.org/html/rfc7231#section-3.1.1.5

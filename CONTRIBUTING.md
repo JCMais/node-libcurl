@@ -23,54 +23,62 @@ Before opening an issue try to search the existing ones for the same problem.
 
 Make sure to include on your issue the following information:
 
-* Node.js Version
-* yarn / npm version
-* Operational System (name and version)
-* Package version
-* Logs of the installation
+- Node.js Version
+- npm version
+- Operational System (name and version)
+- Package version
+- Logs of the installation
 
 ## Contributing with Code
-
-The package manager used on this project is [`yarn`](https://yarnpkg.com/)
 
 The addon lib code is written in Typescript, while the addon itself is written in C++.
 
 Folders [`./scripts`](./scripts) and [`./tools`](./tools) contain scripts in Javascript, those are used mostly during installation and on CI.
 
 ### C/C++
+
 #### Code Style
+
 C/C++ code is written following Google style guide (with some minor changes), and [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html) can/should be used to automatically format the code. There is already a `.clang-format` on the repository.
 
 #### Linting
+
 `cpplint` is used to lint C/C++ code
 
 ### Typescript / Javascript
+
 #### Code Style
+
 TS/JS code should be formatted using prettier
 
 #### Linting
+
 `ts-lint` is used to lint TS code, while JS code is using `eslint`.
 
 ### Setup
 
 If on Windows, first you will need to grab the deps:
+
 ```sh
-$ node scripts/update-deps.js
+node scripts/update-deps.js
 ```
 
 Install the dependencies, this will also build the addon:
+
 ```sh
-$ yarn install
+npm install
 ```
 
 If you made some change to the C++ code, you can just build the addon again:
+
 ```sh
-$ yarn pregyp build
+npm run pregyp build
 ```
 
 In case you need to rebuild:
+
 ```sh
-$ yarn pregyp rebuild
+npm run pregyp rebuild
 ```
 
 If you have any issues with the build process, please refer to a [readme build troubleshooting section](https://github.com/JCMais/node-libcurl#important-notes-on-prebuilt-binaries--direct-installation).
@@ -97,26 +105,29 @@ You will need to open a PR against the repository [`JCMais/curl-for-windows`](ht
 After that a new tag will be created on this repo, which we can them use on the file [`LIBCURL_VERSION_WIN_DEPS`](./LIBCURL_VERSION_WIN_DEPS).
 
 ### Debugging with lldb
+
 1. Install lldb
 On Debian based linux:
+
 ```
 sudo apt-get install lldb
 ```
 
 2. Install Node.js lldb plugin:
+
 ```
 npm i -g llnode
 ```
 
 3. Run script that causes core dump
+
 ```
 llnode -- /path/to/bin/node --abort_on_uncaught_exception script.js
 ```
 
 4. Profit
 
-
-More information go to https://github.com/nodejs/llnode
+More information go to <https://github.com/nodejs/llnode>
 
 ### Publishing New Releases
 
@@ -126,32 +137,26 @@ We are using [`np`](https://github.com/sindresorhus/np) for releases.
 
 1. Checkout `master`
 2. Merge changes from `develop`
-3. Update docs by running `yarn docs` and commit the changes.
+3. Update docs by running `npm run docs` and commit the changes.
 4. Create version
 5. Publish
 
 So basically:
+
 ```bash
 git checkout master
 git merge develop
 ```
+
 And then:
-```bash
-npx np [major|minor|patch]
-```
 
-or if you are having trouble with `np`:
-```bash
-yarn publish
-```
-
-or even if you are having trouble with `yarn`:
 ```bash
 npm version [major|minor|patch]
 npm publish
 ```
 
 And finally
+
 ```bash
 git push --follow-tags
 git checkout develop
@@ -159,21 +164,10 @@ git merge master
 git push
 ```
 
-#### Prereleases
-
-For prereleases, use something like this from the `develop` branch:
-```shell
-$ yarn np prerelease --any-branch --tag next
-```
-
-If for some reason np fails to run with Yarn, you can use this command to skip cleaning up and use npm to publish:
-```shell
-$ yarn np prerelease --no-yarn --no-cleanup --any-branch --tag next
-```
-
 #### Build Matrix
 
 We are using three CI providers:
+
 - CircleCI
 - GitHub Actions
 - AppVeyor
@@ -181,16 +175,19 @@ We are using three CI providers:
 Each CI provider is responsible for some builds:
 
 CircleCI:
+
 - Node.js (Alpine)
 - Electron (linux)
 - NW.js (linux)
 
 GitHub Actions:
+
 - Node.js (Linux, macOS)
 - Electron (macOS)
 - NW.js (macOS)
 
 AppVeyor:
+
 - Node.js (Win64, Win32)
 - Electron (Win64, Win32)
 

@@ -35,50 +35,31 @@
     "brute-force-leak-test:run:debug:gdb": "gdb --args node --inspect --expose_gc -r ts-node/register ./tools/brute-force-leak-test.ts",
     "brute-force-leak-test:server": "http-server ./tools/brute-force-server-static-folder -p 8080 -s",
     "build:dist": "tsc",
-    "clean": "yarn clean:build && yarn clean:dist",
+    "clean": "npm run clean:build && npm run clean:dist",
     "clean:build": "rimraf build",
     "clean:dist": "rimraf dist tsconfig.tsbuildinfo",
-    "docs": "typedoc",
-    "gen:compile_commands:debug": "yarn pregyp -- configure --debug -- --format=\"gyp.generator.compile_commands_json.py\"",
-    "gen:compile_commands:release": "yarn pregyp -- configure --release -- --format=\"gyp.generator.compile_commands_json.py\"",
+    "gen:compile_commands:debug": "npm run pregyp -- configure --debug -- --format=\"gyp.generator.compile_commands_json.py\"",
+    "gen:compile_commands:release": "npm run pregyp -- configure --release -- --format=\"gyp.generator.compile_commands_json.py\"",
     "gen:constants": "node scripts/build-constants.js",
     "install": "node-pre-gyp install --fallback-to-build",
     "postinstall": "node scripts/postinstall",
     "lint": "eslint lib/ scripts/ test/ examples/",
     "pregyp": "node-pre-gyp",
     "prettier": "prettier --write",
-    "prettier:all": "yarn prettier lib/**/*.ts tools/**/*.js scripts/**/*.js test/**/*.ts examples/**/*.js",
+    "prettier:all": "npm run prettier lib/**/*.ts tools/**/*.js scripts/**/*.js test/**/*.ts examples/**/*.js",
     "test": "mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
-    "test:coverage": "nyc yarn test",
+    "test:coverage": "nyc npm run test",
     "test:debug:gdb": "gdb --args node ./node_modules/.bin/mocha -r ts-node/register test/curl/hsts.spec.ts",
     "test:electron": "electron-mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
-    "test:watch": "yarn test --watch --watch-files lib/*.ts lib/**/*.ts test/**/*.spec.ts",
-    "preversion": "yarn lint && yarn clean:dist && yarn build:dist"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
-  },
-  "lint-staged": {
-    "*.{cpp,cc,h}": [
-      "clang-format -style=file -i"
-    ],
-    "*.{ts,js}": [
-      "prettier",
-      "eslint --fix"
-    ],
-    "package.json": [
-      "sort-package-json",
-      "prettier"
-    ]
+    "test:watch": "npm run test --watch --watch-files lib/*.ts lib/**/*.ts test/**/*.spec.ts",
+    "type-check": "tsc --noEmit --project tsconfig.json",
+    "preversion": "npm run lint && npm run clean:dist && npm run build:dist"
   },
   "dependencies": {
     "@mapbox/node-pre-gyp": "1.0.11",
     "env-paths": "2.2.0",
     "nan": "2.19.0",
-    "node-gyp": "10.0.1",
+    "node-gyp": "10.1.0",
     "npmlog": "4.1.2",
     "rimraf": "^3.0.2",
     "tslib": "2.0.1"
@@ -110,10 +91,7 @@
     "formidable": "^1.2.2",
     "http-auth": "^4.1.2",
     "http-auth-connect": "^1.0.4",
-    "husky": "^4.3.0",
-    "lint-staged": "^10.4.0",
     "mocha": "^7.1.1",
-    "np": "^6.5.0",
     "nyc": "^15.1.0",
     "octonode": "^0.9.5",
     "prettier": "^2.1.2",
@@ -121,17 +99,9 @@
     "should": "^13.2.3",
     "sort-package-json": "^1.46.0",
     "ts-node": "^8.8.2",
-    "tslint": "^6.1.3",
-    "tslint-config-airbnb": "^5.11.2",
-    "tslint-config-prettier": "^1.18.0",
-    "typedoc": "^0.19.2",
-    "typedoc-plugin-nojekyll": "^1.0.1",
     "typescript": "^4.0.3"
   },
   "engines": {
     "node": ">= 20"
-  },
-  "np": {
-    "cleanup": false
   }
 }

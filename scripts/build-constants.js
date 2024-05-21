@@ -159,7 +159,7 @@ const run = async () => {
   createSetOptOverloads(curlClassFilePath, 'this')
 
   execSync(
-    `yarn prettier ${curlOptionsFilePath} ${curlInfoFilePath} ${multiOptionFilePath} ${easyBindingFilePath} ${curlClassFilePath}`,
+    `npm run prettier ${curlOptionsFilePath} ${curlInfoFilePath} ${multiOptionFilePath} ${easyBindingFilePath} ${curlClassFilePath}`,
   )
 }
 

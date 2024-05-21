@@ -51,7 +51,7 @@ describe('Option HTTPPOST', () => {
           return
         }
 
-        const file = files.file
+        const file = Array.isArray(files.file) ? files.file[0] : files.file
 
         const response = {
           size: file.size,

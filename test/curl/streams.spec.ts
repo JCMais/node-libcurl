@@ -62,7 +62,7 @@ const getReadableStreamForBuffer = (
             this.push(null)
             wantsMore = false
           }
-        } catch (error) {
+        } catch (error: any) {
           stream.destroy(error)
         }
       }
@@ -132,9 +132,11 @@ describe('streams', () => {
           },
         })
 
-        const { statusCode, data: downloadStream, headers } = await curly.put<
-          Readable
-        >(`${url}/all?type=put-upload`, {
+        const {
+          statusCode,
+          data: downloadStream,
+          headers,
+        } = await curly.put<Readable>(`${url}/all?type=put-upload`, {
           ...getUploadOptions(curlyStreamUpload),
           ...getDownloadOptions(),
           curlyProgressCallback() {

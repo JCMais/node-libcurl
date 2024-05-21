@@ -3,6 +3,6 @@
 This is a simple mock server that can be used to run the example [`19-binary-data-protobuf`](../19-binary-data-protobuf.js).
 
 ```
-yarn
+npm install
 node server.js
 ```

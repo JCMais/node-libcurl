@@ -22,9 +22,9 @@ jobs:
           node-version: 20.9.0
           registry-url: 'https://registry.npmjs.org'
       - name: Install
-        run: yarn install --ignore-scripts
+        run: npm ci --ignore-scripts
       - name: Build
-        run: yarn build:dist
+        run: npm run build:dist
       - name: Publish Package
         run: npm publish --access public --no-git-checks --provenance --tag ${{ github.sha }}
         env:

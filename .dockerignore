@@ -15,4 +15,3 @@ lib/binding/node_libcurl.node
 node_modules/
 tsconfig.tsbuildinfo
 website/
-yarn-error.log

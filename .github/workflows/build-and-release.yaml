@@ -8,7 +8,7 @@ name: build-and-release
 on:
   push:
     tags:
-      - "*"
+      - '*'
     branches:
       - develop
 
@@ -33,13 +33,13 @@ jobs:
       # Produces SBOM and CVE report
       # Helps understand vulnerabilities / license compliance across third party dependencies
       # Drift: Doesn't track any yarn global or OS specific packages that involves scanning entire root file system.
-      # (TODO): Produce OS specific SBOM to detect build time depdencies. 
+      # (TODO): Produce OS specific SBOM to detect build time depdencies.
       - id: sca-project
         uses: Kong/public-shared-actions/security-actions/sca@2f02738ecb1670f01391162e43fe3f5d4e7942a1 # v2.2.2
         with:
           dir: ${{ github.repository }}
           upload-sbom-release-assets: true
-      
+
   build-and-release-nodejs:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -69,21 +69,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
-      - name: Output yarn cache dir
-        id: yarn-cache-dir
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-      - name: Restore Yarn Cache
-        uses: actions/cache@v3
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir.outputs.dir }}
-          key: v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
-            v1-${{ runner.os }}-yarn-cache-
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
       - name: Restore libcurl deps cache
         uses: actions/cache@v3
         id: libcurl-deps-cache
@@ -94,10 +84,10 @@ jobs:
           key: v4-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}-fork
           restore-keys: |
             v4-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}-fork
-      - name: "Set GIT_TAG"
+      - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: "Publish Binary"
+      - name: 'Publish Binary'
         run: |
           pip install packaging
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG RUNNER_OS=${{ runner.os }} ./scripts/ci/build.sh
@@ -171,10 +161,10 @@ jobs:
           key: v4-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}-fork
           restore-keys: |
             v4-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}-fork
-      - name: "Set GIT_TAG"
+      - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: "Publish Binary"
+      - name: 'Publish Binary'
         run: |
           pip install packaging
           GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
@@ -214,7 +204,7 @@ jobs:
       - name: Build
         run: |
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
-          yarn install --frozen-lockfile
+          npm ci
       - name: Test
         run: |
           yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())"
@@ -227,8 +217,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           pip install packaging
-          yarn node-pre-gyp package testpackage --verbose
-          node scripts\module-packaging.js --publish $(yarn -s node-pre-gyp reveal staged_tarball --silent)
+          npm run node-pre-gyp package testpackage --verbose
+          node scripts\module-packaging.js --publish $(npm run -s node-pre-gyp reveal staged_tarball --silent)
 
   build-and-release-electron-windows:
     runs-on: windows-latest
@@ -243,8 +233,8 @@ jobs:
       ELECTRON_VERSION: ${{ matrix.electron-version }}
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
-      npm_config_runtime: "electron"
-      npm_config_dist_url: "https://electronjs.org/headers"
+      npm_config_runtime: 'electron'
+      npm_config_dist_url: 'https://electronjs.org/headers'
       npm_config_target: ${{ matrix.electron-version }}
     steps:
       - name: Checkout
@@ -264,7 +254,7 @@ jobs:
       - name: Build
         run: |
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
-          yarn install --frozen-lockfile
+          npm ci
       - name: Test
         run: |
           yarn test:electron
@@ -278,4 +268,3 @@ jobs:
           pip install packaging
           yarn node-pre-gyp package testpackage --verbose
           node scripts\module-packaging.js --publish $(yarn -s node-pre-gyp reveal staged_tarball --silent)
-          

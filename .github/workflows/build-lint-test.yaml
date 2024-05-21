@@ -28,7 +28,7 @@ jobs:
       # Produces SBOM and CVE report
       # Helps understand vulnerabilities / license compliance across third party dependencies
       # Drift: Doesn't track any yarn global or OS specific packages that involves scanning entire root file system.
-      # (TODO): Produce OS specific SBOM to detect build time depdencies. 
+      # (TODO): Produce OS specific SBOM to detect build time depdencies.
       - id: sca-project
         uses: Kong/public-shared-actions/security-actions/sca@2f02738ecb1670f01391162e43fe3f5d4e7942a1 # v2.2.2
         with:
@@ -81,22 +81,12 @@ jobs:
         run: sudo apt-get install -y cmake
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
-      - name: Output yarn cache dir
-        id: yarn-cache-dir
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-      - name: Restore Yarn Cache ${{ matrix.node }}-${{ github.ref }}
-        uses: actions/cache@v1
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir.outputs.dir }}
-          key: v1-${{ runner.os }}-yarn-cache-${{ matrix.node }}-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            v1-${{ runner.os }}-yarn-cache-${{ matrix.node }}-${{ github.ref }}-
-            v1-${{ runner.os }}-yarn-cache-${{ matrix.node }}-
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
       - name: Restore libcurl deps cache
         uses: actions/cache@v3
         id: libcurl-deps-cache
@@ -116,14 +106,14 @@ jobs:
             ./scripts/ci/build.sh
       - name: 'Run lint'
         if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
-        run: yarn lint
+        run: npm run lint
       - name: 'Run tsc'
         if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
-        run: yarn build:dist
+        run: npm run build:dist
       # we do run tests in all matrix jobs
       - name: 'Run tests'
         if: steps.run_result.outputs.run_result != 'success'
-        run: yarn test:coverage
+        run: npm run test:coverage
       # but coverage is only sent for the run-lint-and-tsc job
       - name: Upload coverage to Codecov
         if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
@@ -181,22 +171,12 @@ jobs:
         run: brew install coreutils wget automake libtool cmake gnu-sed m4 autoconf@2.69 groff
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
-      - name: Output yarn cache dir
-        id: yarn-cache-dir
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-      - name: Restore Yarn Cache ${{ matrix.node }}-${{ github.ref }}
-        uses: actions/cache@v3
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir.outputs.dir }}
-          key: v1-${{ runner.os }}-yarn-cache-${{ matrix.node }}-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            v1-${{ runner.os }}-yarn-cache-${{ matrix.node }}-${{ github.ref }}-
-            v1-${{ runner.os }}-yarn-cache-${{ matrix.node }}-
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
       - name: Restore Electron Cache
         uses: actions/cache@v3
         with:
@@ -262,11 +242,11 @@ jobs:
       - name: Build ${{ matrix.node }}
         run: |
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
-          yarn install --frozen-lockfile
+          npm ci
       - name: Test
         run: |
-          yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())"
-          yarn test
+          npm run ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())"
+          npm run test
 
           if ($LASTEXITCODE -eq 0) {
             $host.SetShouldExit(0)
@@ -302,14 +282,14 @@ jobs:
           choco install nasm -y
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
           python deps\curl-for-windows\configure.py
-          yarn global add electron@${env:ELECTRON_VERSION}
+          npm install -g electron@${env:ELECTRON_VERSION}
       - name: Build ${{ matrix.node }}
         run: |
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
-          yarn install --frozen-lockfile
+          npm ci
       - name: Test
         run: |
-          yarn test:electron
+          npm run test:electron
 
           if ($LASTEXITCODE -eq 0) {
             $host.SetShouldExit(0)

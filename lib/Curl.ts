@@ -1011,7 +1011,7 @@ class Curl extends EventEmitter {
               handle.streamWriteFunctionShouldPause = true
               try {
                 handle.pause(CurlPause.RecvCont)
-              } catch (error) {
+              } catch (error: Error | any) {
                 cb(error)
                 return
               }

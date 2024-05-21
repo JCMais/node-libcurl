@@ -1,8 +1,6 @@
 {
   # Those variables can be overwritten when installing the package, like:
   #  npm install --curl-extra_link_args=true
-  # or if using yarn:
-  #  npm_config_curl_extra_link_args=true yarn install
   #
   'variables': {
     # Comma separated list
