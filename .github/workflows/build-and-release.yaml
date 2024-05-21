@@ -217,8 +217,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           pip install packaging
-          npm run node-pre-gyp package testpackage --verbose
-          node scripts\module-packaging.js --publish $(npm run -s node-pre-gyp reveal staged_tarball --silent)
+          npm run pre-gyp package testpackage --verbose
+          node scripts\module-packaging.js --publish $(npm run -s pre-gyp reveal staged_tarball --silent)
 
   build-and-release-electron-windows:
     runs-on: windows-latest
@@ -266,5 +266,5 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           pip install packaging
-          yarn node-pre-gyp package testpackage --verbose
-          node scripts\module-packaging.js --publish $(yarn -s node-pre-gyp reveal staged_tarball --silent)
+          npm run pre-gyp package testpackage --verbose
+          node scripts\module-packaging.js --publish $(npm run -s pre-gyp reveal staged_tarball --silent)
