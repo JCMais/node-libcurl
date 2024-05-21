@@ -27,7 +27,7 @@ jobs:
       # Perform SCA analysis for the code repository
       # Produces SBOM and CVE report
       # Helps understand vulnerabilities / license compliance across third party dependencies
-      # Drift: Doesn't track any yarn global or OS specific packages that involves scanning entire root file system.
+      # Drift: Doesn't track any npm global or OS specific packages that involves scanning entire root file system.
       # (TODO): Produce OS specific SBOM to detect build time depdencies.
       - id: sca-project
         uses: Kong/public-shared-actions/security-actions/sca@2f02738ecb1670f01391162e43fe3f5d4e7942a1 # v2.2.2

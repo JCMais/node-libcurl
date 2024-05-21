@@ -32,7 +32,7 @@ jobs:
       # Perform SCA analysis for the code repository
       # Produces SBOM and CVE report
       # Helps understand vulnerabilities / license compliance across third party dependencies
-      # Drift: Doesn't track any yarn global or OS specific packages that involves scanning entire root file system.
+      # Drift: Doesn't track any npm global or OS specific packages that involves scanning entire root file system.
       # (TODO): Produce OS specific SBOM to detect build time depdencies.
       - id: sca-project
         uses: Kong/public-shared-actions/security-actions/sca@2f02738ecb1670f01391162e43fe3f5d4e7942a1 # v2.2.2
@@ -128,21 +128,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
-      - name: Output yarn cache dir
-        id: yarn-cache-dir
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-      - name: Restore Yarn Cache
-        uses: actions/cache@v3
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir.outputs.dir }}
-          key: v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
-            v1-${{ runner.os }}-yarn-cache-
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
       - name: Restore Electron Cache
         uses: actions/cache@v3
         with:
@@ -207,8 +197,8 @@ jobs:
           npm ci
       - name: Test
         run: |
-          yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())"
-          yarn test
+          npm run ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())"
+          npm run test
 
           if ($LASTEXITCODE -eq 0) {
             $host.SetShouldExit(0)
@@ -250,14 +240,14 @@ jobs:
           choco install nasm -y
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
           python deps\curl-for-windows\configure.py
-          yarn global add electron@${env:ELECTRON_VERSION}
+          npm i -g electron@${env:ELECTRON_VERSION}
       - name: Build
         run: |
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
           npm ci
       - name: Test
         run: |
-          yarn test:electron
+          npm run test:electron
 
           if ($LASTEXITCODE -eq 0) {
             $host.SetShouldExit(0)
