@@ -262,7 +262,6 @@ curl-config --cflags
 DISPLAY=${DISPLAY:-}
 PUBLISH_BINARY=${PUBLISH_BINARY:-}
 ELECTRON_VERSION=${ELECTRON_VERSION:-}
-# NWJS_VERSION=${NWJS_VERSION:-}
 RUN_TESTS=${RUN_TESTS:-"true"}
 
 if [ -z "$PUBLISH_BINARY" ]; then
@@ -364,8 +363,6 @@ fi
 if [ "$RUN_TESTS" == "true" ]; then
   if [ -n "$ELECTRON_VERSION" ]; then
     [ $run_tests_electron == "true" ] && npm run test:electron || echo "Tests for this version of electron were disabled"
-  elif [ -n "$NWJS_VERSION" ]; then
-    echo "No tests available for node-webkit (nw.js)"
   else
     npm run ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
     npm run test

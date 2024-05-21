@@ -60,13 +60,12 @@
 - [Detailed Installation](#detailed-installation)
   - [Important Notes on Prebuilt Binaries / Direct Installation](#important-notes-on-prebuilt-binaries--direct-installation)
     - [Missing Packages](#missing-packages)
-  - [Electron / NW.js](#electron--nwjs)
-    - [NW.js (aka node-webkit)](#nwjs-aka-node-webkit)
+  - [Electron](#electron)
     - [Electron (aka atom-shell)](#electron-aka-atom-shell)
-    - [Electron >= 11 / NW.js >= 0.50](#electron--11--nwjs--050)
+    - [Electron \>= 11](#electron--11)
   - [Building on Linux](#building-on-linux)
   - [Building on macOS](#building-on-macos)
-    - [Xcode >= 10 | macOS >= Catalina](#xcode--10--macos--catalina)
+    - [Xcode \>= 10 | macOS \>= Catalina](#xcode--10--macos--catalina)
   - [Building on Windows](#building-on-windows)
 - [Getting Help](#getting-help)
 - [Contributing](#contributing)
@@ -273,7 +272,6 @@ available for:
 
 - Node.js: Latest two versions on active LTS (see <https://github.com/nodejs/Release>)
 - Electron: Latest 3 major versions
-- NW.js (node-webkit): Latest 3 major (minor for nw.js case) versions
 
 And on the following platforms:
 
@@ -281,7 +279,7 @@ And on the following platforms:
 - Mac OS X 64 bits
 - Windows 32 and 64 bits
 
-Installing with `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed. However if you are trying to install on `nw.js` or `electron` additional steps will be required, check their corresponding section below.
+Installing with `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed. However if you are trying to install on `electron` additional steps will be required, check their corresponding section below.
 
 The prebuilt binary is statically built with the following library versions, features and protocols (library versions may change between Node.js versions):
 
@@ -294,7 +292,7 @@ Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, NTLM_WB, SSL, libz, brotli, TLS
 If there is no prebuilt binary available that matches your system, or if the installation fails, then you will need an environment capable of compiling Node.js addons, which means:
 
 - [python 2.7](https://www.python.org/download/releases/2.7) installed
-- updated C++ compiler able to compile C++11, or if building Electron >= 11 / NW.js >= 0.50, C++17 (see the [Electron >= 11 / NW.js >= 0.50](#electron--11--nwjs--050) section below).
+- updated C++ compiler able to compile C++11, or if building Electron >= 11, C++17 (see the [Electron >= 11](#electron--11) section below).
 
 If you don't want to use the prebuilt binary even if it works on your system, you can pass a flag when installing:
 
@@ -340,7 +338,7 @@ The scripts to build Kerberos exists on the `./scripts/ci` folder, but it was re
 - If built with Heimdal, the addon becomes too big
 - If built with MIT Kerberos, the addon would be bound to their licensing terms.
 
-### Electron / NW.js
+### Electron
 
 If building for a `Electron` you need to pass additional parameters to the install command.
 
@@ -365,9 +363,9 @@ target_arch = x64
 dist_url = https://atom.io/download/atom-shell
 ```
 
-#### Electron >= 11 / NW.js >= 0.50
+#### Electron >= 11
 
-If you are building for Electron >= 11 or NW.js >= 0.50 you need to set the build process to use the C++17 std, you can do that by passing the variable `node_libcurl_cpp_std=c++17`.
+If you are building for Electron >= 11  you need to set the build process to use the C++17 std, you can do that by passing the variable `node_libcurl_cpp_std=c++17`.
 
 > If using `npm`:
 

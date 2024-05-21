@@ -166,29 +166,9 @@ git push
 
 #### Build Matrix
 
-We are using three CI providers:
-
-- CircleCI
-- GitHub Actions
-- AppVeyor
-
-Each CI provider is responsible for some builds:
-
-CircleCI:
-
-- Node.js (Alpine)
-- Electron (linux)
-- NW.js (linux)
-
 GitHub Actions:
 
 - Node.js (Linux, macOS)
 - Electron (macOS)
-- NW.js (macOS)
-
-AppVeyor:
-
-- Node.js (Win64, Win32)
-- Electron (Win64, Win32)
 
 GitHub Actions are also used to lint PRs, for that a build runs on Linux.
