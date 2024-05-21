@@ -32,7 +32,7 @@ jobs:
           node-version: 20
 
       - name: Install
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Create new package version
         run: npm version "${{ env.TAG }}"
