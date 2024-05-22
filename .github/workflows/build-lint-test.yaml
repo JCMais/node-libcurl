@@ -47,11 +47,11 @@ jobs:
         node-libcurl-cpp-std:
           - c++17
         node:
-          - 20.9.0
+          - 20.11.1
         include:
           # Lint
           - os: ubuntu-latest
-            node: 20.9.0
+            node: 20.11.1
             node-libcurl-cpp-std: c++17
             libcurl-release: 7.79.1
             run-lint-and-tsc: true
@@ -143,9 +143,9 @@ jobs:
         libcurl-release:
           - 7.79.1
         node:
-          - 20.9.0
+          - 20.11.1
         electron-version:
-          - 29.0.0
+          - 30.0.0
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -221,7 +221,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 20.9.0
+          - 20.11.1
     env:
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
@@ -258,9 +258,9 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 20.9.0
+          - 20.11.1
         electron-version:
-          - 29.0.0
+          - 30.0.0
     env:
       ELECTRON_VERSION: ${{ matrix.electron-version }}
       npm_config_msvs_version: 2022
