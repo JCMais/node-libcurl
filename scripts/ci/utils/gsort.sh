@@ -1,5 +1,5 @@
 
-#!/bin/bash
+#!/usr/bin/env bash
 # <release> <dest_folder>
 gsort=sort
 if [ "$(uname)" == "Darwin" ]; then

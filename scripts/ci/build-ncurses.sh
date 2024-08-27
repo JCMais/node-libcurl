@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ncurses is needed to build heimdal
 # <release> <dest_folder>
 set -euo pipefail

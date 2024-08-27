@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # <release> <dest_folder>
 set -euo pipefail
 

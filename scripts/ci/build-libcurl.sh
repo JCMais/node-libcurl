@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # If running this from a macOS, you will need pkgconfig
 #  brew install pkgconfig
 # <release> <dest_folder>
@@ -14,6 +14,7 @@ mkdir -p $2/source
 
 FORCE_REBUILD=${FORCE_REBUILD:-}
 FORCE_REBUILD_LIBCURL=${FORCE_REBUILD_LIBCURL:-}
+RUNNER_OS=${RUNNER_OS:-}
 
 # @TODO force rebuild on macOS, remove this later
 if [ "${RUNNER_OS}" == "macOS" ]; then
