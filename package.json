@@ -1,6 +1,6 @@
 {
   "name": "@getinsomnia/node-libcurl",
-  "version": "2.4.30",
+  "version": "2.4.31",
   "description": "The fastest http(s) client (and much more) for Node.js - Node.js bindings for libcurl",
   "keywords": [
     "node-curl",
@@ -81,7 +81,7 @@
     "cheerio": "^1.0.0-rc.3",
     "clang-format": "^1.4.0",
     "cookie-parser": "^1.4.6",
-    "electron-mocha": "^12.2.0",
+    "electron-mocha": "jackkav/electron-mocha#fix/windows-spawn-einval",
     "eslint": "^7.11.0",
     "eslint-config-prettier": "^6.12.0",
     "eslint-formatter-friendly": "^7.0.0",
@@ -102,6 +102,6 @@
     "typescript": "^4.0.3"
   },
   "engines": {
-    "node": ">= 20.11.1"
+    "node": ">= 20.16.0"
   }
 }

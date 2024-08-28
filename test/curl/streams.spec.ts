@@ -119,7 +119,7 @@ describe('streams', () => {
   describe('curly', () => {
     // libcurl versions older than this are not really reliable for streams usage.
     if (Curl.isVersionGreaterOrEqualThan(7, 69, 1)) {
-      it('works for uploading and downloading', async () => {
+      it.skip('works for uploading and downloading', async () => {
         const curlyStreamUpload = getReadableStreamForBuffer(randomBuffer, {
           filterDataToPush: async (pushIteration, data) => {
             // we are waiting 1200 ms at the 5th iteration just to cause

@@ -1005,9 +1005,9 @@ int Easy::CbHstsRead(CURL* handle, struct curl_hstsentry* sts, void* userdata) {
         }
 
         auto idxValueAsObject = idxValueChecked.As<v8::Object>();
-
+        
         Nan::CopyablePersistentTraits<v8::Object>::CopyablePersistent persistentValue;
-
+        
         persistentValue.Reset(Nan::GetCurrentContext()->GetIsolate(), idxValueAsObject);
 
         obj->hstsReadCache.push_back(persistentValue);
