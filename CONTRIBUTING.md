@@ -13,8 +13,6 @@
   - [Changing libcurl Version Used on Prebuilt Binaries for Windows](#changing-libcurl-version-used-on-prebuilt-binaries-for-windows)
   - [Debugging with lldb](#debugging-with-lldb)
   - [Publishing New Releases](#publishing-new-releases)
-    - [Semver Major / Minor / Patch](#semver-major--minor--patch)
-    - [Prereleases](#prereleases)
     - [Build Matrix](#build-matrix)
 
 ## Contributing with Issues
@@ -131,38 +129,10 @@ More information go to <https://github.com/nodejs/llnode>
 
 ### Publishing New Releases
 
-We are using [`np`](https://github.com/sindresorhus/np) for releases.
-
-#### Semver Major / Minor / Patch
-
-1. Checkout `master`
-2. Merge changes from `develop`
-3. Update docs by running `npm run docs` and commit the changes.
-4. Create version
-5. Publish
-
-So basically:
-
-```bash
-git checkout master
-git merge develop
-```
-
-And then:
-
-```bash
-npm version [major|minor|patch]
-npm publish
-```
-
-And finally
-
-```bash
-git push --follow-tags
-git checkout develop
-git merge master
-git push
-```
+1. Make PR and merge changes into develop
+1. Manually run github action "Release new version of node-libcurl"
+1. Set version to manually and run
+1. a Release should appear and if the build-and-release job is still running the assets will appear when ready
 
 #### Build Matrix
 
