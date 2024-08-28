@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # This must be run from the root of the repo, and the following variables must be available:
 #  GIT_COMMIT
 #  GIT_TAG
@@ -224,7 +224,7 @@ ls -al $LIBSSH2_BUILD_FOLDER/lib
 ###################
 # Build openldap
 ###################
-OPENLDAP_RELEASE=${OPENLDAP_RELEASE:-2.4.47}
+OPENLDAP_RELEASE=${OPENLDAP_RELEASE:-2.6.8}
 OPENLDAP_DEST_FOLDER=$PREFIX_DIR/deps/openldap
 echo "Building openldap v$OPENLDAP_RELEASE"
 ./scripts/ci/build-openldap.sh $OPENLDAP_RELEASE $OPENLDAP_DEST_FOLDER >$LOGS_FOLDER/build-openldap.log 2>&1
@@ -337,7 +337,7 @@ echo "node version: $(node -v)"
 echo "npm run version: $(npm run -v)"
 echo "node-gyp version: $(npm ls node-gyp -g)"
 # https://github.com/nodejs/node-gyp/blob/main/docs/Updating-npm-bundled-node-gyp.md
-npm explore npm/node_modules/@npmcli/run-script -g -- npm_config_global=false npm install node-gyp@10.1.0
+# npm explore npm/node_modules/@npmcli/run-script -g -- npm_config_global=false npm install node-gyp@10.2.0
 
 npm ci
 
@@ -364,7 +364,7 @@ if [ "$RUN_TESTS" == "true" ]; then
   if [ -n "$ELECTRON_VERSION" ]; then
     [ $run_tests_electron == "true" ] && npm run test:electron || echo "Tests for this version of electron were disabled"
   else
-    npm run ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
+    npx ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
     npm run test
   fi
 fi
