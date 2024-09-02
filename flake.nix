@@ -1,6 +1,6 @@
 {
   inputs = {
-    node-20-16-nixpkgs.url = "github:nixos/nixpkgs/8a977702729f2d763adc3e214513d517dcb94d9b";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
   };
   outputs = { self, nixpkgs, ... }@inputs:
     let
@@ -15,7 +15,7 @@
           in
           pkgs.mkShell {
             buildInputs = [
-              inputs.node-20-16-nixpkgs.legacyPackages.${system}.nodejs_20
+              inputs.nixpkgs-unstable.legacyPackages.${system}.nodejs_20
             ];
 
             nativeBuildInputs = with pkgs; [
