@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 const octonode = require('octonode')
-const log = require('npmlog')
+const log = require('./log.js')
 const fs = require('fs')
 const path = require('path')
 const versionTag =

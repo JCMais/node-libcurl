@@ -7,7 +7,7 @@ const util = require('util')
 
 // remember that everything in here must be a direct
 // dependency of the package no dev dependencies are allowed.
-const log = require('npmlog')
+const log = require('./log.js')
 const envPaths = require('env-paths')
 const rimraf = require('rimraf')
 
