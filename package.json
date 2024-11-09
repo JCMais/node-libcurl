@@ -50,7 +50,7 @@
     "test": "mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
     "test:coverage": "nyc npm run test",
     "test:debug:gdb": "gdb --args node ./node_modules/.bin/mocha -r ts-node/register test/curl/hsts.spec.ts",
-    "test:electron": "electron-mocha --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
+    "test:electron": "npx -y electron-mocha@13.0.1 --require ts-node/register test/**/*.spec.ts --reporter spec --timeout 60000",
     "test:watch": "npm run test --watch --watch-files lib/*.ts lib/**/*.ts test/**/*.spec.ts",
     "type-check": "tsc --noEmit --project tsconfig.json",
     "preversion": "npm run lint && npm run clean:dist && npm run build:dist"
@@ -81,7 +81,6 @@
     "clang-format": "^1.4.0",
     "consola": "^3.2.3",
     "cookie-parser": "^1.4.6",
-    "electron-mocha": "jackkav/electron-mocha#fix/windows-spawn-einval",
     "eslint": "^7.11.0",
     "eslint-config-prettier": "^6.12.0",
     "eslint-formatter-friendly": "^7.0.0",

@@ -33,3 +33,4 @@ tsconfig.tsbuildinfo
 website/
 api/
 
+.flox
