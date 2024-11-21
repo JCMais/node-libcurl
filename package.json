@@ -61,7 +61,9 @@
     "nan": "2.20.0",
     "node-gyp": "10.2.0",
     "rimraf": "^3.0.2",
-    "tslib": "2.0.1"
+    "tslib": "2.0.1",
+    "consola": "^3.2.3"
+
   },
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
@@ -79,7 +81,6 @@
     "body-parser": "^1.20.2",
     "cheerio": "^1.0.0-rc.3",
     "clang-format": "^1.4.0",
-    "consola": "^3.2.3",
     "cookie-parser": "^1.4.6",
     "electron-mocha": "jackkav/electron-mocha#fix/windows-spawn-einval",
     "eslint": "^7.11.0",
