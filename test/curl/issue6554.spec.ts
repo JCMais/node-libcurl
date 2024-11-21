@@ -20,6 +20,7 @@ describe('POST Request to API', () => {
       'URL',
       'https://api.groupe-psa.com/applications/majesticf/v1/getAvailableUpdate?client_id=20a4cf7c-f5fb-41d5-9175-a6e23b9880e5',
     )
+    curl.setOpt('SSL_VERIFYPEER', false)
     curl.setOpt('POSTFIELDS', postData)
     curl.setOpt(Curl.option.HTTPHEADER, [
       'Content-Type: application/json',
