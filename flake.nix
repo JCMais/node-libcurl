@@ -16,7 +16,6 @@
           pkgs.mkShell {
             buildInputs = [
               inputs.nixpkgs-unstable.legacyPackages.${system}.nodejs_20
-              inputs.nixpkgs-unstable.legacyPackages.${system}.electron_31
             ];
 
             nativeBuildInputs = with pkgs; [
@@ -33,7 +32,6 @@
 
             ];
             ELECTRON_SKIP_BINARY_DOWNLOAD = 1;
-            ELECTRON_PATH = "${inputs.nixpkgs-unstable.legacyPackages.${system}.electron_31}";
             LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib64:$LD_LIBRARY_PATH";
           });
     };
