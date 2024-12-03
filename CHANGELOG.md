@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Breaking Change  
 ### Fixed  
-### Added  
+- curly - use default content-type when there are no headers [#410](https://github.com/JCMais/node-libcurl/pull/410) by @liamdiprose 
+### Added
 ### Changed  
 ### Removed  
 

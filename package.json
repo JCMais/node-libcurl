@@ -79,7 +79,7 @@
   "dependencies": {
     "@mapbox/node-pre-gyp": "1.0.11",
     "env-paths": "2.2.0",
-    "nan": "2.20.0",
+    "nan": "2.22.0",
     "node-gyp": "10.2.0",
     "npmlog": "7.0.1",
     "rimraf": "5.0.5",

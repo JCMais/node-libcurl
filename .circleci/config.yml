@@ -190,6 +190,24 @@ workflows:
   build-test-deploy:
     jobs:
       ####
+      # Node v22
+      ####
+      - build-addon-unix-and-publish/build-addon:
+          name: build-addon-node-v22-libcurl-latest
+          context: general
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+            tags:
+              only: /^v.*/
+          node-version: '22'
+          cares-version: '1.33.1'
+          nghttp2-version: '1.63.0'
+          openssl-version: '3.0.15'
+          e:
+            name: alpine
+      ####
       # Node v21
       ####
       - build-addon-unix-and-publish/build-addon:
@@ -259,6 +277,51 @@ workflows:
           openssl-version: '3.0.7'
           e:
             name: alpine
+      ####
+      # Electron v33
+      ####
+      - build-addon-unix-and-publish/build-addon:
+          name: build-addon-electron-v33-libcurl-latest
+          context: general
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+            tags:
+              only: /^v.*/
+          electron-version: '33.2.1'
+          e:
+            name: debian
+      ####
+      # Electron v32
+      ####
+      - build-addon-unix-and-publish/build-addon:
+          name: build-addon-electron-v32-libcurl-latest
+          context: general
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+            tags:
+              only: /^v.*/
+          electron-version: '32.2.6'
+          e:
+            name: debian
+      ####
+      # Electron v31
+      ####
+      - build-addon-unix-and-publish/build-addon:
+          name: build-addon-electron-v31-libcurl-latest
+          context: general
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+            tags:
+              only: /^v.*/
+          electron-version: '31.7.5'
+          e:
+            name: debian
       ####
       # Electron v28
       ####
