@@ -63,15 +63,15 @@ else
     -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=$build_folder/lib
 
   make
+
+  # static libraries are built with -static suffix, remove it
+  for filename in $build_folder/lib/*.a; do
+    mv $filename $(echo "$filename" | sed "s/-static//g")
+  done
 fi
 
 
 cp -r $2/source/$1/c/include $build_folder/include
 
-# static libraries are built with -static suffix, remove it
-# also remove the dynamic ones, so they are not used
-for filename in $build_folder/lib/*.a; do
-  mv $filename $(echo "$filename" | sed "s/-static//g")
-done
-
+#  remove the dynamic ones, so they are not used
 find $build_folder/lib/ -not -type d -not -name '*.a' -delete
