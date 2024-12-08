@@ -4,106 +4,141 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import 'should'
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  it,
+  expect,
+} from 'vitest'
 
-import { app, host, port, server } from '../helper/server'
-import { Curl, CurlFeature } from '../../lib'
+import { createServer } from '../helper/server'
+import { Curl, CurlFeature, HeaderInfo } from '../../lib'
 
 const responseData = 'Ok'
 const responseLength = responseData.length
 
-const url = `http://${host}:${port}/`
-
 let curl: Curl
 let headerLength: number
+let serverInstance: ReturnType<typeof createServer>
 
 describe('Features', () => {
   beforeEach(() => {
     curl = new Curl()
-    curl.setOpt('URL', url)
+    curl.setOpt('URL', serverInstance.url)
   })
 
   afterEach(() => {
     curl.close()
   })
 
-  before((done) => {
-    server.listen(port, host, done)
-
-    app.get('/', (_req, res) => {
+  beforeAll(async () => {
+    serverInstance = createServer()
+    serverInstance.app.get('/', (_req, res) => {
       res.send(responseData)
 
       // @ts-ignore
       headerLength = res._header.length
     })
+    await serverInstance.listen()
   })
 
-  after(() => {
-    server.close()
-    app._router.stack.pop()
+  afterAll(async () => {
+    await serverInstance.close()
+    serverInstance.app._router.stack.pop()
   })
 
-  it('should not store data when NoDataStorage is set', (done) => {
+  it('should not store data when NoDataStorage is set', async () => {
     curl.enable(CurlFeature.NoDataStorage)
 
-    curl.on('end', (_status, data, headers) => {
-      data.should.be.an.instanceOf(Buffer).and.have.property('length', 0)
-      headers.should.be.an.instanceOf(Array).and.have.property('length', 1)
-      done()
+    const result = await new Promise<{
+      status: number
+      data: Buffer | string
+      headers: Buffer | HeaderInfo[]
+    }>((resolve, reject) => {
+      curl.on('end', (status, data, headers) => {
+        resolve({ status, data, headers })
+      })
+
+      curl.on('error', reject)
+
+      curl.perform()
     })
 
-    curl.on('error', done)
-
-    curl.perform()
+    expect(result.data).toBeInstanceOf(Buffer)
+    expect(result.data.length).toBe(0)
+    expect(result.headers).toBeInstanceOf(Array)
+    expect(result.headers.length).toBe(1)
   })
 
-  it('should not store headers when NoHeaderStorage is set', (done) => {
+  it('should not store headers when NoHeaderStorage is set', async () => {
     curl.enable(CurlFeature.NoHeaderStorage)
 
-    curl.on('end', (_status, data, headers) => {
-      data.should.be.an
-        .instanceOf(String)
-        .and.have.property('length', responseLength)
-      headers.should.be.instanceOf(Buffer).and.have.property('length', 0)
-      done()
+    const result = await new Promise<{
+      status: number
+      data: Buffer | string
+      headers: Buffer | HeaderInfo[]
+    }>((resolve, reject) => {
+      curl.on('end', (status, data, headers) => {
+        resolve({ status, data, headers })
+      })
+
+      curl.on('error', reject)
+
+      curl.perform()
     })
 
-    curl.on('error', done)
-
-    curl.perform()
+    expect(result.data).toBeTypeOf('string')
+    expect(result.data.length).toBe(responseLength)
+    expect(result.headers).toBeInstanceOf(Buffer)
+    expect(result.headers.length).toBe(0)
   })
 
-  it('should not parse data when NoDataParsing is set', (done) => {
+  it('should not parse data when NoDataParsing is set', async () => {
     curl.enable(CurlFeature.NoDataParsing)
 
-    curl.on('end', (_status, data, headers) => {
-      data.should.be.an
-        .instanceOf(Buffer)
-        .and.have.property('length', responseLength)
-      headers.should.be.an.instanceOf(Array).and.have.property('length', 1)
-      done()
+    const result = await new Promise<{
+      status: number
+      data: Buffer | string
+      headers: Buffer | HeaderInfo[]
+    }>((resolve, reject) => {
+      curl.on('end', (status, data, headers) => {
+        resolve({ status, data, headers })
+      })
+
+      curl.on('error', reject)
+
+      curl.perform()
     })
 
-    curl.on('error', done)
-
-    curl.perform()
+    expect(result.data).toBeInstanceOf(Buffer)
+    expect(result.data.length).toBe(responseLength)
+    expect(result.headers).toBeInstanceOf(Array)
+    expect(result.headers.length).toBe(1)
   })
 
-  it('should not parse headers when NoHeaderParsing is set', (done) => {
+  it('should not parse headers when NoHeaderParsing is set', async () => {
     curl.enable(CurlFeature.NoHeaderParsing)
 
-    curl.on('end', (_status, data, headers) => {
-      data.should.be.an
-        .instanceOf(String)
-        .and.have.property('length', responseLength)
-      headers.should.be.an
-        .instanceOf(Buffer)
-        .and.have.property('length', headerLength)
-      done()
+    const result = await new Promise<{
+      status: number
+      data: Buffer | string
+      headers: Buffer | HeaderInfo[]
+    }>((resolve, reject) => {
+      curl.on('end', (status, data, headers) => {
+        resolve({ status, data, headers })
+      })
+
+      curl.on('error', reject)
+
+      curl.perform()
     })
 
-    curl.on('error', done)
-
-    curl.perform()
+    expect(result.data).toBeTypeOf('string')
+    expect(result.data.length).toBe(responseLength)
+    expect(result.headers).toBeInstanceOf(Buffer)
+    expect(result.headers.length).toBe(headerLength)
   })
 })

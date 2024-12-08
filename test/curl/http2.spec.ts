@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import 'should'
+import { describe, beforeAll, afterAll, it, expect } from 'vitest'
 
 import {
   ServerHttp2Session,
@@ -12,7 +12,7 @@ import {
   IncomingHttpHeaders,
 } from 'http2'
 
-import { host, portHttp2, serverHttp2 } from '../helper/server'
+import { createHttp2Server } from '../helper/server'
 import { Curl, CurlHttpVersion } from '../../lib'
 
 type OnSessionFn = (session: ServerHttp2Session) => void
@@ -23,12 +23,14 @@ type OnStreamFn = (
 ) => void
 
 let session: ServerHttp2Session
+let serverInstance: ReturnType<typeof createHttp2Server>
 
 const onError = (error: Error) => console.error(error)
 const onSession: OnSessionFn = (_session) => {
   session = _session
 }
 const onStream: OnStreamFn = (stream, _headers) => {
+  console.log('Received headers:', _headers)
   stream.respond({
     'content-type': 'text/html',
     ':status': 200,
@@ -37,44 +39,44 @@ const onStream: OnStreamFn = (stream, _headers) => {
 }
 
 describe('HTTP2', () => {
-  before((done) => {
-    serverHttp2.on('error', onError)
-    serverHttp2.on('session', onSession)
-    serverHttp2.on('stream', onStream)
-
-    serverHttp2.listen(portHttp2, host, () => {
-      done()
-    })
+  beforeAll(async () => {
+    serverInstance = createHttp2Server()
+    serverInstance.server.on('error', onError)
+    serverInstance.server.on('session', onSession)
+    serverInstance.server.on('stream', onStream)
+    await serverInstance.listen()
+    console.log(serverInstance.url)
   })
 
-  after(function (done) {
-    this.timeout(5000)
-    serverHttp2.removeListener('error', onError)
-    serverHttp2.removeListener('session', onSession)
-    serverHttp2.removeListener('stream', onStream)
-    session.destroy()
-    serverHttp2.close(done)
+  afterAll(async () => {
+    serverInstance.server.removeListener('error', onError)
+    serverInstance.server.removeListener('session', onSession)
+    serverInstance.server.removeListener('stream', onStream)
+    session?.destroy()
+    await serverInstance.close()
   })
 
-  it('should work with https2 site', (done) => {
+  it('should work with https2 site', async () => {
     const curl = new Curl()
 
-    curl.setOpt('URL', `https://${host}:${portHttp2}/`)
+    curl.setOpt('URL', serverInstance.url)
     curl.setOpt('HTTP_VERSION', CurlHttpVersion.V2_0)
     curl.setOpt('SSL_VERIFYPEER', false)
 
-    curl.on('end', (statusCode) => {
-      curl.close()
+    const result = await new Promise<number>((resolve, reject) => {
+      curl.on('end', (statusCode) => {
+        curl.close()
+        resolve(statusCode)
+      })
 
-      statusCode.should.be.equal(200)
-      done()
+      curl.on('error', (error) => {
+        curl.close()
+        reject(error)
+      })
+
+      curl.perform()
     })
 
-    curl.on('error', (error) => {
-      curl.close()
-      done(error)
-    })
-
-    curl.perform()
+    expect(result).toBe(200)
   })
 })

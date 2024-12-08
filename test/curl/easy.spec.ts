@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import 'should'
+import { describe, beforeEach, afterEach, it, expect } from 'vitest'
 
 import { Curl, CurlCode, Easy } from '../../lib'
 
@@ -15,6 +15,7 @@ const url = 'http://example.com/'
 // @TODO Run a server side by side with the test suite to remove the need to make a external request
 
 let curl: Easy
+
 describe('easy', () => {
   beforeEach(() => {
     curl = new Easy()
@@ -27,7 +28,7 @@ describe('easy', () => {
 
   it('works', () => {
     const retCode = curl.perform()
-    retCode.should.be.equal(CurlCode.CURLE_OK)
+    expect(retCode).toBe(CurlCode.CURLE_OK)
   })
 
   describe('callbacks', () => {
@@ -35,16 +36,15 @@ describe('easy', () => {
       curl.setOpt('WRITEFUNCTION', () => {
         throw new Error('Error thrown on callback')
       })
-      const perform = () => curl.perform()
-      perform.should.throw('Error thrown on callback')
+      expect(() => curl.perform()).toThrow('Error thrown on callback')
     })
+
     it('WRITEFUNCTION - should throw error if has invalid return type', () => {
       // @ts-ignore
       curl.setOpt('WRITEFUNCTION', () => {
         return {}
       })
-      const perform = () => curl.perform()
-      perform.should.throw(
+      expect(() => curl.perform()).toThrow(
         'Return value from the WRITE callback must be an integer.',
       )
     })
@@ -53,16 +53,15 @@ describe('easy', () => {
       curl.setOpt('HEADERFUNCTION', () => {
         throw new Error('Error thrown on callback')
       })
-      const perform = () => curl.perform()
-      perform.should.throw('Error thrown on callback')
+      expect(() => curl.perform()).toThrow('Error thrown on callback')
     })
+
     it('HEADERFUNCTION - should throw error if has invalid return type', () => {
       // @ts-ignore
       curl.setOpt('HEADERFUNCTION', () => {
         return {}
       })
-      const perform = () => curl.perform()
-      perform.should.throw(
+      expect(() => curl.perform()).toThrow(
         'Return value from the HEADER callback must be an integer.',
       )
     })
@@ -73,17 +72,16 @@ describe('easy', () => {
       curl.setOpt('READFUNCTION', () => {
         throw new Error('Error thrown on callback')
       })
-      const perform = () => curl.perform()
-      perform.should.throw('Error thrown on callback')
+      expect(() => curl.perform()).toThrow('Error thrown on callback')
     })
+
     it('READFUNCTION - should throw error if has invalid return type', () => {
       curl.setOpt('UPLOAD', true)
       // @ts-ignore
       curl.setOpt('READFUNCTION', () => {
         return {}
       })
-      const perform = () => curl.perform()
-      perform.should.throw(
+      expect(() => curl.perform()).toThrow(
         'Return value from the READ callback must be an integer.',
       )
     })
@@ -104,9 +102,9 @@ describe('easy', () => {
           finished = true
           return buffer.write(data)
         })
-        const perform = () => curl.perform()
-        perform.should.throw('Error thrown on callback')
+        expect(() => curl.perform()).toThrow('Error thrown on callback')
       })
+
       it('TRAILERFUNCTION - should throw error if has invalid return type', () => {
         curl.setOpt('UPLOAD', true)
         curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])
@@ -122,8 +120,7 @@ describe('easy', () => {
           finished = true
           return buffer.write(data)
         })
-        const perform = () => curl.perform()
-        perform.should.throw(
+        expect(() => curl.perform()).toThrow(
           'Return value from the Trailer callback must be an array of strings or false.',
         )
       })

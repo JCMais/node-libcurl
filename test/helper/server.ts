@@ -10,54 +10,114 @@ import http2 from 'http2'
 import fs from 'fs'
 import path from 'path'
 import { Socket } from 'net'
+import { AddressInfo } from 'net'
 
 import express from 'express'
 import cookieParser from 'cookie-parser'
+
+const host = 'localhost'
 
 const file = path.resolve.bind(this, __dirname)
 const key = fs.readFileSync(file('./ssl/cert.key'))
 const cert = fs.readFileSync(file('./ssl/cert.pem'))
 
-export const app = express()
+// Server setup
+export const createApp = () => {
+  const app = express()
+  app
+    .use(express.urlencoded({ extended: true }))
+    .use(express.raw({ limit: '100MB', type: 'application/node-libcurl.raw' }))
+    // @ts-expect-error - no time for fixing this right now
+    .use(cookieParser())
 
-const serverSockets = new Set<Socket>()
-export const server = http.createServer(app)
-export const closeServer = () => {
-  for (const socket of serverSockets.values()) {
-    socket.destroy()
-  }
-  server.close()
+  app.disable('etag')
+  return app
 }
-server.on('connection', (socket) => {
-  serverSockets.add(socket)
-  socket.on('close', () => {
-    serverSockets.delete(socket)
-  })
-})
 
-export const serverHttps = https.createServer(
-  {
-    key,
-    cert,
-  },
-  app,
-)
-export const serverHttp2 = http2.createSecureServer({
-  key,
-  cert,
-})
+export interface ServerInstance<S extends http.Server | http2.Http2Server> {
+  app: ReturnType<typeof createApp>
+  server: S
+  close: () => Promise<void>
+  listen: () => Promise<number>
+  path: (path: string) => string
+  url: string
+  port: number
+}
 
-app
-  .use(express.urlencoded({ extended: true }))
-  .use(express.raw({ limit: '100MB', type: 'application/node-libcurl.raw' }))
-  // @ts-expect-error - no time for fixing this right now
-  .use(cookieParser())
+function _createServer<
+  S extends http.Server | https.Server | http2.Http2Server,
+>(app: ReturnType<typeof createApp>, server: S): ServerInstance<S> {
+  const serverSockets = new Set<Socket>()
 
-app.disable('etag')
+  if (server instanceof http.Server || server instanceof https.Server) {
+    server.on('connection', (socket) => {
+      serverSockets.add(socket)
+      socket.on('close', () => {
+        serverSockets.delete(socket)
+      })
+    })
+  }
 
-export const port = process.env.TEST_PORT
-  ? parseInt(process.env.TEST_PORT, 10)
-  : 3000
-export const portHttps = 3443
-export const portHttp2 = 3333
-export const host = 'localhost'
+  const isHttps = server instanceof https.Server || 'updateSettings' in server
+
+  let port = 0
+
+  const listen = () => {
+    return new Promise<number>((resolve) => {
+      server.listen(0, 'localhost', () => {
+        const address = server.address() as AddressInfo
+        port = address.port
+        resolve(port)
+      })
+    })
+  }
+
+  function close() {
+    return new Promise<void>((resolve) => {
+      for (const socket of serverSockets.values()) {
+        socket.destroy()
+      }
+      server.close(() => resolve())
+    })
+  }
+
+  return {
+    app,
+    server,
+    close,
+    listen,
+    path(path: string) {
+      return `${this.url}/${path.replace(/^\/+/, '')}`
+    },
+    get url() {
+      return `${isHttps ? 'https' : 'http'}://${host}:${this.port}`
+    },
+    get port() {
+      if (port === 0) {
+        throw new Error('Server is not listening')
+      }
+      return port
+    },
+  }
+}
+
+export const createServer = (): ServerInstance<http.Server> => {
+  const app = createApp()
+  const server = http.createServer(app)
+
+  return _createServer(app, server)
+}
+
+export const createHttpsServer = () => {
+  const app = createApp()
+  const server = https.createServer({ key, cert }, app)
+
+  return _createServer(app, server)
+}
+
+export const createHttp2Server = (): ServerInstance<http2.Http2Server> => {
+  const app = createApp()
+  const server = http2.createSecureServer({ key, cert })
+
+  return _createServer(app, server)
+}

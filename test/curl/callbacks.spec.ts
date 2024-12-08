@@ -6,13 +6,21 @@
  */
 import 'should'
 
-import { app, host, port, server } from '../helper/server'
+import { createServer } from '../helper/server'
 import { Curl, CurlCode } from '../../lib'
 import { CurlPreReqFunc } from '../../lib/enum/CurlPreReqFunc'
+import {
+  describe,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+  it,
+  expect,
+} from 'vitest'
 
 let curl: Curl
-
-const url = `http://${host}:${port}`
+let serverInstance: ReturnType<typeof createServer>
 
 describe('Callbacks', () => {
   beforeEach(() => {
@@ -23,10 +31,13 @@ describe('Callbacks', () => {
     curl.close()
   })
 
-  before((done) => {
-    server.listen(port, host, done)
+  beforeAll(async () => {
+    serverInstance = createServer()
+    await serverInstance.listen()
+  })
 
-    app.get('/delayed', (_req, res) => {
+  beforeAll(() => {
+    serverInstance.app.get('/delayed', (_req, res) => {
       const delayBetweenSends = 10
       const data = [
         '<html>',
@@ -52,13 +63,13 @@ describe('Callbacks', () => {
 
     let trailers: { [key: string]: string | undefined }
 
-    app.get('/trailers', (req, res) => {
+    serverInstance.app.get('/trailers', (req, res) => {
       res.send({
         trailers,
       })
     })
 
-    app.put('/headers', (req, res) => {
+    serverInstance.app.put('/headers', (req, res) => {
       req.resume()
 
       req.on('end', () => {
@@ -72,43 +83,43 @@ describe('Callbacks', () => {
     })
   })
 
-  after(() => {
-    server.close()
-    app._router.stack.pop()
-    app._router.stack.pop()
-    app._router.stack.pop()
+  afterAll(async () => {
+    await serverInstance.close()
+    serverInstance.app._router.stack.pop()
+    serverInstance.app._router.stack.pop()
+    serverInstance.app._router.stack.pop()
   })
 
-  describe('progress', function () {
-    this.timeout(10000)
-
-    it('should work', (done) => {
+  describe('progress', () => {
+    it('should work', async () => {
       let wasCalled = false
 
-      curl.setOpt('URL', `${url}/delayed`)
+      curl.setOpt('URL', `${serverInstance.url}/delayed`)
       curl.setOpt('NOPROGRESS', false)
 
       curl.setProgressCallback((dltotal, dlnow, ultotal, ulnow) => {
         wasCalled = true
-        dltotal.should.be.a.Number()
-        dlnow.should.be.a.Number()
-        ultotal.should.be.a.Number()
-        ulnow.should.be.a.Number()
+        expect(dltotal).toBeTypeOf('number')
+        expect(dlnow).toBeTypeOf('number')
+        expect(ultotal).toBeTypeOf('number')
+        expect(ulnow).toBeTypeOf('number')
         return 0
       })
 
-      curl.on('end', () => {
-        wasCalled.should.be.true
-        done()
+      await new Promise<void>((resolve, reject) => {
+        curl.on('end', () => {
+          expect(wasCalled).toBe(true)
+          resolve()
+        })
+
+        curl.on('error', reject)
+
+        curl.perform()
       })
-
-      curl.on('error', done)
-
-      curl.perform()
     })
 
-    it('should not accept undefined return', (done) => {
-      curl.setOpt('URL', `${url}/delayed`)
+    it('should not accept undefined return', async () => {
+      curl.setOpt('URL', `${serverInstance.url}/delayed`)
       curl.setOpt('NOPROGRESS', false)
 
       // @ts-ignore we want to test returning undefined here
@@ -116,29 +127,28 @@ describe('Callbacks', () => {
         return dlnow >= 40 ? undefined : 0
       })
 
-      curl.on('end', () => {
-        done()
-      })
+      await new Promise<void>((resolve, reject) => {
+        curl.on('end', () => {
+          reject(new Error('end called - request was not aborted by request'))
+        })
 
-      curl.on('error', (error) => {
-        // eslint-disable-next-line no-undef
-        error.should.be.a.instanceOf(TypeError)
-        done()
-      })
+        curl.on('error', (error) => {
+          expect(error).toBeInstanceOf(TypeError)
+          resolve()
+        })
 
-      curl.perform()
-    })
-  })
+        curl.perform()
+      })
+    }, 10000)
+  }, 10000)
 
   if (Curl.isVersionGreaterOrEqualThan(7, 64, 0)) {
     describe('trailer', function () {
-      this.timeout(5000)
-
-      it('should work', (done) => {
+      it('should work', async () => {
         let wasCalled = false
         let isFirstCall = true
 
-        curl.setOpt('URL', `${url}/headers`)
+        curl.setOpt('URL', `${serverInstance.url}/headers`)
         curl.setOpt('UPLOAD', true)
         curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])
         curl.setOpt('TRAILERFUNCTION', () => {
@@ -155,36 +165,38 @@ describe('Callbacks', () => {
           return buffer.write(data)
         })
 
-        curl.on('end', (statusCode, body) => {
-          if (isFirstCall) {
-            wasCalled.should.be.equal(true)
-            statusCode.should.be.equal(200)
+        await new Promise<void>((resolve, reject) => {
+          curl.on('end', (statusCode, body) => {
+            if (isFirstCall) {
+              expect(wasCalled).toBe(true)
+              expect(statusCode).toBe(200)
 
-            curl.setOpt('URL', `${url}/trailers`)
-            curl.setOpt('UPLOAD', 0)
-            curl.setOpt('HTTPHEADER', null)
-            curl.setOpt('TRAILERFUNCTION', null)
+              curl.setOpt('URL', `${serverInstance.url}/trailers`)
+              curl.setOpt('UPLOAD', 0)
+              curl.setOpt('HTTPHEADER', null)
+              curl.setOpt('TRAILERFUNCTION', null)
 
-            isFirstCall = false
-            wasCalled = false
+              isFirstCall = false
+              wasCalled = false
 
-            curl.perform()
-          } else {
-            wasCalled.should.be.equal(false)
-            JSON.parse(body as string).trailers[
-              'x-random-header'
-            ].should.be.equal('random-value2')
-            done()
-          }
+              curl.perform()
+            } else {
+              expect(wasCalled).toBe(false)
+              expect(
+                JSON.parse(body as string).trailers['x-random-header'],
+              ).toBe('random-value2')
+              resolve()
+            }
+          })
+
+          curl.on('error', reject)
+
+          curl.perform()
         })
-
-        curl.on('error', done)
-
-        curl.perform()
       })
 
-      it('should abort request on false', (done) => {
-        curl.setOpt('URL', `${url}/headers`)
+      it('should abort request on false', async () => {
+        curl.setOpt('URL', `${serverInstance.url}/headers`)
         curl.setOpt('UPLOAD', true)
         curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])
         curl.setOpt('TRAILERFUNCTION', () => {
@@ -200,20 +212,22 @@ describe('Callbacks', () => {
           return buffer.write(data)
         })
 
-        curl.on('end', () => {
-          done(new Error('end called - request wast not aborted by request'))
-        })
+        await new Promise<void>((resolve, reject) => {
+          curl.on('end', () => {
+            reject(new Error('end called - request was not aborted by request'))
+          })
 
-        curl.on('error', (error, errorCode) => {
-          errorCode.should.be.equal(CurlCode.CURLE_ABORTED_BY_CALLBACK)
-          done()
-        })
+          curl.on('error', (error, errorCode) => {
+            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+            resolve()
+          })
 
-        curl.perform()
+          curl.perform()
+        })
       })
 
-      it('should rethrow error thrown inside callback', (done) => {
-        curl.setOpt('URL', `${url}/headers`)
+      it('should rethrow error thrown inside callback', async () => {
+        curl.setOpt('URL', `${serverInstance.url}/headers`)
         curl.setOpt('UPLOAD', true)
         curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])
         // @ts-ignore
@@ -230,21 +244,23 @@ describe('Callbacks', () => {
           return buffer.write(data)
         })
 
-        curl.on('end', () => {
-          done(new Error('end called - request wast not aborted by request'))
-        })
+        await new Promise<void>((resolve, reject) => {
+          curl.on('end', () => {
+            reject(new Error('end called - request was not aborted by request'))
+          })
 
-        curl.on('error', (error, errorCode) => {
-          error.message.should.be.equal('thrown error inside callback')
-          errorCode.should.be.equal(CurlCode.CURLE_ABORTED_BY_CALLBACK)
-          done()
-        })
+          curl.on('error', (error, errorCode) => {
+            expect(error.message).toBe('thrown error inside callback')
+            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+            resolve()
+          })
 
-        curl.perform()
+          curl.perform()
+        })
       })
 
-      it('should throw an error on invalid return value', (done) => {
-        curl.setOpt('URL', `${url}/headers`)
+      it('should throw an error on invalid return value', async () => {
+        curl.setOpt('URL', `${serverInstance.url}/headers`)
         curl.setOpt('UPLOAD', true)
         curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])
         // @ts-ignore
@@ -261,116 +277,124 @@ describe('Callbacks', () => {
           return buffer.write(data)
         })
 
-        curl.on('end', () => {
-          done(new Error('end called - request wast not aborted by request'))
-        })
+        await new Promise<void>((resolve, reject) => {
+          curl.on('end', () => {
+            reject(new Error('end called - request was not aborted by request'))
+          })
 
-        curl.on('error', (error, errorCode) => {
-          error.message.should.be.equal(
-            'Return value from the Trailer callback must be an array of strings or false.',
-          )
-          errorCode.should.be.equal(CurlCode.CURLE_ABORTED_BY_CALLBACK)
-          done()
-        })
+          curl.on('error', (error, errorCode) => {
+            expect(error.message).toBe(
+              'Return value from the Trailer callback must be an array of strings or false.',
+            )
+            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+            resolve()
+          })
 
-        curl.perform()
+          curl.perform()
+        })
       })
     })
   }
 
   if (Curl.isVersionGreaterOrEqualThan(7, 80, 0)) {
     describe('prereq', function () {
-      this.timeout(5000)
-
-      it('should work', (done) => {
+      it('should work', async () => {
         let wasCalled = false
 
-        curl.setOpt('URL', `${url}/headers`)
+        curl.setOpt('URL', `${serverInstance.url}/headers`)
         curl.setOpt('PREREQFUNCTION', () => {
           wasCalled = true
           return CurlPreReqFunc.Ok
         })
 
-        curl.on('end', () => {
-          wasCalled.should.be.equal(true)
-          done()
+        await new Promise<void>((resolve, reject) => {
+          curl.on('end', () => {
+            expect(wasCalled).toBe(true)
+            resolve()
+          })
+
+          curl.on('error', reject)
+
+          curl.perform()
         })
-
-        curl.on('error', done)
-
-        curl.perform()
       })
 
-      it('should abort request on Abort return value', (done) => {
+      it('should abort request on Abort return value', async () => {
         let wasCalled = false
 
-        curl.setOpt('URL', `${url}/headers`)
+        curl.setOpt('URL', `${serverInstance.url}/headers`)
         curl.setOpt('PREREQFUNCTION', () => {
           wasCalled = true
           return CurlPreReqFunc.Abort
         })
 
-        curl.on('end', () => {
-          done(new Error('end called - request wast not aborted by request'))
-        })
+        await new Promise<void>((resolve, reject) => {
+          curl.on('end', () => {
+            reject(new Error('end called - request was not aborted by request'))
+          })
 
-        curl.on('error', (_error, errorCode) => {
-          wasCalled.should.be.equal(true)
-          errorCode.should.be.equal(CurlCode.CURLE_ABORTED_BY_CALLBACK)
-          done()
-        })
+          curl.on('error', (_error, errorCode) => {
+            expect(wasCalled).toBe(true)
+            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+            resolve()
+          })
 
-        curl.perform()
+          curl.perform()
+        })
       })
 
-      it('should rethrow error thrown inside callback', (done) => {
+      it('should rethrow error thrown inside callback', async () => {
         let wasCalled = false
 
-        curl.setOpt('URL', `${url}/headers`)
+        curl.setOpt('URL', `${serverInstance.url}/headers`)
         curl.setOpt('PREREQFUNCTION', () => {
           wasCalled = true
           throw new Error('thrown error inside callback')
         })
 
-        curl.on('end', () => {
-          done(new Error('end called - request wast not aborted by request'))
-        })
+        await new Promise<void>((resolve, reject) => {
+          curl.on('end', () => {
+            reject(new Error('end called - request was not aborted by request'))
+          })
 
-        curl.on('error', (error, errorCode) => {
-          wasCalled.should.be.equal(true)
-          error.message.should.be.equal('thrown error inside callback')
-          errorCode.should.be.equal(CurlCode.CURLE_ABORTED_BY_CALLBACK)
-          done()
-        })
+          curl.on('error', (error, errorCode) => {
+            expect(wasCalled).toBe(true)
+            expect(error.message).toBe('thrown error inside callback')
+            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+            resolve()
+          })
 
-        curl.perform()
+          curl.perform()
+        })
       })
 
-      it('should throw an error on invalid return value', (done) => {
+      it('should throw an error on invalid return value', async () => {
         let wasCalled = false
 
-        curl.setOpt('URL', `${url}/headers`)
+        curl.setOpt('URL', `${serverInstance.url}/headers`)
         // @ts-expect-error this should require the fn to return an enum value!
         curl.setOpt('PREREQFUNCTION', () => {
           wasCalled = true
           return '123'
         })
 
-        curl.on('end', () => {
-          done(new Error('end called - request wast not aborted by request'))
-        })
+        await new Promise<void>((resolve, reject) => {
+          curl.on('end', () => {
+            reject(new Error('end called - request was not aborted by request'))
+          })
 
-        curl.on('error', (error, errorCode) => {
-          wasCalled.should.be.equal(true)
-          error.message.should.be.equal(
-            'Return value from the PREREQ callback must be a number.',
-          )
-          errorCode.should.be.equal(CurlCode.CURLE_ABORTED_BY_CALLBACK)
-          done()
-        })
+          curl.on('error', (error, errorCode) => {
+            expect(wasCalled).toBe(true)
+            expect(error.message).toBe(
+              'Return value from the PREREQ callback must be a number.',
+            )
+            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+            resolve()
+          })
 
-        curl.perform()
+          curl.perform()
+        })
       })
     })
   }
-})
+}, 5000)

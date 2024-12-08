@@ -4,7 +4,15 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import 'should'
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  it,
+  expect,
+} from 'vitest'
 
 import path from 'path'
 import fs from 'fs'
@@ -12,10 +20,10 @@ import crypto from 'crypto'
 
 import express from 'express'
 
-import { app, host, port, server } from '../helper/server'
+import { createServer, ServerInstance } from '../helper/server'
 import { Curl } from '../../lib'
 
-const url = `http://${host}:${port}`
+import http from 'http'
 
 const fileSize = 10 * 1024 // 10K
 const fileName = path.resolve(__dirname, 'upload.test')
@@ -23,6 +31,7 @@ const fileName = path.resolve(__dirname, 'upload.test')
 let fileHash = ''
 let uploadLocation = ''
 let curl: Curl
+let serverInstance!: ServerInstance<http.Server>
 
 const hashOfFile = (
   file: string,
@@ -45,21 +54,30 @@ const hashOfFile = (
 }
 
 describe('Put Upload', () => {
-  beforeEach((done) => {
-    curl = new Curl()
-    curl.setOpt(Curl.option.URL, `${url}/upload/upload-result.test`)
-    curl.setOpt(Curl.option.HTTPHEADER, [
-      'Content-Type: application/node-libcurl.raw',
-    ])
+  beforeEach(async () => {
+    return new Promise<void>((resolve, reject) => {
+      curl = new Curl()
+      curl.setOpt(
+        Curl.option.URL,
+        serverInstance.path('/upload/upload-result.test'),
+      )
+      curl.setOpt(Curl.option.HTTPHEADER, [
+        'Content-Type: application/node-libcurl.raw',
+      ])
 
-    // write random bytes to a file, this will be our test file.
-    fs.writeFileSync(fileName, crypto.randomBytes(fileSize))
+      // write random bytes to a file, this will be our test file.
+      fs.writeFileSync(fileName, crypto.randomBytes(fileSize))
 
-    // get a hash of given file so we can assert later
-    // that the file sent is equals to the one we created.
-    hashOfFile(fileName, (error, hash) => {
-      fileHash = hash
-      done(error)
+      // get a hash of given file so we can assert later
+      // that the file sent is equals to the one we created.
+      hashOfFile(fileName, (error, hash) => {
+        if (error) {
+          reject(error)
+          return
+        }
+        fileHash = hash
+        resolve()
+      })
     })
   })
 
@@ -72,8 +90,9 @@ describe('Put Upload', () => {
     }
   })
 
-  before((done) => {
-    app.put('/upload/:filename', (req, res) => {
+  beforeAll(async () => {
+    serverInstance = createServer()
+    serverInstance.app.put('/upload/:filename', (req, res) => {
       uploadLocation = path.resolve(__dirname, req.params['filename'])
 
       const fd = fs.openSync(uploadLocation, 'w+')
@@ -89,7 +108,7 @@ describe('Put Upload', () => {
       })
     })
 
-    app.use(
+    serverInstance.app.use(
       (
         error: any,
         _req: express.Request,
@@ -104,39 +123,43 @@ describe('Put Upload', () => {
       },
     )
 
-    server.listen(port, host, done)
+    await serverInstance.listen()
   })
 
-  after(() => {
-    server.close()
+  afterAll(async () => {
+    await serverInstance.close()
 
-    app._router.stack.pop()
-    app._router.stack.pop()
+    serverInstance.app._router.stack.pop()
+    serverInstance.app._router.stack.pop()
   })
 
-  it('should upload data correctly using put', (done) => {
+  it('should upload data correctly using put', async () => {
     const fd = fs.openSync(fileName, 'r+')
 
     curl.setOpt('UPLOAD', 1)
     curl.setOpt('READDATA', fd)
 
-    curl.on('end', (statusCode, body) => {
-      statusCode.should.be.equal(200)
-      body.should.be.equal(fileHash)
+    const result = await new Promise<{ statusCode: number; body: string }>(
+      (resolve, reject) => {
+        curl.on('end', (statusCode, body) => {
+          fs.closeSync(fd)
+          resolve({ statusCode, body: body as string })
+        })
 
-      fs.closeSync(fd)
-      done()
-    })
+        curl.on('error', (error) => {
+          fs.closeSync(fd)
+          reject(error)
+        })
 
-    curl.on('error', (error) => {
-      fs.closeSync(fd)
-      done(error)
-    })
+        curl.perform()
+      },
+    )
 
-    curl.perform()
+    expect(result.statusCode).toBe(200)
+    expect(result.body).toBe(fileHash)
   })
 
-  it('should upload data correctly using READFUNCTION callback option', (done) => {
+  it('should upload data correctly using READFUNCTION callback option', async () => {
     const CURL_READFUNC_PAUSE = 0x10000001
     const CURL_READFUNC_ABORT = 0x10000000
     const CURLPAUSE_CONT = 0
@@ -149,79 +172,85 @@ describe('Put Upload', () => {
 
     curl.setOpt(Curl.option.UPLOAD, true)
 
-    curl.on('end', (statusCode, body) => {
-      statusCode.should.be.equal(200)
-      body.should.be.equal(fileHash)
+    const result = await new Promise<{ statusCode: number; body: string }>(
+      (resolve, reject) => {
+        curl.on('end', (statusCode, body) => {
+          resolve({ statusCode, body: body as string })
+        })
 
-      done()
-    })
+        curl.on('error', reject)
 
-    curl.on('error', done)
+        stream.on('error', reject)
 
-    stream.on('error', done)
+        stream.on('readable', () => {
+          // resume curl to let it ask for available data
+          if (isPaused) {
+            isPaused = false
+            curl.pause(CURLPAUSE_CONT)
+          }
+        })
 
-    stream.on('readable', () => {
-      // resume curl to let it ask for available data
-      if (isPaused) {
-        isPaused = false
-        curl.pause(CURLPAUSE_CONT)
-      }
-    })
+        stream.on('end', () => {
+          isEnded = true
 
-    stream.on('end', () => {
-      isEnded = true
+          // resume curl to let it see there is no more data, just in case it was paused
+          if (isPaused) {
+            isPaused = false
+            curl.pause(CURLPAUSE_CONT)
+          }
+        })
 
-      // resume curl to let it see there is no more data, just in case it was paused
-      if (isPaused) {
-        isPaused = false
-        curl.pause(CURLPAUSE_CONT)
-      }
-    })
+        curl.setOpt('READFUNCTION', (targetBuffer) => {
+          if (cancelRequested) {
+            return CURL_READFUNC_ABORT
+          }
 
-    curl.setOpt('READFUNCTION', (targetBuffer) => {
-      if (cancelRequested) {
-        return CURL_READFUNC_ABORT
-      }
+          // stream returns null if it has < requestedBytes available
+          const readBuffer = stream.read(100) || stream.read()
 
-      // stream returns null if it has < requestedBytes available
-      const readBuffer = stream.read(100) || stream.read()
+          if (readBuffer === null) {
+            if (isEnded) {
+              return 0
+            }
 
-      if (readBuffer === null) {
-        if (isEnded) {
-          return 0
-        }
+            // stream buffer was drained and we need to pause curl while waiting for new data
+            isPaused = true
+            return CURL_READFUNC_PAUSE
+          }
 
-        // stream buffer was drained and we need to pause curl while waiting for new data
-        isPaused = true
-        return CURL_READFUNC_PAUSE
-      }
+          readBuffer.copy(targetBuffer)
+          return readBuffer.length
+        })
 
-      readBuffer.copy(targetBuffer)
-      return readBuffer.length
-    })
+        curl.perform()
+      },
+    )
 
-    curl.perform()
+    expect(result.statusCode).toBe(200)
+    expect(result.body).toBe(fileHash)
   })
 
-  it('should abort upload with invalid fd', (done) => {
+  it('should abort upload with invalid fd', async () => {
     curl.setOpt('UPLOAD', 1)
     curl.setOpt('READDATA', -1)
 
-    curl.on('end', () => {
-      done(
-        new Error(
-          'Invalid file descriptor specified but upload was performed correctly.',
-        ),
-      )
-    })
+    const error = await new Promise<{ error: Error; errorCode: number }>(
+      (resolve) => {
+        curl.on('end', () => {
+          throw new Error(
+            'Invalid file descriptor specified but upload was performed correctly.',
+          )
+        })
 
-    curl.on('error', (_error, errorCode) => {
-      // [Error: Operation was aborted by an application callback]
-      errorCode.should.be.equal(42)
+        curl.on('error', (error, errorCode) => {
+          resolve({ error, errorCode })
+        })
 
-      done()
-    })
+        curl.perform()
+      },
+    )
 
-    curl.perform()
+    // [Error: Operation was aborted by an application callback]
+    expect(error.errorCode).toBe(42)
   })
 })

@@ -337,33 +337,6 @@ if [ -n "$ELECTRON_VERSION" ]; then
   runtime='electron'
   dist_url='https://electronjs.org/headers'
   target="$ELECTRON_VERSION"
-  
-  # enabled always temporarily
-  is_electron_lt_5=1
-  # is_electron_lt_5=0
-  # (printf '%s\n%s' "5.0.0" "$ELECTRON_VERSION" | $gsort -CV) || is_electron_lt_5=$?
-
-  # if it's lower, we can run tests against it
-  # we cannot run tests against version 5 because it has issues:
-  # https://github.com/electron/electron/issues/17972
-  if [[ "$(uname)" == "Darwin" || $is_electron_lt_5 -eq 1 && $has_display == "true" ]]; then
-    run_tests_electron=true
-    yarn global add electron@${ELECTRON_VERSION} --network-timeout 300000
-  fi
-
-  # A possible solution to the above issue is the following,
-  #  but it kinda does not work because it requires running docker with --privileged flag
-  # yarn_global_dir=$(yarn global dir)
-
-  # # Below is to fix the following error:
-  # # [19233:0507/005247.965078:FATAL:setuid_sandbox_host.cc(157)] The SUID sandbox helper binary was found, but is not 
-  # #  configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that 
-  # # /home/circleci/node-libcurl/node_modules/electron/dist/chrome-sandbox is owned by root and has mode 4755.
-  # if [[ -x "$(command -v sudo)" && "$EUID" -ne 0 && -f $yarn_global_dir/node_modules/electron/dist/chrome-sandbox ]]; then
-  #   echo "Changing owner of chrome-sandbox"
-  #   sudo chown root $yarn_global_dir/node_modules/electron/dist/chrome-sandbox
-  #   sudo chmod 4755 $yarn_global_dir/node_modules/electron/dist/chrome-sandbox
-  # fi
 elif [ -n "$NWJS_VERSION" ]; then
   runtime='node-webkit'
   dist_url=''

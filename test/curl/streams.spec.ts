@@ -4,21 +4,19 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import 'should'
+import { describe, beforeAll, afterAll, it, expect } from 'vitest'
 
 import { Readable } from 'stream'
 import crypto from 'crypto'
 
 import { Curl, CurlCode, curly } from '../../lib'
 
-import { app, closeServer, host, port, server } from '../helper/server'
+import { createServer } from '../helper/server'
 import { allMethodsWithMultipleReqResTypes } from '../helper/commonRoutes'
 
 interface GetReadableStreamForBufferOptions {
   filterDataToPush?(pushIteration: number, data: Buffer): Promise<Buffer>
 }
-
-const url = `http://${host}:${port}`
 
 // @ts-ignore
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -99,21 +97,23 @@ const getDownloadOptions = () => ({
 })
 
 let randomBuffer: Buffer
+let serverInstance: ReturnType<typeof createServer>
 
 describe('streams', () => {
-  before((done) => {
+  beforeAll(async () => {
     randomBuffer = getRandomBuffer()
-    server.listen(port, host, done)
+    serverInstance = createServer()
 
-    allMethodsWithMultipleReqResTypes(app, {
+    allMethodsWithMultipleReqResTypes(serverInstance.app, {
       putUploadBuffer: randomBuffer,
     })
+
+    await serverInstance.listen()
   })
 
-  after(() => {
-    closeServer()
-    // beatiful is not it?
-    app._router.stack.pop()
+  afterAll(async () => {
+    await serverInstance.close()
+    serverInstance.app._router.stack.pop()
   })
 
   describe('curly', () => {
@@ -136,23 +136,25 @@ describe('streams', () => {
           statusCode,
           data: downloadStream,
           headers,
-        } = await curly.put<Readable>(`${url}/all?type=put-upload`, {
-          ...getUploadOptions(curlyStreamUpload),
-          ...getDownloadOptions(),
-          curlyProgressCallback() {
-            return 0
+        } = await curly.put<Readable>(
+          `${serverInstance.url}/all?type=put-upload`,
+          {
+            ...getUploadOptions(curlyStreamUpload),
+            ...getDownloadOptions(),
+            curlyProgressCallback() {
+              return 0
+            },
           },
-        })
+        )
 
-        statusCode.should.be.equal(200)
-
-        headers[headers.length - 1]['x-is-same-buffer'].should.be.equal('0')
+        expect(statusCode).toBe(200)
+        expect(headers[headers.length - 1]['x-is-same-buffer']).toBe('0')
 
         // TODO: add snapshot testing for headers
 
         // we cannot use async iterators here because we need to support Node.js v8
 
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           const acc: Buffer[] = []
           let iteration = 0
 
@@ -173,11 +175,9 @@ describe('streams', () => {
 
           downloadStream.on('end', () => {
             const finalBuffer = Buffer.concat(acc)
-
             const result = finalBuffer.compare(randomBuffer)
-            result.should.be.equal(0)
-
-            resolve()
+            expect(result).toBe(0)
+            resolve(undefined)
           })
 
           downloadStream.on('error', (error) => {
@@ -186,11 +186,9 @@ describe('streams', () => {
         })
       })
 
-      it('works with responses without body', async function () {
-        this.timeout(3000)
-
+      it('works with responses without body', async () => {
         const { statusCode, data: downloadStream } = await curly.get<Readable>(
-          `${url}/all?type=no-body`,
+          `${serverInstance.url}/all?type=no-body`,
           {
             ...getDownloadOptions(),
             curlyProgressCallback() {
@@ -199,13 +197,13 @@ describe('streams', () => {
           },
         )
 
-        statusCode.should.be.equal(200)
+        expect(statusCode).toBe(200)
 
         // TODO: add snapshot testing for headers
 
         // we cannot use async iterators here because we need to support Node.js v8
 
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           const acc: Buffer[] = []
 
           downloadStream.on('data', (data) => {
@@ -214,10 +212,8 @@ describe('streams', () => {
 
           downloadStream.on('end', () => {
             const finalBuffer = Buffer.concat(acc)
-
-            finalBuffer.byteLength.should.be.equal(0)
-
-            resolve()
+            expect(finalBuffer.byteLength).toBe(0)
+            resolve(undefined)
           })
 
           downloadStream.on('error', (error) => {
@@ -226,11 +222,9 @@ describe('streams', () => {
         })
       })
 
-      it('works with HEAD requests', async function () {
-        this.timeout(3000)
-
+      it('works with HEAD requests', async () => {
         const { statusCode, data: downloadStream } = await curly.head<Readable>(
-          `${url}/all?type=method`,
+          `${serverInstance.url}/all?type=method`,
           {
             ...getDownloadOptions(),
             curlyProgressCallback() {
@@ -239,13 +233,13 @@ describe('streams', () => {
           },
         )
 
-        statusCode.should.be.equal(200)
+        expect(statusCode).toBe(200)
 
         // TODO: add snapshot testing for headers
 
         // we cannot use async iterators here because we need to support Node.js v8
 
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           const acc: Buffer[] = []
 
           downloadStream.on('data', (data) => {
@@ -254,10 +248,8 @@ describe('streams', () => {
 
           downloadStream.on('end', () => {
             const finalBuffer = Buffer.concat(acc)
-
-            finalBuffer.byteLength.should.be.equal(0)
-
-            resolve()
+            expect(finalBuffer.byteLength).toBe(0)
+            resolve(undefined)
           })
 
           downloadStream.on('error', (error) => {
@@ -279,14 +271,16 @@ describe('streams', () => {
         },
       })
 
-      await curly
-        .put(`${url}/all?type=put-upload`, getUploadOptions(curlyStreamUpload))
-        // @ts-ignore
-        .should.be.rejectedWith(Error, {
-          message: errorMessage,
-          isCurlError: true,
-          code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
-        })
+      await expect(
+        curly.put(
+          `${serverInstance.url}/all?type=put-upload`,
+          getUploadOptions(curlyStreamUpload),
+        ),
+      ).rejects.toMatchObject({
+        message: errorMessage,
+        isCurlError: true,
+        code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
+      })
     })
 
     it('returns an error when the upload stream is destroyed unexpectedly', async () => {
@@ -300,14 +294,16 @@ describe('streams', () => {
         },
       })
 
-      await curly
-        .put(`${url}/all?type=put-upload`, getUploadOptions(curlyStreamUpload))
-        // @ts-ignore
-        .should.be.rejectedWith(Error, {
-          message: 'Curl upload stream was unexpectedly destroyed',
-          isCurlError: true,
-          code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
-        })
+      await expect(
+        curly.put(
+          `${serverInstance.url}/all?type=put-upload`,
+          getUploadOptions(curlyStreamUpload),
+        ),
+      ).rejects.toMatchObject({
+        message: 'Curl upload stream was unexpectedly destroyed',
+        isCurlError: true,
+        code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
+      })
     })
 
     it('returns an error when the upload stream is destroyed unexpectedly with a specific error', async () => {
@@ -322,29 +318,31 @@ describe('streams', () => {
         },
       })
 
-      await curly
-        .put(`${url}/all?type=put-upload`, getUploadOptions(curlyStreamUpload))
-        // @ts-ignore
-        .should.be.rejectedWith(Error, {
-          message: errorMessage,
-          isCurlError: true,
-          code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
-        })
+      await expect(
+        curly.put(
+          `${serverInstance.url}/all?type=put-upload`,
+          getUploadOptions(curlyStreamUpload),
+        ),
+      ).rejects.toMatchObject({
+        message: errorMessage,
+        isCurlError: true,
+        code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
+      })
     })
 
     it('emits an error when the download stream is destroyed unexpectedly', async () => {
       const { statusCode, data: downloadStream } = await curly.get<Readable>(
-        `${url}/all?type=json`,
+        `${serverInstance.url}/all?type=json`,
         {
           ...getDownloadOptions(),
         },
       )
 
-      statusCode.should.be.equal(200)
+      expect(statusCode).toBe(200)
 
       // we cannot use async iterators here because we need to support Node.js v8
 
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         downloadStream.on('data', () => {
           downloadStream.destroy()
         })
@@ -356,12 +354,12 @@ describe('streams', () => {
         })
 
         downloadStream.on('error', (error) => {
-          error.should.match({
+          expect(error).toMatchObject({
             message: 'Curl response stream was unexpectedly destroyed',
             isCurlError: true,
             code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
           })
-          resolve()
+          resolve(undefined)
         })
       })
     })
@@ -370,7 +368,7 @@ describe('streams', () => {
       const errorMessage = 'Custom error message'
 
       const { statusCode, data: downloadStream } = await curly.get<Readable>(
-        `${url}/all?type=json`,
+        `${serverInstance.url}/all?type=json`,
         {
           ...getDownloadOptions(),
           // this is just to also test the branching for when this is not set
@@ -378,11 +376,11 @@ describe('streams', () => {
         },
       )
 
-      statusCode.should.be.equal(200)
+      expect(statusCode).toBe(200)
 
       // we cannot use async iterators here because we need to support Node.js v8
 
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         downloadStream.on('data', () => {
           downloadStream.destroy(new Error(errorMessage))
         })
@@ -394,12 +392,12 @@ describe('streams', () => {
         })
 
         downloadStream.on('error', (error) => {
-          error.should.match({
+          expect(error).toMatchObject({
             message: errorMessage,
             isCurlError: true,
             code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
           })
-          resolve()
+          resolve(undefined)
         })
       })
     })
@@ -412,12 +410,10 @@ describe('streams', () => {
       const values = [123, [], { read: true }]
 
       for (const val of values) {
-        ;(() => {
+        expect(() => {
           // @ts-expect-error
           curl.setUploadStream(val)
-        }).should.throw(Error, {
-          message: /^The passed value to setUploadStream does not/,
-        })
+        }).toThrow(/^The passed value to setUploadStream does not/)
       }
     })
 
@@ -431,7 +427,7 @@ describe('streams', () => {
 
       // the way we are testing this is by making sure we are
       // not adding more listeners to the stream end evt
-      streamUpload.listenerCount('end').should.be.equal(1)
+      expect(streamUpload.listenerCount('end')).toBe(1)
     })
 
     it('resets stream back to null after calling setUploadStream(null)', async () => {
@@ -440,10 +436,10 @@ describe('streams', () => {
       const curl = new Curl()
 
       curl.setUploadStream(streamUpload)
-      streamUpload.listenerCount('end').should.be.equal(1)
+      expect(streamUpload.listenerCount('end')).toBe(1)
 
       curl.setUploadStream(null)
-      streamUpload.listenerCount('end').should.be.equal(0)
+      expect(streamUpload.listenerCount('end')).toBe(0)
     })
   })
 })

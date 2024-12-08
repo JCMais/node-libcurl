@@ -4,42 +4,47 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import 'should'
+import { describe, beforeAll, afterAll, it, expect } from 'vitest'
 
-import { app, host, portHttps, serverHttps } from '../helper/server'
+import { createHttpsServer } from '../helper/server'
 import { Curl } from '../../lib'
 
 describe('SSL', () => {
-  before((done) => {
-    serverHttps.listen(portHttps, host, done)
+  const serverInstance = createHttpsServer()
 
-    app.get('/', (_req, res) => {
+  beforeAll(async () => {
+    serverInstance.app.get('/', (_req, res) => {
       res.send('ok')
     })
+
+    await serverInstance.listen()
   })
 
-  after(() => {
-    serverHttps.close()
-    app._router.stack.pop()
+  afterAll(async () => {
+    await serverInstance.close()
+    serverInstance.app._router.stack.pop()
   })
 
-  it('should work with ssl site', (done) => {
+  it('should work with ssl site', async () => {
     const curl = new Curl()
 
-    curl.setOpt('URL', `https://${host}:${portHttps}/`)
+    curl.setOpt('URL', `${serverInstance.url}/`)
     curl.setOpt('SSL_VERIFYPEER', false)
 
-    curl.on('end', (statusCode) => {
-      statusCode.should.be.equal(200)
-      curl.close()
-      done()
+    const statusCode = await new Promise<number>((resolve, reject) => {
+      curl.on('end', (statusCode) => {
+        curl.close()
+        resolve(statusCode)
+      })
+
+      curl.on('error', (error) => {
+        curl.close()
+        reject(error)
+      })
+
+      curl.perform()
     })
 
-    curl.on('error', (error) => {
-      curl.close()
-      done(error)
-    })
-
-    curl.perform()
+    expect(statusCode).toBe(200)
   })
 })

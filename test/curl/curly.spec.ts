@@ -4,31 +4,30 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import 'should'
+import { describe, beforeAll, afterAll, it, expect } from 'vitest'
 
 import { curly } from '../../lib'
-
-import { app, host, port, server } from '../helper/server'
+import { createServer } from '../helper/server'
 import { allMethodsWithMultipleReqResTypes } from '../helper/commonRoutes'
 
-const url = `http://${host}:${port}`
+let serverInstance: ReturnType<typeof createServer>
 
 describe('curly', () => {
-  before((done) => {
-    server.listen(port, host, done)
-
-    allMethodsWithMultipleReqResTypes(app)
+  beforeAll(async () => {
+    serverInstance = createServer()
+    allMethodsWithMultipleReqResTypes(serverInstance.app)
+    await serverInstance.listen()
   })
 
-  after(() => {
-    server.close()
-    // beatiful is not it?
-    app._router.stack.pop()
+  afterAll(async () => {
+    await serverInstance.close()
+    // beautiful is not it?
+    serverInstance.app._router.stack.pop()
   })
 
   describe('common usage', () => {
     it('works for multiple methods', async () => {
-      const urlMethod = `${url}/all?type=method`
+      const urlMethod = `${serverInstance.url}/all?type=method`
 
       const emptyData = {
         // this is necessary to do an empty post request with libcurl
@@ -53,31 +52,34 @@ describe('curly', () => {
           },
         })
 
-        statusCode.should.be.equal(200)
-        headers[0]['x-req-method'].should.be.equal(method)
+        expect(statusCode).toBe(200)
+        expect(headers[0]['x-req-method']).toBe(method)
       }
     })
 
     it('can set base url', async () => {
-      const curlyBaseUrl = url
+      const curlyBaseUrl = serverInstance.url
 
       const { statusCode } = await curly.get('/all', {
         curlyBaseUrl,
       })
 
-      statusCode.should.be.equal(200)
+      expect(statusCode).toBe(200)
     })
 
     it('lower cases headers when setting curlyLowerCaseHeaders to true', async () => {
-      const { statusCode, headers } = await curly.get(`${url}/all`, {
-        curlyLowerCaseHeaders: true,
-      })
+      const { statusCode, headers } = await curly.get(
+        `${serverInstance.url}/all`,
+        {
+          curlyLowerCaseHeaders: true,
+        },
+      )
 
-      statusCode.should.be.equal(200)
+      expect(statusCode).toBe(200)
 
       for (const headerReq of headers) {
         for (const key of Object.keys(headerReq)) {
-          key.should.be.equal(key.toLowerCase())
+          expect(key).toBe(key.toLowerCase())
         }
       }
     })
@@ -88,112 +90,124 @@ describe('curly', () => {
       })
 
       const { statusCode, data } = await curlyObj.post<Record<string, any>>(
-        `${url}/all?type=json-body`,
+        `${serverInstance.url}/all?type=json-body`,
       )
 
-      statusCode.should.be.equal(200)
-      data.should.be.deepEqual({
+      expect(statusCode).toBe(200)
+      expect(data).toEqual({
         field: 'value',
       })
     })
 
     it('default content-type parsers work - text', async () => {
-      const { statusCode, data } = await curly.get<string>(`${url}/all`)
-      statusCode.should.be.equal(200)
+      const { statusCode, data } = await curly.get<string>(
+        `${serverInstance.url}/all`,
+      )
+      expect(statusCode).toBe(200)
 
-      data.should.be.a.String()
-      data.should.be.equal('Hello World!')
+      expect(typeof data).toBe('string')
+      expect(data).toBe('Hello World!')
     })
 
     it('default content-type parsers work - json', async () => {
       const { statusCode, data } = await curly.get<Record<string, any>>(
-        `${url}/all?type=json`,
+        `${serverInstance.url}/all?type=json`,
       )
 
-      statusCode.should.be.equal(200)
+      expect(statusCode).toBe(200)
 
-      data.should.be.an.Object()
-      data.should.have.a.property('test', true)
+      expect(typeof data).toBe('object')
+      expect(data).toHaveProperty('test', true)
     })
 
     it('default content-type parsers work - *', async () => {
       const { statusCode, data } = await curly.get<Buffer>(
-        `${url}/all?type=something`,
+        `${serverInstance.url}/all?type=something`,
       )
 
-      statusCode.should.be.equal(200)
+      expect(statusCode).toBe(200)
 
-      data.should.be.instanceOf(Buffer)
-      data.toString('utf-8').should.be.equal('binary data would go here :)')
+      expect(data).toBeInstanceOf(Buffer)
+      expect(data.toString('utf-8')).toBe('binary data would go here :)')
     })
 
     it('overrides content-type parser with the curlyResponseBodyParsers option - json', async () => {
       const options = {
         curlyResponseBodyParsers: {
           'application/json': (data: Buffer, header: any[]) => {
-            data.should.be.an.instanceOf(Buffer)
-            header.should.be.an.Array()
+            expect(data).toBeInstanceOf(Buffer)
+            expect(Array.isArray(header)).toBe(true)
 
             return 'json'
           },
         },
       }
 
-      const req1 = await curly.get<string>(`${url}/all?type=json`, options)
-      req1.statusCode.should.be.equal(200)
-      req1.data.should.be.equal('json')
+      const req1 = await curly.get<string>(
+        `${serverInstance.url}/all?type=json`,
+        options,
+      )
+      expect(req1.statusCode).toBe(200)
+      expect(req1.data).toBe('json')
 
       // make sure the others default parsers are still working
 
-      const req2 = await curly.get<string>(`${url}/all?type=something`, options)
-      req2.statusCode.should.be.equal(200)
-      req2.data.should.be.an.instanceOf(Buffer)
+      const req2 = await curly.get<string>(
+        `${serverInstance.url}/all?type=something`,
+        options,
+      )
+      expect(req2.statusCode).toBe(200)
+      expect(req2.data).toBeInstanceOf(Buffer)
     })
 
     it('overrides all content-type parsers with the curlyResponseBodyParser option - json', async () => {
       const options = {
         curlyResponseBodyParser: (data: Buffer, header: any[]) => {
-          data.should.be.an.instanceOf(Buffer)
-          header.should.be.an.Array()
+          expect(data).toBeInstanceOf(Buffer)
+          expect(Array.isArray(header)).toBe(true)
 
           return 'data'
         },
       }
 
-      const req1 = await curly.get<string>(`${url}/all?type=json`, options)
-      req1.statusCode.should.be.equal(200)
-      req1.data.should.be.equal('data')
+      const req1 = await curly.get<string>(
+        `${serverInstance.url}/all?type=json`,
+        options,
+      )
+      expect(req1.statusCode).toBe(200)
+      expect(req1.data).toBe('data')
 
-      const req2 = await curly.get<string>(`${url}/all?type=something`, options)
-      req2.statusCode.should.be.equal(200)
-      req1.data.should.be.equal('data')
+      const req2 = await curly.get<string>(
+        `${serverInstance.url}/all?type=something`,
+        options,
+      )
+      expect(req2.statusCode).toBe(200)
+      expect(req1.data).toBe('data')
     })
 
     it('can set curlyResponseBodyParser option to false', async () => {
       const { statusCode, data } = await curly.get<string>(
-        `${url}/all?type=json`,
+        `${serverInstance.url}/all?type=json`,
         {
           curlyResponseBodyParser: false,
         },
       )
 
-      statusCode.should.be.equal(200)
-      data.should.be.an.instanceOf(Buffer)
+      expect(statusCode).toBe(200)
+      expect(data).toBeInstanceOf(Buffer)
     })
   })
 
-  // these are mostly testing Curl behavior
-  // we are testing then here just because this api is cleaner. :P
   describe('Curl internal handling', () => {
     it('Set-Cookie header is an array of strings', async () => {
       const { statusCode, headers } = await curly.get(
-        `${url}/all?type=set-cookie`,
+        `${serverInstance.url}/all?type=set-cookie`,
       )
 
-      statusCode.should.be.equal(200)
-      headers.should.have.length(1)
-      headers[0].should.have.property('Set-Cookie')
-      headers[0]['Set-Cookie']!.should.be.deepEqual([
+      expect(statusCode).toBe(200)
+      expect(headers).toHaveLength(1)
+      expect(headers[0]).toHaveProperty('Set-Cookie')
+      expect(headers[0]['Set-Cookie']).toEqual([
         'test-a=abc; Path=/; HttpOnly',
         'test-b=def; Path=/',
       ])
@@ -201,20 +215,18 @@ describe('curly', () => {
 
     it('headers is an array where each element contains the headers of each redirect', async () => {
       const { statusCode, headers } = await curly.get(
-        `${url}/all?type=redirect-c`,
+        `${serverInstance.url}/all?type=redirect-c`,
         {
           followLocation: true,
         },
       )
 
-      statusCode.should.be.equal(200)
+      expect(statusCode).toBe(200)
       // there are 3 redirects and the final response, so 4 HeaderInfo objects
-      headers.should.have.length(4)
+      expect(headers).toHaveLength(4)
 
       for (const [idx, header] of headers.entries()) {
-        header.result!.code.should.be.equal(
-          idx === headers.length - 1 ? 200 : 301,
-        )
+        expect(header.result!.code).toBe(idx === headers.length - 1 ? 200 : 301)
       }
     })
   })
@@ -222,29 +234,25 @@ describe('curly', () => {
   describe('weird servers', () => {
     it('works with response without a content-type', async () => {
       const { statusCode, data } = await curly.get(
-        `${url}/all?type=no-content-type`,
+        `${serverInstance.url}/all?type=no-content-type`,
       )
 
-      statusCode.should.be.equal(200)
-      data.should.be.instanceOf(Buffer)
+      expect(statusCode).toBe(200)
+      expect(data).toBeInstanceOf(Buffer)
     })
   })
 
   describe('error handling', () => {
-    it('throw error on invalid curlyProgressCallback', async () => {
+    it('throw error on invalid curlyProgressCallback', () => {
       const options = {
         curlyProgressCallback: 'I should have been a function :)',
       }
 
-      ;(() =>
+      expect(() =>
         curly
           // @ts-expect-error not assignable!
-          .get<string>(`${url}/all?type=json`, options)).should.throw(
-        TypeError,
-        {
-          message: /^curlyProgressCallback must be a function/,
-        },
-      )
+          .get<string>(`${serverInstance.url}/all?type=json`, options),
+      ).toThrow(/^curlyProgressCallback must be a function/)
     })
 
     it('throw error on invalid response body parser in option curlyResponseBodyParsers', async () => {
@@ -254,13 +262,11 @@ describe('curly', () => {
         },
       }
 
-      await curly
-        // @ts-expect-error
-        .get<string>(`${url}/all?type=json`, options)
-        // @ts-ignore
-        .should.be.rejectedWith(TypeError, {
-          message: /^Response body parser for/,
-        })
+      await expect(
+        curly
+          // @ts-expect-error
+          .get<string>(`${serverInstance.url}/all?type=json`, options),
+      ).rejects.toThrow(/^Response body parser for/)
     })
 
     it('throw error on invalid response body parser in option curlyResponseBodyParser', async () => {
@@ -268,13 +274,11 @@ describe('curly', () => {
         curlyResponseBodyParser: 'abc',
       }
 
-      await curly
-        // @ts-expect-error
-        .get<string>(`${url}/all?type=json`, options)
-        // @ts-ignore
-        .should.be.rejectedWith(TypeError, {
-          message: /^`curlyResponseBodyParser` passed to curly must be/,
-        })
+      await expect(
+        curly
+          // @ts-expect-error
+          .get<string>(`${serverInstance.url}/all?type=json`, options),
+      ).rejects.toThrow(/^`curlyResponseBodyParser` passed to curly must be/)
     })
 
     it('error thrown inside response body parser bubble up to the original call', async () => {
@@ -284,33 +288,23 @@ describe('curly', () => {
         },
       }
 
-      await curly
-        .get<string>(`${url}/all?type=json`, options)
-        // @ts-ignore
-        .should.be.rejectedWith(Error, {
-          message: /^error here/,
-        })
+      await expect(
+        curly.get<string>(`${serverInstance.url}/all?type=json`, options),
+      ).rejects.toThrow(/^error here/)
     })
 
     it('default response body parser for application/json throws an error when it receives invalid json', async () => {
-      await curly
-        .get<string>(`${url}/all?type=json-invalid`)
-        // @ts-ignore
-        .should.be.rejectedWith(Error, {
-          message: /^curly failed to parse/,
-        })
+      await expect(
+        curly.get<string>(`${serverInstance.url}/all?type=json-invalid`),
+      ).rejects.toThrow(/^curly failed to parse/)
     })
 
     it('throws an error when the internal Curl instance emits an error', async () => {
-      await curly
-        .get<string>(`${url}/abc`, {
+      await expect(
+        curly.get<string>(`${serverInstance.url}/abc`, {
           failOnError: true,
-        })
-        // @ts-ignore
-        .should.be.rejectedWith(Error, {
-          message: /^HTTP response code said error/,
-          code: 22,
-        })
+        }),
+      ).rejects.toThrow(/^HTTP response code said error/)
     })
   })
 })

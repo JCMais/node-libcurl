@@ -4,11 +4,9 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import should from 'should'
+import { describe, beforeEach, afterEach, it, expect } from 'vitest'
 import tls from 'tls'
 
-// import { app, host, port, server } from '../helper/server'
-// import { Curl, CurlCode } from '../../lib'
 import {
   Curl,
   CurlCode,
@@ -67,7 +65,7 @@ if (Curl.isVersionGreaterOrEqualThan(7, 74, 0)) {
     })
 
     describe('hsts', function () {
-      it('HSTSREADFUNCTION should work if returning null', (done) => {
+      it('HSTSREADFUNCTION should work if returning null', async () => {
         curl.setOpt('HSTS_CTRL', CurlHsts.Enable)
         let callCount = 0
         curl.setOpt('HSTSREADFUNCTION', () => {
@@ -75,23 +73,27 @@ if (Curl.isVersionGreaterOrEqualThan(7, 74, 0)) {
           return null
         })
 
-        curl.on('end', () => {
-          done(
-            callCount > 1
-              ? new Error(
+        await new Promise<void>((resolve, reject) => {
+          curl.on('end', () => {
+            if (callCount > 1) {
+              reject(
+                new Error(
                   'HSTSREADFUNCTION was called more than once when returning null',
-                )
-              : undefined,
-          )
+                ),
+              )
+            } else {
+              resolve()
+            }
+          })
+          curl.on('error', reject)
+          curl.perform()
         })
-        curl.on('error', done)
-        curl.perform()
       })
 
       // libcurl <= 7.79 has a bug where HSTSREADFUNCTION is always called if it is set, see:
       // https://github.com/curl/curl/issues/7710
       if (Curl.isVersionGreaterOrEqualThan(7, 80, 0)) {
-        it('HSTSREADFUNCTION should not be called if HSTS_CTRL is disabled', (done) => {
+        it('HSTSREADFUNCTION should not be called if HSTS_CTRL is disabled', async () => {
           curl.setOpt('HSTS_CTRL', CurlHsts.Disabled)
           let wasCalled = false
           curl.setOpt('HSTSREADFUNCTION', () => {
@@ -99,23 +101,27 @@ if (Curl.isVersionGreaterOrEqualThan(7, 74, 0)) {
             return null
           })
 
-          curl.on('end', () => {
-            wasCalled
-              ? done(
+          await new Promise<void>((resolve, reject) => {
+            curl.on('end', () => {
+              if (wasCalled) {
+                reject(
                   new Error(
                     'HSTSREADFUNCTION was called while HSTS_CTRL was set to CurlHsts.Disabled',
                   ),
                 )
-              : done()
+              } else {
+                resolve()
+              }
+            })
+
+            curl.on('error', reject)
+
+            curl.perform()
           })
-
-          curl.on('error', done)
-
-          curl.perform()
         })
       }
 
-      it('HSTSREADFUNCTION should work correctly by returning object multiple times', (done) => {
+      it('HSTSREADFUNCTION should work correctly by returning object multiple times', async () => {
         curl.setOpt('HSTS_CTRL', CurlHsts.Enable)
         const cache = getHstsCache()
         const initialCacheLength = cache.length
@@ -128,18 +134,20 @@ if (Curl.isVersionGreaterOrEqualThan(7, 74, 0)) {
           return entry ?? null
         })
 
-        curl.on('end', () => {
-          cache.should.have.lengthOf(0)
-          hstsReadFunctionCallCount.should.be.equal(initialCacheLength + 1)
-          done()
+        await new Promise<void>((resolve, reject) => {
+          curl.on('end', () => {
+            expect(cache).toHaveLength(0)
+            expect(hstsReadFunctionCallCount).toBe(initialCacheLength + 1)
+            resolve()
+          })
+
+          curl.on('error', reject)
+
+          curl.perform()
         })
-
-        curl.on('error', done)
-
-        curl.perform()
       })
 
-      it('HSTSREADFUNCTION should work correctly by returning an array a single time', (done) => {
+      it('HSTSREADFUNCTION should work correctly by returning an array a single time', async () => {
         curl.setOpt('HSTS_CTRL', CurlHsts.Enable)
         const cache = getHstsCache()
 
@@ -153,32 +161,34 @@ if (Curl.isVersionGreaterOrEqualThan(7, 74, 0)) {
           return cache ?? null
         })
 
-        curl.on('end', () => {
-          const dupHandle = curl.dupHandle(false)
+        await new Promise<void>((resolve, reject) => {
+          curl.on('end', () => {
+            const dupHandle = curl.dupHandle(false)
 
-          // kill the original just to make sure we are not relying on memory from it
-          curl.close()
+            // kill the original just to make sure we are not relying on memory from it
+            curl.close()
 
-          dupHandle.on('end', () => {
-            // first two calls will be true, as it is realted for the first instance:
-            // 1: perform
-            // 2: duphandle
-            // the third call will be false, as the instance will not be === curl.handle, but === dupHandle.handle
-            callsToHstsReadFunction.should.match([true, true, false])
+            dupHandle.on('end', () => {
+              // first two calls will be true, as it is realted for the first instance:
+              // 1: perform
+              // 2: duphandle
+              // the third call will be false, as the instance will not be === curl.handle, but === dupHandle.handle
+              expect(callsToHstsReadFunction).toEqual([true, true, false])
 
-            done()
+              resolve()
+            })
+            dupHandle.on('error', reject)
+
+            dupHandle.perform()
           })
-          dupHandle.on('error', done)
 
-          dupHandle.perform()
+          curl.on('error', reject)
+
+          curl.perform()
         })
-
-        curl.on('error', done)
-
-        curl.perform()
       })
 
-      it('HSTSWRITEFUNCTION should work correctly by returning the same number of items that were provided by HSTSREADFUNCTION', (done) => {
+      it('HSTSWRITEFUNCTION should work correctly by returning the same number of items that were provided by HSTSREADFUNCTION', async () => {
         curl.setOpt('HSTS_CTRL', CurlHsts.Enable)
 
         const originalHstsCache = getHstsCache()
@@ -201,50 +211,52 @@ if (Curl.isVersionGreaterOrEqualThan(7, 74, 0)) {
           return CurlHstsCallback.Ok
         })
 
-        curl.on('end', () => {
-          // kill the handle so the cache is saved - this is a sync operation so everything will happen in a synchronous way
-          curl.close()
+        await new Promise<void>((resolve, reject) => {
+          curl.on('end', () => {
+            // kill the handle so the cache is saved - this is a sync operation so everything will happen in a synchronous way
+            curl.close()
 
-          savedHstsCache.should.have.lengthOf(originalHstsCache.length)
+            expect(savedHstsCache).toHaveLength(originalHstsCache.length)
 
-          // cache is already updated here
-          savedHstsCache.forEach((value, index) => {
-            const matchingHstsCache = originalHstsCache[index]
+            // cache is already updated here
+            savedHstsCache.forEach((value, index) => {
+              const matchingHstsCache = originalHstsCache[index]
 
-            value.host.should.be.equal(matchingHstsCache.host)
+              expect(value.host).toBe(matchingHstsCache.host)
 
-            // this one should be equal, as it should have been updated
-            if (value.host.indexOf('owasp') !== -1) {
-              should.exist(value.expire)
-              value.expire!.should.not.be.equal(matchingHstsCache.expire)
-              // should be false as this is what is returned from the domain
-              value.includeSubDomains!.should.be.equal(true)
-            } else {
-              should(value.expire).be.equal(matchingHstsCache.expire || null)
-              value.includeSubDomains!.should.be.equal(
-                matchingHstsCache.includeSubDomains || false,
-              )
-            }
+              // this one should be equal, as it should have been updated
+              if (value.host.indexOf('owasp') !== -1) {
+                expect(value.expire).toBeDefined()
+                expect(value.expire).not.toBe(matchingHstsCache.expire)
+                // should be false as this is what is returned from the domain
+                expect(value.includeSubDomains).toBe(true)
+              } else {
+                expect(value.expire).toBe(matchingHstsCache.expire || null)
+                expect(value.includeSubDomains).toBe(
+                  matchingHstsCache.includeSubDomains || false,
+                )
+              }
+            })
+
+            expect(savedCount).toEqual(
+              new Array(originalHstsCache.length)
+                .fill(null)
+                .map((_v, index, arr) => ({
+                  index,
+                  total: arr.length,
+                })),
+            )
+
+            resolve()
           })
 
-          savedCount.should.match(
-            new Array(originalHstsCache.length)
-              .fill(null)
-              .map((_v, index, arr) => ({
-                index,
-                total: arr.length,
-              })),
-          )
+          curl.on('error', reject)
 
-          done()
+          curl.perform()
         })
-
-        curl.on('error', done)
-
-        curl.perform()
       })
 
-      it('returning invalid data from HSTSREADFUNCTION should throw an error', (done) => {
+      it('returning invalid data from HSTSREADFUNCTION should throw an error', async () => {
         curl.setOpt('HSTS_CTRL', CurlHsts.Enable)
 
         let hstsReadFunctionCallCount = 0
@@ -278,39 +290,44 @@ if (Curl.isVersionGreaterOrEqualThan(7, 74, 0)) {
           return values.pop() ?? null
         })
 
-        curl.on('end', () => {
-          done(
-            onErrorCallCount !== initialValuesLength
-              ? new Error(
+        await new Promise<void>((resolve, reject) => {
+          curl.on('end', () => {
+            if (onErrorCallCount !== initialValuesLength) {
+              reject(
+                new Error(
                   `End event emitted too soon - Errors: ${onErrorCallCount} - Expected: ${initialValuesLength}`,
-                )
-              : null,
-          )
-        })
+                ),
+              )
+            } else {
+              resolve()
+            }
+          })
 
-        curl.on('error', (error, errorCode) => {
-          ++onErrorCallCount
+          curl.on('error', (error, errorCode) => {
+            ++onErrorCallCount
 
-          if (onErrorCallCount > initialValuesLength) {
-            return done(
-              new Error(
-                `onError called more times than expected - Expected: ${initialValuesLength} - Error: ${error.message}`,
-              ),
-            )
-          }
+            if (onErrorCallCount > initialValuesLength) {
+              reject(
+                new Error(
+                  `onError called more times than expected - Expected: ${initialValuesLength} - Error: ${error.message}`,
+                ),
+              )
+              return
+            }
 
-          error.message.should.match(/fix the HSTS callback/)
-          errorCode.should.be.equal(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+            expect(error.message).toMatch(/fix the HSTS callback/)
+            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
 
-          hstsReadFunctionCallCount.should.be.equal(onErrorCallCount)
+            expect(hstsReadFunctionCallCount).toBe(onErrorCallCount)
+
+            curl.perform()
+          })
 
           curl.perform()
         })
-
-        curl.perform()
       })
 
-      it('throwing an error from inside HSTSREADFUNCTION should work correctly', (done) => {
+      it('throwing an error from inside HSTSREADFUNCTION should work correctly', async () => {
         curl.setOpt('HSTS_CTRL', CurlHsts.Enable)
 
         let hstsReadFunctionCallCount = 0
@@ -326,20 +343,22 @@ if (Curl.isVersionGreaterOrEqualThan(7, 74, 0)) {
           return null
         })
 
-        curl.on('end', () => {
-          done(new Error('No error found - end was called'))
+        await new Promise<void>((resolve, reject) => {
+          curl.on('end', () => {
+            reject(new Error('No error found - end was called'))
+          })
+
+          curl.on('error', (error, errorCode) => {
+            expect(error.message).toBe(errorMessage)
+            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+
+            expect(hstsReadFunctionCallCount).toBe(1)
+
+            resolve()
+          })
+
+          curl.perform()
         })
-
-        curl.on('error', (error, errorCode) => {
-          error.message.should.be.equal(errorMessage)
-          errorCode.should.be.equal(CurlCode.CURLE_ABORTED_BY_CALLBACK)
-
-          hstsReadFunctionCallCount.should.be.equal(1)
-
-          done()
-        })
-
-        curl.perform()
       })
 
       describe('Easy', () => {
@@ -372,17 +391,10 @@ if (Curl.isVersionGreaterOrEqualThan(7, 74, 0)) {
             return null
           })
 
-          const perform = () => easy.perform()
-
-          perform.should.throw(TypeError, {
-            message: errorMessage,
-          })
-
-          hstsReadFunctionCallCount.should.be.equal(1)
+          expect(() => easy.perform()).toThrow(errorMessage)
+          expect(hstsReadFunctionCallCount).toBe(1)
         })
       })
-
-      // test Easy errors
     })
   })
 }

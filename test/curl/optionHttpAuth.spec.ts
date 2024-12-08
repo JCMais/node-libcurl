@@ -4,17 +4,23 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import 'should'
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  it,
+  expect,
+} from 'vitest'
 
 import crypto from 'crypto'
 
 import httpAuth from 'http-auth'
 import httpAuthConnect from 'http-auth-connect'
 
-import { app, host, port, server } from '../helper/server'
+import { createServer } from '../helper/server'
 import { Curl, CurlAuth } from '../../lib'
-
-const url = `http://${host}:${port}/`
 
 const username = 'user'
 const password = 'pass'
@@ -47,29 +53,30 @@ const digest = httpAuth.digest(
 )
 
 let curl: Curl
+let serverInstance: ReturnType<typeof createServer>
 
 describe('Option HTTPAUTH', () => {
   beforeEach(() => {
     curl = new Curl()
-    curl.setOpt('URL', url)
+    curl.setOpt('URL', serverInstance.url)
   })
 
   afterEach(() => {
     curl.close()
-
-    app._router.stack.pop()
+    serverInstance.app._router.stack.pop()
   })
 
-  before((done) => {
-    server.listen(port, host, done)
+  beforeAll(async () => {
+    serverInstance = createServer()
+    await serverInstance.listen()
   })
 
-  after(() => {
-    server.close()
+  afterAll(async () => {
+    await serverInstance.close()
   })
 
-  it('should authenticate using basic auth', (done) => {
-    app.get('/', httpAuthConnect(basic), (req, res) => {
+  it('should authenticate using basic auth', async () => {
+    serverInstance.app.get('/', httpAuthConnect(basic), (req, res) => {
       // @ts-ignore
       res.send(req.user)
     })
@@ -78,22 +85,27 @@ describe('Option HTTPAUTH', () => {
     curl.setOpt('USERNAME', username)
     curl.setOpt('PASSWORD', password)
 
-    curl.on('end', (status, data) => {
-      if (status !== 200) {
-        throw Error(`Invalid status code: ${status}`)
-      }
+    const result = await new Promise<{ status: number; data: string }>(
+      (resolve, reject) => {
+        curl.on('end', (status, data) => {
+          if (status !== 200) {
+            reject(new Error(`Invalid status code: ${status}`))
+            return
+          }
 
-      data.should.be.equal(username)
+          resolve({ status, data: data as string })
+        })
 
-      done()
-    })
+        curl.on('error', reject)
 
-    curl.on('error', done)
+        curl.perform()
+      },
+    )
 
-    curl.perform()
+    expect(result.data).toBe(username)
   })
 
-  it('should authenticate using digest', (done) => {
+  it('should authenticate using digest', async () => {
     // Currently, there is a bug with libcurl > 7.40 when using digest auth
     // on Windows, the realm is not populated from the Auth header.
     //  So we need to use the workaround below to make it work.
@@ -103,7 +115,7 @@ describe('Option HTTPAUTH', () => {
       user = `${realmDigest}/${username}`
     }
 
-    app.get('/', httpAuthConnect(digest), (req, res) => {
+    serverInstance.app.get('/', httpAuthConnect(digest), (req, res) => {
       // @ts-ignore
       res.send(req.user)
     })
@@ -112,23 +124,28 @@ describe('Option HTTPAUTH', () => {
     curl.setOpt('USERNAME', user)
     curl.setOpt('PASSWORD', password)
 
-    curl.on('end', (status, data) => {
-      if (status !== 200) {
-        throw Error(`Invalid status code: ${status}`)
-      }
+    const result = await new Promise<{ status: number; data: string }>(
+      (resolve, reject) => {
+        curl.on('end', (status, data) => {
+          if (status !== 200) {
+            reject(new Error(`Invalid status code: ${status}`))
+            return
+          }
 
-      data.should.be.equal(username)
+          resolve({ status, data: data as string })
+        })
 
-      done()
-    })
+        curl.on('error', reject)
 
-    curl.on('error', done)
+        curl.perform()
+      },
+    )
 
-    curl.perform()
+    expect(result.data).toBe(username)
   })
 
-  it('should not authenticate using basic', (done) => {
-    app.get('/', httpAuthConnect(basic), (req, res) => {
+  it('should not authenticate using basic', async () => {
+    serverInstance.app.get('/', httpAuthConnect(basic), (req, res) => {
       // @ts-ignore
       res.send(req.user)
     })
@@ -137,14 +154,16 @@ describe('Option HTTPAUTH', () => {
     curl.setOpt('USERNAME', username)
     curl.setOpt('PASSWORD', password)
 
-    curl.on('end', (status) => {
-      status.should.be.equal(401)
+    const result = await new Promise<number>((resolve, reject) => {
+      curl.on('end', (status) => {
+        resolve(status)
+      })
 
-      done()
+      curl.on('error', reject)
+
+      curl.perform()
     })
 
-    curl.on('error', done)
-
-    curl.perform()
+    expect(result).toBe(401)
   })
 })

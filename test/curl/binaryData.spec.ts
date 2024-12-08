@@ -4,9 +4,9 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import 'should'
+import { describe, beforeAll, afterAll, it, expect } from 'vitest'
 
-import { app, host, port, server } from '../helper/server'
+import { createServer } from '../helper/server'
 import { Curl } from '../../lib'
 
 const image =
@@ -14,46 +14,51 @@ const image =
 const buffer = Buffer.from(image, 'base64')
 const size = buffer.length
 
-describe('Binary Data', () => {
-  before((done) => {
-    server.listen(port, host, done)
+let serverInstance: ReturnType<typeof createServer>
 
-    app.post('/', (req, res) => {
+describe('Binary Data', () => {
+  beforeAll(async () => {
+    serverInstance = createServer()
+    await serverInstance.listen()
+  })
+
+  beforeAll(() => {
+    serverInstance.app.post('/', (req, res) => {
       res.send(req.body.length.toString())
     })
   })
 
-  after(() => {
-    server.close()
-    app._router.stack.pop()
+  afterAll(() => {
+    serverInstance.close()
+    serverInstance.app._router.stack.pop()
   })
 
-  it('should upload binary data correctly', (done) => {
+  it('should upload binary data correctly', async () => {
     const curl = new Curl()
-    curl.setOpt('URL', `http://${host}:${port}`)
+    curl.setOpt('URL', serverInstance.url)
     curl.setOpt('POSTFIELDSIZE', size)
     curl.setOpt('POSTFIELDS', buffer.toString())
     curl.setOpt('HTTPHEADER', ['Content-Type: application/node-libcurl.raw'])
 
-    curl.on('end', (status, data) => {
-      curl.close()
+    const result = await new Promise<{ status: number; data: string }>(
+      (resolve, reject) => {
+        curl.on('end', (status, data) => {
+          curl.close()
+          resolve({ status, data: data as string })
+        })
 
-      if (status !== 200) {
-        throw Error(`Invalid status code: ${status}`)
-      }
+        curl.on('error', (error) => {
+          curl.close()
+          reject(error)
+        })
 
-      const receivedSize = parseInt(data as string, 10)
+        curl.perform()
+      },
+    )
 
-      receivedSize.should.be.equal(size)
+    expect(result.status).toBe(200)
 
-      done()
-    })
-
-    curl.on('error', (error) => {
-      curl.close()
-      done(error)
-    })
-
-    curl.perform()
+    const receivedSize = parseInt(result.data, 10)
+    expect(receivedSize).toBe(size)
   })
 })

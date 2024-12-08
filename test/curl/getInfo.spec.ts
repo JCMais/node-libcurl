@@ -4,116 +4,127 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import 'should'
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  it,
+  expect,
+} from 'vitest'
 
-import { app, closeServer, host, port, server } from '../helper/server'
+import { createServer } from '../helper/server'
 import { Curl } from '../../lib'
 
-const url = `http://${host}:${port}/`
+let curl: Curl
+let serverInstance: ReturnType<typeof createServer>
 
 describe('getInfo()', () => {
-  let curl: Curl
-
   beforeEach(() => {
     curl = new Curl()
-    curl.setOpt('URL', url)
+    curl.setOpt('URL', serverInstance.url)
   })
 
   afterEach(() => {
     curl.close()
   })
 
-  before((done) => {
-    server.listen(port, host, done)
-
-    app.get('/', (_req, res) => {
+  beforeAll(async () => {
+    serverInstance = createServer()
+    serverInstance.app.get('/', (_req, res) => {
       res.send('Hello World!')
     })
+    await serverInstance.listen()
   })
 
-  after(() => {
-    app._router.stack.pop()
-    closeServer()
+  afterAll(async () => {
+    await serverInstance.close()
+    serverInstance.app._router.stack.pop()
   })
 
-  it('should not work with non-implemented infos', (done) => {
-    curl.on('end', (status) => {
-      if (status !== 200) {
-        throw Error(`Invalid status code: ${status}`)
-      }
-
-      ;(() => {
-        curl.getInfo(Curl.info.PRIVATE)
-      }).should.throw(/^Unsupported/)
-
-      done()
-    })
-
-    curl.on('error', done)
-
-    curl.perform()
-  })
-
-  it('should get all infos', (done) => {
-    curl.on('end', (status) => {
-      if (status !== 200) {
-        throw Error(`Invalid status code: ${status}`)
-      }
-
-      for (const infoId in Curl.info) {
-        if (
-          Object.prototype.hasOwnProperty.call(Curl.info, infoId) &&
-          infoId !== 'debug'
-        ) {
-          // @ts-ignore
-          curl.getInfo(infoId)
+  it('should not work with non-implemented infos', async () => {
+    await new Promise<void>((resolve, reject) => {
+      curl.on('end', (status) => {
+        if (status !== 200) {
+          reject(new Error(`Invalid status code: ${status}`))
+          return
         }
-      }
 
-      done()
+        expect(() => {
+          curl.getInfo(Curl.info.PRIVATE)
+        }).toThrow(/^Unsupported/)
+
+        resolve()
+      })
+
+      curl.on('error', reject)
+
+      curl.perform()
     })
-
-    curl.on('error', done)
-
-    curl.perform()
   })
 
-  it('CERTINFO', (done) => {
+  it('should get all infos', async () => {
+    await new Promise<void>((resolve, reject) => {
+      curl.on('end', (status) => {
+        if (status !== 200) {
+          reject(new Error(`Invalid status code: ${status}`))
+          return
+        }
+
+        for (const infoId in Curl.info) {
+          if (
+            Object.prototype.hasOwnProperty.call(Curl.info, infoId) &&
+            infoId !== 'debug'
+          ) {
+            // @ts-ignore
+            curl.getInfo(infoId)
+          }
+        }
+
+        resolve()
+      })
+
+      curl.on('error', reject)
+
+      curl.perform()
+    })
+  })
+
+  it('CERTINFO', async () => {
     curl.setOpt('URL', 'https://github.com')
     curl.setOpt('CERTINFO', true)
     curl.setOpt('FOLLOWLOCATION', true)
     curl.setOpt('SSL_VERIFYPEER', false)
     curl.setOpt('SSL_VERIFYHOST', false)
-    curl.on('end', (status) => {
-      if (status !== 200) {
-        throw Error(`Invalid status code: ${status}`)
-      }
 
-      let certInfo: string[] = []
-      ;(() => {
-        certInfo = curl.getInfo(Curl.info.CERTINFO)
-      }).should.not.throw() // Enexpected error while collecting cert info
+    const certInfo = await new Promise<string[]>((resolve, reject) => {
+      curl.on('end', (status) => {
+        if (status !== 200) {
+          reject(new Error(`Invalid status code: ${status}`))
+          return
+        }
 
-      Array.isArray(certInfo).should.be.true(
-        'Returned CERTINFO value must be array',
-      )
+        let certInfo: string[] = []
+        expect(() => {
+          certInfo = curl.getInfo(Curl.info.CERTINFO)
+        }).not.toThrow()
 
-      certInfo.should.not.have.length(0)
+        resolve(certInfo)
+      })
 
-      const cert = certInfo.find(
-        (itm: string): boolean => itm.search('Cert:') === 0,
-      )
+      curl.on('error', reject)
 
-      ;(typeof cert).should.not.be.equal(
-        'undefined',
-        'Certificate not returned',
-      )
-
-      done()
+      curl.perform()
     })
 
-    curl.on('error', done)
+    expect(Array.isArray(certInfo)).toBe(true)
+    expect(certInfo.length).toBeGreaterThan(0)
 
-    curl.perform()
+    const cert = certInfo.find(
+      (itm: string): boolean => itm.search('Cert:') === 0,
+    )
+
+    expect(cert).toBeDefined()
   })
 })

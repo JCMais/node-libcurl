@@ -133,7 +133,7 @@ jobs:
           fail_ci_if_error: false
       - name: Upload artifacts
         if: always() && steps.run_result.outputs.run_result != 'success'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.node }}
           path: ./logs/
@@ -241,7 +241,7 @@ jobs:
             ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always() && steps.run_result.outputs.run_result != 'success'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}
           path: ./logs/

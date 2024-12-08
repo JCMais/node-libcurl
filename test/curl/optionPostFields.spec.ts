@@ -4,14 +4,20 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import 'should'
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  it,
+  expect,
+} from 'vitest'
 
 import querystring from 'querystring'
 
-import { app, host, port, server } from '../helper/server'
+import { createServer } from '../helper/server'
 import { Curl } from '../../lib'
-
-const url = `http://${host}:${port}/`
 
 const postData: { [key: string]: string } = {
   'input-name': 'This is input-name value.',
@@ -19,51 +25,57 @@ const postData: { [key: string]: string } = {
 }
 
 let curl: Curl
+let serverInstance: ReturnType<typeof createServer>
 
 describe('Option POSTFIELDS', () => {
   beforeEach(() => {
     curl = new Curl()
-    curl.setOpt('URL', url)
+    curl.setOpt('URL', serverInstance.url)
   })
 
   afterEach(() => {
     curl.close()
-    server.close()
   })
 
-  before((done) => {
-    server.listen(port, host, done)
-
-    app.post('/', (req, res) => {
+  beforeAll(async () => {
+    serverInstance = createServer()
+    serverInstance.app.post('/', (req, res) => {
       res.send(JSON.stringify(req.body))
     })
+    await serverInstance.listen()
   })
 
-  after(() => {
-    app._router.stack.pop()
+  afterAll(async () => {
+    await serverInstance.close()
+    serverInstance.app._router.stack.pop()
   })
 
-  it('should post the correct data', (done) => {
+  it('should post the correct data', async () => {
     curl.setOpt('POSTFIELDS', querystring.stringify(postData))
 
-    curl.on('end', (status, data) => {
-      if (status !== 200) {
-        throw Error(`Invalid status code: ${status}`)
+    const result = await new Promise<{ status: number; data: string }>(
+      (resolve, reject) => {
+        curl.on('end', (status, data) => {
+          if (status !== 200) {
+            reject(new Error(`Invalid status code: ${status}`))
+            return
+          }
+
+          resolve({ status, data: data as string })
+        })
+
+        curl.on('error', reject)
+
+        curl.perform()
+      },
+    )
+
+    const parsedData = JSON.parse(result.data)
+
+    for (const field in parsedData) {
+      if (Object.prototype.hasOwnProperty.call(parsedData, field)) {
+        expect(parsedData[field]).toBe(postData[field])
       }
-
-      const parsedData = JSON.parse(data as string)
-
-      for (const field in parsedData) {
-        if (Object.prototype.hasOwnProperty.call(parsedData, field)) {
-          parsedData[field].should.be.equal(postData[field])
-        }
-      }
-
-      done()
-    })
-
-    curl.on('error', done)
-
-    curl.perform()
+    }
   })
 })
