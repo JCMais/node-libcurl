@@ -41,15 +41,30 @@ if [ "$(uname)" == "Darwin" ]; then
   export LDFLAGS=""
 fi
 
-../configure-cmake \
-  --prefix=$build_folder \
-  --disable-debug \
-  --pass-thru \
-  -DCMAKE_INSTALL_PREFIX:PATH=$build_folder \
-  -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=$build_folder/lib \
-  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=$build_folder/lib
+is_less_than_1_1_0=0
+(printf '%s\n%s' "1.1.0" "$1" | $gsort -CV) || is_less_than_1_1_0=$?
 
-make
+if [ "$is_less_than_1_1_0" == "1" ]; then
+  cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=$build_folder \
+    -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=$build_folder/lib \
+    -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=$build_folder/lib \
+    -DBUILD_SHARED_LIBS=OFF \
+    ..
+  cmake --build . --config Release --target install
+else
+  ../configure-cmake \
+    --prefix=$build_folder \
+    --disable-debug \
+    --pass-thru \
+    -DCMAKE_INSTALL_PREFIX:PATH=$build_folder \
+    -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=$build_folder/lib \
+    -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=$build_folder/lib
+
+  make
+fi
+
 
 cp -r $2/source/$1/c/include $build_folder/include
 
