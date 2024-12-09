@@ -72,7 +72,7 @@ install:
   - echo 127.0.0.1       localhost >> C:\Windows\System32\drivers\etc\hosts
   - echo ::1             localhost >> C:\Windows\System32\drivers\etc\hosts
   # Get nasm
-  - cinst nasm -y
+  - choco install nasm -y
   - set PATH=%PROGRAMFILES%\NASM;%PATH%
   # in case above does not work
   # - curl -L -o nasminst.exe http://libgd.blob.core.windows.net/nasm/nasm-2.07-installer.exe

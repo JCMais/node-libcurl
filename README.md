@@ -448,7 +448,7 @@ npm install --global --production windows-build-tools
 
 `nasm` can be obtained from their website, which is linked above, or using chocolatey:
 ```
-cinst nasm
+choco install nasm
 ```
 
 Currently there is no support to use other libcurl version than the one provided by the [curl-for-windows](https://github.com/JCMais/curl-for-windows) submodule (help is appreciated on adding this feature).
