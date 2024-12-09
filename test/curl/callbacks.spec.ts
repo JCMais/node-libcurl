@@ -142,8 +142,9 @@ describe('Callbacks', () => {
     }, 10000)
   }, 10000)
 
-  if (Curl.isVersionGreaterOrEqualThan(7, 64, 0)) {
-    describe('trailer', function () {
+  describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 64, 0))(
+    'trailer',
+    function () {
       it('should work', async () => {
         let wasCalled = false
         let isFirstCall = true
@@ -293,11 +294,12 @@ describe('Callbacks', () => {
           curl.perform()
         })
       })
-    })
-  }
+    },
+  )
 
-  if (Curl.isVersionGreaterOrEqualThan(7, 80, 0)) {
-    describe('prereq', function () {
+  describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 80, 0))(
+    'prereq',
+    function () {
       it('should work', async () => {
         let wasCalled = false
 
@@ -395,6 +397,6 @@ describe('Callbacks', () => {
           curl.perform()
         })
       })
-    })
-  }
+    },
+  )
 }, 5000)

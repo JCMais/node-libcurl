@@ -86,8 +86,9 @@ describe('easy', () => {
       )
     })
 
-    if (Curl.isVersionGreaterOrEqualThan(7, 64, 0)) {
-      it('TRAILERFUNCTION - should rethrow error', () => {
+    describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 64, 0))(
+      'TRAILERFUNCTION - should rethrow error',
+      () => {
         curl.setOpt('UPLOAD', true)
         curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])
         // @ts-ignore
@@ -103,27 +104,27 @@ describe('easy', () => {
           return buffer.write(data)
         })
         expect(() => curl.perform()).toThrow('Error thrown on callback')
-      })
+      },
+    )
 
-      it('TRAILERFUNCTION - should throw error if has invalid return type', () => {
-        curl.setOpt('UPLOAD', true)
-        curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])
-        // @ts-ignore
-        curl.setOpt('TRAILERFUNCTION', () => {
-          return {}
-        })
-        let finished = false
-        curl.setOpt(Curl.option.READFUNCTION, (buffer, _size, _nmemb) => {
-          if (finished) return 0
-
-          const data = 'HELLO'
-          finished = true
-          return buffer.write(data)
-        })
-        expect(() => curl.perform()).toThrow(
-          'Return value from the Trailer callback must be an array of strings or false.',
-        )
+    it('TRAILERFUNCTION - should throw error if has invalid return type', () => {
+      curl.setOpt('UPLOAD', true)
+      curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])
+      // @ts-ignore
+      curl.setOpt('TRAILERFUNCTION', () => {
+        return {}
       })
-    }
+      let finished = false
+      curl.setOpt(Curl.option.READFUNCTION, (buffer, _size, _nmemb) => {
+        if (finished) return 0
+
+        const data = 'HELLO'
+        finished = true
+        return buffer.write(data)
+      })
+      expect(() => curl.perform()).toThrow(
+        'Return value from the Trailer callback must be an array of strings or false.',
+      )
+    })
   })
 })

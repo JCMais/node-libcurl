@@ -118,8 +118,9 @@ describe('streams', () => {
 
   describe('curly', () => {
     // libcurl versions older than this are not really reliable for streams usage.
-    if (Curl.isVersionGreaterOrEqualThan(7, 69, 1)) {
-      it('works for uploading and downloading', async () => {
+    describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 69, 1))(
+      'works for uploading and downloading',
+      async () => {
         const curlyStreamUpload = getReadableStreamForBuffer(randomBuffer, {
           filterDataToPush: async (pushIteration, data) => {
             // we are waiting 1200 ms at the 5th iteration just to cause
@@ -184,80 +185,80 @@ describe('streams', () => {
             reject(error)
           })
         })
-      })
+      },
+    )
 
-      it('works with responses without body', async () => {
-        const { statusCode, data: downloadStream } = await curly.get<Readable>(
-          `${serverInstance.url}/all?type=no-body`,
-          {
-            ...getDownloadOptions(),
-            curlyProgressCallback() {
-              return 0
-            },
+    it('works with responses without body', async () => {
+      const { statusCode, data: downloadStream } = await curly.get<Readable>(
+        `${serverInstance.url}/all?type=no-body`,
+        {
+          ...getDownloadOptions(),
+          curlyProgressCallback() {
+            return 0
           },
-        )
+        },
+      )
 
-        expect(statusCode).toBe(200)
+      expect(statusCode).toBe(200)
 
-        // TODO: add snapshot testing for headers
+      // TODO: add snapshot testing for headers
 
-        // we cannot use async iterators here because we need to support Node.js v8
+      // we cannot use async iterators here because we need to support Node.js v8
 
-        return new Promise<void>((resolve, reject) => {
-          const acc: Buffer[] = []
+      return new Promise<void>((resolve, reject) => {
+        const acc: Buffer[] = []
 
-          downloadStream.on('data', (data) => {
-            acc.push(data)
-          })
+        downloadStream.on('data', (data) => {
+          acc.push(data)
+        })
 
-          downloadStream.on('end', () => {
-            const finalBuffer = Buffer.concat(acc)
-            expect(finalBuffer.byteLength).toBe(0)
-            resolve(undefined)
-          })
+        downloadStream.on('end', () => {
+          const finalBuffer = Buffer.concat(acc)
+          expect(finalBuffer.byteLength).toBe(0)
+          resolve(undefined)
+        })
 
-          downloadStream.on('error', (error) => {
-            reject(error)
-          })
+        downloadStream.on('error', (error) => {
+          reject(error)
         })
       })
+    })
 
-      it('works with HEAD requests', async () => {
-        const { statusCode, data: downloadStream } = await curly.head<Readable>(
-          `${serverInstance.url}/all?type=method`,
-          {
-            ...getDownloadOptions(),
-            curlyProgressCallback() {
-              return 0
-            },
+    it('works with HEAD requests', async () => {
+      const { statusCode, data: downloadStream } = await curly.head<Readable>(
+        `${serverInstance.url}/all?type=method`,
+        {
+          ...getDownloadOptions(),
+          curlyProgressCallback() {
+            return 0
           },
-        )
+        },
+      )
 
-        expect(statusCode).toBe(200)
+      expect(statusCode).toBe(200)
 
-        // TODO: add snapshot testing for headers
+      // TODO: add snapshot testing for headers
 
-        // we cannot use async iterators here because we need to support Node.js v8
+      // we cannot use async iterators here because we need to support Node.js v8
 
-        return new Promise<void>((resolve, reject) => {
-          const acc: Buffer[] = []
+      return new Promise<void>((resolve, reject) => {
+        const acc: Buffer[] = []
 
-          downloadStream.on('data', (data) => {
-            acc.push(data)
-          })
+        downloadStream.on('data', (data) => {
+          acc.push(data)
+        })
 
-          downloadStream.on('end', () => {
-            const finalBuffer = Buffer.concat(acc)
-            expect(finalBuffer.byteLength).toBe(0)
-            resolve(undefined)
-          })
+        downloadStream.on('end', () => {
+          const finalBuffer = Buffer.concat(acc)
+          expect(finalBuffer.byteLength).toBe(0)
+          resolve(undefined)
+        })
 
-          downloadStream.on('error', (error) => {
-            reject(error)
-          })
+        downloadStream.on('error', (error) => {
+          reject(error)
         })
       })
-    }
+    })
 
     it('returns an error when the upload stream throws an error', async () => {
       const errorMessage = 'custom error'
