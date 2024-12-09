@@ -94,19 +94,7 @@ jobs:
         if: matrix.node-libcurl-cpp-std
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4
-      # not using brew for that one as we need 2.69
-      - if: runner.os == 'macOS'
-        name: Install autoconf on macOS
-        run: |
-          curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
-          tar -xzf autoconf-2.69.tar.gz
-          cd autoconf-*
-          ./configure
-          make
-          make install
-          autoconf --version
-          ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
+        run: brew install coreutils wget automake libtool cmake gnu-sed m4 autoconf
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "::set-output name=dir::$(yarn cache dir)"
