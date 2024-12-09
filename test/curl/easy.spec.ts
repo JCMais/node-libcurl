@@ -86,7 +86,7 @@ describe('easy', () => {
       )
     })
 
-    describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 64, 0))(
+    it.runIf(Curl.isVersionGreaterOrEqualThan(7, 64, 0))(
       'TRAILERFUNCTION - should rethrow error',
       () => {
         curl.setOpt('UPLOAD', true)

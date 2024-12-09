@@ -118,7 +118,7 @@ describe('streams', () => {
 
   describe('curly', () => {
     // libcurl versions older than this are not really reliable for streams usage.
-    describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 69, 1))(
+    it.runIf(Curl.isVersionGreaterOrEqualThan(7, 69, 1))(
       'works for uploading and downloading',
       async () => {
         const curlyStreamUpload = getReadableStreamForBuffer(randomBuffer, {
