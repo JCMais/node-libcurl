@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-11
+          - macos-14
           # removed as we enabled CircleCI to run on PRs
           # - ubuntu-20.04
         libcurl-release:
@@ -32,12 +32,12 @@ jobs:
           - 22
         include:
           # we only want to run lint in one of the jobs, in this case, the one for the latest stable Node.js version
-          - os: macos-11
+          - os: macos-14
             libcurl-release: 7.86.0
             node: 18
             run-lint-and-tsc: true
           # we also want to build a job for old libcurl versions
-          - os: macos-11
+          - os: macos-14
             libcurl-release: 7.50.0
             node: 18
     env:
@@ -147,7 +147,7 @@ jobs:
       matrix:
         # we use CircleCI for linux binaries
         os:
-          - macos-11
+          - macos-14
         libcurl-release:
           - 7.86.0
         node:
@@ -256,7 +256,7 @@ jobs:
   #     matrix:
   #       # we use CircleCI for linux binaries
   #       os:
-  #         - macos-11
+  #         - macos-14
   #       libcurl-release:
   #         - 7.86.0
   #       node:

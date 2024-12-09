@@ -35,7 +35,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-11
+          - macos-14
           - ubuntu-20.04
         libcurl-release:
           - 7.86.0
@@ -152,7 +152,7 @@ jobs:
       matrix:
         # we use CircleCI for linux binaries
         os:
-          - macos-11
+          - macos-14
         libcurl-release:
           - 7.86.0
         node:
@@ -257,7 +257,7 @@ jobs:
   #     matrix:
   #       # we use CircleCI for linux binaries
   #       os:
-  #         - macos-11
+  #         - macos-14
   #       libcurl-release:
   #         - 7.86.0
   #       node:
