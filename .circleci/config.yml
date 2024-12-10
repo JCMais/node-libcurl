@@ -38,7 +38,7 @@ orbs:
         parameters:
           node-version:
             description: Version of Node.js
-            default: '18'
+            default: '22'
             type: string
           electron-version:
             description: Version of Node.js
@@ -290,6 +290,7 @@ workflows:
             tags:
               only: /^v.*/
           electron-version: '33.2.1'
+          node-libcurl-cpp-std: 'c++20'
           e:
             name: debian
       ####
@@ -305,6 +306,7 @@ workflows:
             tags:
               only: /^v.*/
           electron-version: '32.2.6'
+          node-libcurl-cpp-std: 'c++20'
           e:
             name: debian
       ####
