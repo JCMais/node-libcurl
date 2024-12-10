@@ -336,7 +336,7 @@ workflows:
                 - gh-pages
             tags:
               only: /^v.*/
-          electron-version: '28.0.0'
+          electron-version: '28.3.3'
           e:
             name: debian
       ####
