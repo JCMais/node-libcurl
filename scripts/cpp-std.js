@@ -32,20 +32,20 @@ if (process.env.NODE_LIBCURL_CPP_STD) {
     } else {
       console.log('c++98')
     }
-  }
-
-  // https://github.com/nodejs/node/blob/main/doc/abi_version_registry.json
-  // https://github.com/nodejs/node/blob/main/doc/abi_version_registry.json
-  // 129 === Node.js v23
-  if (process.versions.modules && parseInt(process.versions.modules) >= 129) {
-    console.log('c++20')
-  } else if (
-    process.versions.modules &&
-    parseInt(process.versions.modules) >= 88
-  ) {
-    // 88 === Node.js v15
-    console.log('c++17')
   } else {
-    console.log('c++98')
+    // https://github.com/nodejs/node/blob/main/doc/abi_version_registry.json
+    // https://github.com/nodejs/node/blob/main/doc/abi_version_registry.json
+    // 129 === Node.js v23
+    if (process.versions.modules && parseInt(process.versions.modules) >= 129) {
+      console.log('c++20')
+    } else if (
+      process.versions.modules &&
+      parseInt(process.versions.modules) >= 88
+    ) {
+      // 88 === Node.js v15
+      console.log('c++17')
+    } else {
+      console.log('c++98')
+    }
   }
 }
