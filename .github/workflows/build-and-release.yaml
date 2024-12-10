@@ -84,17 +84,17 @@ jobs:
             curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
             sudo apt-get update && sudo apt-get install -y yarn
           fi
-      - name: Checkout
-        uses: actions/checkout@main
-      - name: Setup Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node }}
       - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
         if: matrix.node-libcurl-cpp-std
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
         run: brew install coreutils wget automake libtool cmake gnu-sed m4 autoconf
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "::set-output name=dir::$(yarn cache dir)"
@@ -154,6 +154,11 @@ jobs:
           - 28.0.0
           - 27.1.3
           - 26.6.2
+        include:
+          - electron-version: 33.2.1
+            node-libcurl-cpp-std: c++20
+          - electron-version: 32.2.6
+            node-libcurl-cpp-std: c++20
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -172,25 +177,15 @@ jobs:
       - id: run_result
         run: cat run_result 2>/dev/null || echo 'default'
       - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
+        if: matrix.node-libcurl-cpp-std
+      - name: Install Needed packages
+        run: brew install coreutils wget automake libtool cmake gnu-sed m4
       - name: Checkout
         uses: actions/checkout@main
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
-      - name: Install Needed packages
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4
-      # not using brew for that one as we need 2.69
-      - name: Install autoconf
-        run: |
-          curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
-          tar -xzf autoconf-2.69.tar.gz
-          cd autoconf-*
-          ./configure
-          make
-          make install
-          autoconf --version
-          ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "::set-output name=dir::$(yarn cache dir)"
