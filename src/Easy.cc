@@ -1,3 +1,9 @@
+#ifndef NOMINMAX
+// Fix for: warning C4003: not enough arguments for function-like macro invocation 'max'
+// [C:\projects\node-libcurl\build\node_libcurl.vcxproj]
+#define NOMINMAX
+#endif
+
 /**
  * Copyright (c) Jonathan Cardoso Machado. All Rights Reserved.
  *
