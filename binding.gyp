@@ -11,7 +11,7 @@
     'curl_static_build%': 'false',
     'curl_config_bin%': 'node <(module_root_dir)/scripts/curl-config.js',
     'node_libcurl_no_setlocale%': 'false',
-    'node_libcurl_cpp_std%': '<!(node <(module_root_dir)/scripts/cpp-std.js)',
+    'node_libcurl_cpp_std%': '<!(node <(module_root_dir)/scripts/cpp-std.js <(node_root_dir))',
     'macos_universal_build%': 'false',
   },
   'targets': [

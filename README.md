@@ -62,7 +62,6 @@
   - [Electron / NW.js](#electron--nwjs)
     - [NW.js (aka node-webkit)](#nwjs-aka-node-webkit)
     - [Electron (aka atom-shell)](#electron-aka-atom-shell)
-    - [Electron \>= 11 / NW.js \>= 0.50](#electron--11--nwjs--050)
   - [Building on Linux](#building-on-linux)
   - [Building on macOS](#building-on-macos)
     - [Xcode \>= 10 | macOS \>= Mojave](#xcode--10--macos--mojave)
@@ -276,7 +275,7 @@ Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, NTLM_WB, SSL, libz, brotli, TLS
 
 If there is no prebuilt binary available that matches your system, or if the installation fails, then you will need an environment capable of compiling Node.js addons, which means:
 - [python 3.x](https://www.python.org/downloads/) installed
-- updated C++ compiler able to compile C++11, or if building Electron >= 11 / NW.js >= 0.50, C++17 (see the [Electron >= 11 / NW.js >= 0.50](#electron--11--nwjs--050) section below).
+- updated C++ compiler able to compile C++17 (C++20 for Electron >= v32).
 
 If you don't want to use the prebuilt binary even if it works on your system, you can pass a flag when installing:
 > With `npm`
@@ -370,19 +369,6 @@ runtime = electron
 target = 5.0.1
 target_arch = x64
 dist_url = https://atom.io/download/atom-shell
-```
-
-#### Electron >= 11 / NW.js >= 0.50
-
-If you are building for Electron >= 11 or NW.js >= 0.50 you need to set the build process to use the C++17 std, you can do that by passing the variable `node_libcurl_cpp_std=c++17`. The way you do that depends if you are using `npm` or `yarn`:
-
-> If using `npm`:
-```sh
-npm install node-libcurl --node_libcurl_cpp_std=c++17 <...other args...>
-```
-> If using `yarn`:
-```sh
-npm_config_node_libcurl_cpp_std=c++17 <...other args...> yarn add node-libcurl
 ```
 
 ### Building on Linux
