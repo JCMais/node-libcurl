@@ -56,32 +56,20 @@ jobs:
             ${{ github.run_id }}-${{ github.job }}-
       - id: run_result
         run: cat run_result 2>/dev/null || echo 'default'
+      - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
+        if: matrix.node-libcurl-cpp-std
+      - if: runner.os == 'macOS'
+        name: Install Needed packages on macOS
+        run: brew install coreutils wget automake libtool cmake gnu-sed m4
+      - if: runner.os == 'Linux'
+        name: Install Needed packages on Linux
+        run: sudo apt-get install -y cmake
       - name: Checkout
         uses: actions/checkout@main
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
-      - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
-        if: matrix.node-libcurl-cpp-std
-      - if: runner.os == 'macOS'
-        name: Install Needed packages on macOS
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4
-      # not using brew for that one as we need 2.69
-      - if: runner.os == 'macOS'
-        name: Install autoconf
-        run: |
-          curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
-          tar -xzf autoconf-2.69.tar.gz
-          cd autoconf-*
-          ./configure
-          make
-          make install
-          autoconf --version
-          ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
-      - if: runner.os == 'Linux'
-        name: Install Needed packages on Linux
-        run: sudo apt-get install -y cmake
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "::set-output name=dir::$(yarn cache dir)"
@@ -153,9 +141,6 @@ jobs:
         node:
           - 22
         electron-version:
-          - 33.2.1
-          - 32.2.6
-          - 31.7.5
           - 21.0.1
           - 20.0.3
           - 19.1.1
@@ -180,25 +165,14 @@ jobs:
         run: cat run_result 2>/dev/null || echo 'default'
       - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
         if: matrix.node-libcurl-cpp-std
+      - name: Install Needed packages
+        run: brew install coreutils wget automake libtool cmake gnu-sed m4
       - name: Checkout
         uses: actions/checkout@main
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
-      - name: Install Needed packages
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4
-      # not using brew for that one as we need 2.69
-      - name: Install autoconf
-        run: |
-          curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
-          tar -xzf autoconf-2.69.tar.gz
-          cd autoconf-*
-          ./configure
-          make
-          make install
-          autoconf --version
-          ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
       - name: Output yarn cache dir
         id: yarn-cache-dir
         run: echo "::set-output name=dir::$(yarn cache dir)"
