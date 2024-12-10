@@ -152,7 +152,7 @@ install:
         $env:PATH = "$outputFolder;$env:PATH"
       }
 
-      $env:npm_config_msvs_version      = "2019"
+      $env:npm_config_msvs_version      = "2022"
       $env:npm_config_build_from_source = "true"
       $env:npm_config_runtime           = $runtime
       $env:npm_config_dist_url          = $dist_url
