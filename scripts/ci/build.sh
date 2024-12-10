@@ -10,12 +10,12 @@ curr_dirname=$(dirname "$0")
 
 . $curr_dirname/utils/gsort.sh
 
-FORCE_REBUILD=false
+FORCE_REBUILD_DEFAULT=false
 # if [[ ! -z "$GIT_TAG" ]]; then
-#   FORCE_REBUILD=true
+#   FORCE_REBUILD_DEFAULT=true
 # fi
 
-export FORCE_REBUILD=$FORCE_REBUILD
+export FORCE_REBUILD=${FORCE_REBUILD:-$FORCE_REBUILD_DEFAULT}
 
 MACOS_UNIVERSAL_BUILD=${MACOS_UNIVERSAL_BUILD:-}
 
@@ -23,6 +23,8 @@ echo "Checking python version"
 python -V || true
 echo "Checking python3 version"
 python3 -V || true
+echo "Checking nodejs version"
+node -e "console.log(process.versions)"
 
 if [ "$(uname)" == "Darwin" ]; then
   # Default to universal build, if possible.
