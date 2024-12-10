@@ -85,6 +85,7 @@
   },
   "devDependencies": {
     "@commitlint/cli": "18.4.3",
+    "@electron/rebuild": "^3.7.1",
     "@microsoft/api-documenter": "7.23.12",
     "@microsoft/api-extractor": "7.38.3",
     "@octokit/rest": "^20.0.2",
@@ -99,6 +100,7 @@
     "cheerio": "1.0.0-rc.3",
     "clang-format": "1.8.0",
     "cookie-parser": "1.4.6",
+    "electron": "32.2.6",
     "eslint": "8.55.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-formatter-friendly": "7.0.0",
@@ -110,6 +112,7 @@
     "http-auth-connect": "1.0.6",
     "husky": "8.0.3",
     "lint-staged": "15.2.0",
+    "node-abi": "^3.71.0",
     "np": "9.2.0",
     "nyc": "15.1.0",
     "prettier": "3.1.0",
