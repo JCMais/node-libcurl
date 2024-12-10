@@ -120,6 +120,14 @@ npm_config_curl_config_bin=~/deps/libcurl/build/7.78.0/bin/curl-config \
  yarn pregyp rebuild --debug
 ```
 
+You can also use `electron-rebuild`, e.g for macOS:
+```sh
+npm_config_curl_static_build=true \
+npm_config_macos_universal_build=true \
+npm_config_curl_config_bin=~/deps/libcurl/build/7.86.0/bin/curl-config \
+yarn exec electron-rebuild
+```
+
 ### Debugging with lldb
 1. Install lldb
 On Debian based linux:
