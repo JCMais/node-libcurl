@@ -85,7 +85,7 @@ $PYTHON -c "import distutils" || $PIP install setuptools
 
 # on gh actions it is including this file for some reason: /usr/local/include/nghttp2/nghttp2.h:55:
 # so we are making sure we remove those so they do not mess with our build
-if [[ -n "$CI" && "$(uname)" == "Darwin" ]]; then
+if [[ -n "$CI" && "$(uname)" == "Darwin" && -d "/usr/local/include" ]]; then
   echo "include folder:"
   ls -al /usr/local/include
   echo "lib folder:"
