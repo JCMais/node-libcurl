@@ -9,6 +9,9 @@ lib/binding
 # docs override
 lib/**/*.doc.ts
 
+# electron rebuild
+bin/
+
 logs/
 
 debug/
