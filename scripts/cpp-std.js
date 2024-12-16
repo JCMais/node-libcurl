@@ -19,12 +19,12 @@ if (process.env.NODE_LIBCURL_CPP_STD) {
   // we could also use node-abi here!
   const isElectron =
     process.env['npm_config_runtime'] === 'electron' ||
-    nodeRootDir.includes('electron-gyp')
+    nodeRootDir?.includes('electron-gyp')
   const electronVersion = isElectron
-    ? process.env['npm_config_target'] ?? nodeRootDir.split('/').pop()
+    ? process.env['npm_config_target'] ?? nodeRootDir?.split('/').pop()
     : null
 
-  if (isElectron) {
+  if (isElectron && electronVersion) {
     if (isGreaterOrEqual(electronVersion, '32.0.0')) {
       console.log('c++20')
     } else if (isGreaterOrEqual(electronVersion, '13.0.0')) {

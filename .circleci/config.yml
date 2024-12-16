@@ -79,7 +79,7 @@ orbs:
             default: '1.47.0'
           openldap-version:
             type: string
-            default: '2.4.47'
+            default: '2.5.19'
           openssl-version:
             type: string
             default: '3.0.7'
