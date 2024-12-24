@@ -403,6 +403,9 @@ else
   ldd ./lib/binding/node_libcurl.node || true
 fi
 
+echo "Showing /etc/hosts"
+cat /etc/hosts || true
+
 if [ "$RUN_TESTS" == "true" ]; then
   if [ -n "$ELECTRON_VERSION" ]; then
     [ $run_tests_electron == "true" ] && yarn test:electron || echo "Tests for this version of electron were disabled"

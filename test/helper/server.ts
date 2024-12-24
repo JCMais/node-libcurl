@@ -15,7 +15,7 @@ import { AddressInfo } from 'net'
 import express from 'express'
 import cookieParser from 'cookie-parser'
 
-const host = 'localhost'
+const host = '127.0.0.1'
 
 const file = path.resolve.bind(this, __dirname)
 const key = fs.readFileSync(file('./ssl/cert.key'))
@@ -64,7 +64,7 @@ function _createServer<
 
   const listen = () => {
     return new Promise<number>((resolve) => {
-      server.listen(0, 'localhost', () => {
+      server.listen(0, '127.0.0.1', () => {
         const address = server.address() as AddressInfo
         port = address.port
         resolve(port)

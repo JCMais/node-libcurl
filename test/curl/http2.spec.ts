@@ -30,7 +30,6 @@ const onSession: OnSessionFn = (_session) => {
   session = _session
 }
 const onStream: OnStreamFn = (stream, _headers) => {
-  console.log('Received headers:', _headers)
   stream.respond({
     'content-type': 'text/html',
     ':status': 200,
@@ -45,7 +44,6 @@ describe('HTTP2', () => {
     serverInstance.server.on('session', onSession)
     serverInstance.server.on('stream', onStream)
     await serverInstance.listen()
-    console.log(serverInstance.url)
   })
 
   afterAll(async () => {
