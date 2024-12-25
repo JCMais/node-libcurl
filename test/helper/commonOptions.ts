@@ -12,7 +12,7 @@ export function withCommonTestOptions(curl: Curl | Easy | Record<string, any>) {
       curl.setOpt(key, value)
     })
   } else {
-    Object.assign(curl, options)
+    Object.assign(options, curl)
   }
 
   return options

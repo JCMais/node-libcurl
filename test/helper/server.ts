@@ -27,7 +27,6 @@ export const createApp = () => {
   app
     .use(express.urlencoded({ extended: true }))
     .use(express.raw({ limit: '100MB', type: 'application/node-libcurl.raw' }))
-    // @ts-expect-error - no time for fixing this right now
     .use(cookieParser())
 
   app.disable('etag')

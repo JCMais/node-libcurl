@@ -403,8 +403,10 @@ else
   ldd ./lib/binding/node_libcurl.node || true
 fi
 
+sleep 1
 echo "Showing /etc/hosts"
 cat /etc/hosts || true
+sleep 1
 
 if [ "$RUN_TESTS" == "true" ]; then
   if [ -n "$ELECTRON_VERSION" ]; then
