@@ -67,7 +67,7 @@ function _createServer<
 
   const listen = () => {
     return new Promise<number>((resolve) => {
-      server.listen(0, host, () => {
+      server.listen(0, '0.0.0.0', () => {
         const address = server.address() as AddressInfo
         port = address.port
         resolve(port)
