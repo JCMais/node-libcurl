@@ -50,9 +50,6 @@ jobs:
     steps:
       - id: timestamp
         run: echo "::set-output name=timestamp::$(timestamp +%s)"
-      # see https://github.com/nodejs/node/issues/40537
-      - name: Enforce IPv4 Connectivity
-        uses: ./.github/actions/force-ipv4
       - name: Restore the previous run result
         uses: actions/cache@v4
         with:
@@ -94,6 +91,9 @@ jobs:
         run: brew install coreutils wget automake libtool cmake gnu-sed m4 autoconf groff
       - name: Checkout
         uses: actions/checkout@v3
+      # see https://github.com/nodejs/node/issues/40537
+      - name: Enforce IPv4 Connectivity
+        uses: ./.github/actions/force-ipv4
       - name: Setup Node.js ${{ matrix.node }}
         uses: actions/setup-node@v3
         with:
@@ -167,9 +167,6 @@ jobs:
     steps:
       - id: timestamp
         run: echo "::set-output name=timestamp::$(timestamp +%s)"
-      # see https://github.com/nodejs/node/issues/40537
-      - name: Enforce IPv4 Connectivity
-        uses: ./.github/actions/force-ipv4
       - name: Restore the previous run result
         uses: actions/cache@v4
         with:
@@ -186,6 +183,9 @@ jobs:
         run: brew install coreutils wget automake libtool cmake gnu-sed m4 groff
       - name: Checkout
         uses: actions/checkout@main
+      # see https://github.com/nodejs/node/issues/40537
+      - name: Enforce IPv4 Connectivity
+        uses: ./.github/actions/force-ipv4
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
