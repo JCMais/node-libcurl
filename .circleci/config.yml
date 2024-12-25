@@ -275,6 +275,8 @@ workflows:
           cares-version: '1.18.1'
           nghttp2-version: '1.47.0'
           openssl-version: '3.0.7'
+          # https://github.com/curl/curl/issues/7004
+          openldap-version: '2.5.3'
           e:
             name: alpine
       ####
