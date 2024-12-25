@@ -276,7 +276,7 @@ workflows:
           nghttp2-version: '1.47.0'
           openssl-version: '3.0.7'
           # https://github.com/curl/curl/issues/7004
-          openldap-version: '2.5.3'
+          openldap-version: '2.4.59'
           e:
             name: alpine
       ####
