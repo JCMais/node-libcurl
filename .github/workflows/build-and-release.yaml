@@ -50,6 +50,8 @@ jobs:
     steps:
       - id: timestamp
         run: echo "::set-output name=timestamp::$(timestamp +%s)"
+      - name: Enforce IPv4 Connectivity
+        uses: ./.github/actions/force-ipv4
       - name: Restore the previous run result
         uses: actions/cache@v4
         with:
@@ -164,6 +166,8 @@ jobs:
     steps:
       - id: timestamp
         run: echo "::set-output name=timestamp::$(timestamp +%s)"
+      - name: Enforce IPv4 Connectivity
+        uses: ./.github/actions/force-ipv4
       - name: Restore the previous run result
         uses: actions/cache@v4
         with:
