@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eo pipefail
+
 main() {
   if is_linux; then
     echo 'Configuring Linux...'
@@ -34,6 +36,7 @@ configure_warp_with_doh_and_ipv6_exclusion_on_linux() {
 }
 
 configure_warp_with_doh_and_ipv6_exclusion_on_macos() {
+  brew update
   brew install cloudflare-warp
   configure_warp_doh_and_exclude_ipv6
 }
