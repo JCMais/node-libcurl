@@ -50,6 +50,7 @@ jobs:
     steps:
       - id: timestamp
         run: echo "::set-output name=timestamp::$(timestamp +%s)"
+      # see https://github.com/nodejs/node/issues/40537
       - name: Enforce IPv4 Connectivity
         uses: ./.github/actions/force-ipv4
       - name: Restore the previous run result
@@ -166,6 +167,7 @@ jobs:
     steps:
       - id: timestamp
         run: echo "::set-output name=timestamp::$(timestamp +%s)"
+      # see https://github.com/nodejs/node/issues/40537
       - name: Enforce IPv4 Connectivity
         uses: ./.github/actions/force-ipv4
       - name: Restore the previous run result
