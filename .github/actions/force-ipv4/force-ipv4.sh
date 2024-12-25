@@ -48,7 +48,7 @@ configure_warp_doh_and_exclude_ipv6() {
   echo 'Configuring WARP to operate in DNS-over-HTTPS mode (warp+doh)...'
   warp-cli --accept-tos mode warp+doh
   echo 'Excluding IPv6 traffic from WARP by configuring it as a split tunnel...'
-  warp-cli --accept-tos tunnel ip-range add '::/0' # Exclude IPv6, forcing IPv4 resolution
+  warp-cli --accept-tos tunnel ip add '::/0' # Exclude IPv6, forcing IPv4 resolution
   # `tunnel ip add` does not work with IP ranges, see https://community.cloudflare.com/t/cant-cidr-for-split-tunnling/630834
   echo 'Establishing WARP connection...'
   warp-cli --accept-tos connect
