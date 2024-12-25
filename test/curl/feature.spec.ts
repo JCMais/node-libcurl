@@ -16,6 +16,7 @@ import {
 
 import { createServer } from '../helper/server'
 import { Curl, CurlFeature, HeaderInfo } from '../../lib'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 const responseData = 'Ok'
 const responseLength = responseData.length
@@ -27,6 +28,7 @@ let serverInstance: ReturnType<typeof createServer>
 describe('Features', () => {
   beforeEach(() => {
     curl = new Curl()
+    withCommonTestOptions(curl)
     curl.setOpt('URL', serverInstance.url)
   })
 

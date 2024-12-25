@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { Curl } from '../../lib'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 describe('issues', () => {
   it('issue-177 - node.js microtasks interference', async () => {
@@ -8,6 +9,7 @@ describe('issues', () => {
     const makeCall = () =>
       new Promise((resolve, reject) => {
         const curl = new Curl()
+        withCommonTestOptions(curl)
 
         curl.setOpt('URL', '10.255.255.1')
         curl.setOpt('CONNECTTIMEOUT', 1)

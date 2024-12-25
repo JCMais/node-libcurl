@@ -18,6 +18,7 @@ import querystring from 'querystring'
 
 import { createServer } from '../helper/server'
 import { Curl } from '../../lib'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 const postData: { [key: string]: string } = {
   'input-name': 'This is input-name value.',
@@ -30,6 +31,7 @@ let serverInstance: ReturnType<typeof createServer>
 describe('Option POSTFIELDS', () => {
   beforeEach(() => {
     curl = new Curl()
+    withCommonTestOptions(curl)
     curl.setOpt('URL', serverInstance.url)
   })
 

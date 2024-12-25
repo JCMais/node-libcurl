@@ -24,6 +24,7 @@ import { createServer, ServerInstance } from '../helper/server'
 import { Curl } from '../../lib'
 
 import http from 'http'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 const fileSize = 10 * 1024 // 10K
 const fileName = path.resolve(__dirname, 'upload.test')
@@ -57,6 +58,7 @@ describe('Put Upload', () => {
   beforeEach(async () => {
     return new Promise<void>((resolve, reject) => {
       curl = new Curl()
+      withCommonTestOptions(curl)
       curl.setOpt(
         Curl.option.URL,
         serverInstance.path('/upload/upload-result.test'),

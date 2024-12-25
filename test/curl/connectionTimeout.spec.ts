@@ -6,10 +6,12 @@
  */
 import { describe, it } from 'vitest'
 import { Curl } from '../../lib'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 describe('Connection Timeout', () => {
   it('should give an error on timeout', async () => {
     const curl = new Curl()
+    withCommonTestOptions(curl)
 
     // http://stackoverflow.com/a/904609/710693
     curl.setOpt('URL', '10.255.255.1')

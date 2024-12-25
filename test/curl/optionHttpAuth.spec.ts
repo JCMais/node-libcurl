@@ -21,6 +21,7 @@ import httpAuthConnect from 'http-auth-connect'
 
 import { createServer } from '../helper/server'
 import { Curl, CurlAuth } from '../../lib'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 const username = 'user'
 const password = 'pass'
@@ -58,6 +59,7 @@ let serverInstance: ReturnType<typeof createServer>
 describe('Option HTTPAUTH', () => {
   beforeEach(() => {
     curl = new Curl()
+    withCommonTestOptions(curl)
     curl.setOpt('URL', serverInstance.url)
   })
 

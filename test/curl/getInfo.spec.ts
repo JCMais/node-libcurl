@@ -16,6 +16,7 @@ import {
 
 import { createServer } from '../helper/server'
 import { Curl } from '../../lib'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 let curl: Curl
 let serverInstance: ReturnType<typeof createServer>
@@ -23,6 +24,7 @@ let serverInstance: ReturnType<typeof createServer>
 describe('getInfo()', () => {
   beforeEach(() => {
     curl = new Curl()
+    withCommonTestOptions(curl)
     curl.setOpt('URL', serverInstance.url)
   })
 

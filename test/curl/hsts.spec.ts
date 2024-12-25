@@ -16,6 +16,7 @@ import {
   CurlHstsCacheCount,
   Easy,
 } from '../../lib'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 let curl: Curl
 
@@ -49,6 +50,7 @@ const getHstsCache = (): CurlHstsCacheEntry[] => [
 describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 74, 0))('Callbacks', () => {
   beforeEach(() => {
     curl = new Curl()
+    withCommonTestOptions(curl)
     curl.setOpt('URL', url)
     if (process.version.startsWith('v10.')) {
       curl.setOpt('SSL_VERIFYPEER', false)

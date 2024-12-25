@@ -8,6 +8,7 @@ import { describe, beforeAll, afterAll, it } from 'vitest'
 
 import { createServer } from '../helper/server'
 import { Curl, CurlCode } from '../../lib'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 let firstRun = true
 let curl: Curl
@@ -22,6 +23,7 @@ describe('reset()', () => {
     await serverInstance.listen()
 
     curl = new Curl()
+    withCommonTestOptions(curl)
     curl.setOpt('URL', serverInstance.url)
   })
 

@@ -9,6 +9,7 @@ import { describe, beforeAll, afterAll, it, expect } from 'vitest'
 import { curly } from '../../lib'
 import { createServer } from '../helper/server'
 import { allMethodsWithMultipleReqResTypes } from '../helper/commonRoutes'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 let serverInstance: ReturnType<typeof createServer>
 
@@ -45,12 +46,15 @@ describe('curly', () => {
       ] as const
 
       for (const [method, options] of methods) {
-        const { statusCode, headers } = await curly[method](urlMethod, {
-          ...options,
-          curlyProgressCallback() {
-            return 0
-          },
-        })
+        const { statusCode, headers } = await curly[method](
+          urlMethod,
+          withCommonTestOptions({
+            ...options,
+            curlyProgressCallback() {
+              return 0
+            },
+          }),
+        )
 
         expect(statusCode).toBe(200)
         expect(headers[0]['x-req-method']).toBe(method)

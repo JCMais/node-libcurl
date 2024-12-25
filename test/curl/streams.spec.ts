@@ -13,6 +13,7 @@ import { Curl, CurlCode, curly } from '../../lib'
 
 import { createServer } from '../helper/server'
 import { allMethodsWithMultipleReqResTypes } from '../helper/commonRoutes'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 interface GetReadableStreamForBufferOptions {
   filterDataToPush?(pushIteration: number, data: Buffer): Promise<Buffer>
@@ -139,13 +140,13 @@ describe('streams', () => {
           headers,
         } = await curly.put<Readable>(
           `${serverInstance.url}/all?type=put-upload`,
-          {
+          withCommonTestOptions({
             ...getUploadOptions(curlyStreamUpload),
             ...getDownloadOptions(),
             curlyProgressCallback() {
               return 0
             },
-          },
+          }),
         )
 
         expect(statusCode).toBe(200)
@@ -191,12 +192,12 @@ describe('streams', () => {
     it('works with responses without body', async () => {
       const { statusCode, data: downloadStream } = await curly.get<Readable>(
         `${serverInstance.url}/all?type=no-body`,
-        {
+        withCommonTestOptions({
           ...getDownloadOptions(),
           curlyProgressCallback() {
             return 0
           },
-        },
+        }),
       )
 
       expect(statusCode).toBe(200)
@@ -227,12 +228,12 @@ describe('streams', () => {
     it('works with HEAD requests', async () => {
       const { statusCode, data: downloadStream } = await curly.head<Readable>(
         `${serverInstance.url}/all?type=method`,
-        {
+        withCommonTestOptions({
           ...getDownloadOptions(),
           curlyProgressCallback() {
             return 0
           },
-        },
+        }),
       )
 
       expect(statusCode).toBe(200)
@@ -275,7 +276,7 @@ describe('streams', () => {
       await expect(
         curly.put(
           `${serverInstance.url}/all?type=put-upload`,
-          getUploadOptions(curlyStreamUpload),
+          withCommonTestOptions(getUploadOptions(curlyStreamUpload)),
         ),
       ).rejects.toMatchObject({
         message: errorMessage,
@@ -298,7 +299,7 @@ describe('streams', () => {
       await expect(
         curly.put(
           `${serverInstance.url}/all?type=put-upload`,
-          getUploadOptions(curlyStreamUpload),
+          withCommonTestOptions(getUploadOptions(curlyStreamUpload)),
         ),
       ).rejects.toMatchObject({
         message: 'Curl upload stream was unexpectedly destroyed',
@@ -322,7 +323,7 @@ describe('streams', () => {
       await expect(
         curly.put(
           `${serverInstance.url}/all?type=put-upload`,
-          getUploadOptions(curlyStreamUpload),
+          withCommonTestOptions(getUploadOptions(curlyStreamUpload)),
         ),
       ).rejects.toMatchObject({
         message: errorMessage,
@@ -334,9 +335,9 @@ describe('streams', () => {
     it('emits an error when the download stream is destroyed unexpectedly', async () => {
       const { statusCode, data: downloadStream } = await curly.get<Readable>(
         `${serverInstance.url}/all?type=json`,
-        {
+        withCommonTestOptions({
           ...getDownloadOptions(),
-        },
+        }),
       )
 
       expect(statusCode).toBe(200)
@@ -370,11 +371,11 @@ describe('streams', () => {
 
       const { statusCode, data: downloadStream } = await curly.get<Readable>(
         `${serverInstance.url}/all?type=json`,
-        {
+        withCommonTestOptions({
           ...getDownloadOptions(),
           // this is just to also test the branching for when this is not set
           curlyStreamResponseHighWaterMark: undefined,
-        },
+        }),
       )
 
       expect(statusCode).toBe(200)

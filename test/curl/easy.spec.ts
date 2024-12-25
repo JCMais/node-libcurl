@@ -7,6 +7,7 @@
 import { describe, beforeEach, afterEach, it, expect } from 'vitest'
 
 import { Curl, CurlCode, Easy } from '../../lib'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 const url = 'http://example.com/'
 
@@ -19,6 +20,7 @@ let curl: Easy
 describe('easy', () => {
   beforeEach(() => {
     curl = new Easy()
+    withCommonTestOptions(curl)
     curl.setOpt('URL', url)
   })
 

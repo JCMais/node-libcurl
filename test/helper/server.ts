@@ -15,7 +15,7 @@ import { AddressInfo } from 'net'
 import express from 'express'
 import cookieParser from 'cookie-parser'
 
-const host = '127.0.0.1'
+const DEFAULT_HOST = 'localhost'
 
 const file = path.resolve.bind(this, __dirname)
 const key = fs.readFileSync(file('./ssl/cert.key'))
@@ -46,7 +46,11 @@ export interface ServerInstance<S extends http.Server | http2.Http2Server> {
 
 function _createServer<
   S extends http.Server | https.Server | http2.Http2Server,
->(app: ReturnType<typeof createApp>, server: S): ServerInstance<S> {
+>(
+  app: ReturnType<typeof createApp>,
+  server: S,
+  host = DEFAULT_HOST,
+): ServerInstance<S> {
   const serverSockets = new Set<Socket>()
 
   if (server instanceof http.Server || server instanceof https.Server) {
@@ -64,7 +68,7 @@ function _createServer<
 
   const listen = () => {
     return new Promise<number>((resolve) => {
-      server.listen(0, '127.0.0.1', () => {
+      server.listen(0, host, () => {
         const address = server.address() as AddressInfo
         port = address.port
         resolve(port)

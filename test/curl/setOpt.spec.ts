@@ -16,6 +16,7 @@ import {
 
 import { createServer } from '../helper/server'
 import { Curl } from '../../lib'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 const pemFormattedPrivateKey = `-----BEGIN PRIVATE KEY-----
 MC4CAQAwBQYDK2VwBCIEILeQs78xyjaibQhUrMQJ1Fsxeb8LAaDPeat8SGEFEVQ+
@@ -28,6 +29,7 @@ let serverInstance: ReturnType<typeof createServer>
 describe('setOpt()', () => {
   beforeEach(() => {
     curl = new Curl()
+    withCommonTestOptions(curl)
     curl.setOpt('URL', serverInstance.url)
   })
 

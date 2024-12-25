@@ -14,6 +14,7 @@ import {
 
 import { createHttp2Server } from '../helper/server'
 import { Curl, CurlHttpVersion } from '../../lib'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 type OnSessionFn = (session: ServerHttp2Session) => void
 type OnStreamFn = (
@@ -56,6 +57,7 @@ describe('HTTP2', () => {
 
   it('should work with https2 site', async () => {
     const curl = new Curl()
+    withCommonTestOptions(curl)
 
     curl.setOpt('URL', serverInstance.url)
     curl.setOpt('HTTP_VERSION', CurlHttpVersion.V2_0)

@@ -18,6 +18,7 @@ import {
   it,
   expect,
 } from 'vitest'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 let curl: Curl
 let serverInstance: ReturnType<typeof createServer>
@@ -25,6 +26,7 @@ let serverInstance: ReturnType<typeof createServer>
 describe('Callbacks', () => {
   beforeEach(() => {
     curl = new Curl()
+    withCommonTestOptions(curl)
   })
 
   afterEach(() => {

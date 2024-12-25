@@ -8,6 +8,7 @@ import { describe, beforeAll, afterAll, it, expect } from 'vitest'
 
 import { createHttpsServer } from '../helper/server'
 import { Curl } from '../../lib'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 describe('SSL', () => {
   const serverInstance = createHttpsServer()
@@ -27,7 +28,7 @@ describe('SSL', () => {
 
   it('should work with ssl site', async () => {
     const curl = new Curl()
-
+    withCommonTestOptions(curl)
     curl.setOpt('URL', `${serverInstance.url}/`)
     curl.setOpt('SSL_VERIFYPEER', false)
 

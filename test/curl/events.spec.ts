@@ -16,6 +16,7 @@ import {
 
 import { createServer } from '../helper/server'
 import { Curl, CurlCode } from '../../lib'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 let curl: Curl
 let timeout: NodeJS.Timeout
@@ -24,6 +25,7 @@ let serverInstance: ReturnType<typeof createServer>
 describe('Events', () => {
   beforeEach(() => {
     curl = new Curl()
+    withCommonTestOptions(curl)
     curl.setOpt('URL', serverInstance.url)
   })
 
