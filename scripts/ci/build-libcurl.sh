@@ -83,12 +83,12 @@ fi
 
 #   https://github.com/curl/curl/pull/1427#issuecomment-295783852
 # The detection for ldl was broken for libcurl < 7.54.1
-# pthread is only needed if using OpenSSL >= 1.1.0, however we are just addind it anyway as required
-# no harm done
+# pthread is only needed if using OpenSSL >= 1.1.0 or when building OpenLDAP.
+# we are not checking for OpenSSL tho, as there is no harm on adding it anyway.
 is_less_than_7_54_1=0
 (printf '%s\n%s' "7.54.1" "$1" | $gsort -CV) || is_less_than_7_54_1=$?
 
-if [ "$is_less_than_7_54_1" == "1" ]; then
+if [[ "$is_less_than_7_54_1" == "1" || ! -z "$OPENLDAP_BUILD_FOLDER" ]]; then
   LIBS="$LIBS -ldl -lpthread"
 fi
 
