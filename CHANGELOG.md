@@ -8,12 +8,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Breaking Change  
 ### Fixed  
-- curly - use default content-type when there are no headers [#410](https://github.com/JCMais/node-libcurl/pull/410) by @liamdiprose 
 ### Added
 ### Changed  
 ### Removed  
 
-## [4.0.0]
+## [4.1.0] - 2024-12-26
+
+### Fixed  
+- curly - use default content-type when there are no headers [#410](https://github.com/JCMais/node-libcurl/pull/410) by @liamdiprose 
+### Added
+- Added prebuilt binaries for Node.js 22, Electron 33, Electron 32, and Electron 31
+
+### Notes
+
+Besides possible security patches, this will be the last minor release in the v4 series. For v5, I am currently planning to work on this:
+- Migrate to N-API, which will allow us to support newer Node.js versions more easily.
+- Drop support for Node.js < 22.
+- Drop support for building with libcurl < 8.0.
+- Drop x86 support.
+
+## [4.0.0] - 2024-02-11
 
 ### Breaking Change  
 - Mininum supported Node.js version is now Node.js 16.14.
