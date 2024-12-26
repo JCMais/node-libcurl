@@ -25,16 +25,5 @@
     "skipLibCheck": true
   },
   "include": ["lib/**/*"],
-  "exclude": ["node_modules"],
-  // @TODO Remove those when done
-  // "files": ["types/custom/index.d.ts"]
-  "typedocOptions": {
-    // "mode": "modules",
-    "mode": "library",
-    "out": "docs",
-    "excludeNotExported": true,
-    "excludePrivate": true,
-    "readme": "none",
-    "gaID": "UA-11343647-11"
-  }
+  "exclude": ["node_modules"]
 }

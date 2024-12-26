@@ -26,6 +26,7 @@ Besides possible security patches, this will be the last minor release in the v4
 - Drop support for Node.js < 22.
 - Drop support for building with libcurl < 8.0.
 - Drop x86 support.
+- Support ES modules.
 
 ## [4.0.0] - 2024-02-11
 
