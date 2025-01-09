@@ -9,7 +9,7 @@ if (process.env.NODE_LIBCURL_CPP_STD) {
 } else {
   if (process.versions.modules && parseInt(process.versions.modules) >= 88) {
     // 88 === Node.js v15
-    console.log('c++17')
+    console.log('c++20')
   } else {
     console.log('c++11')
   }

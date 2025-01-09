@@ -62,7 +62,7 @@
     - [Missing Packages](#missing-packages)
   - [Electron](#electron)
     - [Electron (aka atom-shell)](#electron-aka-atom-shell)
-    - [Electron \>= 11](#electron--11)
+    - [Electron \>= 31](#electron--31)
   - [Building on Linux](#building-on-linux)
   - [Building on macOS](#building-on-macos)
     - [Xcode \>= 10 | macOS \>= Catalina](#xcode--10--macos--catalina)
@@ -363,14 +363,14 @@ target_arch = x64
 dist_url = https://atom.io/download/atom-shell
 ```
 
-#### Electron >= 11
+#### Electron >= 31
 
-If you are building for Electron >= 11  you need to set the build process to use the C++17 std, you can do that by passing the variable `node_libcurl_cpp_std=c++17`.
+If you are building for Electron >= 31  you need to set the build process to use the C++20 std, you can do that by passing the variable `node_libcurl_cpp_std=c++20`.
 
 > If using `npm`:
 
 ```sh
-npm install node-libcurl --build-from-source --node_libcurl_cpp_std=c++17
+npm install node-libcurl --build-from-source --node_libcurl_cpp_std=c++20
 ```
 
 ### Building on Linux

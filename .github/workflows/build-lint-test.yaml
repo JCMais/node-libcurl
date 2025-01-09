@@ -45,14 +45,14 @@ jobs:
         libcurl-release:
           - 7.86.0
         node-libcurl-cpp-std:
-          - c++17
+          - c++20
         node:
-          - 20.16.0
+          - 20.18.0
         include:
           # Lint
           - os: ubuntu-latest
-            node: 20.16.0
-            node-libcurl-cpp-std: c++17
+            node: 20.18.0
+            node-libcurl-cpp-std: c++20
             libcurl-release: 7.86.0
             run-lint-and-tsc: true
 
@@ -75,7 +75,7 @@ jobs:
         run: cat run_result 2>/dev/null || echo 'default'
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4 autoconf@2.69 groff
+        run: brew install coreutils wget automake libtool cmake gnu-sed m4 autoconf groff
       - if: runner.os == 'Linux'
         name: Install Needed packages on Linux
         run: sudo apt-get install -y cmake
@@ -143,14 +143,14 @@ jobs:
         libcurl-release:
           - 7.86.0
         node:
-          - 20.16.0
+          - 20.18.0
         electron-version:
-          - 31.4.0
+          - 33.3.0
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
-      NODE_LIBCURL_CPP_STD: c++17
+      NODE_LIBCURL_CPP_STD: c++20
     steps:
       - id: timestamp
         run: echo "timestamp=$(timestamp +%s)" >> $GITHUB_OUTPUT
@@ -168,7 +168,7 @@ jobs:
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
       - name: Install Needed packages
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4 autoconf@2.69 groff
+        run: brew install coreutils wget automake libtool cmake gnu-sed m4 autoconf groff
       - name: Checkout
         uses: actions/checkout@v3
       - name: Setup Node
@@ -221,7 +221,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 20.16.0
+          - 20.18.0
     env:
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
@@ -258,9 +258,9 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 20.16.0
+          - 20.18.0
         electron-version:
-          - 31.4.0
+          - 33.3.0
     env:
       ELECTRON_VERSION: ${{ matrix.electron-version }}
       npm_config_msvs_version: 2022

@@ -15,7 +15,7 @@
           in
           pkgs.mkShell {
             buildInputs = [
-              inputs.nixpkgs-unstable.legacyPackages.${system}.nodejs_20
+              pkgs.nodejs
             ];
 
             nativeBuildInputs = with pkgs; [
