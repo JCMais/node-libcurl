@@ -41,6 +41,7 @@ jobs:
           upload-sbom-release-assets: true
 
   build-and-release-nodejs:
+    permissions: write-all
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -100,6 +101,7 @@ jobs:
           retention-days: 5
 
   build-and-release-electron:
+    permissions: write-all
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -168,6 +170,7 @@ jobs:
           retention-days: 5
 
   build-and-release-nodejs-windows:
+    permissions: write-all
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -211,6 +214,7 @@ jobs:
           node scripts\module-packaging.js --publish $(npm run -s pregyp reveal staged_tarball --silent)
 
   build-and-release-electron-windows:
+    permissions: write-all
     runs-on: windows-latest
     strategy:
       fail-fast: false
