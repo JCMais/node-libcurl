@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ${{ github.repository }}
 
@@ -64,7 +64,7 @@ jobs:
       - id: timestamp
         run: echo "timestamp=$(timestamp +%s)" >> $GITHUB_OUTPUT
       - name: Restore the previous run result
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             run_result
@@ -80,7 +80,7 @@ jobs:
         name: Install Needed packages on Linux
         run: sudo apt-get install -y cmake
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -88,7 +88,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
       - name: Restore libcurl deps cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: libcurl-deps-cache
         with:
           path: |
@@ -124,7 +124,7 @@ jobs:
           fail_ci_if_error: false
       - name: Upload artifacts
         if: always() && steps.run_result.outputs.run_result != 'success'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.node }}
           path: ./logs/
@@ -155,7 +155,7 @@ jobs:
       - id: timestamp
         run: echo "timestamp=$(timestamp +%s)" >> $GITHUB_OUTPUT
       - name: Restore the previous run result
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             run_result
@@ -170,7 +170,7 @@ jobs:
       - name: Install Needed packages
         run: brew install coreutils wget automake libtool cmake gnu-sed m4 autoconf groff
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -178,7 +178,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
       - name: Restore Electron Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/Library/Caches/electron
           key: v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
@@ -186,7 +186,7 @@ jobs:
             v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
             v1-${{ runner.os }}-electron-cache-
       - name: Restore libcurl deps cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: libcurl-deps-cache
         with:
           path: |
@@ -207,7 +207,7 @@ jobs:
             ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always() && steps.run_result.outputs.run_result != 'success'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}
           path: ./logs/
@@ -227,11 +227,11 @@ jobs:
       npm_config_build_from_source: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
       - name: Install dependencies
@@ -270,11 +270,11 @@ jobs:
       npm_config_target: ${{ matrix.electron-version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
       - name: Install dependencies
