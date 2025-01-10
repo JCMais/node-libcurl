@@ -57,7 +57,7 @@ if [ "$MACOS_UNIVERSAL_BUILD" == "true" ]; then
       -fPIC \
       --prefix=$build_folder \
       --openssldir=$build_folder \
-      no-tests no-shared enable-legacy enable-weak-ssl-ciphers "${@:2}"
+      no-tests no-shared "${@:2}"
 
     make && make install_sw
 
@@ -84,7 +84,7 @@ else
     -fPIC \
     --prefix=$build_folder \
     --openssldir=$build_folder \
-    no-shared enable-legacy enable-weak-ssl-ciphers "${@:3}"
+    no-shared "${@:3}"
 
   # Release - Both
   # ./config \
