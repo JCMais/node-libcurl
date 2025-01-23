@@ -92,7 +92,11 @@ jobs:
       - name: 'Publish Binary'
         run: |
           pip install packaging
-          GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG RUNNER_OS=${{ matrix.os }} ./scripts/ci/build.sh
+          GIT_COMMIT=${{ github.sha }} \
+          GIT_TAG=$GIT_TAG \
+          RUNNER_OS=${{ matrix.os }} \
+          TARGET_ARCH=${{ matrix.os=='ubuntu-22.04-arm' && 'arm64' || 'x64' }} \
+          ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -161,8 +165,10 @@ jobs:
       - name: 'Publish Binary'
         run: |
           pip install packaging
-          GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
-          # Perform SCA analysis for the code repository
+          GIT_COMMIT=${{ github.sha }} \
+          GIT_TAG=$GIT_TAG \
+          TARGET_ARCH=${{ matrix.os=='ubuntu-22.04-arm' && 'arm64' || 'x64' }} \
+          ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
