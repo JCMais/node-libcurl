@@ -22,7 +22,7 @@ jobs:
     permissions:
       packages: write
       contents: write # publish sbom to GH releases/tag assets
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,6 +49,7 @@ jobs:
         os:
           - macos-13-xlarge
           - ubuntu-22.04
+          - ubuntu-22.04-arm
         libcurl-release:
           - 7.86.0
         node-libcurl-cpp-std:
@@ -82,16 +83,16 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v4-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}-fork
+          key: v4-${{ matrix.os }}-libcurl-deps-cache-node-${{ matrix.node }}-fork
           restore-keys: |
-            v4-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}-fork
+            v4-${{ matrix.os }}-libcurl-deps-cache-node-${{ matrix.node }}-fork
       - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: 'Publish Binary'
         run: |
           pip install packaging
-          GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG RUNNER_OS=${{ runner.os }} ./scripts/ci/build.sh
+          GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG RUNNER_OS=${{ matrix.os }} ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -109,6 +110,7 @@ jobs:
         os:
           - macos-13-xlarge
           - ubuntu-22.04
+          - ubuntu-22.04-arm
         libcurl-release:
           - 7.86.0
         node:
@@ -139,10 +141,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/Library/Caches/electron
-          key: v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
+          key: v1-${{ matrix.os }}-electron-cache-${{ matrix.electron-version }}
           restore-keys: |
-            v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
-            v1-${{ runner.os }}-electron-cache-
+            v1-${{ matrix.os }}-electron-cache-${{ matrix.electron-version }}
+            v1-${{ matrix.os }}-electron-cache-
       - name: Restore libcurl deps cache
         uses: actions/cache@v4
         id: libcurl-deps-cache
@@ -150,9 +152,9 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v4-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}-fork
+          key: v4-${{ matrix.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}-fork
           restore-keys: |
-            v4-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}-fork
+            v4-${{ matrix.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}-fork
       - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV

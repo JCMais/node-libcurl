@@ -8,7 +8,7 @@ import 'should'
 
 import { Curl, CurlCode, Easy } from '../../lib'
 
-const url = 'http://example.com/'
+const url = 'http://httpbin.org/put'
 
 // This is the only test that does not uses a express server
 // It makes a request to a live server, which can cause issues if there are network problems
@@ -66,7 +66,6 @@ describe('easy', () => {
         'Return value from the HEADER callback must be an integer.',
       )
     })
-
     it('READFUNCTION - should rethrow error', () => {
       curl.setOpt('UPLOAD', true)
       // @ts-ignore

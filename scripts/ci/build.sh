@@ -60,6 +60,12 @@ LOGS_FOLDER=${BUILD_LOGS_FOLDER:-./logs}
 
 mkdir -p $LOGS_FOLDER
 
+# ia32, x64, armv7, etc
+target_arch=${TARGET_ARCH:-"x64"}
+# the build system of some dependencies (e.g. zstd and openldap) seems to read
+# and use this variable, so unset it here to avoid making them fail
+unset TARGET_ARCH
+
 # The following two, libunistring and libidn2, are only necessary if building libcurl >= 7.53
 # However we are going to build then anyway, they are not that slow to build.
 
@@ -243,8 +249,8 @@ fi
 LIBCURL_DEST_FOLDER=$PREFIX_DIR/deps/libcurl
 echo "Building libcurl v$LIBCURL_RELEASE - Latest is v$LATEST_LIBCURL_RELEASE"
 ./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER || (echo "libcurl failed build log:" && cat $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log && exit 1)
-echo "libcurl successful build log:"
-cat $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log
+# echo "libcurl successful build log:"
+# cat $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log
 
 export LIBCURL_BUILD_FOLDER=$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE
 ls -al $LIBCURL_BUILD_FOLDER/lib
@@ -307,8 +313,6 @@ else
 fi
 
 target=`echo $target | sed 's/^v//'`
-# ia32, x64, armv7, etc
-target_arch=${TARGET_ARCH:-"x64"}
 
 NODE_LIBCURL_CPP_STD=${NODE_LIBCURL_CPP_STD:-$(node $curr_dirname/../cpp-std.js)}
 
