@@ -103,7 +103,6 @@ jobs:
           RUN_TESTS=false \
           RUN_PREGYP_CLEAN=false \
           PUBLISH_BINARY=false \
-          TARGET_ARCH=${{ matrix.os=='ubuntu-22.04-arm' && 'arm64' || 'x64' }} \
             ./scripts/ci/build.sh
       - name: 'Run lint'
         if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
@@ -209,7 +208,6 @@ jobs:
           RUN_TESTS=true \
           RUN_PREGYP_CLEAN=false \
           PUBLISH_BINARY=false \
-          TARGET_ARCH=${{ matrix.os=='ubuntu-22.04-arm' && 'arm64' || 'x64' }} \
             ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always() && steps.run_result.outputs.run_result != 'success'

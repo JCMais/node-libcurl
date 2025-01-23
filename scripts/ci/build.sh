@@ -61,7 +61,7 @@ LOGS_FOLDER=${BUILD_LOGS_FOLDER:-./logs}
 mkdir -p $LOGS_FOLDER
 
 # ia32, x64, armv7, etc
-target_arch=${TARGET_ARCH:-"x64"}
+target_arch=${TARGET_ARCH:-"$(node -e 'console.log(process.arch)')"}
 # the build system of some dependencies (e.g. zstd and openldap) seems to read
 # and use this variable, so unset it here to avoid making them fail
 unset TARGET_ARCH

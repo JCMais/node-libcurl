@@ -95,7 +95,6 @@ jobs:
           GIT_COMMIT=${{ github.sha }} \
           GIT_TAG=$GIT_TAG \
           RUNNER_OS=${{ matrix.os }} \
-          TARGET_ARCH=${{ matrix.os=='ubuntu-22.04-arm' && 'arm64' || 'x64' }} \
           ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always()
@@ -167,7 +166,6 @@ jobs:
           pip install packaging
           GIT_COMMIT=${{ github.sha }} \
           GIT_TAG=$GIT_TAG \
-          TARGET_ARCH=${{ matrix.os=='ubuntu-22.04-arm' && 'arm64' || 'x64' }} \
           ./scripts/ci/build.sh
       - name: Upload artifacts
         if: always()
