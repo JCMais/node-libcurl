@@ -1,6 +1,6 @@
 name: build-lint-test
 
-on: [push, workflow_dispatch]
+on: [push, workflow_dispatch, pull_request]
 
 env:
   LIBCURL_RELEASE: 'LATEST'
@@ -208,7 +208,6 @@ jobs:
         run: |
           RUN_TESTS=true \
           RUN_PREGYP_CLEAN=false \
-          PUBLISH_BINARY=false \
           PUBLISH_BINARY=false \
           TARGET_ARCH=${{ matrix.os=='ubuntu-22.04-arm' && 'arm64' || 'x64' }} \
             ./scripts/ci/build.sh
