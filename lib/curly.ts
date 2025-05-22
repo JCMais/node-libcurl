@@ -170,7 +170,7 @@ export interface CurlyOptions extends CurlOptionValueType {
   curlyStreamResponse?: boolean
 
   /**
-   * This will set the `hightWaterMark` option in the response stream, if `curlyStreamResponse` is `true`.
+   * This will set the `highWaterMark` option in the response stream, if `curlyStreamResponse` is `true`.
    *
    * @remarks
    *
