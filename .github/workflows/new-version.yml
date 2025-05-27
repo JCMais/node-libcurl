@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.PAT_INSOMNIA_INFRA }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure Git user
         uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
