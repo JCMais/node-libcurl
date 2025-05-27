@@ -30,7 +30,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: '.node-version'
 
       - name: Install
         run: npm ci --ignore-scripts
@@ -53,7 +53,7 @@ jobs:
         id: core_tag_and_release
         with:
           tag: v${{ env.TAG }}
-          name: "nodelibcurl v${{ env.TAG }} 📦"
+          name: 'nodelibcurl v${{ env.TAG }} 📦'
           generateReleaseNotes: true
           prerelease: false
           draft: false
