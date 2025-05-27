@@ -198,7 +198,7 @@ ls -al $BROTLI_BUILD_FOLDER/lib
 ###################
 # Zlib version must match Node.js one
 #ZLIB_RELEASE=${ZLIB_RELEASE:-$(node -e "console.log(process.versions.zlib)")}
-ZLIB_RELEASE=${ZLIB_RELEASE:-1.2.13}
+ZLIB_RELEASE=${ZLIB_RELEASE:-1.3.1}
 
 ZLIB_DEST_FOLDER=$PREFIX_DIR/deps/zlib
 echo "Building zlib v$ZLIB_RELEASE"

@@ -55,7 +55,7 @@ jobs:
         node-libcurl-cpp-std:
           - c++20
         node:
-          - 22.14.0
+          - 22.15.0
 
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -64,7 +64,7 @@ jobs:
     steps:
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4 autoconf groff
+        run: brew install coreutils automake libtool cmake gnu-sed m4 autoconf groff
       - if: runner.os == 'Linux'
         name: Install Needed packages on Linux
         run: sudo apt-get install -y cmake
@@ -73,7 +73,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: '.node-version'
           cache: 'npm'
           cache-dependency-path: package-lock.json
       - name: Restore libcurl deps cache
@@ -117,7 +117,7 @@ jobs:
         libcurl-release:
           - 7.86.0
         node:
-          - 22.14.0
+          - 22.15.0
         electron-version:
           - 35.0.2
     env:
@@ -128,7 +128,7 @@ jobs:
     steps:
       - if: runner.os == 'macOS'
         name: Install Needed packages
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4 autoconf groff
+        run: brew install coreutils automake libtool cmake gnu-sed m4 autoconf groff
       - if: runner.os == 'Linux'
         name: Install Needed packages on Linux
         run: sudo apt-get install -y cmake
@@ -137,7 +137,7 @@ jobs:
       - name: Setup Node.js ${{ matrix.node }}
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: '.node-version'
           cache: 'npm'
           cache-dependency-path: package-lock.json
       - name: Restore Electron Cache
@@ -182,7 +182,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 22.14.0
+          - 22.15.0
     env:
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
@@ -226,7 +226,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 22.14.0
+          - 22.15.0
         electron-version:
           - 35.0.2
     env:

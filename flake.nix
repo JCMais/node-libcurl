@@ -21,7 +21,6 @@
             nativeBuildInputs = with pkgs; [
               stdenv.cc.cc.lib
               cmake
-              wget
               coreutils-prefixed
               python3
               zlib

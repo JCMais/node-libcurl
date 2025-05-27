@@ -45,6 +45,7 @@ fi
   --prefix=$build_folder \
   --disable-debug \
   --pass-thru \
+  -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
   -DCMAKE_INSTALL_PREFIX:PATH=$build_folder \
   -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=$build_folder/lib \
   -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=$build_folder/lib

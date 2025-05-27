@@ -56,10 +56,10 @@
     "preversion": "npm run lint && npm run clean:dist && npm run build:dist"
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "br0p0p/node-pre-gyp#replace-npmlog",
+    "@mapbox/node-pre-gyp": "2.0.0",
     "env-paths": "2.2.0",
-    "nan": "2.22.0",
-    "node-gyp": "11.0.0",
+    "nan": "2.22.2",
+    "node-gyp": "11.2.0",
     "rimraf": "^3.0.2",
     "tslib": "2.0.1",
     "consola": "^3.2.3"
@@ -102,6 +102,6 @@
     "typescript": "^4.0.3"
   },
   "engines": {
-    "node": ">= 22.14.0"
+    "node": ">= 22.15.0"
   }
 }
