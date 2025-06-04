@@ -2,9 +2,6 @@ name: build-lint-test
 
 on: [push, workflow_dispatch, pull_request]
 
-env:
-  LIBCURL_RELEASE: 'LATEST'
-
 concurrency:
   group: ${{ github.head_ref }}
   cancel-in-progress: true
@@ -32,8 +29,37 @@ jobs:
         uses: Kong/public-shared-actions/security-actions/sca@f2b77d6aa619dbe3bfcc1ac4f99af7d02614e90a # v4.1.0
         with:
           dir: ${{ github.repository }}
+  setup:
+    runs-on: ubuntu-22.04
+    outputs:
+      NODE_VERSION: ${{ steps.set-versions.outputs.NODE_VERSION }}
+      ELECTRON_VERSION: ${{ steps.set-versions.outputs.ELECTRON_VERSION }}
+      LIBCURL_RELEASE: ${{ steps.set-versions.outputs.LIBCURL_RELEASE }}
+      LATEST_LIBCURL_RELEASE: ${{ steps.set-versions.outputs.LATEST_LIBCURL_RELEASE }}
+      NODE_LIBCURL_CPP_STD: ${{ steps.set-versions.outputs.NODE_LIBCURL_CPP_STD }}
+      npm_config_target: ${{ steps.set-versions.outputs.npm_config_target }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read .node-version
+        id: set-versions
+        run: |
+          NODE_VERSION=$(cat .node-version)
+          ELECTRON_VERSION=$(cat .electron-version)
+          LIBCURL_RELEASE=$(cat .libcurl-version)
+          LATEST_LIBCURL_RELEASE=$(cat .libcurl-version)
+          NODE_LIBCURL_CPP_STD=c++20
+          npm_config_target=$(cat .electron-version)
+          echo "NODE_VERSION=$NODE_VERSION" >> $GITHUB_OUTPUT
+          echo "ELECTRON_VERSION=$ELECTRON_VERSION" >> $GITHUB_OUTPUT
+          echo "LIBCURL_RELEASE=$LIBCURL_RELEASE" >> $GITHUB_OUTPUT
+          echo "LATEST_LIBCURL_RELEASE=$LATEST_LIBCURL_RELEASE" >> $GITHUB_OUTPUT
+          echo "NODE_LIBCURL_CPP_STD=$NODE_LIBCURL_CPP_STD" >> $GITHUB_OUTPUT
+          echo "npm_config_target=$npm_config_target" >> $GITHUB_OUTPUT
 
   build-and-test-nodejs:
+    needs: setup
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -42,24 +68,11 @@ jobs:
           - macos-13-xlarge
           - ubuntu-22.04
           - ubuntu-22.04-arm
-        libcurl-release:
-          - 7.86.0
-        node-libcurl-cpp-std:
-          - c++20
-        node:
-          - 22.15.1
-        include:
-          # Lint
-          - os: ubuntu-22.04
-            node: 22.15.1
-            node-libcurl-cpp-std: c++20
-            libcurl-release: 7.86.0
-            run-lint-and-tsc: true
-
     env:
-      LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-      LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-      NODE_LIBCURL_CPP_STD: ${{ matrix.node-libcurl-cpp-std }}
+      NODE_VERSION: ${{ needs.setup.outputs.NODE_VERSION }}
+      LIBCURL_RELEASE: ${{ needs.setup.outputs.LIBCURL_RELEASE }}
+      LATEST_LIBCURL_RELEASE: ${{ needs.setup.outputs.LATEST_LIBCURL_RELEASE }}
+      NODE_LIBCURL_CPP_STD: ${{ needs.setup.outputs.NODE_LIBCURL_CPP_STD }}
     steps:
       - id: timestamp
         run: echo "timestamp=$(timestamp +%s)" >> $GITHUB_OUTPUT
@@ -94,10 +107,10 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v4-build-lint-test-${{ matrix.os }}-libcurl-deps-cache-node-${{ matrix.node }}
+          key: v4-build-lint-test-${{ matrix.os }}-libcurl-deps-cache-node-${{ env.NODE_VERSION }}
           restore-keys: |
-            v4-build-lint-test-${{ matrix.os }}-libcurl-deps-cache-node-${{ matrix.node }}
-      - name: Build node-libcurl ${{ matrix.node }}
+            v4-build-lint-test-${{ matrix.os }}-libcurl-deps-cache-node-${{ env.NODE_VERSION }}
+      - name: Build node-libcurl ${{ env.NODE_VERSION }}
         if: steps.run_result.outputs.run_result != 'success'
         run: |
           RUN_TESTS=false \
@@ -105,10 +118,10 @@ jobs:
           PUBLISH_BINARY=false \
             ./scripts/ci/build.sh
       - name: 'Run lint'
-        if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
+        if: steps.run_result.outputs.run_result != 'success'
         run: npm run lint
       - name: 'Run tsc'
-        if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
+        if: steps.run_result.outputs.run_result != 'success'
         run: npm run build:dist
       # we do run tests in all matrix jobs
       - name: 'Run tests'
@@ -126,13 +139,14 @@ jobs:
         if: always() && steps.run_result.outputs.run_result != 'success'
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.node }}
+          name: build-logs-${{ matrix.os }}-${{ env.LIBCURL_RELEASE }}-${{ env.NODE_VERSION }}
           path: ./logs/
           retention-days: 3
       # TODO(Filipe) - fix this set-output
       - run: echo "::set-output name=run_result::success" > run_result
 
   build-and-test-electron:
+    needs: setup
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -141,17 +155,12 @@ jobs:
           - macos-13-xlarge
           - ubuntu-22.04
           - ubuntu-22.04-arm
-        libcurl-release:
-          - 7.86.0
-        node:
-          - 22.15.1
-        electron-version:
-          - 36.3.1
     env:
-      LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-      LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-      ELECTRON_VERSION: ${{ matrix.electron-version }}
-      NODE_LIBCURL_CPP_STD: c++20
+      NODE_VERSION: ${{ needs.setup.outputs.NODE_VERSION }}
+      ELECTRON_VERSION: ${{ needs.setup.outputs.ELECTRON_VERSION }}
+      LIBCURL_RELEASE: ${{ needs.setup.outputs.LIBCURL_RELEASE }}
+      LATEST_LIBCURL_RELEASE: ${{ needs.setup.outputs.LATEST_LIBCURL_RELEASE }}
+      NODE_LIBCURL_CPP_STD: ${{ needs.setup.outputs.NODE_LIBCURL_CPP_STD }}
     steps:
       - id: timestamp
         run: echo "timestamp=$(timestamp +%s)" >> $GITHUB_OUTPUT
@@ -185,9 +194,9 @@ jobs:
           path: |
             ~/Library/Caches/electron
             ~/.cache/electron
-          key: v1-${{ matrix.os }}-electron-cache-${{ matrix.electron-version }}
+          key: v1-${{ matrix.os }}-electron-cache-${{ env.ELECTRON_VERSION }}
           restore-keys: |
-            v1-${{ matrix.os }}-electron-cache-${{ matrix.electron-version }}
+            v1-${{ matrix.os }}-electron-cache-${{ env.ELECTRON_VERSION }}
             v1-${{ matrix.os }}-electron-cache-
       - name: Restore libcurl deps cache
         uses: actions/cache@v4
@@ -196,13 +205,13 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v4-build-lint-test-${{ matrix.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}
+          key: v4-build-lint-test-${{ matrix.os }}-libcurl-deps-cache-electron-${{ env.ELECTRON_VERSION }}
           restore-keys: |
-            v4-build-lint-test-${{ matrix.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}
+            v4-build-lint-test-${{ matrix.os }}-libcurl-deps-cache-electron-${{ env.ELECTRON_VERSION }}
       - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: Build node-libcurl ${{ matrix.node }} ${{ matrix.electron-version }}
+      - name: Build node-libcurl ${{ env.NODE_VERSION }} ${{ env.ELECTRON_VERSION }}
         if: steps.run_result.outputs.run_result != 'success'
         run: |
           RUN_TESTS=true \
@@ -213,37 +222,37 @@ jobs:
         if: always() && steps.run_result.outputs.run_result != 'success'
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}
+          name: build-logs-${{ matrix.os }}-${{ env.LIBCURL_RELEASE }}-${{ env.ELECTRON_VERSION }}
           path: ./logs/
           retention-days: 5
       # TODO(Filipe) - fix this set-output
       - run: echo "::set-output name=run_result::success" > run_result
 
   build-and-test-nodejs-windows:
+    needs: setup
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node:
-          - 22.15.1
     env:
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
+      NODE_VERSION: ${{ needs.setup.outputs.NODE_VERSION }}
+      LIBCURL_RELEASE: ${{ needs.setup.outputs.LIBCURL_RELEASE }}
+      LATEST_LIBCURL_RELEASE: ${{ needs.setup.outputs.LATEST_LIBCURL_RELEASE }}
+      NODE_LIBCURL_CPP_STD: ${{ needs.setup.outputs.NODE_LIBCURL_CPP_STD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Setup Node.js ${{ matrix.node }}
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
         run: |
           choco install nasm -y
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
           python deps\curl-for-windows\configure.py
-      - name: Build ${{ matrix.node }}
+      - name: Build ${{ env.NODE_VERSION }}
         run: |
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
           npm ci
@@ -257,37 +266,35 @@ jobs:
           }
 
   build-and-test-electron-windows:
+    needs: setup
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node:
-          - 22.15.1
-        electron-version:
-          - 36.3.1
     env:
-      ELECTRON_VERSION: ${{ matrix.electron-version }}
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
       npm_config_runtime: 'electron'
       npm_config_dist_url: 'https://electronjs.org/headers'
-      npm_config_target: ${{ matrix.electron-version }}
+      npm_config_target: ${{ needs.setup.outputs.npm_config_target }}
+      NODE_VERSION: ${{ needs.setup.outputs.NODE_VERSION }}
+      ELECTRON_VERSION: ${{ needs.setup.outputs.ELECTRON_VERSION }}
+      LIBCURL_RELEASE: ${{ needs.setup.outputs.LIBCURL_RELEASE }}
+      LATEST_LIBCURL_RELEASE: ${{ needs.setup.outputs.LATEST_LIBCURL_RELEASE }}
+      NODE_LIBCURL_CPP_STD: ${{ needs.setup.outputs.NODE_LIBCURL_CPP_STD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Setup Node.js ${{ matrix.node }}
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
         run: |
           choco install nasm -y
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
           python deps\curl-for-windows\configure.py
           npm install -g electron@${env:ELECTRON_VERSION}
-      - name: Build ${{ matrix.node }}
+      - name: Build ${{ env.NODE_VERSION }}
         run: |
           $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
           npm ci

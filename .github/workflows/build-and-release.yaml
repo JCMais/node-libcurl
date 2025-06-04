@@ -12,9 +12,6 @@ on:
     branches:
       - develop
 
-env:
-  NODE_LIBCURL_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 # all jobs here must have a matrix identical to the ones inside build-lint-test.yaml
 
 jobs:
@@ -39,8 +36,37 @@ jobs:
         with:
           dir: ${{ github.repository }}
           upload-sbom-release-assets: true
-
+      setup:
+        runs-on: ubuntu-22.04
+        outputs:
+          NODE_VERSION: ${{ steps.set-versions.outputs.NODE_VERSION }}
+          ELECTRON_VERSION: ${{ steps.set-versions.outputs.ELECTRON_VERSION }}
+          LIBCURL_RELEASE: ${{ steps.set-versions.outputs.LIBCURL_RELEASE }}
+          LATEST_LIBCURL_RELEASE: ${{ steps.set-versions.outputs.LATEST_LIBCURL_RELEASE }}
+          NODE_LIBCURL_CPP_STD: ${{ steps.set-versions.outputs.NODE_LIBCURL_CPP_STD }}
+          npm_config_target: ${{ steps.set-versions.outputs.npm_config_target }}
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v4
+    
+          - name: Read .node-version
+            id: set-versions
+            run: |
+              NODE_VERSION=$(cat .node-version)
+              ELECTRON_VERSION=$(cat .electron-version)
+              LIBCURL_RELEASE=$(cat .libcurl-version)
+              LATEST_LIBCURL_RELEASE=$(cat .libcurl-version)
+              NODE_LIBCURL_CPP_STD=c++20
+              npm_config_target=$(cat .electron-version)
+              echo "NODE_VERSION=$NODE_VERSION" >> $GITHUB_OUTPUT
+              echo "ELECTRON_VERSION=$ELECTRON_VERSION" >> $GITHUB_OUTPUT
+              echo "LIBCURL_RELEASE=$LIBCURL_RELEASE" >> $GITHUB_OUTPUT
+              echo "LATEST_LIBCURL_RELEASE=$LATEST_LIBCURL_RELEASE" >> $GITHUB_OUTPUT
+              echo "NODE_LIBCURL_CPP_STD=$NODE_LIBCURL_CPP_STD" >> $GITHUB_OUTPUT
+              echo "npm_config_target=$npm_config_target" >> $GITHUB_OUTPUT
+        
   build-and-release-nodejs:
+    needs: setup
     permissions: write-all
     runs-on: ${{ matrix.os }}
     strategy:
@@ -50,17 +76,11 @@ jobs:
           - macos-13-xlarge
           - ubuntu-22.04
           - ubuntu-22.04-arm
-        libcurl-release:
-          - 7.86.0
-        node-libcurl-cpp-std:
-          - c++20
-        node:
-          - 22.15.1
-
     env:
-      LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-      LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-      NODE_LIBCURL_CPP_STD: ${{ matrix.node-libcurl-cpp-std }}
+      NODE_VERSION: ${{ needs.setup.outputs.NODE_VERSION }}
+      LIBCURL_RELEASE: ${{ needs.setup.outputs.LIBCURL_RELEASE }}
+      LATEST_LIBCURL_RELEASE: ${{ needs.setup.outputs.LATEST_LIBCURL_RELEASE }}
+      NODE_LIBCURL_CPP_STD: ${{ needs.setup.outputs.NODE_LIBCURL_CPP_STD }}
     steps:
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
@@ -83,9 +103,9 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v4-${{ matrix.os }}-libcurl-deps-cache-node-${{ matrix.node }}-fork
+          key: v4-${{ matrix.os }}-libcurl-deps-cache-node-${{ env.NODE_VERSION }}-fork
           restore-keys: |
-            v4-${{ matrix.os }}-libcurl-deps-cache-node-${{ matrix.node }}-fork
+            v4-${{ matrix.os }}-libcurl-deps-cache-node-${{ env.NODE_VERSION }}-fork
       - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
@@ -100,11 +120,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.node }}
+          name: build-logs-${{ matrix.os }}-${{ env.LIBCURL_VERSION }}-${{ env.NODE_VERSION }}
           path: ./logs/
           retention-days: 5
 
   build-and-release-electron:
+    needs: setup
     permissions: write-all
     runs-on: ${{ matrix.os }}
     strategy:
@@ -114,17 +135,12 @@ jobs:
           - macos-13-xlarge
           - ubuntu-22.04
           - ubuntu-22.04-arm
-        libcurl-release:
-          - 7.86.0
-        node:
-          - 22.15.1
-        electron-version:
-          - 36.3.1
     env:
-      LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-      LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-      ELECTRON_VERSION: ${{ matrix.electron-version }}
-      NODE_LIBCURL_CPP_STD: c++20
+      NODE_VERSION: ${{ needs.setup.outputs.NODE_VERSION }}
+      ELECTRON_VERSION: ${{ needs.setup.outputs.ELECTRON_VERSION }}
+      LIBCURL_RELEASE: ${{ needs.setup.outputs.LIBCURL_RELEASE }}
+      LATEST_LIBCURL_RELEASE: ${{ needs.setup.outputs.LATEST_LIBCURL_RELEASE }}
+      NODE_LIBCURL_CPP_STD: ${{ needs.setup.outputs.NODE_LIBCURL_CPP_STD }}
     steps:
       - if: runner.os == 'macOS'
         name: Install Needed packages
@@ -134,7 +150,7 @@ jobs:
         run: sudo apt-get install -y cmake
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Node.js ${{ matrix.node }}
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version-file: '.node-version'
@@ -144,9 +160,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/Library/Caches/electron
-          key: v1-${{ matrix.os }}-electron-cache-${{ matrix.electron-version }}
+          key: v1-${{ matrix.os }}-electron-cache-${{ env.ELECTRON_VERSION }} }}
           restore-keys: |
-            v1-${{ matrix.os }}-electron-cache-${{ matrix.electron-version }}
+            v1-${{ matrix.os }}-electron-cache-${{ env.ELECTRON_VERSION }} }}
             v1-${{ matrix.os }}-electron-cache-
       - name: Restore libcurl deps cache
         uses: actions/cache@v4
@@ -155,9 +171,9 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v4-${{ matrix.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}-fork
+          key: v4-${{ matrix.os }}-libcurl-deps-cache-electron-${{ env.ELECTRON_VERSION }} }}-fork
           restore-keys: |
-            v4-${{ matrix.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}-fork
+            v4-${{ matrix.os }}-libcurl-deps-cache-electron-${{ env.ELECTRON_VERSION }} }}-fork
       - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
@@ -171,30 +187,30 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}
+          name: build-logs-${{ matrix.os }}-${{ env.LIBCURL_VERSION }}-${{ env.ELECTRON_VERSION }} }}
           path: ./logs/
           retention-days: 5
 
   build-and-release-nodejs-windows:
+    needs: setup
     permissions: write-all
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node:
-          - 22.15.1
     env:
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
+      NODE_VERSION: ${{ needs.setup.outputs.NODE_VERSION }}
+      LIBCURL_RELEASE: ${{ needs.setup.outputs.LIBCURL_RELEASE }}
+      LATEST_LIBCURL_RELEASE: ${{ needs.setup.outputs.LATEST_LIBCURL_RELEASE }}
+      NODE_LIBCURL_CPP_STD: ${{ needs.setup.outputs.NODE_LIBCURL_CPP_STD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Setup Node.js ${{ matrix.node }}
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
         run: |
           choco install nasm -y
@@ -220,31 +236,29 @@ jobs:
           node scripts\module-packaging.js --publish $(npm run -s pregyp reveal staged_tarball --silent)
 
   build-and-release-electron-windows:
+    needs: setup
     permissions: write-all
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node:
-          - 22.15.1
-        electron-version:
-          - 36.3.1
     env:
-      ELECTRON_VERSION: ${{ matrix.electron-version }}
       npm_config_msvs_version: 2022
       npm_config_build_from_source: true
       npm_config_runtime: 'electron'
       npm_config_dist_url: 'https://electronjs.org/headers'
-      npm_config_target: ${{ matrix.electron-version }}
+    env:
+      NODE_VERSION: ${{ needs.setup.outputs.NODE_VERSION }}
+      ELECTRON_VERSION: ${{ needs.setup.outputs.ELECTRON_VERSION }}
+      LIBCURL_RELEASE: ${{ needs.setup.outputs.LIBCURL_RELEASE }}
+      LATEST_LIBCURL_RELEASE: ${{ needs.setup.outputs.LATEST_LIBCURL_RELEASE }}
+      NODE_LIBCURL_CPP_STD: ${{ needs.setup.outputs.NODE_LIBCURL_CPP_STD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Setup Node.js ${{ matrix.node }}
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
         run: |
           choco install nasm -y
