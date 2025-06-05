@@ -36,35 +36,36 @@ jobs:
         with:
           dir: ${{ github.repository }}
           upload-sbom-release-assets: true
-      setup:
-        runs-on: ubuntu-22.04
-        outputs:
-          NODE_VERSION: ${{ steps.set-versions.outputs.NODE_VERSION }}
-          ELECTRON_VERSION: ${{ steps.set-versions.outputs.ELECTRON_VERSION }}
-          LIBCURL_RELEASE: ${{ steps.set-versions.outputs.LIBCURL_RELEASE }}
-          LATEST_LIBCURL_RELEASE: ${{ steps.set-versions.outputs.LATEST_LIBCURL_RELEASE }}
-          NODE_LIBCURL_CPP_STD: ${{ steps.set-versions.outputs.NODE_LIBCURL_CPP_STD }}
-          npm_config_target: ${{ steps.set-versions.outputs.npm_config_target }}
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v4
-    
-          - name: Read .node-version
-            id: set-versions
-            run: |
-              NODE_VERSION=$(cat .node-version)
-              ELECTRON_VERSION=$(cat .electron-version)
-              LIBCURL_RELEASE=$(cat .libcurl-version)
-              LATEST_LIBCURL_RELEASE=$(cat .libcurl-version)
-              NODE_LIBCURL_CPP_STD=c++20
-              npm_config_target=$(cat .electron-version)
-              echo "NODE_VERSION=$NODE_VERSION" >> $GITHUB_OUTPUT
-              echo "ELECTRON_VERSION=$ELECTRON_VERSION" >> $GITHUB_OUTPUT
-              echo "LIBCURL_RELEASE=$LIBCURL_RELEASE" >> $GITHUB_OUTPUT
-              echo "LATEST_LIBCURL_RELEASE=$LATEST_LIBCURL_RELEASE" >> $GITHUB_OUTPUT
-              echo "NODE_LIBCURL_CPP_STD=$NODE_LIBCURL_CPP_STD" >> $GITHUB_OUTPUT
-              echo "npm_config_target=$npm_config_target" >> $GITHUB_OUTPUT
-        
+
+  setup:
+    runs-on: ubuntu-22.04
+    outputs:
+      NODE_VERSION: ${{ steps.set-versions.outputs.NODE_VERSION }}
+      ELECTRON_VERSION: ${{ steps.set-versions.outputs.ELECTRON_VERSION }}
+      LIBCURL_RELEASE: ${{ steps.set-versions.outputs.LIBCURL_RELEASE }}
+      LATEST_LIBCURL_RELEASE: ${{ steps.set-versions.outputs.LATEST_LIBCURL_RELEASE }}
+      NODE_LIBCURL_CPP_STD: ${{ steps.set-versions.outputs.NODE_LIBCURL_CPP_STD }}
+      npm_config_target: ${{ steps.set-versions.outputs.npm_config_target }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read .node-version
+        id: set-versions
+        run: |
+          NODE_VERSION=$(cat .node-version)
+          ELECTRON_VERSION=$(cat .electron-version)
+          LIBCURL_RELEASE=$(cat .libcurl-version)
+          LATEST_LIBCURL_RELEASE=$(cat .libcurl-version)
+          NODE_LIBCURL_CPP_STD=c++20
+          npm_config_target=$(cat .electron-version)
+          echo "NODE_VERSION=$NODE_VERSION" >> $GITHUB_OUTPUT
+          echo "ELECTRON_VERSION=$ELECTRON_VERSION" >> $GITHUB_OUTPUT
+          echo "LIBCURL_RELEASE=$LIBCURL_RELEASE" >> $GITHUB_OUTPUT
+          echo "LATEST_LIBCURL_RELEASE=$LATEST_LIBCURL_RELEASE" >> $GITHUB_OUTPUT
+          echo "NODE_LIBCURL_CPP_STD=$NODE_LIBCURL_CPP_STD" >> $GITHUB_OUTPUT
+          echo "npm_config_target=$npm_config_target" >> $GITHUB_OUTPUT
+
   build-and-release-nodejs:
     needs: setup
     permissions: write-all
@@ -120,7 +121,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs-${{ matrix.os }}-${{ env.LIBCURL_VERSION }}-${{ env.NODE_VERSION }}
+          name: build-logs-${{ matrix.os }}-${{ env.LIBCURL_RELEASE }}-${{ env.NODE_VERSION }}
           path: ./logs/
           retention-days: 5
 
@@ -187,7 +188,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs-${{ matrix.os }}-${{ env.LIBCURL_VERSION }}-${{ env.ELECTRON_VERSION }} }}
+          name: build-logs-${{ matrix.os }}-${{ env.LIBCURL_RELEASE }}-${{ env.ELECTRON_VERSION }} }}
           path: ./logs/
           retention-days: 5
 
@@ -244,7 +245,7 @@ jobs:
       npm_config_build_from_source: true
       npm_config_runtime: 'electron'
       npm_config_dist_url: 'https://electronjs.org/headers'
-    env:
+      npm_config_target: ${{ needs.setup.outputs.npm_config_target }}
       NODE_VERSION: ${{ needs.setup.outputs.NODE_VERSION }}
       ELECTRON_VERSION: ${{ needs.setup.outputs.ELECTRON_VERSION }}
       LIBCURL_RELEASE: ${{ needs.setup.outputs.LIBCURL_RELEASE }}
