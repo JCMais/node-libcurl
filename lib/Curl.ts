@@ -269,7 +269,8 @@ class Curl extends EventEmitter {
   protected streamPauseNext = false
   protected streamContinueNext = false
   protected streamError: false | Error = false
-  protected streamUserSuppliedProgressFunction: CurlOptionValueType['xferInfoFunction'] = null
+  protected streamUserSuppliedProgressFunction: CurlOptionValueType['xferInfoFunction'] =
+    null
 
   /**
    * @param cloneHandle {@link "Easy".Easy | `Easy`} handle that should be used instead of creating a new one.
