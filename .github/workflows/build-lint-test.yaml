@@ -76,16 +76,6 @@ jobs:
     steps:
       - id: timestamp
         run: echo "timestamp=$(timestamp +%s)" >> $GITHUB_OUTPUT
-      - name: Restore the previous run result
-        uses: actions/cache@v4
-        with:
-          path: |
-            run_result
-          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
-          restore-keys: |
-            ${{ github.run_id }}-${{ github.job }}-
-      - id: run_result
-        run: cat run_result 2>/dev/null || echo 'default'
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
         run: brew install coreutils automake libtool cmake gnu-sed m4 autoconf groff
@@ -111,39 +101,25 @@ jobs:
           restore-keys: |
             v4-build-lint-test-${{ matrix.os }}-libcurl-deps-cache-node-${{ env.NODE_VERSION }}
       - name: Build node-libcurl ${{ env.NODE_VERSION }}
-        if: steps.run_result.outputs.run_result != 'success'
         run: |
           RUN_TESTS=false \
           RUN_PREGYP_CLEAN=false \
           PUBLISH_BINARY=false \
             ./scripts/ci/build.sh
       - name: 'Run lint'
-        if: steps.run_result.outputs.run_result != 'success'
         run: npm run lint
       - name: 'Run tsc'
-        if: steps.run_result.outputs.run_result != 'success'
         run: npm run build:dist
       # we do run tests in all matrix jobs
       - name: 'Run tests'
-        if: steps.run_result.outputs.run_result != 'success'
-        run: npm run test:coverage
-      # but coverage is only sent for the run-lint-and-tsc job
-      - name: Upload coverage to Codecov
-        if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
-        uses: codecov/codecov-action@29386c70ef20e286228c72b668a06fd0e8399192 # v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage/**
-          fail_ci_if_error: false
+        run: npm run test
       - name: Upload artifacts
-        if: always() && steps.run_result.outputs.run_result != 'success'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: build-logs-${{ matrix.os }}-${{ env.LIBCURL_RELEASE }}-${{ env.NODE_VERSION }}
           path: ./logs/
           retention-days: 3
-      # TODO(Filipe) - fix this set-output
-      - run: echo "::set-output name=run_result::success" > run_result
 
   build-and-test-electron:
     needs: setup
@@ -164,16 +140,6 @@ jobs:
     steps:
       - id: timestamp
         run: echo "timestamp=$(timestamp +%s)" >> $GITHUB_OUTPUT
-      - name: Restore the previous run result
-        uses: actions/cache@v4
-        with:
-          path: |
-            run_result
-          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
-          restore-keys: |
-            ${{ github.run_id }}-${{ github.job }}-
-      - id: run_result
-        run: cat run_result 2>/dev/null || echo 'default'
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
         run: brew install coreutils automake libtool cmake gnu-sed m4 autoconf groff
@@ -212,21 +178,18 @@ jobs:
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Build node-libcurl ${{ env.NODE_VERSION }} ${{ env.ELECTRON_VERSION }}
-        if: steps.run_result.outputs.run_result != 'success'
         run: |
           RUN_TESTS=true \
           RUN_PREGYP_CLEAN=false \
           PUBLISH_BINARY=false \
             ./scripts/ci/build.sh
       - name: Upload artifacts
-        if: always() && steps.run_result.outputs.run_result != 'success'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: build-logs-${{ matrix.os }}-${{ env.LIBCURL_RELEASE }}-${{ env.ELECTRON_VERSION }}
           path: ./logs/
           retention-days: 5
-      # TODO(Filipe) - fix this set-output
-      - run: echo "::set-output name=run_result::success" > run_result
 
   build-and-test-nodejs-windows:
     needs: setup
