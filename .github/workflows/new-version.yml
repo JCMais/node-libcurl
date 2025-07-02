@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_INSOMNIA_INFRA }}
 
       - name: Configure Git user
         uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
@@ -37,6 +37,16 @@ jobs:
 
       - name: Create new package version
         run: npm version "${{ env.TAG }}"
+
+      - name: DEBUG see tags
+        run: |
+          git tag --list
+          git remote -v
+
+      - name: Merge version commit into develop
+        run: |
+          git push origin v${{ env.TAG }}
+          git push origin develop
 
       - name: Create Tag and Release
         uses: ncipollo/release-action@440c8c1cb0ed28b9f43e4d1d670870f059653174 # v1
