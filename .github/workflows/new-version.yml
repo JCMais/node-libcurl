@@ -20,33 +20,33 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.PAT_INSOMNIA_INFRA }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure Git user
         uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
         with:
           username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.node-version'
+      # - name: Setup Node
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version-file: '.node-version'
 
-      - name: Install
-        run: npm ci --ignore-scripts
+      # - name: Install
+      #   run: npm ci --ignore-scripts
 
-      - name: Create new package version
-        run: npm version "${{ env.TAG }}"
+      # - name: Create new package version
+      #   run: npm version "${{ env.TAG }}"
 
       - name: DEBUG see tags
         run: |
           git tag --list
           git remote -v
 
-      - name: Merge version commit into develop
-        run: |
-          git push origin v${{ env.TAG }}
-          git push origin develop
+      # - name: Merge version commit into develop
+      #   run: |
+      #     git push origin v${{ env.TAG }}
+      #     git push origin develop
 
       - name: Create Tag and Release
         uses: ncipollo/release-action@440c8c1cb0ed28b9f43e4d1d670870f059653174 # v1
@@ -56,4 +56,4 @@ jobs:
           name: 'nodelibcurl v${{ env.TAG }} 📦'
           generateReleaseNotes: true
           prerelease: false
-          draft: false
+          draft: true

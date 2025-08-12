@@ -15,6 +15,27 @@ on:
 # all jobs here must have a matrix identical to the ones inside build-lint-test.yaml
 
 jobs:
+  release:
+    permissions: write-all
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Tag and Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: ncipollo/release-action@440c8c1cb0ed28b9f43e4d1d670870f059653174 # v1
+        id: core_tag_and_release
+        with:
+          tag: v${{ env.TAG }}
+          name: 'nodelibcurl v${{ env.TAG }} 📦'
+          generateReleaseNotes: true
+          prerelease: false
+          draft: true
+
   scan:
     permissions:
       packages: write
@@ -25,6 +46,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: ${{ github.repository }}
+          # fetch-depth: 0
 
       # Perform SCA analysis for the code repository
       # Produces SBOM and CVE report
@@ -110,13 +132,34 @@ jobs:
       - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: 'Publish Binary'
+      - name: 'Build Binary'
         run: |
           pip install packaging
           GIT_COMMIT=${{ github.sha }} \
           GIT_TAG=$GIT_TAG \
           RUNNER_OS=${{ matrix.os }} \
           ./scripts/ci/build.sh
+      - name: 'Publish Binary'
+        if: runner.os != 'macOS' && startsWith(github.ref, 'refs/tags/')
+        run: |
+          gh release upload $(git describe --exact-match --tags) \
+          "$(cat ./package.txt)"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 'Publish x64 Mac Binary'
+        if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/')
+        run: |
+          gh release upload $(git describe --exact-match --tags) \
+          "$(cat ./package_x64.txt)"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 'Publish arm64 Mac Binary'
+        if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/')
+        run: |
+          gh release upload $(git describe --exact-match --tags) \
+          "$(cat ./package_arm64.txt)"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -178,12 +221,33 @@ jobs:
       - name: 'Set GIT_TAG'
         if: startsWith(github.ref, 'refs/tags')
         run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: 'Publish Binary'
+      - name: 'Build Binary'
         run: |
           pip install packaging
           GIT_COMMIT=${{ github.sha }} \
           GIT_TAG=$GIT_TAG \
           ./scripts/ci/build.sh
+      - name: 'Publish Binary'
+        if: runner.os != 'macOS' && startsWith(github.ref, 'refs/tags/')
+        run: |
+          gh release upload $(git describe --exact-match --tags) \
+          "$(cat ./package.txt)"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 'Publish x64 Mac Binary'
+        if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/')
+        run: |
+          gh release upload $(git describe --exact-match --tags) \
+          "$(cat ./package_x64.txt)"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 'Publish arm64 Mac Binary'
+        if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/')
+        run: |
+          gh release upload $(git describe --exact-match --tags) \
+          "$(cat ./package_arm64.txt)"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -229,12 +293,18 @@ jobs:
           if ($LASTEXITCODE -eq 0) {
             $host.SetShouldExit(0)
           }
-      - name: Publish binary
+      - name: Build binary
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           pip install packaging
           npm run pregyp package testpackage --verbose
-          node scripts\module-packaging.js --publish $(npm run -s pregyp reveal staged_tarball --silent)
+          # node scripts\module-packaging.js --publish $(npm run -s pregyp reveal staged_tarball --silent)
+      - name: Publish Binary
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          gh release upload $(git describe --exact-match --tags) $(npm run -s pregyp reveal staged_tarball --silent)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-and-release-electron-windows:
     needs: setup
@@ -277,9 +347,14 @@ jobs:
           if ($LASTEXITCODE -eq 0) {
             $host.SetShouldExit(0)
           }
-      - name: Publish binary
+      - name: Build binary
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           pip install packaging
           npm run pregyp package testpackage --verbose
-          node scripts\module-packaging.js --publish $(npm run -s pregyp reveal staged_tarball --silent)
+      - name: Publish Binary
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          gh release upload $(git describe --exact-match --tags) $(npm run -s pregyp reveal staged_tarball --silent)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

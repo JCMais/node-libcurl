@@ -373,6 +373,8 @@ if [ "$RUN_TESTS" == "true" ]; then
   fi
 fi
 
+echo "=== node version: $(node -v)"
+
 # If we are here, it means the addon worked
 # Check if we need to publish the binaries
 if [[ $PUBLISH_BINARY == true && $LIBCURL_RELEASE == $LATEST_LIBCURL_RELEASE ]]; then
@@ -380,38 +382,43 @@ if [[ $PUBLISH_BINARY == true && $LIBCURL_RELEASE == $LATEST_LIBCURL_RELEASE ]];
   if [[ "$MACOS_UNIVERSAL_BUILD" == "true" ]]; then
     # Need to publish two binaries when doing a universal build.
     # --
-    # Publish x64 package
+    # Build x64 package
     npm_config_target_arch=x64 npm run pregyp package testpackage --verbose
-    npm_config_target_arch=x64 node scripts/module-packaging.js --publish \
-      "$(npm_config_target_arch=x64 npm run --silent pregyp reveal staged_tarball --silent)"
-    # Publish arm64 package.
+    npm_config_target_arch=x64 npm run --silent pregyp reveal staged_tarball --silent>package_x64.txt
+    # npm_config_target_arch=x64 node scripts/module-packaging.js --publish \
+    #   "$(npm_config_target_arch=x64 npm run --silent pregyp reveal staged_tarball --silent)"
+    # Build arm64 package.
     npm_config_target_arch=arm64 npm run pregyp package --verbose  # Can't testpackage for arm64 yet.
-    npm_config_target_arch=arm64 node scripts/module-packaging.js --publish \
-      "$(npm_config_target_arch=arm64 npm run --silent pregyp reveal staged_tarball --silent)"
+    npm_config_target_arch=arm64 npm run --silent pregyp reveal staged_tarball --silent>package_arm64.txt
+    # npm_config_target_arch=arm64 node scripts/module-packaging.js --publish \
+    #   "$(npm_config_target_arch=arm64 npm run --silent pregyp reveal staged_tarball --silent)"
   else
     npm run pregyp package testpackage --verbose
-    node scripts/module-packaging.js --publish "$(npm run --silent pregyp reveal staged_tarball --silent)"
+    npm run --silent pregyp reveal staged_tarball --silent>package.txt
+    # node scripts/module-packaging.js --publish "$(npm run --silent pregyp reveal staged_tarball --silent)"
   fi
 fi
-echo "=== node version: $(node -v)"
-# In case we published the binaries, verify if we can download them, and that they work
-# Otherwise, unpublish them
-INSTALL_RESULT=0
-if [[ $PUBLISH_BINARY == true ]]; then
-  echo "=== Publish binary is true - Testing if it was published correctly"
 
-  INSTALL_RESULT=$(npm_config_fallback_to_build=false npm ci > /dev/null)$? || true
-fi
-if [[ $INSTALL_RESULT != 0 ]]; then
-  echo "=== Failed to install package from npm after being published"
-  node scripts/module-packaging.js --unpublish "$(npm run --silent pregyp reveal hosted_tarball --silent)"
-  false
-fi
+## Move this to action or a different script later
+# echo "=== node version: $(node -v)"
+# # In case we published the binaries, verify if we can download them, and that they work
+# # Otherwise, unpublish them
+# INSTALL_RESULT=0
+# if [[ $PUBLISH_BINARY == true ]]; then
+#   echo "=== Publish binary is true - Testing if it was published correctly"
 
-# Clean everything
-if [[ $RUN_PREGYP_CLEAN == true ]]; then
-  echo "=== cleanup"
-  npm run pregyp clean
-fi
+#   INSTALL_RESULT=$(npm_config_fallback_to_build=false npm ci > /dev/null)$? || true
+# fi
+# if [[ $INSTALL_RESULT != 0 ]]; then
+#   echo "=== Failed to install package from npm after being published"
+#   node scripts/module-packaging.js --unpublish "$(npm run --silent pregyp reveal hosted_tarball --silent)"
+#   false
+# fi
+
+# # Clean everything
+# if [[ $RUN_PREGYP_CLEAN == true ]]; then
+#   echo "=== cleanup"
+#   npm run pregyp clean
+# fi
 
 set +uv
