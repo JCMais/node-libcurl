@@ -1,6 +1,4 @@
 #ifndef NOMINMAX
-// Fix for: warning C4003: not enough arguments for function-like macro invocation 'max'
-// [C:\projects\node-libcurl\build\node_libcurl.vcxproj]
 #define NOMINMAX
 #endif
 
@@ -12,102 +10,104 @@
  */
 #include "Http2PushFrameHeaders.h"
 
-#include <iostream>
-
 namespace NodeLibcurl {
 
-Nan::Persistent<v8::ObjectTemplate> Http2PushFrameHeaders::objectTemplate;
+const napi_type_tag HTTP2_PUSH_FRAME_HEADERS_TYPE_TAG = {0x3ddda65f5bf2445c, 0xbdcd5768faf8210d};
 
-Http2PushFrameHeaders::Http2PushFrameHeaders(struct curl_pushheaders* headers,
-                                             size_t numberOfHeaders) {
-  this->headers = headers;
-  this->numberOfHeaders = numberOfHeaders;
-}
+Http2PushFrameHeaders::Http2PushFrameHeaders(const Napi::CallbackInfo& info)
+    : Napi::ObjectWrap<Http2PushFrameHeaders>(info) {
+  Napi::Env env = info.Env();
 
-v8::Local<v8::Object> Http2PushFrameHeaders::NewInstance(struct curl_pushheaders* headers,
-                                                         size_t numberOfHeaders) {
-  Nan::EscapableHandleScope scope;
-
-  v8::Local<v8::Object> jsObj = Nan::NewInstance(Nan::New(objectTemplate)).ToLocalChecked();
-
-  Http2PushFrameHeaders* cppObj = new Http2PushFrameHeaders(headers, numberOfHeaders);
-  cppObj->Wrap(jsObj);
-
-  return scope.Escape(jsObj);
-}
-
-NAN_METHOD(Http2PushFrameHeaders::GetByIndex) {
-  Nan::HandleScope scope;
-
-  v8::Local<v8::Value> value = info[0];
-
-  if (!value->IsUint32()) {
-    Nan::ThrowTypeError("Index must be a non-negative integer");
-    return;
+  if (info.Length() < 2) {
+    throw Napi::TypeError::New(env, "Http2PushFrameHeaders requires headers and numberOfHeaders");
   }
 
-  Http2PushFrameHeaders* obj = Nan::ObjectWrap::Unwrap<Http2PushFrameHeaders>(info.This());
-  uint32_t val = Nan::To<uint32_t>(value).FromJust();
-
-  char* result = curl_pushheader_bynum(obj->headers, static_cast<size_t>(val));
-
-  v8::Local<v8::Value> returnValue =
-      result == NULL ? Nan::Null().As<v8::Value>()
-                     : Nan::New<v8::String>(result).ToLocalChecked().As<v8::Value>();
-
-  info.GetReturnValue().Set(returnValue);
-}
-
-NAN_METHOD(Http2PushFrameHeaders::GetByName) {
-  Nan::HandleScope scope;
-
-  v8::Local<v8::Value> value = info[0];
-
-  if (!value->IsString()) {
-    Nan::ThrowTypeError("Name must be a string");
-    return;
+  // Expect external object wrapping curl_pushheaders* as first arg
+  if (!info[0].IsExternal()) {
+    throw Napi::TypeError::New(env,
+                               "First argument must be an external pointer to curl_pushheaders");
   }
 
-  Http2PushFrameHeaders* obj = Nan::ObjectWrap::Unwrap<Http2PushFrameHeaders>(info.This());
+  // Expect number of headers as second arg
+  if (!info[1].IsNumber()) {
+    throw Napi::TypeError::New(env, "Second argument must be the number of headers");
+  }
 
-  Nan::Utf8String utf8String(value);
+  auto maybeHeadersExternal = info[0].As<Napi::External<curl_pushheaders>>();
 
-  char* result = curl_pushheader_byname(obj->headers, *utf8String);
+  if (!maybeHeadersExternal.CheckTypeTag(&HTTP2_PUSH_FRAME_HEADERS_TYPE_TAG)) {
+    throw Napi::TypeError::New(env, "Argument must be an external curl_pushheaders handle.");
+  }
 
-  v8::Local<v8::Value> returnValue =
-      result == NULL ? Nan::Null().As<v8::Value>()
-                     : Nan::New<v8::String>(result).ToLocalChecked().As<v8::Value>();
-
-  info.GetReturnValue().Set(returnValue);
+  this->headers = maybeHeadersExternal.Data();
+  this->numberOfHeaders = info[1].As<Napi::Number>().Uint32Value();
 }
 
-NAN_GETTER(Http2PushFrameHeaders::GetterNumberOfHeaders) {
-  Nan::HandleScope scope;
+Napi::Function Http2PushFrameHeaders::Init(Napi::Env env, Napi::Object exports) {
+  // Define the class but don't export it
+  // This class is only created internally
+  Napi::Function func = DefineClass(
+      env, "Http2PushFrameHeaders",
+      {// Instance methods
+       InstanceMethod("getByIndex", &Http2PushFrameHeaders::GetByIndex),
+       InstanceMethod("getByName", &Http2PushFrameHeaders::GetByName),
 
-  Http2PushFrameHeaders* obj = Nan::ObjectWrap::Unwrap<Http2PushFrameHeaders>(info.This());
-
-  info.GetReturnValue().Set(Nan::New<v8::Uint32>(static_cast<uint32_t>(obj->numberOfHeaders)));
+       // Property accessors
+       InstanceAccessor(
+           "numberOfHeaders", &Http2PushFrameHeaders::GetNumberOfHeaders, nullptr,
+           static_cast<napi_property_attributes>(napi_enumerable | napi_configurable))});
+  return func;
 }
 
-NAN_MODULE_INIT(Http2PushFrameHeaders::Initialize) {
-  Nan::HandleScope scope;
+Napi::Value Http2PushFrameHeaders::GetByIndex(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
 
-  v8::Local<v8::ObjectTemplate> objTmpl = Nan::New<v8::ObjectTemplate>();
-  objTmpl->SetInternalFieldCount(1);
+  if (info.Length() < 1) {
+    throw Napi::TypeError::New(env, "Wrong number of arguments");
+  }
 
-  v8::PropertyAttribute attributes =
-      static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete);
+  Napi::Value value = info[0];
 
-  Nan::SetAccessor(objTmpl, Nan::New("numberOfHeaders").ToLocalChecked(),
-                   Http2PushFrameHeaders::GetterNumberOfHeaders, 0, v8::Local<v8::Value>(),
-                   v8::DEFAULT, attributes);
+  if (!value.IsNumber()) {
+    throw Napi::TypeError::New(env, "Index must be a non-negative integer");
+  }
 
-  Nan::SetMethod(objTmpl, "getByIndex", Http2PushFrameHeaders::GetByIndex);
-  Nan::SetMethod(objTmpl, "getByName", Http2PushFrameHeaders::GetByName);
+  uint32_t index = value.As<Napi::Number>().Uint32Value();
+  char* result = curl_pushheader_bynum(this->headers, static_cast<size_t>(index));
 
-  Http2PushFrameHeaders::objectTemplate.Reset(objTmpl);
+  if (result == nullptr) {
+    return env.Null();
+  }
 
-  // this is not exported
+  return Napi::String::New(env, result);
+}
+
+Napi::Value Http2PushFrameHeaders::GetByName(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() < 1) {
+    throw Napi::TypeError::New(env, "Wrong number of arguments");
+  }
+
+  Napi::Value value = info[0];
+
+  if (!value.IsString()) {
+    throw Napi::TypeError::New(env, "Name must be a string");
+  }
+
+  std::string name = value.As<Napi::String>().Utf8Value();
+  char* result = curl_pushheader_byname(this->headers, name.c_str());
+
+  if (result == nullptr) {
+    return env.Null();
+  }
+
+  return Napi::String::New(env, result);
+}
+
+Napi::Value Http2PushFrameHeaders::GetNumberOfHeaders(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  return Napi::Number::New(env, static_cast<uint32_t>(this->numberOfHeaders));
 }
 
 }  // namespace NodeLibcurl

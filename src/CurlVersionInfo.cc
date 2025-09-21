@@ -1,7 +1,6 @@
 #ifndef NOMINMAX
-// Fix for: warning C4003: not enough arguments for function-like macro invocation 'max'
-// [C:\projects\node-libcurl\build\node_libcurl.vcxproj]
 #define NOMINMAX
+#include "napi.h"
 #endif
 
 /**
@@ -15,30 +14,8 @@
 #include <iostream>
 
 namespace NodeLibcurl {
-namespace {
-template <typename TValue>
-void SetObjPropertyToNullOrValue(v8::Local<v8::Object> obj, std::string key, TValue value) {
-  Nan::Set(obj, Nan::New(key).ToLocalChecked(), Nan::New(value));
-}
 
-template <>
-void SetObjPropertyToNullOrValue<v8::Local<v8::Primitive>>(v8::Local<v8::Object> obj,
-                                                           std::string key,
-                                                           v8::Local<v8::Primitive> value) {
-  Nan::Set(obj, Nan::New(key).ToLocalChecked(), value);
-}
-
-template <>
-void SetObjPropertyToNullOrValue<const char*>(v8::Local<v8::Object> obj, std::string key,
-                                              const char* value) {
-  if (value == nullptr) {
-    Nan::Set(obj, Nan::New(key).ToLocalChecked(), Nan::Null());
-  } else {
-    Nan::Set(obj, Nan::New(key).ToLocalChecked(), Nan::New(value).ToLocalChecked());
-  }
-}
-}  // namespace
-
+// Static member definitions
 const std::vector<CurlVersionInfo::feature> CurlVersionInfo::features = {
     {"AsynchDNS", CURL_VERSION_ASYNCHDNS},
     {"Debug", CURL_VERSION_DEBUG},
@@ -85,80 +62,115 @@ const std::vector<CurlVersionInfo::feature> CurlVersionInfo::features = {
 
 const curl_version_info_data* CurlVersionInfo::versionInfo = curl_version_info(CURLVERSION_NOW);
 
-NAN_MODULE_INIT(CurlVersionInfo::Initialize) {
-  Nan::HandleScope scope;
-
-  if (!versionInfo) {
-    Nan::ThrowError("Failed to retrieve libcurl information using curl_version_info");
-    return;
-  }
-
-  v8::PropertyAttribute attributes =
-      static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete);
-
-  v8::Local<v8::Object> obj = Nan::New<v8::Object>();
-
-  Nan::SetAccessor(obj, Nan::New("protocols").ToLocalChecked(), GetterProtocols, 0,
-                   v8::Local<v8::Value>(), v8::DEFAULT, attributes);
-  Nan::SetAccessor(obj, Nan::New("features").ToLocalChecked(), GetterFeatures, 0,
-                   v8::Local<v8::Value>(), v8::DEFAULT, attributes);
-  SetObjPropertyToNullOrValue(obj, "rawFeatures", versionInfo->features);
-
-  SetObjPropertyToNullOrValue(obj, "version", versionInfo->version);
-  SetObjPropertyToNullOrValue(obj, "versionNumber", versionInfo->version_num);
-
-  SetObjPropertyToNullOrValue(obj, "sslVersion", versionInfo->ssl_version);
-  SetObjPropertyToNullOrValue(obj, "sslVersionNum", 0);
-  SetObjPropertyToNullOrValue(obj, "libzVersion", versionInfo->libz_version);
-  SetObjPropertyToNullOrValue(obj, "aresVersion", versionInfo->ares);
-  SetObjPropertyToNullOrValue(obj, "aresVersionNumber", versionInfo->ares_num);
-  SetObjPropertyToNullOrValue(obj, "libidnVersion", versionInfo->libidn);
-  SetObjPropertyToNullOrValue(obj, "iconvVersionNumber", versionInfo->iconv_ver_num);
-  SetObjPropertyToNullOrValue(obj, "libsshVersion", versionInfo->libssh_version);
-#if NODE_LIBCURL_VER_GE(7, 57, 0)
-  SetObjPropertyToNullOrValue(obj, "brotliVersionNumber", versionInfo->brotli_ver_num);
-  SetObjPropertyToNullOrValue(obj, "brotliVersion", versionInfo->brotli_version);
-#else
-  SetObjPropertyToNullOrValue(obj, "brotliVersionNumber", 0);
-  SetObjPropertyToNullOrValue(obj, "brotliVersion", Nan::Null());
-#endif
-
-  Nan::Set(target, Nan::New("CurlVersionInfo").ToLocalChecked(), obj);
+// Helper template implementations
+template <typename TValue>
+void CurlVersionInfo::SetObjPropertyToNullOrValue(Napi::Object obj, const std::string& key,
+                                                  TValue value) {
+  obj.Set(key, Napi::Value::From(obj.Env(), value));
 }
 
-NAN_GETTER(CurlVersionInfo::GetterProtocols) {
-  Nan::HandleScope scope;
+template <>
+void CurlVersionInfo::SetObjPropertyToNullOrValue<Napi::Value>(Napi::Object obj,
+                                                               const std::string& key,
+                                                               Napi::Value value) {
+  obj.Set(key, value);
+}
+
+template <>
+void CurlVersionInfo::SetObjPropertyToNullOrValue<const char*>(Napi::Object obj,
+                                                               const std::string& key,
+                                                               const char* value) {
+  Napi::Env env = obj.Env();
+  if (value == nullptr) {
+    obj.Set(key, env.Null());
+  } else {
+    obj.Set(key, Napi::String::New(env, value));
+  }
+}
+
+void CurlVersionInfo::Init(Napi::Env env, Napi::Object exports) {
+  if (!versionInfo) {
+    throw Napi::Error::New(env, "Failed to retrieve libcurl information using curl_version_info");
+  }
+
+  Napi::Object obj = Napi::Object::New(env);
+
+  napi_property_attributes attributes =
+      static_cast<napi_property_attributes>(napi_enumerable | napi_configurable);
+
+  Napi::PropertyDescriptor protocols =
+      Napi::PropertyDescriptor::Accessor<GetProtocols>("protocols", attributes);
+  Napi::PropertyDescriptor features =
+      Napi::PropertyDescriptor::Accessor<GetFeatures>("features", attributes);
+
+  obj.DefineProperties({protocols, features});
+
+  // Add static properties using Napi::String::New for all keys
+  obj.Set("rawFeatures", Napi::Number::New(env, static_cast<int32_t>(versionInfo->features)));
+  obj.Set("version",
+          versionInfo->version ? Napi::String::New(env, versionInfo->version) : env.Null());
+  obj.Set("versionNumber", Napi::Number::New(env, static_cast<int32_t>(versionInfo->version_num)));
+  obj.Set("sslVersion",
+          versionInfo->ssl_version ? Napi::String::New(env, versionInfo->ssl_version) : env.Null());
+  obj.Set("sslVersionNum", Napi::Number::New(env, 0));
+  obj.Set("libzVersion", versionInfo->libz_version
+                             ? Napi::String::New(env, versionInfo->libz_version)
+                             : env.Null());
+  obj.Set("aresVersion",
+          versionInfo->ares ? Napi::String::New(env, versionInfo->ares) : env.Null());
+  obj.Set("aresVersionNumber", Napi::Number::New(env, static_cast<int32_t>(versionInfo->ares_num)));
+  obj.Set("libidnVersion",
+          versionInfo->libidn ? Napi::String::New(env, versionInfo->libidn) : env.Null());
+  obj.Set("iconvVersionNumber",
+          Napi::Number::New(env, static_cast<int32_t>(versionInfo->iconv_ver_num)));
+  obj.Set("libsshVersion", versionInfo->libssh_version
+                               ? Napi::String::New(env, versionInfo->libssh_version)
+                               : env.Null());
+
+// TODO(jonathan, changelog): possibly support only 7.78>= moving forward
+#if NODE_LIBCURL_VER_GE(7, 57, 0)
+  obj.Set("brotliVersionNumber",
+          Napi::Number::New(env, static_cast<int32_t>(versionInfo->brotli_ver_num)));
+  obj.Set("brotliVersion", versionInfo->brotli_version
+                               ? Napi::String::New(env, versionInfo->brotli_version)
+                               : env.Null());
+#else
+  obj.Set("brotliVersionNumber", Napi::Number::New(env, 0));
+  obj.Set("brotliVersion", env.Null());
+#endif
+
+  exports.Set("CurlVersionInfo", obj);
+}
+
+Napi::Value CurlVersionInfo::GetProtocols(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
 
   // const pointer to const char pointer
   const char* const* protocols = versionInfo->protocols;
   unsigned int i = 0;
 
-  std::vector<const char*> vec;
-
-  v8::Local<v8::Array> protocolsResult = Nan::New<v8::Array>();
+  Napi::Array protocolsResult = Napi::Array::New(env);
 
   for (i = 0; *(protocols + i); i++) {
-    v8::Local<v8::String> protocol = Nan::New<v8::String>(*(protocols + i)).ToLocalChecked();
-    Nan::Set(protocolsResult, i, protocol);
+    protocolsResult.Set(i, Napi::String::New(env, *(protocols + i)));
   }
 
-  info.GetReturnValue().Set(protocolsResult);
+  return protocolsResult;
 }
 
-// basically a copy of https://github.com/curl/curl/blob/05a131eb7740e/src/tool_help.c#L579
-NAN_GETTER(CurlVersionInfo::GetterFeatures) {
-  Nan::HandleScope scope;
+Napi::Value CurlVersionInfo::GetFeatures(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
 
-  v8::Local<v8::Array> featuresResult = Nan::New<v8::Array>();
+  Napi::Array featuresResult = Napi::Array::New(env);
 
   unsigned int currentFeature = 0;
   for (auto const& feat : CurlVersionInfo::features) {
     if (versionInfo->features & feat.bitmask) {
-      v8::Local<v8::String> featureString = Nan::New<v8::String>(feat.name).ToLocalChecked();
-      Nan::Set(featuresResult, currentFeature++, featureString);
+      featuresResult.Set(currentFeature++, Napi::String::New(env, feat.name));
     }
   }
 
-  info.GetReturnValue().Set(featuresResult);
+  return featuresResult;
 }
+
 }  // namespace NodeLibcurl

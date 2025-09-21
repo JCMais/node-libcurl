@@ -49,7 +49,7 @@ curl.setOpt(Curl.option.VERBOSE, true)
 curl.setOpt(Curl.option.URL, url + uploadFileWithName)
 curl.setOpt(Curl.option.USERNAME, username)
 // only set password if one was provided
-password && curl.setOpt(Curl.option.PASSWORD, password)
+if (password) curl.setOpt(Curl.option.PASSWORD, password)
 // enable uploading
 curl.setOpt(Curl.option.UPLOAD, true)
 // pass in that last of FTP commands to run after the transfer

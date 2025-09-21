@@ -3,7 +3,7 @@
 
 To run the examples in this directory, you must first download this folder or clone the repository, install the dependencies:
 ```
-yarn
+pnpm i
 ```
 
 And then just run the example you want:
