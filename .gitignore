@@ -37,3 +37,6 @@ website/
 api/
 
 yarn-error.log
+
+.cache/
+compile_commands.json

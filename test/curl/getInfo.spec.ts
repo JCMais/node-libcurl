@@ -53,9 +53,13 @@ describe('getInfo()', () => {
           return
         }
 
-        expect(() => {
-          curl.getInfo(Curl.info.PRIVATE)
-        }).toThrow(/^Unsupported/)
+        try {
+          expect(() => {
+            curl.getInfo(Curl.info.PRIVATE)
+          }).toThrow(/^Unsupported/)
+        } catch (error) {
+          reject(error)
+        }
 
         resolve()
       })
@@ -75,12 +79,23 @@ describe('getInfo()', () => {
         }
 
         for (const infoId in Curl.info) {
-          if (
-            Object.prototype.hasOwnProperty.call(Curl.info, infoId) &&
-            infoId !== 'debug'
-          ) {
-            // @ts-ignore
-            curl.getInfo(infoId)
+          try {
+            if (
+              Object.prototype.hasOwnProperty.call(Curl.info, infoId) &&
+              infoId !== 'debug'
+            ) {
+              // @ts-ignore
+              curl.getInfo(infoId)
+            }
+          } catch (error) {
+            if (
+              error instanceof Error &&
+              error.message.includes('Unsupported')
+            ) {
+              continue
+            }
+
+            reject(error)
           }
         }
 

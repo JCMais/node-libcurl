@@ -6,7 +6,7 @@
  */
 import { describe, beforeEach, afterEach, it, expect } from 'vitest'
 
-import { Curl, CurlCode, Easy } from '../../lib'
+import { Curl, CurlCode, Easy, CurlHttpVersion } from '../../lib'
 import { withCommonTestOptions } from '../helper/commonOptions'
 
 const url = 'http://example.com/'
@@ -24,8 +24,10 @@ describe('easy', () => {
     curl.setOpt('URL', url)
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     curl.close()
+    // easy is sync, this is just to give some breathing room to vitest itself
+    await new Promise((resolve) => setTimeout(resolve, 10))
   })
 
   it('works', () => {
@@ -69,6 +71,7 @@ describe('easy', () => {
     })
 
     it('READFUNCTION - should rethrow error', () => {
+      curl.setOpt('URL', 'https://httpbin.org/put')
       curl.setOpt('UPLOAD', true)
       // @ts-ignore
       curl.setOpt('READFUNCTION', () => {
@@ -78,6 +81,7 @@ describe('easy', () => {
     })
 
     it('READFUNCTION - should throw error if has invalid return type', () => {
+      curl.setOpt('URL', 'https://httpbin.org/put')
       curl.setOpt('UPLOAD', true)
       // @ts-ignore
       curl.setOpt('READFUNCTION', () => {
@@ -91,8 +95,11 @@ describe('easy', () => {
     it.runIf(Curl.isVersionGreaterOrEqualThan(7, 64, 0))(
       'TRAILERFUNCTION - should rethrow error',
       () => {
+        curl.setOpt('URL', 'https://httpbin.org/put')
         curl.setOpt('UPLOAD', true)
         curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])
+        // chunked transfer (with trailers) are only supported in http 1.1
+        curl.setOpt('HTTP_VERSION', CurlHttpVersion.V1_1)
         // @ts-ignore
         curl.setOpt('TRAILERFUNCTION', () => {
           throw new Error('Error thrown on callback')
@@ -112,8 +119,11 @@ describe('easy', () => {
     it.runIf(Curl.isVersionGreaterOrEqualThan(7, 64, 0))(
       'TRAILERFUNCTION - should throw error if has invalid return type',
       () => {
+        curl.setOpt('URL', 'https://httpbin.org/put')
         curl.setOpt('UPLOAD', true)
         curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])
+        // chunked transfer (with trailers) are only supported in http 1.1
+        curl.setOpt('HTTP_VERSION', CurlHttpVersion.V1_1)
         // @ts-ignore
         curl.setOpt('TRAILERFUNCTION', () => {
           return {}
