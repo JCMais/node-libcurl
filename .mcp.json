@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "fast-markdown": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "devdocs-mcp",
+        "python",
+        "-m",
+        "fast_markdown_mcp.server",
+        "/app/storage/markdown"
+      ],
+      "env": {},
+      "disabled": false,
+      "alwaysAllow": [
+        "sync_file",
+        "get_status",
+        "list_files",
+        "read_file",
+        "search_files",
+        "search_by_tag",
+        "get_stats",
+        "get_section",
+        "get_table_of_contents"
+      ]
+    }
+  }
+}

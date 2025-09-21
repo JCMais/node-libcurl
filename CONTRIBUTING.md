@@ -137,7 +137,13 @@ sudo apt-get install lldb
 
 2. Install Node.js lldb plugin:
 ```
-npm i -g llnode
+pnpm i -g llnode
+```
+
+or:
+```
+brew install llnode
+# then follow instructions
 ```
 
 3. Run script that causes core dump
@@ -194,12 +200,12 @@ git push
 
 For prereleases, use something like this from the `develop` branch:
 ```shell
-$ yarn np prerelease --any-branch --tag next
+$ pnpm exec np prerelease --any-branch --tag next
 ```
 
-If for some reason np fails to run with Yarn, you can use this command to skip cleaning up and use npm to publish:
+If for some reason np fails to run, you can use this command to skip cleaning up and use npm to publish:
 ```shell
-$ yarn np prerelease --no-yarn --no-cleanup --any-branch --tag next
+$ pnpm exec np prerelease --no-cleanup --any-branch --tag next
 ```
 
 #### Build Matrix

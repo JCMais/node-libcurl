@@ -9,8 +9,7 @@ import { StringDecoder } from 'string_decoder'
 import assert from 'assert'
 import { Readable } from 'stream'
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const pkg = require('../package.json')
+import pkg from '../package.json'
 
 import {
   NodeLibcurlNativeBinding,
@@ -41,7 +40,6 @@ import { CurlFeature } from './enum/CurlFeature'
 import { CurlFnMatchFunc } from './enum/CurlFnMatchFunc'
 import { CurlFtpMethod } from './enum/CurlFtpMethod'
 import { CurlFtpSsl } from './enum/CurlFtpSsl'
-import { CurlGlobalInit } from './enum/CurlGlobalInit'
 import { CurlGssApi } from './enum/CurlGssApi'
 import { CurlHeader } from './enum/CurlHeader'
 import {
@@ -68,19 +66,9 @@ import { CurlWriteFunc } from './enum/CurlWriteFunc'
 import { CurlReadFunc } from './enum/CurlReadFunc'
 import { CurlInfoNameSpecific, GetInfoReturn } from './types/EasyNativeBinding'
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const bindings: NodeLibcurlNativeBinding = require('../lib/binding/node_libcurl.node')
 
 const { Curl: _Curl, CurlVersionInfo } = bindings
-
-if (
-  !process.env.NODE_LIBCURL_DISABLE_GLOBAL_INIT_CALL ||
-  process.env.NODE_LIBCURL_DISABLE_GLOBAL_INIT_CALL !== 'true'
-) {
-  // We could just pass nothing here, CurlGlobalInitEnum.All is the default anyway.
-  const globalInitResult = _Curl.globalInit(CurlGlobalInit.All)
-  assert(globalInitResult === 0 || 'Libcurl global init failed.')
-}
 
 const decoder = new StringDecoder('utf8')
 // Handle used by curl instances created by the Curl wrapper.
@@ -113,23 +101,6 @@ multiHandle.onMessage((error, handle, errorCode) => {
  * @public
  */
 class Curl extends EventEmitter {
-  /**
-   * Calls [`curl_global_init()`](http://curl.haxx.se/libcurl/c/curl_global_init.html).
-   *
-   * For **flags** see the the enum {@link CurlGlobalInit | `CurlGlobalInit`}.
-   *
-   * This is automatically called when the addon is loaded, to disable this, set the environment variable
-   *  `NODE_LIBCURL_DISABLE_GLOBAL_INIT_CALL=false`
-   */
-  static globalInit = _Curl.globalInit
-
-  /**
-   * Calls [`curl_global_cleanup()`](http://curl.haxx.se/libcurl/c/curl_global_cleanup.html)
-   *
-   * This is automatically called when the process is exiting.
-   */
-  static globalCleanup = _Curl.globalCleanup
-
   /**
    * Returns libcurl version string.
    *
@@ -1141,6 +1112,35 @@ class Curl extends EventEmitter {
   static isVersionGreaterOrEqualThan = (x: number, y: number, z = 0) => {
     return _Curl.VERSION_NUM >= (x << 16) + (y << 8) + z
   }
+
+  /**
+   * Calls [`curl_global_init()`](http://curl.haxx.se/libcurl/c/curl_global_init.html).
+   *
+   * For **flags** see the the enum {@link CurlGlobalInit | `CurlGlobalInit`}.
+   *
+   * This is automatically called when the addon is loaded, and there is no way to disable it.
+   *
+   * This is a no-op now, and the call itself is deprecated.
+   *
+   * @deprecated
+   * TODO(jonathan, changelog): add to changelog - remove it
+   */
+  static globalInit = () => {
+    /* noop */
+  }
+
+  /**
+   * Calls [`curl_global_cleanup()`](http://curl.haxx.se/libcurl/c/curl_global_cleanup.html)
+   *
+   * This is automatically called when the process is exiting.
+   *
+   * @deprecated Does nothing, do not call. This is called by the addon itself when the environment
+   * is being unloaded.
+   * TODO(jonathan, changelog): add to changelog - remove it
+   */
+  static globalCleanup = () => {
+    /* noop */
+  }
 }
 
 interface Curl {
@@ -1198,7 +1198,7 @@ interface Curl {
       curlInstance: Curl,
     ) => void,
   ): this
-  // eslint-disable-next-line @typescript-eslint/ban-types
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   on(event: string, listener: Function): this
 
   // START AUTOMATICALLY GENERATED CODE - DO NOT EDIT

@@ -21,7 +21,7 @@ if (process.env.NODE_LIBCURL_CPP_STD) {
     process.env['npm_config_runtime'] === 'electron' ||
     nodeRootDir?.includes('electron-gyp')
   const electronVersion = isElectron
-    ? process.env['npm_config_target'] ?? nodeRootDir?.split('/').pop()
+    ? (process.env['npm_config_target'] ?? nodeRootDir?.split('/').pop())
     : null
 
   if (isElectron && electronVersion) {

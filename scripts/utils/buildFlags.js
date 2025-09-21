@@ -7,7 +7,7 @@ let isGitRepo
 try {
   fs.statSync(path.resolve(__dirname, '..', '..', '.git'))
   isGitRepo = true
-} catch (e) {
+} catch {
   isGitRepo = false
 }
 
