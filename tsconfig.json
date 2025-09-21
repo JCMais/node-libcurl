@@ -4,16 +4,13 @@
     "paths": { "*": ["types/external/*"] },
     "incremental": true,
     "module": "commonjs",
-    // Node.js >= 19 supports almost 100% of ES2018 (https://node.green/#ES2018)
-    "target": "es2018",
-    "lib": [
-      "es2018",
-      // error Cannot find name 'AsyncIterable'.
-      "esnext.asynciterable"
-    ],
+    // Node.js >= 22 supports almost 100% of ES2024 (https://node.green/#ES2024)
+    "target": "es2024",
+    "lib": ["es2024"],
     "esModuleInterop": true,
     "declaration": true,
     "declarationMap": true,
+    "resolveJsonModule": true,
     "rootDir": "lib",
     "outDir": "dist",
     "sourceMap": true,

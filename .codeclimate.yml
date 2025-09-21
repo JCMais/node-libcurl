@@ -1,9 +1,0 @@
-engines:
-  tslint:
-    enabled: true
-ratings:
-   paths:
-   - "**.ts"
-exclude_paths:
-- test/**/*
-- node_modules/**/*

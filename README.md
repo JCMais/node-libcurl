@@ -73,6 +73,10 @@ npm i node-libcurl --save
 ```
 or
 ```shell
+pnpm i node-libcurl --save
+```
+or
+```shell
 yarn add node-libcurl
 ```
 ### Simple Request - Async / Await using curly
@@ -294,9 +298,9 @@ If you want to build a statically linked version of the addon yourself, you need
 ```sh
 npm install node-libcurl --build-from-source --curl_static_build=true
 ```
-> If using `yarn`:
+> If using `yarn` or `pnpm`:
 ```sh
-npm_config_build_from_source=true npm_config_curl_static_build=true yarn add node-libcurl
+npm_config_build_from_source=true npm_config_curl_static_build=true yarn/pnpm add node-libcurl
 ```
 
 The build process will use `curl-config` available on path, if you want to overwrite it to your own libcurl installation one, you can set the `curl_config_bin` variable, like mentioned above for `curl_static_build`.
@@ -323,7 +327,7 @@ If you do not want to use the prebuilt binary, pass the `npm_config_build_from_s
 
 #### NW.js (aka node-webkit)
 For building from source on NW.js you first need to make sure you have nw-gyp installed globally:
-`yarn global add nw-gyp` or `npm i -g nw-gyp`
+`yarn global add nw-gyp` or `npm i -g nw-gyp` or `pnpm i -g nw-gyp`
 
 > If on Windows, you also need addition steps, currently the available win_delay_load_hook.cc on `nw-gyp` is not working with this addon, so it's necessary to apply a patch to it. The patch can be found on `./scripts/ci/patches/win_delay_load_hook.cc.patch`, and should be applied to the file on `<nw-gyp-folder>/src/win_delay_load_hook.cc`.
 

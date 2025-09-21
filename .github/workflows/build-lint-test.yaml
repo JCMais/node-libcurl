@@ -1,11 +1,18 @@
 name: build-lint-test
 
+defaults:
+  run:
+    shell: bash
+
 on:
   pull_request:
 
 env:
-  LIBCURL_RELEASE: 'LATEST'
-  NODE_LIBCURL_CPP_STD: c++17
+  LATEST_LIBCURL_RELEASE: 7.86.0
+  OLDEST_LIBCURL_RELEASE: 7.77.0
+  NODE_LIBCURL_CPP_STD: c++23
+  # https://www.electronjs.org/docs/latest/tutorial/installation#cache
+  electron_config_cache: ~/.cache/electron
 
 concurrency:
   group: ${{ github.head_ref }}
@@ -14,185 +21,96 @@ concurrency:
 # all jobs here must have a matrix identical to the ones inside build-and-release.yaml
 
 jobs:
-  build-and-test-nodejs:
+  set-params:
+    runs-on: ubuntu-22.04
+    outputs:
+      latest-libcurl-release: ${{ env.LATEST_LIBCURL_RELEASE }}
+      oldest-libcurl-release: ${{ env.OLDEST_LIBCURL_RELEASE }}
+    steps:
+      - run: exit 0
+
+  lint-and-tsc:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # Node.js / PNPM
+      - uses: pnpm/action-setup@v4
+      - name: Set up Node ${{ matrix.node }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: '${{ matrix.node }}'
+          cache: 'pnpm'
+          package-manager-cache: 'pnpm'
+
+      - name: Install node dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Run lint
+        run: pnpm lint
+      - name: Run tsc
+        run: pnpm build:dist
+
+  build-and-test:
     runs-on: ${{ matrix.os }}
+    needs: set-params
     strategy:
       fail-fast: false
       matrix:
+        electron-version:
+          - ''
         os:
-          - macos-14
-          # removed as we enabled CircleCI to run on PRs
-          # - ubuntu-20.04
+          # - macos-15
+          - ubuntu-22.04
         libcurl-release:
-          - 7.86.0
+          - ${{ needs.set-params.outputs.latest-libcurl-release }}
         node:
-          - 18
-          - 20
-          - 21
-          - 22
+          - 24
+          # TODO(jonathan, migration): add Node v22
         include:
           # we only want to run lint in one of the jobs, in this case, the one for the latest stable Node.js version
-          - os: macos-14
-            libcurl-release: 7.86.0
-            node: 18
-            run-lint-and-tsc: true
+          - os: ubuntu-22.04
+            libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
+            node: 24
+            record-coverage: true
           # we also want to build a job for old libcurl versions
-          - os: macos-14
-            libcurl-release: 7.50.0
-            node: 18
-    env:
-      LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-      LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-    steps:
-      - id: timestamp
-        run: echo "::set-output name=timestamp::$(timestamp +%s)"
-      - name: Restore the previous run result
-        uses: actions/cache@v4
-        with:
-          path: |
-            run_result
-          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
-          restore-keys: |
-            ${{ github.run_id }}-${{ github.job }}-
-      - id: run_result
-        run: cat run_result 2>/dev/null || echo 'default'
-      - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
-        if: matrix.node-libcurl-cpp-std
-      - if: runner.os == 'macOS'
-        name: Install Needed packages on macOS
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4
-      - if: runner.os == 'Linux'
-        name: Install Needed packages on Linux
-        run: sudo apt-get install -y cmake
-      - name: Checkout
-        uses: actions/checkout@main
-      - name: Setup Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node }}
-      - name: Output yarn cache dir
-        id: yarn-cache-dir
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-      - name: Restore Yarn Cache
-        uses: actions/cache@v4
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir.outputs.dir }}
-          key: v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
-            v1-${{ runner.os }}-yarn-cache-
-      - name: Restore libcurl deps cache
-        uses: actions/cache@v4
-        id: libcurl-deps-cache
-        with:
-          path: |
-            ~/.node-gyp
-            ~/deps
-          key: v4-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
-          restore-keys: |
-            v4-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
-      - name: 'Build node-libcurl'
-        if: steps.run_result.outputs.run_result != 'success'
-        run: |
-          RUN_TESTS=false \
-          RUN_PREGYP_CLEAN=false \
-          PUBLISH_BINARY=false \
-            ./scripts/ci/build.sh
-      - name: 'Run lint'
-        if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
-        run: yarn lint
-      - name: 'Run tsc'
-        if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
-        run: yarn build:dist
-      # we do run tests in all matrix jobs
-      - name: 'Run tests'
-        if: steps.run_result.outputs.run_result != 'success'
-        run: yarn test:coverage
-      # but coverage is only sent for the run-lint-and-tsc job
-      - name: Upload coverage to Codecov
-        if: matrix.run-lint-and-tsc && steps.run_result.outputs.run_result != 'success'
-        uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage/**
-          fail_ci_if_error: false
-      - name: Upload artifacts
-        if: always() && steps.run_result.outputs.run_result != 'success'
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.node }}
-          path: ./logs/
-          retention-days: 3
-      - run: echo "::set-output name=run_result::success" > run_result
-
-  build-and-test-electron:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        # we use CircleCI for linux binaries
-        os:
-          - macos-14
-        libcurl-release:
-          - 7.86.0
-        node:
-          - 22
-        electron-version:
-          - 21.0.1
-          - 20.0.3
-          - 19.1.1
-          - 18.3.15
-          - 17.4.11
+          - os: ubuntu-22.04
+            libcurl-release: ${{ needs.set-params.outputs.oldest-libcurl-release }}
+            node: 24
+          # electron builds, only latest version is tested
+          - os: ubuntu-22.04
+            libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
+            node: 24
+            electron-version: 38.1.2
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
     steps:
-      - id: timestamp
-        run: echo "::set-output name=timestamp::$(timestamp +%s)"
-      - name: Restore the previous run result
-        uses: actions/cache@v4
-        with:
-          path: |
-            run_result
-          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
-          restore-keys: |
-            ${{ github.run_id }}-${{ github.job }}-
-      - id: run_result
-        run: cat run_result 2>/dev/null || echo 'default'
-      - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
-        if: matrix.node-libcurl-cpp-std
-      - name: Install Needed packages
+      - if: runner.os == 'macOS'
+        name: Install Needed packages on macOS
         run: brew install coreutils wget automake libtool cmake gnu-sed m4
+
+      - if: runner.os == 'Linux'
+        name: Install Needed packages on Linux
+        run: sudo apt-get install -y cmake
+
       - name: Checkout
-        uses: actions/checkout@main
-      - name: Setup Node.js
-        uses: actions/setup-node@v1
+        uses: actions/checkout@v5
+      # see https://github.com/nodejs/node/issues/40537
+      - name: Enforce IPv4 Connectivity
+        uses: ./.github/actions/force-ipv4
+
+        # PNPM / Node.js
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+      - name: Set up Node ${{ matrix.node }}
+        uses: actions/setup-node@v5
         with:
-          node-version: ${{ matrix.node }}
-      - name: Output yarn cache dir
-        id: yarn-cache-dir
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-      - name: Restore Yarn Cache
-        uses: actions/cache@v4
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir.outputs.dir }}
-          key: v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
-            v1-${{ runner.os }}-yarn-cache-
-      - name: Restore Electron Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Caches/electron
-          key: v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
-          restore-keys: |
-            v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
-            v1-${{ runner.os }}-electron-cache-
+          node-version: '${{ matrix.node }}'
+          cache: 'pnpm'
+          package-manager-cache: 'pnpm'
+
       - name: Restore libcurl deps cache
         uses: actions/cache@v4
         id: libcurl-deps-cache
@@ -200,120 +118,48 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v4-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}
+          key: v4-${{ runner.os }}-libcurl-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
           restore-keys: |
-            v4-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}
-      - name: 'Set GIT_TAG'
-        if: startsWith(github.ref, 'refs/tags')
-        run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+            v4-${{ runner.os }}-libcurl-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
+
+      - name: Restore Electron Cache
+        uses: actions/cache@v4
+        if: matrix.electron-version
+        with:
+          path: ${{ env.electron_config_cache }}
+          key: v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
+          restore-keys: |
+            v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
+            v1-${{ runner.os }}-electron-cache-
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: matrix.enable-debugging
+
       - name: 'Build node-libcurl'
-        if: steps.run_result.outputs.run_result != 'success'
         run: |
-          RUN_TESTS=true \
+          RUN_TESTS=false \
           RUN_PREGYP_CLEAN=false \
           PUBLISH_BINARY=false \
             ./scripts/ci/build.sh
+
+      - name: 'Run tests'
+        # no way to run vitest tests using electron's main process, so no point doing this here
+        if: matrix.electron-version != ''
+        run: pnpm test:coverage
+
+      - name: Upload coverage to Codecov
+        if: matrix.record-coverage && matrix.electron-version != ''
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage/**
+          fail_ci_if_error: false
+      
       - name: Upload artifacts
-        if: always() && steps.run_result.outputs.run_result != 'success'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}
+          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
           path: ./logs/
-          retention-days: 5
-      - run: echo "::set-output name=run_result::success" > run_result
-
-  # disabled until nwjs supports newer node-gyp versions + python 3
-  # build-and-test-nwjs:
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       # we use CircleCI for linux binaries
-  #       os:
-  #         - macos-14
-  #       libcurl-release:
-  #         - 7.86.0
-  #       node:
-  #         - 18
-  #       nwjs-version:
-  #         - 0.69.1
-  #         - 0.68.1
-  #         - 0.67.1
-  #   env:
-  #     LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-  #     LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-  #     NWJS_VERSION: ${{ matrix.nwjs-version }}
-  #   steps:
-  #     - id: timestamp
-  #       run: echo "::set-output name=timestamp::$(timestamp +%s)"
-  #     - name: Restore the previous run result
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: |
-  #           run_result
-  #         key: ${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
-  #         restore-keys: |
-  #           ${{ github.run_id }}-${{ github.job }}-
-  #     - id: run_result
-  #       run: cat run_result 2>/dev/null || echo 'default'
-  #     - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
-  #       if: matrix.node-libcurl-cpp
-  #     - name: Checkout
-  #       uses: actions/checkout@main
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v1
-  #       with:
-  #         node-version: ${{ matrix.node }}
-  #     - name: Install Needed packages
-  #       run: brew install coreutils wget automake libtool cmake gnu-sed m4
-  #     # not using brew for that one as we need 2.69
-  #     - name: Install autoconf
-  #       run: |
-  #         curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
-  #         tar -xzf autoconf-2.69.tar.gz
-  #         cd autoconf-*
-  #         ./configure
-  #         make
-  #         make install
-  #         autoconf --version
-  #         ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
-  #     - name: Output yarn cache dir
-  #       id: yarn-cache-dir
-  #       run: echo "::set-output name=dir::$(yarn cache dir)"
-  #     - name: Restore Yarn Cache
-  #       uses: actions/cache@v4
-  #       id: yarn-cache
-  #       with:
-  #         path: ${{ steps.yarn-cache-dir.outputs.dir }}
-  #         key: v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
-  #         restore-keys: |
-  #           v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
-  #           v1-${{ runner.os }}-yarn-cache-
-  #     - name: Restore libcurl deps cache
-  #       uses: actions/cache@v4
-  #       id: libcurl-deps-cache
-  #       with:
-  #         path: |
-  #           ~/.node-gyp
-  #           ~/deps
-  #         key: v4-${{ runner.os }}-libcurl-deps-cache-nwjs-${{ matrix.nwjs-version }}
-  #         restore-keys: |
-  #           v4-${{ runner.os }}-libcurl-deps-cache-nwjs-${{ matrix.nwjs-version }}
-  #     - name: 'Set GIT_TAG'
-  #       if: startsWith(github.ref, 'refs/tags')
-  #       run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-  #     - name: 'Build node-libcurl'
-  #       if: steps.run_result.outputs.run_result != 'success'
-  #       run: |
-  #         RUN_TESTS=false \
-  #         RUN_PREGYP_CLEAN=false \
-  #         PUBLISH_BINARY=false \
-  #           ./scripts/ci/build.sh
-  #     - name: Upload artifacts
-  #       if: always() && steps.run_result.outputs.run_result != 'success'
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.nwjs-version }}
-  #         path: ./logs/
-  #         retention-days: 5
-  #     - run: echo "::set-output name=run_result::success" > run_result
+          retention-days: 3

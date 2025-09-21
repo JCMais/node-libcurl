@@ -84,7 +84,7 @@ const run = async () => {
         process.stdout.write(`deps/${depsGypTarget}`)
       })
     }
-  } catch (_) {
+  } catch {
     // ignore errors
   }
 

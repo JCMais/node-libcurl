@@ -420,7 +420,6 @@ function sendData(handle, buffer) {
 function receiveData(handle, bufferSize = 32 * 1024) {
   const buffers = []
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const data = Buffer.alloc(bufferSize)
     const { code, bytesReceived } = handle.recv(data)

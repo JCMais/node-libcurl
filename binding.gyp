@@ -1,8 +1,8 @@
 {
   # Those variables can be overwritten when installing the package, like:
   #  npm install --curl-extra_link_args=true
-  # or if using yarn:
-  #  npm_config_curl_extra_link_args=true yarn install
+  # or if using pnpm:
+  #  npm_config_curl_extra_link_args=true pnpm install
   # 
   'variables': {
     # Comma separated list
@@ -11,6 +11,8 @@
     'curl_static_build%': 'false',
     'curl_config_bin%': 'node <(module_root_dir)/scripts/curl-config.js',
     'node_libcurl_no_setlocale%': 'false',
+    'node_libcurl_debug%': 'false',
+    'node_libcurl_asan_debug%': 'false',
     'node_libcurl_cpp_std%': '<!(node <(module_root_dir)/scripts/cpp-std.js <(node_root_dir))',
     'macos_universal_build%': 'false',
   },
@@ -18,23 +20,36 @@
     {
       'target_name': '<(module_name)',
       'type': 'loadable_module',
+      'dependencies': [
+        # https://github.com/nodejs/node-addon-api/blob/main/doc/setup.md
+        # using exceptions (instead of maybe, like we used to have on nan)
+        "<!(node -p \"require('node-addon-api').targets\"):node_addon_api_except",
+      ],
       'sources': [
         'src/node_libcurl.cc',
         'src/Easy.cc',
         'src/Share.cc',
         'src/Multi.cc',
-        'src/Curl.cc',
         'src/CurlHttpPost.cc',
+        'src/Curl.cc',
         'src/CurlVersionInfo.cc',
         'src/Http2PushFrameHeaders.cc',
       ],
-      'include_dirs' : [
-        "<!(node -e \"require('nan')\")",
+      'include_dirs': [
+        '<!@(node -p "require(\'node-addon-api\').include")',
+      ],
+      'defines': [
+        'NAPI_VERSION=10',
       ],
       'conditions': [
         ['node_libcurl_no_setlocale=="true"', {
-          'defines' : [
+          'defines': [
             'NODE_LIBCURL_NO_SETLOCALE'
+          ]
+        }],
+        ['node_libcurl_debug=="true"', {
+          'defines': [
+            'NODE_LIBCURL_DEBUG'
           ]
         }],
         ['curl_include_dirs!=""', {
@@ -63,7 +78,7 @@
               'GenerateDebugInformation': 'true',
             },
           },
-          'configurations' : {
+          'configurations': {
             'Release': {
               'msvs_settings': {
                 'VCCLCompilerTool': {
@@ -90,15 +105,15 @@
           'dependencies': [
             '<!@(node "<(module_root_dir)/scripts/retrieve-win-deps.js")'
           ],
-          'defines' : [
+          'defines': [
             'CURL_STATICLIB'
           ]
         }, { # OS != "win"
             # Use level 2 optimizations
-          'cflags' : [
+          'cflags': [
             '-O2',
           ],
-          'cflags_cc' : [
+          'cflags_cc': [
             '-O2',
             '-std=<(node_libcurl_cpp_std)',
             '-Wno-narrowing',
@@ -115,7 +130,7 @@
           ],
           'conditions': [
             ['curl_include_dirs==""', {
-              'include_dirs' : [
+              'include_dirs': [
                 # '<!@(node "<(module_root_dir)/scripts/curl-config.js" --cflags | sed "s/-D.* //g" | sed s/-I//g)'
                 '<!(<(curl_config_bin) --prefix)/include'
               ],
@@ -149,6 +164,27 @@
           ],
         }],
         ['OS=="mac"', {
+          'cflags+': ['-fvisibility=hidden'],
+          'configurations': {
+            'Debug': {
+              'xcode_settings': {
+                'GCC_GENERATE_DEBUGGING_SYMBOLS': 'YES',
+                'GCC_OPTIMIZATION_LEVEL': '0',
+                'DEAD_CODE_STRIPPING': 'NO',
+                'GCC_INLINES_ARE_PRIVATE_EXTERN': 'NO',
+                'GCC_SYMBOLS_PRIVATE_EXTERN': 'NO'
+              },
+              'cflags_cc': ['-g', '-O0', '-fno-omit-frame-pointer'],
+              'cflags': ['-g', '-O0', '-fno-omit-frame-pointer'],
+              'defines': ['NODE_LIBCURL_DEBUG_BUILD']
+            },
+            'Release': {
+              'xcode_settings': {
+                'GCC_OPTIMIZATION_LEVEL': 's',
+                'DEAD_CODE_STRIPPING': 'YES'
+              }
+            }
+          },
           'conditions': [
             ['curl_static_build=="true"', {
               # pretty sure cflags adds that
@@ -186,7 +222,7 @@
             }],
             ['macos_universal_build=="true"', {
               'xcode_settings': {
-                'OTHER_CPLUSPLUSFLAGS' : [
+                'OTHER_CPLUSPLUSFLAGS': [
                   '-arch x86_64',
                   '-arch arm64'
                 ],
@@ -204,42 +240,48 @@
           'xcode_settings': {
             'conditions': [
               ['curl_include_dirs==""', {
-                'OTHER_CPLUSPLUSFLAGS' : [
+                'OTHER_CPLUSPLUSFLAGS': [
                   '<!(<(curl_config_bin) --prefix)/include',
                 ],
-                'OTHER_CFLAGS':[
+                'OTHER_CFLAGS': [
                   '<!(<(curl_config_bin) --prefix)/include',
                 ],
               }],
             ],
-            'OTHER_CPLUSPLUSFLAGS':[
-              '-std=<(node_libcurl_cpp_std)','-stdlib=libc++',
+            'OTHER_CPLUSPLUSFLAGS': [
+              '-std=<(node_libcurl_cpp_std)', '-stdlib=libc++',
             ],
-            'OTHER_LDFLAGS':[
+            'OTHER_LDFLAGS': [
               '-Wl,-bind_at_load',
               '-stdlib=libc++'
             ],
+            'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES', # -fvisibility=hidden
             'GCC_ENABLE_CPP_RTTI': 'YES',
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
-            'MACOSX_DEPLOYMENT_TARGET':'11.6',
+            'MACOSX_DEPLOYMENT_TARGET': '11.6',
             'CLANG_CXX_LIBRARY': 'libc++',
-            'CLANG_CXX_LANGUAGE_STANDARD':'<(node_libcurl_cpp_std)',
-            'OTHER_LDFLAGS': ['-stdlib=libc++'],
-            'WARNING_CFLAGS':[
+            'CLANG_CXX_LANGUAGE_STANDARD': '<(node_libcurl_cpp_std)',
+            'WARNING_CFLAGS': [
               '-Wno-c++11-narrowing',
               '-Wno-constant-conversion'
             ],
           },
+        }],
+        ['node_libcurl_asan_debug=="true" and (OS=="mac" or OS=="linux")', {
+          'cflags_cc': ['-fsanitize=address', '-fsanitize=undefined', '-fno-sanitize-recover=all'],
+          'cflags': ['-fsanitize=address', '-fsanitize=undefined', '-fno-sanitize-recover=all'],
+          'ldflags': ['-fsanitize=address', '-fsanitize=undefined'],
+          'defines': ['NODE_LIBCURL_DEBUG_BUILD', 'NODE_LIBCURL_ASAN_BUILD']
         }],
       ]
     },
     {
       'target_name': 'action_after_build',
       'type': 'none',
-      'dependencies': [ '<(module_name)' ],
+      'dependencies': ['<(module_name)'],
       'copies': [
         {
-          'files': [ '<(PRODUCT_DIR)/<(module_name).node' ],
+          'files': ['<(PRODUCT_DIR)/<(module_name).node'],
           'destination': '<(module_path)'
         }
       ],

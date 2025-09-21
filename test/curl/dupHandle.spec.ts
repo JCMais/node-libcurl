@@ -65,8 +65,8 @@ describe('dupHandle()', () => {
   })
 
   afterEach(() => {
-    curl && curl.close()
-    duplicatedCurl && duplicatedCurl.close()
+    if (curl) curl.close()
+    if (duplicatedCurl) duplicatedCurl.close()
   })
 
   beforeAll(async () => {

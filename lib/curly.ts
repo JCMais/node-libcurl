@@ -494,7 +494,7 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
       try {
         const string = data.toString('utf8')
         return JSON.parse(string)
-      } catch (error) {
+      } catch {
         throw new Error(
           `curly failed to parse "application/json" content as JSON. This is generally caused by receiving malformed JSON data from the server.
 You can disable this automatic behavior by setting the option curlyResponseBodyParser to false, then a Buffer will be returned as the data.
