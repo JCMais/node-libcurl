@@ -37,10 +37,11 @@ describe('easy', () => {
 
   describe('callbacks', () => {
     it('WRITEFUNCTION - should rethrow error', () => {
+      const msg = `Error thrown on callback: ${Date.now()}`
       curl.setOpt('WRITEFUNCTION', () => {
-        throw new Error('Error thrown on callback')
+        throw new Error(msg)
       })
-      expect(() => curl.perform()).toThrow()
+      expect(() => curl.perform()).toThrow(msg)
     })
 
     it('WRITEFUNCTION - should throw error if has invalid return type', () => {
@@ -54,10 +55,11 @@ describe('easy', () => {
     })
 
     it('HEADERFUNCTION - should rethrow error', () => {
+      const msg = `Error thrown on callback: ${Date.now()}`
       curl.setOpt('HEADERFUNCTION', () => {
-        throw new Error('Error thrown on callback')
+        throw new Error(msg)
       })
-      expect(() => curl.perform()).toThrow()
+      expect(() => curl.perform()).toThrow(msg)
     })
 
     it('HEADERFUNCTION - should throw error if has invalid return type', () => {
@@ -71,17 +73,20 @@ describe('easy', () => {
     })
 
     it('READFUNCTION - should rethrow error', () => {
+      const msg = `Error thrown on callback: ${Date.now()}`
       curl.setOpt('URL', 'https://httpbin.org/put')
+      curl.setOpt('SSL_VERIFYPEER', false)
       curl.setOpt('UPLOAD', true)
       // @ts-ignore
       curl.setOpt('READFUNCTION', () => {
-        throw new Error('Error thrown on callback')
+        throw new Error(msg)
       })
-      expect(() => curl.perform()).toThrow()
+      expect(() => curl.perform()).toThrow(msg)
     })
 
     it('READFUNCTION - should throw error if has invalid return type', () => {
       curl.setOpt('URL', 'https://httpbin.org/put')
+      curl.setOpt('SSL_VERIFYPEER', false)
       curl.setOpt('UPLOAD', true)
       // @ts-ignore
       curl.setOpt('READFUNCTION', () => {
@@ -95,14 +100,16 @@ describe('easy', () => {
     it.runIf(Curl.isVersionGreaterOrEqualThan(7, 64, 0))(
       'TRAILERFUNCTION - should rethrow error',
       () => {
+        const msg = `Error thrown on callback: ${Date.now()}`
         curl.setOpt('URL', 'https://httpbin.org/put')
+        curl.setOpt('SSL_VERIFYPEER', false)
         curl.setOpt('UPLOAD', true)
         curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])
         // chunked transfer (with trailers) are only supported in http 1.1
         curl.setOpt('HTTP_VERSION', CurlHttpVersion.V1_1)
         // @ts-ignore
         curl.setOpt('TRAILERFUNCTION', () => {
-          throw new Error('Error thrown on callback')
+          throw new Error(msg)
         })
         let finished = false
         curl.setOpt(Curl.option.READFUNCTION, (buffer, _size, _nmemb) => {
@@ -112,7 +119,7 @@ describe('easy', () => {
           finished = true
           return buffer.write(data)
         })
-        expect(() => curl.perform()).toThrow()
+        expect(() => curl.perform()).toThrow(msg)
       },
     )
 
@@ -120,6 +127,7 @@ describe('easy', () => {
       'TRAILERFUNCTION - should throw error if has invalid return type',
       () => {
         curl.setOpt('URL', 'https://httpbin.org/put')
+        curl.setOpt('SSL_VERIFYPEER', false)
         curl.setOpt('UPLOAD', true)
         curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])
         // chunked transfer (with trailers) are only supported in http 1.1
