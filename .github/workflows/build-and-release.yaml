@@ -29,7 +29,7 @@ env:
   PUBLISH_BINARY: ${{ inputs.publish-binary }}
 
 concurrency:
-  group: ${{ github.head_ref }}
+  group: ${{ github.ref_name }}
   cancel-in-progress: true
 
 # all jobs here must have a matrix identical to the ones inside build-and-release.yaml
