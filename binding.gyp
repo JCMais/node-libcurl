@@ -15,6 +15,7 @@
     'node_libcurl_asan_debug%': 'false',
     'node_libcurl_cpp_std%': '<!(node <(module_root_dir)/scripts/cpp-std.js <(node_root_dir))',
     'macos_universal_build%': 'false',
+    'napi_build_version%': '10',
   },
   'targets': [
     {
@@ -39,7 +40,7 @@
         '<!@(node -p "require(\'node-addon-api\').include")',
       ],
       'defines': [
-        'NAPI_VERSION=10',
+        'NAPI_VERSION=<(napi_build_version)',
       ],
       'conditions': [
         ['node_libcurl_no_setlocale=="true"', {
