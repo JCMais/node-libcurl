@@ -145,7 +145,7 @@ jobs:
 
       - name: 'Run tests'
         # no way to run vitest tests using electron's main process, so no point doing this here
-        if: matrix.electron-version != ''
+        if: matrix.electron-version == ''
         run: pnpm test:coverage
 
       - name: Upload coverage to Codecov

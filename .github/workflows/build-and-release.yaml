@@ -65,9 +65,11 @@ jobs:
       - name: Run tsc
         run: pnpm build:dist
 
-  build-and-test:
+  build-and-release:
     runs-on: ${{ matrix.os }}
-    needs: set-params
+    needs:
+      - set-params
+      - lint-and-tsc
 
     strategy:
       fail-fast: false
@@ -75,7 +77,7 @@ jobs:
         electron-version:
           - ''
         os:
-          # - macos-15
+          - macos-15
           - ubuntu-22.04
         libcurl-release:
           - ${{ needs.set-params.outputs.latest-libcurl-release }}
@@ -147,11 +149,6 @@ jobs:
           GIT_COMMIT=${{ github.sha }} \
           GIT_TAG=${{ github.ref_name}} \
           ./scripts/ci/build.sh
-
-      - name: 'Run tests'
-        # no way to run vitest tests using electron's main process, so no point doing this here
-        if: matrix.electron-version != ''
-        run: pnpm test:coverage
 
       - name: Upload artifacts
         if: always()
