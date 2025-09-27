@@ -40,7 +40,8 @@
         '<!@(node -p "require(\'node-addon-api\').include")',
       ],
       'defines': [
-        'NAPI_VERSION=<(napi_build_version)',
+        'NAPI_VERSION=10',
+        # 'NAPI_VERSION=<(napi_build_version)',
       ],
       'conditions': [
         ['node_libcurl_no_setlocale=="true"', {
