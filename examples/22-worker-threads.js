@@ -18,6 +18,8 @@ const nodeLibcurl = require(
   path.join(__dirname, '..', 'lib', 'binding', 'node_libcurl.node'),
 )
 
+const { Curl } = require('../dist')
+
 // Worker thread - run the actual tests
 
 function log(message) {
@@ -31,7 +33,7 @@ async function workerMain() {
   const { testName, url } = workerData
 
   try {
-    log(`Worker ${testName}: Module loaded successfully`)
+    log(`Worker ${testName}: Module loaded successfully - ${Curl.getVersion()}`)
 
     switch (testName) {
       case 'basic-test':

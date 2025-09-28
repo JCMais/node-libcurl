@@ -84,7 +84,6 @@ void Multi::CloseTimerAsync() {
 
     // Stop the timer if it was started; safe to call even if it wasn't.
     uv_timer_stop(&this->timeout);
-
     uv_close(timeoutHandle, [](uv_handle_t* handle) {
       uv_timer_t* timer = reinterpret_cast<uv_timer_t*>(handle);
       Multi* multi = static_cast<Multi*>(timer->data);
@@ -121,10 +120,6 @@ void Multi::Dispose() {
   // Clear callbacks
   this->callbacks.clear();
   this->cbOnMessage.Reset();
-  // Clean up ThreadSafeFunction
-  if (this->tsfnOnMessage) {
-    this->tsfnOnMessage.Release();
-  }
 
   // Clean up multi handle
   if (this->mh) {
@@ -358,25 +353,8 @@ Napi::Value Multi::OnMessage(const Napi::CallbackInfo& info) {
 
   if (isNull) {
     this->cbOnMessage.Reset();
-    this->asyncContextOnMessage.reset();  // Clear the AsyncContext
-    if (this->tsfnOnMessage) {
-      this->tsfnOnMessage.Release();
-    }
   } else {
     this->cbOnMessage = Napi::Persistent(arg.As<Napi::Function>());
-
-    // Capture AsyncContext when the callback is set (on the same call stack)
-    this->asyncContextOnMessage = std::make_unique<Napi::AsyncContext>(env, "Multi::OnMessage");
-
-    // Create ThreadSafeFunction for the callback
-    this->tsfnOnMessage =
-        Napi::ThreadSafeFunction::New(env,
-                                      arg.As<Napi::Function>(),  // JavaScript function to call
-                                      "Multi::OnMessage",        // Name for debugging
-                                      0,                         // Unlimited queue
-                                      1,               // Only one thread will use this initially
-                                      [](Napi::Env) {  // Finalizer - no cleanup needed
-                                      });
   }
 
   return info.This();
@@ -447,75 +425,6 @@ void Multi::CallOnMessageCallback(CURL* easy, CURLcode statusCode) {
   if (this->cbOnMessage.IsEmpty()) return;
   if (!this->isOpen) return;
 
-  // temporary
-  if (this->tsfnOnMessage && false) {
-    // Create data to pass to the ThreadSafeFunction
-    MessageCallbackData* callbackData = new MessageCallbackData{easy, statusCode, this};
-
-    // Make a non-blocking call to the ThreadSafeFunction
-    napi_status status = this->tsfnOnMessage.NonBlockingCall(
-        callbackData, [](Napi::Env env, Napi::Function jsCallback, MessageCallbackData* data) {
-          // This lambda runs on the main thread
-          if (!data || !data->multi->isOpen) {
-            delete data;
-            return;
-          }
-
-          Multi* multi = data->multi;
-          CURL* easy = data->easy;
-          CURLcode statusCode = data->statusCode;
-
-          // From https://curl.haxx.se/libcurl/c/CURLINFO_PRIVATE.html
-          // > Please note that for internal reasons, the value is returned as a char
-          // pointer, although effectively being a 'void *'.
-          char* ptr = nullptr;
-          CURLcode code = curl_easy_getinfo(easy, CURLINFO_PRIVATE, &ptr);
-
-          if (code != CURLE_OK) {
-            delete data;
-            Napi::Error::New(env, "Error retrieving current handle instance.")
-                .ThrowAsJavaScriptException();
-            return;
-          }
-
-          assert(ptr != nullptr && "Invalid handle returned from CURLINFO_PRIVATE.");
-          Easy* easyObj = reinterpret_cast<Easy*>(ptr);
-
-          bool hasError = !easyObj->callbackError.IsEmpty();
-
-          // Create arguments: error (null or Error object), Easy instance
-          Napi::Value error = env.Null();
-          Napi::Number errorCode =
-              Napi::Number::New(env, static_cast<int32_t>(statusCode == CURLE_OK && hasError
-                                                              ? CURLE_ABORTED_BY_CALLBACK
-                                                              : statusCode));
-
-          if (statusCode != CURLE_OK || hasError) {
-            error = hasError ? easyObj->callbackError.Value()
-                             : Napi::Error::New(env, curl_easy_strerror(statusCode)).Value();
-          }
-
-          try {
-            // Call the JavaScript callback with the arguments
-            jsCallback.MakeCallback(multi->Value(), {error, easyObj->Value(), errorCode},
-                                    *multi->asyncContextOnMessage);
-          } catch (const Napi::Error& e) {
-            // ignore any and all errors
-          }
-
-          delete data;
-        });
-
-    if (status != napi_ok) {
-      delete callbackData;
-      NODE_LIBCURL_DEBUG_LOG(this, "Multi::CallOnMessageCallback",
-                             "Failed to queue ThreadSafeFunction call");
-    }
-
-    return;
-  }
-
-  // Fallback to original implementation if ThreadSafeFunction is not available
   Napi::Env env = Env();
   Napi::HandleScope scope(env);
 
@@ -552,15 +461,7 @@ void Multi::CallOnMessageCallback(CURL* easy, CURLcode statusCode) {
                          "statusCode: " + std::to_string(statusCode));
 
   try {
-    // Use the AsyncContext captured when the callback was set (same call stack)
-    // instead of creating a new one here which might be causing the crash
-    if (this->asyncContextOnMessage) {
-      callback.MakeCallback(this->Value(), {error, easyObj->Value(), errorCode},
-                            *this->asyncContextOnMessage);
-    } else {
-      // Fallback to regular Call if no AsyncContext was captured
-      callback.Call(this->Value(), {error, easyObj->Value(), errorCode});
-    }
+    callback.Call(this->Value(), {error, easyObj->Value(), errorCode});
 
   } catch (const Napi::Error& e) {
     // ignore any and all errors
