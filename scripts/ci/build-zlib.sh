@@ -24,7 +24,7 @@ if [ ! -d $2/source/$1 ]; then
 
   $curr_dirname/download-and-unpack.sh https://github.com/madler/zlib/archive/v$1.tar.gz $2 || \
     $curr_dirname/download-and-unpack.sh https://github.com/madler/zlib/archive/v${git_version_full}.tar.gz $2 || \
-    $curr_dirname/download-and-unpack.sh https://github.com/madler/zlib/archive/v${git_version_major_minor}.tar.gz $2 || 
+    $curr_dirname/download-and-unpack.sh https://github.com/madler/zlib/archive/v${git_version_major_minor}.tar.gz $2
 
   ls -al $2/
 
