@@ -4,9 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import { Easy } from '../Easy'
 // https://github.com/curl/curl/blob/e1be8254/include/curl/curl.h#L2828
 /**
- * Options to be used with {@link "Easy".Easy.pause | `Easy#pause`} and {@link "Curl".Curl.pause | `Curl#pause`}.
+ * Options to be used with {@link Easy.pause | `Easy#pause`} and {@link Curl.pause | `Curl#pause`}.
  *
  * `CURLPAUSE_RECV_CONT` becomes `CurlPause.RecvCont`
  *

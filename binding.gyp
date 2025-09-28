@@ -13,7 +13,7 @@
     'node_libcurl_no_setlocale%': 'false',
     'node_libcurl_debug%': 'false',
     'node_libcurl_asan_debug%': 'false',
-    'node_libcurl_cpp_std%': '<!(node <(module_root_dir)/scripts/cpp-std.js <(node_root_dir))',
+    'node_libcurl_cpp_std%': 'c++20',
     'macos_universal_build%': 'false',
     'napi_build_version%': '10',
   },
@@ -70,7 +70,8 @@
               # 4068 -> Unknown pragma (mostly GCC pragmas being used)
               # 4996 -> Declared wrongly Nan::Callback::Call
               # 4309 -> 'static_cast': truncation of constant value on v8 header
-              'DisableSpecificWarnings': ['4244', '4506', '4068', '4838', '4996', '4309'],
+              # 28251 -> Inconsistent annotation for 'NTSTATUS': this instance has no annotations. This is coming from libuv headers.
+              'DisableSpecificWarnings': ['4244', '4506', '4068', '4838', '4996', '4309', '28251'],
               'AdditionalOptions': [
                 '/std:<(node_libcurl_cpp_std)',
                 '/MP', #compile across multiple CPUs

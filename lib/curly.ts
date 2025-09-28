@@ -109,8 +109,8 @@ export interface CurlyOptions extends CurlOptionValueType {
    * @remarks
    *
    * This basically calls one of the following methods, depending on if any of the streams feature is being used or not:
-   * - If using streams: {@link "Curl".Curl.setStreamProgressCallback | `Curl#setStreamProgressCallback`}
-   * - else:  {@link "Curl".Curl.setProgressCallback | `Curl#setProgressCallback`}
+   * - If using streams: {@link Curl.setStreamProgressCallback | `Curl#setStreamProgressCallback`}
+   * - else:  {@link Curl.setProgressCallback | `Curl#setProgressCallback`}
    */
   curlyProgressCallback?: CurlOptionValueType['xferInfoFunction']
 
@@ -149,7 +149,7 @@ export interface CurlyOptions extends CurlOptionValueType {
    *
    * The `curly` call will resolve as soon as the stream is available.
    *
-   * When using this option, if an error is thrown in the internal {@link "Curl".Curl | `Curl`} instance
+   * When using this option, if an error is thrown in the internal {@link Curl | `Curl`} instance
    * after the `curly` call has been resolved (it resolves as soon as the stream is available)
    * it will cause the `error` event to be emitted on the stream itself, this way it's possible
    * to handle these too, if necessary. The error object will have the property `isCurlError` set to `true`.
@@ -165,7 +165,7 @@ export interface CurlyOptions extends CurlOptionValueType {
    * Versions older than that one are not reliable for streams usage.
    *
    * This basically enables the {@link CurlFeature.StreamResponse | `CurlFeature.StreamResponse`} feature
-   * flag in the internal {@link "Curl".Curl | `Curl`} instance.
+   * flag in the internal {@link Curl | `Curl`} instance.
    */
   curlyStreamResponse?: boolean
 
@@ -174,8 +174,8 @@ export interface CurlyOptions extends CurlOptionValueType {
    *
    * @remarks
    *
-   * This basically calls {@link "Curl".Curl.setStreamResponseHighWaterMark | `Curl#setStreamResponseHighWaterMark`}
-   * method in the internal {@link "Curl".Curl | `Curl`} instance.
+   * This basically calls {@link Curl.setStreamResponseHighWaterMark | `Curl#setStreamResponseHighWaterMark`}
+   * method in the internal {@link Curl | `Curl`} instance.
    */
   curlyStreamResponseHighWaterMark?: number
 
@@ -189,7 +189,7 @@ export interface CurlyOptions extends CurlOptionValueType {
    *
    * If the stream set here is destroyed before libcurl finishes uploading it, the error
    * `Curl upload stream was unexpectedly destroyed` (Code `42`) will be emitted in the
-   * internal {@link "Curl".Curl | `Curl`} instance, and so will cause the curly call to be rejected with that error.
+   * internal {@link Curl | `Curl`} instance, and so will cause the curly call to be rejected with that error.
    *
    * If the stream was destroyed with a specific error, this error will be passed instead.
    *
@@ -200,13 +200,13 @@ export interface CurlyOptions extends CurlOptionValueType {
    * Make sure your libcurl version is greater than or equal 7.69.1.
    * Versions older than that one are not reliable for streams usage.
    *
-   * This basically calls {@link "Curl".Curl.setUploadStream | `Curl#setUploadStream`}
-   * method in the internal {@link "Curl".Curl | `Curl`} instance.
+   * This basically calls {@link Curl.setUploadStream | `Curl#setUploadStream`}
+   * method in the internal {@link Curl | `Curl`} instance.
    */
   curlyStreamUpload?: Readable | null
 }
 
-interface CurlyHttpMethodCall {
+export interface CurlyHttpMethodCall {
   /**
    * **EXPERIMENTAL** This API can change between minor releases
    *
@@ -225,6 +225,7 @@ interface CurlyHttpMethodCall {
 // type HttpMethodCalls = { readonly [K in HttpMethod]: CurlyHttpMethodCall }
 type HttpMethodCalls = Record<HttpMethod, CurlyHttpMethodCall>
 
+/** @expand */
 export interface CurlyFunction extends HttpMethodCalls {
   /**
    * **EXPERIMENTAL** This API can change between minor releases

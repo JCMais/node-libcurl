@@ -14,7 +14,7 @@ import { CurlShareLock } from '../enum/CurlShareLock'
  * > [C++ source code](https://github.com/JCMais/node-libcurl/blob/master/src/Share.cc)
  *
  * Using this class you should be able to share data between
- *  two {@link "Easy".Easy | Easy} handles, like cookies for instance.
+ *  two {@link Easy | Easy} handles, like cookies for instance.
  *
  * For usage see [examples/05-share.js](https://github.com/JCMais/node-libcurl/blob/master/examples/05-share.js)
  *

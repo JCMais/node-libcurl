@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Breaking Change  
+- Minimum supported Electron version is now Electron v37.0.0.
+- Mininum supported libcurl version is now libcurl 7.77.0.
+- Windows 32-bit support is now dropped.
+- Minimum supported versions:
+  - Node.js >= v22.14.0.
+  - Electron >= v37.0.0.
+  - libcurl >= v7.77.0.
+  - Ubuntu >= v22.04.
+  - C++ compilers supporting c++20
 ### Fixed  
 ### Added
 ### Changed  

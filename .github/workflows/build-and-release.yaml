@@ -22,7 +22,7 @@ on:
 env:
   LATEST_LIBCURL_RELEASE: 7.86.0
   OLDEST_LIBCURL_RELEASE: 7.77.0
-  NODE_LIBCURL_CPP_STD: c++23
+  NODE_LIBCURL_CPP_STD: c++20
   # https://www.electronjs.org/docs/latest/tutorial/installation#cache
   electron_config_cache: ~/.cache/electron
   NODE_LIBCURL_GITHUB_TOKEN: ${{ secrets.NODE_LIBCURL_GITHUB_TOKEN }}
@@ -77,9 +77,9 @@ jobs:
         electron-version:
           - ''
         os:
-          # - macos-15
-          # - ubuntu-22.04
-          # - ubuntu-24.04-arm
+          - macos-15
+          - ubuntu-22.04
+          - ubuntu-24.04-arm
           - windows-2025
         libcurl-release:
           - ${{ needs.set-params.outputs.latest-libcurl-release }}
@@ -155,7 +155,7 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           GIT_COMMIT=${{ github.sha }} \
-          GIT_TAG=${{ github.ref_name}} \
+          GIT_REF_NAME=${{ github.ref_name}} \
           ./scripts/ci/build.sh
 
       - name: 'Publish Binary Windows'
@@ -163,7 +163,7 @@ jobs:
         shell: pwsh
         run: |
           $env:GIT_COMMIT = '${{ github.sha }}'
-          $env:GIT_TAG = '${{ github.ref_name }}'
+          $env:GIT_REF_NAME = '${{ github.ref_name }}'
           ./scripts/ci/windows/build.ps1
 
       - name: Upload artifacts

@@ -6,6 +6,7 @@
  */
 
 import { CurlVersion } from '../enum/CurlVersion'
+import { Curl } from '../Curl'
 
 /**
  * This is the data returned on {@link Curl.getVersionInfo| `Curl.getVersionInfo`}.
