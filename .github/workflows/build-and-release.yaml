@@ -83,10 +83,14 @@ jobs:
           - ${{ needs.set-params.outputs.latest-libcurl-release }}
         node:
           - 24
-          # TODO(jonathan, migration): add Node v22
+          - 22
         include:
           # electron builds
           - os: ubuntu-22.04
+            libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
+            node: 24
+            electron-version: 38.1.2
+          - os: macos-15
             libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
             node: 24
             electron-version: 38.1.2
