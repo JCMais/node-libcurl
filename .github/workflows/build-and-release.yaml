@@ -29,7 +29,7 @@ env:
   PUBLISH_BINARY: ${{ inputs.publish-binary }}
 
 concurrency:
-  group: ${{ github.ref_name }}
+  group: build-and-release-${{ github.ref_name }}
   cancel-in-progress: true
 
 # all jobs here must have a matrix identical to the ones inside build-and-release.yaml
@@ -77,25 +77,25 @@ jobs:
         electron-version:
           - ''
         os:
-          - macos-15
-          - ubuntu-22.04
-          - ubuntu-24.04-arm
+          # - macos-15
+          # - ubuntu-22.04
+          # - ubuntu-24.04-arm
           - windows-2025
         libcurl-release:
           - ${{ needs.set-params.outputs.latest-libcurl-release }}
         node:
           - 24
           - 22
-        include:
-          # electron builds
-          - os: ubuntu-22.04
-            libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
-            node: 24
-            electron-version: 38.1.2
-          - os: macos-15
-            libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
-            node: 24
-            electron-version: 38.1.2
+        # include:
+        #   # electron builds
+        #   - os: ubuntu-22.04
+        #     libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
+        #     node: 24
+        #     electron-version: 38.1.2
+        #   - os: macos-15
+        #     libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
+        #     node: 24
+        #     electron-version: 38.1.2
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -123,11 +123,12 @@ jobs:
         with:
           node-version: '${{ matrix.node }}'
           cache: 'pnpm'
-          package-manager-cache: 'pnpm'
+          package-manager-cache: true
 
       - name: Restore libcurl deps cache
         uses: actions/cache@v4
         id: libcurl-deps-cache
+        if: runner.os != 'Windows'
         with:
           path: |
             ~/.node-gyp
@@ -138,7 +139,7 @@ jobs:
 
       - name: Restore Electron Cache
         uses: actions/cache@v4
-        if: matrix.electron-version
+        if: matrix.electron-version && runner.os != 'Windows'
         with:
           path: ${{ env.electron_config_cache }}
           key: v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
@@ -156,6 +157,14 @@ jobs:
           GIT_COMMIT=${{ github.sha }} \
           GIT_TAG=${{ github.ref_name}} \
           ./scripts/ci/build.sh
+
+      - name: 'Publish Binary Windows'
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:GIT_COMMIT = '${{ github.sha }}'
+          $env:GIT_TAG = '${{ github.ref_name }}'
+          ./scripts/ci/windows/build.ps1
 
       - name: Upload artifacts
         if: always() && runner.os != 'Windows'

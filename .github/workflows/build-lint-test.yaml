@@ -15,7 +15,7 @@ env:
   electron_config_cache: ~/.cache/electron
 
 concurrency:
-  group: ${{ github.head_ref }}
+  group: build-lint-test-${{ github.head_ref }}
   cancel-in-progress: true
 
 # all jobs here must have a matrix identical to the ones inside build-and-release.yaml
