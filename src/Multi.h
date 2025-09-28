@@ -70,19 +70,10 @@ class Multi : public Napi::ObjectWrap<Multi> {
   static CurlSocketContext* CreateCurlSocketContext(curl_socket_t sockfd, Multi* multi) noexcept;
   static void DestroyCurlSocketContext(CurlSocketContext* ctx);
 
-  // Data structure for ThreadSafeFunction callback
-  struct MessageCallbackData {
-    CURL* easy;
-    CURLcode statusCode;
-    Multi* multi;
-  };
-
   // Callback management
   typedef std::map<CURLMoption, Napi::FunctionReference> CallbacksMap;
   CallbacksMap callbacks;
   Napi::FunctionReference cbOnMessage;
-  Napi::ThreadSafeFunction tsfnOnMessage;
-  std::unique_ptr<Napi::AsyncContext> asyncContextOnMessage;
 
   // Timer for timeout handling
   uv_timer_t timeout;
