@@ -19,7 +19,7 @@ fi
 if [ ! -d $2/source/$1 ]; then
   # zlib version may be in the format 1.2.13.1-motley
   # so we need to strip everything but major.minor.patch (removing the .1-motley part), and if we don't find it after that, we then need to try just major.minor
-  git_version_full=$(echo $1 | sed -E 's/([0-9]+\.[0-9]+\.[0-9]+)\..*/\1/')
+  git_version_full=$(echo $1 | sed -E 's/([0-9]+\.[0-9]+\.[0-9]+)[.-].*/\1/')
   git_version_major_minor=$(echo $git_version_full | sed -E 's/([0-9]+\.[0-9]+).*/\1/')
 
   $curr_dirname/download-and-unpack.sh https://github.com/madler/zlib/archive/v$1.tar.gz $2 || \
