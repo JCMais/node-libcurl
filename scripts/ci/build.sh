@@ -100,19 +100,31 @@ if [ "$(uname)" == "Darwin" ]; then
   if ! command -v cmake &>/dev/null; then
     (>&2 echo "Could not find cmake, we need it to build some dependencies (such as brotli)")
     (>&2 echo "You can get it by installing the cmake package:")
-    (>&2 echo "brew install cmake")
+    (>&2 echo "> brew install cmake")
     exit 1
   fi
   if ! command -v autoreconf &>/dev/null; then
     (>&2 echo "Could not find autoreconf, we need it to build some dependencies (such as libssh2)")
     (>&2 echo "You can get it by installing the autoconf package:")
-    (>&2 echo "brew install autoconf")
+    (>&2 echo "> brew install autoconf")
     exit 1
   fi
   if ! command -v aclocal &>/dev/null; then
     (>&2 echo "Could not find aclocal, we need it to build some dependencies (such as libssh2)")
     (>&2 echo "You can get it by installing the automake package:")
-    (>&2 echo "brew install automake")
+    (>&2 echo "> brew install automake")
+    exit 1
+  fi
+fi
+
+if ! command -v soelim &>/dev/null; then
+  (>&2 echo "Could not find soelim, we need it to build some dependencies (such as openldap)")
+  (>&2 echo "You can get it by installing the groff package")
+  if [ "$(uname)" == "Darwin" ]; then
+    (>&2 echo "> brew install groff")
+    exit 1
+  elif [ "$(uname)" == "Linux" ]; then
+    (>&2 echo "> apt-get install groff")
     exit 1
   fi
 fi
