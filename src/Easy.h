@@ -11,6 +11,7 @@
 #include <curl/curl.h>
 #include <node_api.h>
 
+#include <atomic>
 #include <map>
 #include <memory>
 #include <napi.h>
