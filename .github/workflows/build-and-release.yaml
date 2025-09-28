@@ -79,6 +79,8 @@ jobs:
         os:
           - macos-15
           - ubuntu-22.04
+          - ubuntu-24.04-arm
+          - windows-2025
         libcurl-release:
           - ${{ needs.set-params.outputs.latest-libcurl-release }}
         node:
@@ -149,13 +151,14 @@ jobs:
         if: matrix.enable-debugging
 
       - name: 'Publish Binary'
+        if: runner.os != 'Windows'
         run: |
           GIT_COMMIT=${{ github.sha }} \
           GIT_TAG=${{ github.ref_name}} \
           ./scripts/ci/build.sh
 
       - name: Upload artifacts
-        if: always()
+        if: always() && runner.os != 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
