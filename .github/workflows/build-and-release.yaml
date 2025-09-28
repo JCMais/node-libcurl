@@ -97,11 +97,11 @@ jobs:
     steps:
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4
+        run: brew install coreutils wget automake libtool cmake gnu-sed m4 groff
 
       - if: runner.os == 'Linux'
         name: Install Needed packages on Linux
-        run: sudo apt-get install -y cmake
+        run: sudo apt-get install -y cmake groff
 
       - name: Checkout
         uses: actions/checkout@v5
