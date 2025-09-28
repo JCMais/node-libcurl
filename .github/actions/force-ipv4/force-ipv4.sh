@@ -56,7 +56,9 @@ configure_warp_doh_and_exclude_ipv6() {
 
 install_warp_on_debian() {
   curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
-  echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+  # Infer the architecture dynamically (e.g., amd64, arm64, etc.)
+  ARCH="$(dpkg --print-architecture)"
+  echo "deb [arch=${ARCH} signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
   sudo apt-get update
   sudo apt-get install -y cloudflare-warp
 }

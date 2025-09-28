@@ -1,7 +1,7 @@
 #ifndef NOMINMAX
 #define NOMINMAX
-#include "napi.h"
 #endif
+#include "napi.h"
 
 /**
  * Copyright (c) Jonathan Cardoso Machado. All Rights Reserved.

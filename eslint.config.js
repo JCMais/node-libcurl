@@ -7,7 +7,7 @@ const js = require('@eslint/js')
 const tsEslint = require('typescript-eslint')
 
 const noUnusedVarsSetting = {
-  varsIgnorePattern: '^_',
+  varsIgnorePattern: '^(_|Easy|Share|Multi|Curl)',
   argsIgnorePattern: '^_',
 }
 

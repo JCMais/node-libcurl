@@ -3,12 +3,13 @@
 
 param(
     [string]$GitCommit = $env:GIT_COMMIT,
-    [string]$GitTag = $env:GIT_TAG,
+    [string]$GitRefName = $env:GIT_REF_NAME,
     [string]$ElectronVersion = $env:ELECTRON_VERSION
 )
 
 # Set error action preference
 $ErrorActionPreference = "Stop"
+$PSNativeCommandErrorActionPreference = "Stop"
 
 # Set up environment variables
 $env:DEBUG = 'node-libcurl'
@@ -33,7 +34,7 @@ Write-Host "=== Node-libcurl Windows Build Script ===" -ForegroundColor Green
 Write-Host "Electron Version: $ElectronVersion" -ForegroundColor Yellow
 Write-Host "Architecture: $Architecture" -ForegroundColor Yellow
 Write-Host "Git Commit: $GitCommit" -ForegroundColor Yellow
-Write-Host "Git Tag: $GitTag" -ForegroundColor Yellow
+Write-Host "Git Ref Name: $GitRefName" -ForegroundColor Yellow
 
 # Add localhost entries to hosts file (needed for c-ares DNS resolution)
 Write-Host "Adding localhost entries to hosts file..." -ForegroundColor Blue
@@ -78,15 +79,15 @@ if (-not $env:PUBLISH_BINARY) {
         Write-Warning "Could not get commit message"
     }
 
-    $gitDescribe = ""
+    $gitLatestTag = ""
     try {
-        $gitDescribe = git describe --tags --always HEAD
-        Write-Host "Git describe: $gitDescribe" -ForegroundColor Cyan
+        $gitLatestTag = git describe --tags --always HEAD
+        Write-Host "Git latest tag: $gitLatestTag" -ForegroundColor Cyan
     } catch {
         Write-Warning "Could not get git describe"
     }
 
-    if ($commitMessage.ToLower().Contains('[publish binary]') -or $gitDescribe -eq $GitTag) {
+    if ($commitMessage.ToLower().Contains('[publish binary]') -or $gitLatestTag -eq $GitRefName) {
         $env:PUBLISH_BINARY = "true"
         Write-Host "Binary will be published (auto-detected)" -ForegroundColor Green
     } else {
@@ -136,6 +137,30 @@ if ($ElectronVersion) {
     $target = ""
 }
 
+
+# Get node-gyp version from package.json
+$packageJson = Get-Content -Raw -Path "package.json" | ConvertFrom-Json
+$nodeGypVersion = $null
+
+if ($packageJson.devDependencies -and $packageJson.devDependencies.'node-gyp') {
+    $nodeGypVersion = $packageJson.devDependencies.'node-gyp'
+} elseif ($packageJson.dependencies -and $packageJson.dependencies.'node-gyp') {
+    $nodeGypVersion = $packageJson.dependencies.'node-gyp'
+}
+
+if ($nodeGypVersion) {
+    Write-Host "node-gyp version from package.json: $nodeGypVersion" -ForegroundColor Cyan
+} else {
+    Write-Host "node-gyp version not found in package.json, using latest" -ForegroundColor Yellow
+    $nodeGypVersion = "latest"
+}
+
+# https://github.com/nodejs/node-gyp/blob/main/docs/Force-npm-to-use-global-node-gyp.md
+Write-Host "Installing node-gyp@$nodeGypVersion..." -ForegroundColor Blue
+npm install --global node-gyp@$nodeGypVersion
+$globalNodeGypPath = Join-Path (npm prefix -g) "node_modules\node-gyp\bin\node-gyp.js"
+Write-Host "Set node-gyp path to ${globalNodeGypPath}"
+
 # Remove 'v' prefix from target if present
 $target = $target -replace '^v', ''
 
@@ -145,6 +170,7 @@ $env:npm_config_build_from_source = "true"
 $env:npm_config_runtime = $runtime
 $env:npm_config_dist_url = $dist_url
 $env:npm_config_target = $target
+$env:npm_config_node_gyp = $globalNodeGypPath
 
 Write-Host "Build configuration:" -ForegroundColor Green
 Write-Host "  npm_config_msvs_version: $env:npm_config_msvs_version" -ForegroundColor Cyan

@@ -1,10 +1,11 @@
 #ifndef NOMINMAX
 #define NOMINMAX
+#endif
+
 #include "curl/curl.h"
 #include "napi.h"
 
 #include <cassert>
-#endif
 
 /**
  * Copyright (c) Jonathan Cardoso Machado. All Rights Reserved.

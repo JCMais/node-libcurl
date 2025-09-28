@@ -14,7 +14,7 @@ const getSetOptDefinition = (
   extraComments = '',
 ) =>
   `/**
- * Use {@link "Curl".Curl.option|\`Curl.option\`} for predefined constants.${extraComments}
+ * Use {@link Curl.option|\`Curl.option\`} for predefined constants.${extraComments}
  *
  *
  * Official libcurl documentation: [\`curl_easy_setopt()\`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)

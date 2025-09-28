@@ -1,0 +1,10 @@
+FROM --platform=linux/amd64 node:24-bookworm
+
+RUN mkdir -p /usr/src/app
+
+WORKDIR /usr/src/app
+
+RUN npm install node-libcurl@5.0.0-0
+RUN node -e "const { Curl } = require('node-libcurl'); console.log(Curl.getVersionInfoString())"
+
+RUN node -e "const { Easy, Curl } = require('node-libcurl'); const easy = new Easy(); easy.setOpt(Curl.option.URL, 'https://example.com'); easy.perform(); console.log(easy.getInfo(Curl.info.RESPONSE_CODE))"

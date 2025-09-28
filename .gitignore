@@ -42,3 +42,4 @@ yarn-error.log
 compile_commands.json
 
 *.hidden.*
+docs/
