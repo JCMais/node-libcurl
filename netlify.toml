@@ -1,5 +1,5 @@
 [build]
-  command = "pnpm docs"
+  command = "pnpm gen:docs"
   publish = "docs"
 
 # Production context: All deploys from the main

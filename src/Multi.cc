@@ -1,12 +1,13 @@
 #ifndef NOMINMAX
 #define NOMINMAX
+#endif
+
 #include "curl/multi.h"
 
 #include "macros.h"
 #include "uv.h"
 
 #include <cassert>
-#endif
 
 /**
  * Copyright (c) Jonathan Cardoso Machado. All Rights Reserved.

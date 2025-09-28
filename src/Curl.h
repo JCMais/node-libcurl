@@ -84,7 +84,7 @@ class Curl {
   static Napi::Value GetThreadId(const Napi::CallbackInfo& info);
 
  private:
-  ssize_t addonAllocatedMemory;
+  int64_t addonAllocatedMemory;
   std::unordered_map<CurlHandleType, int> activeHandleCount = {
       {CURL_HANDLE_TYPE_EASY, 0}, {CURL_HANDLE_TYPE_MULTI, 0}, {CURL_HANDLE_TYPE_SHARE, 0}};
 };

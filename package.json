@@ -46,10 +46,10 @@
     "clean": "pnpm clean:build && pnpm clean:dist",
     "clean:build": "rimraf build",
     "clean:dist": "rimraf dist tsconfig.tsbuildinfo",
-    "docs": "typedoc",
     "gen:compile_commands:debug": "node-pre-gyp -- configure --debug -f compile_commands_json",
     "gen:compile_commands:release": "node-pre-gyp -- configure -f compile_commands_json",
     "gen:constants": "node scripts/build-constants.js",
+    "gen:docs": "typedoc",
     "install": "node-pre-gyp install --fallback-to-build",
     "postinstall": "node scripts/postinstall",
     "lint": "eslint lib/ scripts/ test/ examples/",
@@ -76,9 +76,8 @@
     ]
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "1.0.11",
+    "@mapbox/node-pre-gyp": "2.0.0",
     "env-paths": "2.2.0",
-    "nan": "github:JCMais/nan#fix/electron-failures",
     "node-addon-api": "8.5.0",
     "node-gyp": "11.4.2",
     "npmlog": "7.0.1",
@@ -87,7 +86,7 @@
   },
   "devDependencies": {
     "@commitlint/cli": "18.4.3",
-    "@electron/rebuild": "^3.7.1",
+    "@electron/rebuild": "4.0.1",
     "@eslint/eslintrc": "3.3.1",
     "@eslint/js": "9.36.0",
     "@microsoft/api-documenter": "7.23.12",
@@ -102,7 +101,7 @@
     "cheerio": "1.0.0-rc.3",
     "clang-format": "1.8.0",
     "cookie-parser": "1.4.7",
-    "electron": "33.2.1",
+    "electron": "38.2.0",
     "eslint": "9.36.0",
     "eslint-plugin-prettier": "5.5.4",
     "express": "4.21.2",
@@ -127,7 +126,7 @@
   },
   "packageManager": "pnpm@9.9.0+sha256.7a4261e50d9a44d9240baf6c9d6e10089dcf0a79d0007f2a26985a6927324177",
   "engines": {
-    "node": ">=16.14"
+    "node": ">=22.14"
   },
   "np": {
     "cleanup": false

@@ -96,7 +96,7 @@ If you want to include a new libcurl option on the addon, those are the basic st
    - Added the `CURLOPT_AWS_SIGV4` constant as the `AwsSigV4` member in the `CurlAuth` enum. To get the value we looked at the libcurl source code.
    - Added the `CURLOPT_AWS_SIGV4` as a string option.
   [Full commit with the above changes is available here](https://github.com/JCMais/node-libcurl/commit/a38dd73db6f47a11197b7e1550111cc8ffd9ec2b).
-4. Run `node ./scripts/build-constants.js`, this will generate an updated list of options on [`./lib/generated/`](./lib/generated), and also update the files [`./lib/Curl.ts`] and [`./lib/EasyNativeBinding.ts`] with overloads for the `setOpt` method. Make sure the options added are correct.
+4. Run `node ./scripts/build-constants.js`, this will generate an updated list of options on [`./lib/generated/`](./lib/generated), and also update the files [`./lib/Curl.ts`] and [`./lib/Easy.ts`] with overloads for the `setOpt` method. Make sure the options added are correct.
 5. If running the above adds extra options that you do not want to add / are not related to the options you are adding, please feel free to remove them manually from the generated output. We will try to improve this experience later, but for now you have to manually remove them.
 
 ### Changing libcurl Version Used on Prebuilt Binaries for Windows

@@ -1,7 +1,7 @@
 #!/bin/bash
 # This must be run from the root of the repo, and the following variables must be available:
 #  GIT_COMMIT
-#  GIT_TAG
+#  GIT_REF_NAME
 # In case it's needed to use the vars declared here, this should be sourced on the current shell
 #  . ./scripts/ci/build.sh
 set -euvo pipefail
@@ -11,9 +11,6 @@ curr_dirname=$(dirname "$0")
 . $curr_dirname/utils/gsort.sh
 
 FORCE_REBUILD_DEFAULT=false
-# if [[ ! -z "$GIT_TAG" ]]; then
-#   FORCE_REBUILD_DEFAULT=true
-# fi
 
 export FORCE_REBUILD=${FORCE_REBUILD:-$FORCE_REBUILD_DEFAULT}
 
@@ -333,7 +330,7 @@ RUN_TESTS=${RUN_TESTS:-"true"}
 if [ -z "$PUBLISH_BINARY" ]; then
   PUBLISH_BINARY=false
   COMMIT_MESSAGE=$(git show -s --format=%B $GIT_COMMIT | tr -d '\n')
-  if [[ $GIT_TAG == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
+  if [[ $GIT_REF_NAME == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
     PUBLISH_BINARY=true;
   fi
 fi
@@ -370,7 +367,7 @@ target=`echo $target | sed 's/^v//'`
 # ia32, x64, armv7, etc
 target_arch=${TARGET_ARCH:-"x64"}
 
-NODE_LIBCURL_CPP_STD=${NODE_LIBCURL_CPP_STD:-$(node $curr_dirname/../cpp-std.js)}
+NODE_LIBCURL_CPP_STD=${NODE_LIBCURL_CPP_STD:-"c++20"}
 
 # Build Addon
 export npm_config_curl_config_bin="$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin/curl-config"
