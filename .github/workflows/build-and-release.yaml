@@ -79,7 +79,7 @@ jobs:
         os:
           - macos-15
           - ubuntu-22.04
-          - ubuntu-24.04-arm
+          # - ubuntu-24.04-arm
           - windows-2025
         libcurl-release:
           - ${{ needs.set-params.outputs.latest-libcurl-release }}
@@ -125,8 +125,8 @@ jobs:
           cache: 'pnpm'
           package-manager-cache: true
 
-      - name: Restore libcurl deps cache
-        uses: actions/cache@v4
+      - name: Libcurl Deps Cache (Restore)
+        uses: actions/cache/restore@v4
         id: libcurl-deps-cache
         if: runner.os != 'Windows'
         with:
@@ -157,6 +157,25 @@ jobs:
           GIT_COMMIT=${{ github.sha }} \
           GIT_REF_NAME=${{ github.ref_name}} \
           ./scripts/ci/build.sh
+      
+      - name: 'Check if fully installed and built'
+        id: built-and-installed
+        if: runner.os != 'Windows'
+        run: |
+          if [[ -f built-and-installed.hidden.txt ]]; then
+            echo "status=true" >> $GITHUB_OUTPUT
+          else
+            echo "status=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Libcurl Deps Cache (Save)
+        uses: actions/cache/save@v4
+        if: runner.os != 'Windows' && steps.libcurl-deps-cache.outputs.cache-hit == 'false' && steps.built-and-installed.outputs.status == 'true'
+        with:
+          path: |
+            ~/.node-gyp
+            ~/deps
+          key: v4-${{ runner.os }}-libcurl-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
 
       - name: 'Publish Binary Windows'
         if: runner.os == 'Windows'

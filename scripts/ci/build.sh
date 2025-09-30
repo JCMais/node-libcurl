@@ -392,6 +392,8 @@ echo "npm_config_target_arch=$npm_config_target_arch"
 
 pnpm install --frozen-lockfile --fetch-timeout 300000
 
+touch built-and-installed.hidden.txt
+
 if [ "$STOP_ON_INSTALL" == "true" ]; then
   set +uv
   exit 0

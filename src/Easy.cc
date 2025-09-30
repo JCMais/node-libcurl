@@ -931,7 +931,7 @@ Napi::Value Easy::GetInfo(const Napi::CallbackInfo& info) {
         curl_certinfo* ci = nullptr;
         code = curl_easy_getinfo(this->ch, curlInfo, &ci);
 
-        if (code == CURLE_OK) {
+        if (code == CURLE_OK && ci != nullptr) {
           Napi::Array arr = Napi::Array::New(env);
 
           for (int i = 0; i < ci->num_of_certs; i++) {
