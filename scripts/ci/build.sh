@@ -365,7 +365,16 @@ fi
 
 target=`echo $target | sed 's/^v//'`
 # ia32, x64, armv7, etc
-target_arch=${TARGET_ARCH:-"x64"}
+if [[ -z "${TARGET_ARCH:-}" ]]; then
+  case "$(uname -m)" in
+    x86_64) target_arch="x64" ;;
+    aarch64|arm64) target_arch="arm64" ;;
+    armv7l) target_arch="arm" ;;
+    *) target_arch="$(uname -m)" ;;
+  esac
+else
+  target_arch="$TARGET_ARCH"
+fi
 
 NODE_LIBCURL_CPP_STD=${NODE_LIBCURL_CPP_STD:-"c++20"}
 
