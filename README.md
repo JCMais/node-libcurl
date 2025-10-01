@@ -57,6 +57,7 @@
   - [Building on macOS](#building-on-macos)
     - [Xcode \>= 10 | macOS \>= Mojave](#xcode--10--macos--mojave)
   - [Building on Windows](#building-on-windows)
+    - [Note on outdated node-gyp version](#note-on-outdated-node-gyp-version)
 - [Getting Help](#getting-help)
 - [Contributing](#contributing)
 - [Donations / Patreon](#donations--patreon)
@@ -419,7 +420,8 @@ If installing using a prebuilt binary you only need to have the [visual c++ 2017
 
 If building from source, you must have:
 - Python 3.x
-- [Visual Studio >= 2017](https://visualstudio.microsoft.com/downloads/)
+- [Visual Studio >= 2019](https://visualstudio.microsoft.com/downloads/) (with Clang/LLVM support enabled, see the next item)
+- [Clang/LLVM support on Visual Studio](https://learn.microsoft.com/en-us/cpp/build/clang-support-msbuild?view=msvc-170)
 - [nasm](https://www.nasm.us/)
 
 Python 3.x and the Visual Studio compiler can be installed by running:
@@ -435,6 +437,50 @@ choco install nasm
 Currently there is no support to use other libcurl version than the one provided by the [curl-for-windows](https://github.com/JCMais/curl-for-windows) submodule (help is appreciated on adding this feature).
 
 An important note about building the addon on Windows is that we have to do some "hacks" with the header files included by `node-gyp`/`nw-gyp`. The reason for that is because as we are using a standalone version of OpenSSL, we don't want to use the OpenSSL headers provided by Node.js, which are by default added to `<nw-gyp-or-node-gyp-folder>/include/node/openssl`, so what we do is that before compilation that folder is renamed to `openssl.disabled`. After a successful installation the folder is renamed back to their original name, **however** if any error happens during compilation the folder will stay renamed until the addon is compiled successfully. More info on why that was needed and some context can be found on issue [#164](https://github.com/JCMais/node-libcurl/issues/164).
+
+#### Note on outdated node-gyp version
+
+NPM has its own internal version of `node-gyp`, which may not be the most up-to-date version. If you see an output like this:
+```
+[info] it worked if it ends with ok
+[info] using node-pre-gyp@2.0.0
+[info] using node@24.9.0 | win32 | x64 
+gyp info it worked if it ends with ok
+gyp info using node-gyp@10.1.0
+gyp info using node@24.9.0 | win32 | x64
+gyp info ok 
+gyp info it worked if it ends with ok
+gyp info using node-gyp@10.1.0
+gyp info using node@24.9.0 | win32 | x64
+```
+
+Where the node-gyp version is `10.1.0`, you will probably face issues related to ClangCL like this:
+```
+C:\Users\internal\AppData\Local\node\corepack\v1\pnpm\9.9.0\dist\node_modules\node-gyp\src\win_delay_load_hook.cc(37,9): warning : unknown pragma ignored [-Wunknown-pragmas] [F:\jc\node-libcurl\build\deps\
+curl-for-windows\libcurl.vcxproj]
+  /LTCG:INCREMENTAL: no such file or directory
+D:\Software\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppCommon.targets(1522,5): error MSB6006: "llvm-lib.exe" exited with code 1. [F:\jc\node-libcurl\build\deps\curl-fo
+r-windows\libcurl.vcxproj]
+C:\Users\internal\AppData\Local\node\corepack\v1\pnpm\9.9.0\dist\node_modules\node-gyp\src\win_delay_load_hook.cc(12,9): warning : unknown pragma ignored [-Wunknown-pragmas] [F:\jc\node-libcurl\build\deps\
+curl-for-windows\brotli\brotli.vcxproj]
+C:\Users\internal\AppData\Local\node\corepack\v1\pnpm\9.9.0\dist\node_modules\node-gyp\src\win_delay_load_hook.cc(37,9): warning : unknown pragma ignored [-Wunknown-pragmas] [F:\jc\node-libcurl\build\deps\
+curl-for-windows\brotli\brotli.vcxproj]
+  /LTCG:INCREMENTAL: no such file or directory
+D:\Software\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppCommon.targets(1522,5): error MSB6006: "llvm-lib.exe" exited with code 1. [F:\jc\node-libcurl\build\deps\curl-fo
+r-windows\brotli\brotli.vcxproj]
+```
+
+The only solution to this is to install a globally available node-gyp version:
+```powershell
+npm install --global node-gyp@latest
+```
+
+and then use it in the install command by setting the `npm_config_node_gyp` environment variable (this assumes powershell):
+```powershell
+$globalNodeGypPath = Join-Path (npm prefix -g) "node_modules\node-gyp\bin\node-gyp.js"
+$env:npm_config_node_gyp=$globalNodeGypPath
+pnpm install node-libcurl
+```
 
 ## Getting Help
 
