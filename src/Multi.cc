@@ -464,7 +464,7 @@ void Multi::CallOnMessageCallback(CURL* easy, CURLcode statusCode) {
   try {
     callback.Call(this->Value(), {error, easyObj->Value(), errorCode});
 
-  } catch (const Napi::Error& e) {
+  } catch (const Napi::Error&) {
     // ignore any and all errors
   }
 
