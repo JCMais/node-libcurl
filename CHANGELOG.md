@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Electron >= v37.0.0.
   - libcurl >= v7.77.0.
   - Ubuntu >= v22.04.
+  - Alpine >= 3.21
   - C++ compilers supporting c++20
 ### Fixed  
 ### Added
