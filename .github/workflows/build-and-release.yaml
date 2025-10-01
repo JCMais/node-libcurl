@@ -66,7 +66,8 @@ jobs:
         run: pnpm build:dist
 
   build-and-release:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os == 'alpine' && 'ubuntu-22.04' || matrix.os }}
+    container: ${{ matrix.os == 'alpine' && format('node:{0}-alpine3.21', matrix.node) || '' }}
     needs:
       - set-params
       - lint-and-tsc
@@ -77,10 +78,11 @@ jobs:
         electron-version:
           - ''
         os:
-          - macos-15
-          - ubuntu-22.04
+          # - macos-15
+          # - ubuntu-22.04
           # - ubuntu-24.04-arm
-          - windows-2025
+          - alpine
+          # - windows-2025
         libcurl-release:
           - ${{ needs.set-params.outputs.latest-libcurl-release }}
         node:
@@ -101,24 +103,39 @@ jobs:
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
     steps:
+      - if: matrix.os == 'alpine'
+        name: Install Alpine Packages
+        shell: sh
+        run: |
+          apk --no-cache add --virtual .rundeps \
+          bash ca-certificates cmake curl docker git \
+          gnupg openssh-client openssl parallel pkgconfig \
+          coreutils \
+          python3 py3-pip make g++ \
+          perl linux-headers \
+          autoconf automake libtool \
+          texinfo flex bison build-base libedit-dev mandoc-soelim
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
         run: brew install coreutils wget automake libtool cmake gnu-sed m4 groff
 
-      - if: runner.os == 'Linux'
+      - if: runner.os == 'Linux' && matrix.os != 'alpine'
         name: Install Needed packages on Linux
         run: sudo apt-get install -y cmake groff
 
       - name: Checkout
         uses: actions/checkout@v5
+
       # see https://github.com/nodejs/node/issues/40537
       - name: Enforce IPv4 Connectivity
+        if: matrix.os != 'alpine'
         uses: ./.github/actions/force-ipv4
 
         # PNPM / Node.js
       - name: Setup PNPM
         uses: pnpm/action-setup@v4
       - name: Set up Node ${{ matrix.node }}
+        if: matrix.os != 'alpine'
         uses: actions/setup-node@v5
         with:
           node-version: '${{ matrix.node }}'
@@ -133,19 +150,19 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v4-${{ runner.os }}-libcurl-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
+          key: v4-${{ matrix.os }}-libcurl-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
           restore-keys: |
-            v4-${{ runner.os }}-libcurl-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
+            v4-${{ matrix.os }}-libcurl-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
 
       - name: Restore Electron Cache
         uses: actions/cache@v4
         if: matrix.electron-version && runner.os != 'Windows'
         with:
           path: ${{ env.electron_config_cache }}
-          key: v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
+          key: v1-${{ matrix.os }}-electron-cache-${{ matrix.electron-version }}
           restore-keys: |
-            v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
-            v1-${{ runner.os }}-electron-cache-
+            v1-${{ matrix.os }}-electron-cache-${{ matrix.electron-version }}
+            v1-${{ matrix.os }}-electron-cache-
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -157,7 +174,7 @@ jobs:
           GIT_COMMIT=${{ github.sha }} \
           GIT_REF_NAME=${{ github.ref_name}} \
           ./scripts/ci/build.sh
-      
+
       - name: 'Check if fully installed and built'
         id: built-and-installed
         if: runner.os != 'Windows'
