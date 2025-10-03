@@ -207,14 +207,14 @@ if ($ElectronVersion) {
     }
 }
 
+# Create the tarballs
+pnpm pregyp package testpackage --verbose
+
 # Package and publish if needed
 if ($env:PUBLISH_BINARY -eq "true") {
     Write-Host "Packaging and publishing binary..." -ForegroundColor Blue
     
     try {
-        # Package the binary
-        pnpm pregyp package testpackage --verbose
-        
         # Get the staged tarball path and publish it
         $stagedTarball = pnpm --silent pregyp reveal staged_tarball --silent
         Write-Host "Publishing: $stagedTarball" -ForegroundColor Cyan
@@ -225,10 +225,8 @@ if ($env:PUBLISH_BINARY -eq "true") {
         Write-Error "Failed to publish binary: $($_.Exception.Message)"
         throw
     }
-}
 
-# Verify installation if binary was published
-if ($env:PUBLISH_BINARY -eq "true") {
+    # Verify installation if binary was published
     Write-Host "Verifying published binary..." -ForegroundColor Blue
     
     $installResult = 0
