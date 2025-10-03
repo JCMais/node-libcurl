@@ -120,6 +120,9 @@ importers:
       progress:
         specifier: 2.0.3
         version: 2.0.3
+      semver:
+        specifier: 7.7.2
+        version: 7.7.2
       sort-package-json:
         specifier: 3.4.0
         version: 3.4.0
