@@ -435,30 +435,35 @@ if [ "$RUN_TESTS" == "true" ]; then
   fi
 fi
 
+# Create the tarballs
+if [[ "$MACOS_UNIVERSAL_BUILD" == "true" ]]; then
+  # Need to publish two binaries when doing a universal build.
+  #
+  # Could also publish the universal build twice instead, but it might not
+  # play well with electron-builder which will try to lipo native add-ons
+  # for different architectures.
+  # --
+  lipo build/Release/node_libcurl.node -thin x86_64 -output lib/binding/node_libcurl.node
+  lipo build/Release/node_libcurl.node -thin arm64 -output lib/binding/node_libcurl.node
+
+  npm_config_target_arch=arm64 pnpm pregyp package testpackage --verbose
+  npm_config_target_arch=x64 pnpm pregyp package testpackage --verbose
+else
+  pnpm pregyp package testpackage --verbose
+fi
+
 # If we are here, it means the addon worked
 # Check if we need to publish the binaries
+# Notice, this is only useful if publishing locally, as the CI has a separate
+# step defined on the workflow itself, which uses attestations.
 if [[ $PUBLISH_BINARY == true && $LIBCURL_RELEASE == $LATEST_LIBCURL_RELEASE ]]; then
-  echo "Publish binary is true - Testing and publishing package with pregyp"
+  echo "Publish binary is true - Publishing package with pregyp"
   if [[ "$MACOS_UNIVERSAL_BUILD" == "true" ]]; then
-    # Need to publish two binaries when doing a universal build.
-    #
-    # Could also publish the universal build twice instead, but it might not
-    # play well with electron-builder which will try to lipo native add-ons
-    # for different architectures.
-    # --
-    # Build and publish x64 package
-    lipo build/Release/node_libcurl.node -thin x86_64 -output lib/binding/node_libcurl.node
-    npm_config_target_arch=x64 pnpm pregyp package testpackage --verbose
-    npm_config_target_arch=x64 node scripts/module-packaging.js --publish \
+    node scripts/module-packaging.js --publish \
       "$(npm_config_target_arch=x64 pnpm --silent pregyp reveal staged_tarball --silent)"
-  
-    # Build and publish arm64 package.
-    lipo build/Release/node_libcurl.node -thin arm64 -output lib/binding/node_libcurl.node
-    npm_config_target_arch=arm64 pnpm pregyp package --verbose  # Can't testpackage for arm64 yet.
-    npm_config_target_arch=arm64 node scripts/module-packaging.js --publish \
+    node scripts/module-packaging.js --publish \
       "$(npm_config_target_arch=arm64 pnpm --silent pregyp reveal staged_tarball --silent)"
   else
-    pnpm pregyp package testpackage --verbose
     node scripts/module-packaging.js --publish "$(pnpm --silent pregyp reveal staged_tarball --silent)"
   fi
 fi
