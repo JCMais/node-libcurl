@@ -16,7 +16,7 @@ on:
       publish-binary:
         type: boolean
         default: false
-        description: Publish binary?
+        description: Force publish binary?
         required: true
 
 env:
@@ -26,7 +26,6 @@ env:
   # https://www.electronjs.org/docs/latest/tutorial/installation#cache
   electron_config_cache: ~/.cache/electron
   NODE_LIBCURL_GITHUB_TOKEN: ${{ secrets.NODE_LIBCURL_GITHUB_TOKEN }}
-  PUBLISH_BINARY: ${{ inputs.publish-binary }}
 
 concurrency:
   group: build-and-release-${{ github.ref_name }}
@@ -66,6 +65,11 @@ jobs:
         run: pnpm build:dist
 
   build-and-release:
+    permissions:
+      id-token: write
+      attestations: write
+      contents: write
+      packages: write
     runs-on: ${{ matrix.os == 'alpine' && 'ubuntu-22.04' || matrix.os }}
     container: ${{ matrix.os == 'alpine' && format('node:{0}-alpine3.21', matrix.node) || '' }}
     needs:
@@ -78,26 +82,26 @@ jobs:
         electron-version:
           - ''
         os:
-          # - macos-15
-          # - ubuntu-22.04
+          - macos-15
+          - ubuntu-22.04
           # - ubuntu-24.04-arm
           - alpine
-          # - windows-2025
+          - windows-2025
         libcurl-release:
           - ${{ needs.set-params.outputs.latest-libcurl-release }}
         node:
           - 24
           - 22
-        # include:
-        #   # electron builds
-        #   - os: ubuntu-22.04
-        #     libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
-        #     node: 24
-        #     electron-version: 38.1.2
-        #   - os: macos-15
-        #     libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
-        #     node: 24
-        #     electron-version: 38.1.2
+        include:
+          # electron builds
+          - os: ubuntu-22.04
+            libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
+            node: 24
+            electron-version: 38.1.2
+          - os: macos-15
+            libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
+            node: 24
+            electron-version: 38.1.2
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -121,7 +125,14 @@ jobs:
 
       - if: runner.os == 'Linux' && matrix.os != 'alpine'
         name: Install Needed packages on Linux
-        run: sudo apt-get install -y cmake groff
+        run: sudo apt-get update && sudo apt-get install -y cmake groff
+
+      - name: Export Electron npm_config envs
+        if: matrix.electron-version
+        run: |
+          echo "npm_config_runtime=electron" >> $GITHUB_ENV
+          echo "npm_config_dist_url=https://electronjs.org/headers" >> $GITHUB_ENV
+          echo "npm_config_target=${{ matrix.electron-version }}" >> $GITHUB_ENV
 
       - name: Checkout
         uses: actions/checkout@v5
@@ -168,12 +179,14 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: matrix.enable-debugging
 
-      - name: 'Publish Binary'
+      - name: 'Build and Package Binary'
         if: runner.os != 'Windows'
-        run: |
-          GIT_COMMIT=${{ github.sha }} \
-          GIT_REF_NAME=${{ github.ref_name}} \
-          ./scripts/ci/build.sh
+        env:
+          # this is false because we publish as a separate step
+          PUBLISH_BINARY: false
+          GIT_COMMIT: ${{ github.sha }}
+          GIT_REF_NAME: ${{ github.ref_name }}
+        run: ./scripts/ci/build.sh
 
       - name: 'Check if fully installed and built'
         id: built-and-installed
@@ -192,15 +205,42 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v4-${{ runner.os }}-libcurl-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
+          key: v4-${{ matrix.os }}-libcurl-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
 
-      - name: 'Publish Binary Windows'
+      - name: 'Build and Package Binary Windows'
         if: runner.os == 'Windows'
         shell: pwsh
+        env:
+          # this is false because we publish as a separate step
+          PUBLISH_BINARY: false
+          GIT_COMMIT: ${{ github.sha }}
+          GIT_REF_NAME: ${{ github.ref_name }}
+        run: ./scripts/ci/windows/build.ps1
+
+      - name: Create attestations
+        uses: actions/attest-build-provenance@v3
+        if: inputs.publish-binary
+        with:
+          subject-path: 'build/**/node_libcurl-*.tar.gz'
+
+      - name: 'Publish Binary [macos arm64]'
+        if: runner.os == 'macOS' && inputs.publish-binary
+        env:
+          npm_config_target_arch: arm64
         run: |
-          $env:GIT_COMMIT = '${{ github.sha }}'
-          $env:GIT_REF_NAME = '${{ github.ref_name }}'
-          ./scripts/ci/windows/build.ps1
+          node scripts/module-packaging.js --publish "$(pnpm --silent pregyp reveal staged_tarball --silent)"
+
+      - name: 'Publish Binary [macos x64]'
+        if: runner.os == 'macOS' && inputs.publish-binary
+        env:
+          npm_config_target_arch: x64
+        run: |
+          node scripts/module-packaging.js --publish "$(pnpm --silent pregyp reveal staged_tarball --silent)"
+
+      - name: 'Publish Binary [non macos]'
+        if: runner.os != 'macOS' && inputs.publish-binary
+        run: |
+          node scripts/module-packaging.js --publish "$(pnpm --silent pregyp reveal staged_tarball --silent)"
 
       - name: Upload artifacts
         if: always() && runner.os != 'Windows'

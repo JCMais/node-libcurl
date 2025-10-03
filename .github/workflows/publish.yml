@@ -1,0 +1,166 @@
+name: publish
+
+defaults:
+  run:
+    shell: bash
+
+on:
+  workflow_dispatch:
+    inputs:
+      enable-debugging:
+        type: boolean
+        description: Enable tmate session
+        required: false
+        default: false
+      version:
+        type: string
+        description: Version to release, takes precedence over release-type
+        required: false
+        default: ''
+      release-type:
+        type: choice
+        description: Kind of release
+        required: true
+        default: patch
+        options:
+          - prerelease
+          - premajor
+          - preminor
+          - prepatch
+          - major
+          - minor
+          - patch
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 24
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    environment: release
+    permissions:
+      id-token: write
+      attestations: write
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Get GitHub App User ID
+        id: get-user-id
+        run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - run: |
+          git config --global user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+          git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+  
+      # Node.js / PNPM
+      - uses: pnpm/action-setup@v4
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: '${{ env.NODE_VERSION }}'
+          cache: 'pnpm'
+          package-manager-cache: 'pnpm'
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: inputs.enable-debugging
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - uses: actions/github-script@v8
+        id: version-check
+        with:
+          result-encoding: json
+          script: |
+            const semver = require('semver');
+            const refName = '${{ github.ref_name }}';
+            let version = '${{ inputs.version }}'.trim();
+            const currentVersion = require('./package.json').version;
+
+            if (version) {
+              const isValid = semver.valid(version);
+              if (!isValid) {
+                throw new Error('Version is not a valid semver');
+              }
+
+              // must be greater than current version
+              const isGt = semver.gt(version, currentVersion);
+              if (!isGt) {
+                throw new Error('Version is not greater than current version');
+              }
+            } else {
+              version = semver.inc(currentVersion, '${{ inputs.release-type }}');
+              if (!version) {
+                throw new Error(`Failed to increment version with release type ${{ inputs.release-type }} for current version ${currentVersion}`);
+              }
+            }
+
+            const preRelease = semver.prerelease(version);
+            const isPreRelease = preRelease !== null;
+
+            if (refName !== 'master' && !isPreRelease) {
+              throw new Error('Version is not a prerelease and not on the main branch.');
+            }
+
+            return { version, isPreRelease };
+
+      - name: Run lint
+        run: pnpm lint
+      - name: Run tsc
+        run: pnpm build:dist
+
+      - name: Bump version (and run hooks) and create commit
+        run: pnpm version ${{ fromJson(steps.version-check.outputs.result).version }}
+
+      - name: Push Commit and Tags
+        run: git push origin --follow-tags
+
+      # Use https://github.com/changesets/changesets eventually
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ fromJson(steps.version-check.outputs.result).version }}
+          IS_PRE_RELEASE=${{ fromJson(steps.version-check.outputs.result).isPreRelease }}
+          IS_LATEST=${{ fromJson(steps.version-check.outputs.result).isPreRelease == false }}
+          gh release create v$VERSION \
+            --fail-on-no-commits \
+            --verify-tag \
+            --prerelease=$IS_PRE_RELEASE \
+            --latest=$IS_LATEST \
+            --title=v$VERSION \
+            --draft
+
+      - name: Ensure clean git state
+        run: git diff --exit-code
+
+      - name: Sleep for 1 minute
+        run: sleep 60
+
+      - name: Publish to NPM
+        env:
+          NPM_CONFIG_PROVENANCE: true
+        run: |
+          pnpm publish \
+            --access public \
+            --no-git-checks \
+            --tag ${{ fromJson(steps.version-check.outputs.result).isPreRelease && 'next' || 'latest' }}
