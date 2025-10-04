@@ -1,6 +1,4 @@
 #ifndef NOMINMAX
-// Fix for: warning C4003: not enough arguments for function-like macro invocation 'max'
-// [C:\projects\node-libcurl\build\node_libcurl.vcxproj]
 #define NOMINMAX
 #endif
 
@@ -11,27 +9,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 #include "Curl.h"
-#include "CurlVersionInfo.h"
-#include "Easy.h"
-#include "Http2PushFrameHeaders.h"
-#include "Multi.h"
-#include "Share.h"
+#include "macros.h"
 
 #include <curl/curl.h>
-#include <nan.h>
-#include <node.h>
 
 #include <iostream>
+#include <napi.h>
+#include <thread>
 
 namespace NodeLibcurl {
 
-static void AtExitCallback(void* arg) {
-  (void)arg;
-
-  curl_global_cleanup();
-}
-
-NAN_MODULE_INIT(Init) {
+// Module initialization function
+Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
   // Some background story on this commented code and other usages of setlocale
   // elsewhere on the addon: Libcurl, when built with libidn2, calls function
   // `idn2_lookup_ul` to retrieve a punycode representation
@@ -53,23 +42,14 @@ NAN_MODULE_INIT(Init) {
   //  NODE_LIBCURL_NO_SETLOCALE.
   // https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/setlocale-wsetlocale?view=vs-2019
   // setlocale(AC_ALL, "")
-  Initialize(target);
-  Easy::Initialize(target);
-  Multi::Initialize(target);
-  Share::Initialize(target);
-  CurlVersionInfo::Initialize(target);
-  Http2PushFrameHeaders::Initialize(target);
 
-#if NODE_VERSION_AT_LEAST(11, 0, 0)
-  auto context = Nan::GetCurrentContext();
-  node::AtExit(node::GetCurrentEnvironment(context), AtExitCallback, NULL);
-#else
-// this will stay until Node.js v10 support is dropped
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  node::AtExit(AtExitCallback, NULL);
-#pragma GCC diagnostic pop
-#endif
+  NODE_LIBCURL_DEBUG_LOG_STATIC(static_cast<napi_env>(env), "NodeLibcurl::InitAll");
+
+  Curl::Init(env, exports);
+  return exports;
 }
 
-NODE_MODULE(node_libcurl, Init);
+// Register the module with N-API
+NODE_API_MODULE(node_libcurl, InitAll)
+
 }  // namespace NodeLibcurl

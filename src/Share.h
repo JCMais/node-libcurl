@@ -5,42 +5,54 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#ifndef NODELIBCURL_SHARE_H
-#define NODELIBCURL_SHARE_H
+#pragma once
+
+#include "macros.h"
 
 #include <curl/curl.h>
-#include <nan.h>
-#include <node.h>
+
+#include <atomic>
+#include <napi.h>
 
 namespace NodeLibcurl {
 
-class Share : public Nan::ObjectWrap {
-  Share();
+// Forward declaration
+class Easy;
 
-  Share(const Share& that);
-  Share& operator=(const Share& that);
-
-  ~Share();
-
-  // instance methods
-  void Dispose();
+class Share : public Napi::ObjectWrap<Share> {
+  friend class Easy;
 
  public:
-  // js object constructor template
-  static Nan::Persistent<v8::FunctionTemplate> constructor;
+  // Constructor for JS object creation
+  static Napi::Function Init(Napi::Env env, Napi::Object exports);
+  Share(const Napi::CallbackInfo& info);
+  ~Share();
 
-  // members
+  // Instance methods
+  Napi::Value SetOpt(const Napi::CallbackInfo& info);
+  Napi::Value Close(const Napi::CallbackInfo& info);
+
+  // Static methods
+  static Napi::Value StrError(const Napi::CallbackInfo& info);
+
+  // Debug support
+  uint64_t GetDebugId() const { return id; }
+
+ private:
+  // Private methods
+  void Dispose();
+
+  // Members
   CURLSH* sh;
   bool isOpen;
+  uint64_t id;
 
-  // export Easy to js
-  static NAN_MODULE_INIT(Initialize);
+  // Static members
+  static std::atomic<uint64_t> nextId;
 
-  // js available methods
-  static NAN_METHOD(New);
-  static NAN_METHOD(SetOpt);
-  static NAN_METHOD(Close);
-  static NAN_METHOD(StrError);
+  // Prevent copying
+  Share(const Share& that) = delete;
+  Share& operator=(const Share& that) = delete;
 };
+
 }  // namespace NodeLibcurl
-#endif

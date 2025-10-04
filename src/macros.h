@@ -60,4 +60,36 @@
     Nan::ThrowError(typeError);                                            \
     tryCatch.ReThrow();                                                    \
   }
+
+// Debug logging macros with zero runtime overhead when disabled
+#ifdef NODE_LIBCURL_DEBUG
+#include <iostream>
+#include <string>
+#include <thread>
+#define NODE_LIBCURL_DEBUG_LOG(obj, message, extra)                   \
+  do {                                                                \
+    std::cout << "[thread: " << std::this_thread::get_id()            \
+              << "] [env: " << static_cast<napi_env>((obj)->Env())    \
+              << "] [id: " << (obj)->GetDebugId() << "] " << message; \
+    std::string extra_str(extra);                                     \
+    if (!extra_str.empty()) {                                         \
+      std::cout << " - " << extra_str;                                \
+    }                                                                 \
+    std::cout << std::endl;                                           \
+  } while (0)
+
+#define NODE_LIBCURL_DEBUG_LOG_STATIC(env, message)                                                \
+  do {                                                                                             \
+    std::cout << "[thread: " << std::this_thread::get_id() << "] [env: " << env << "] " << message \
+              << std::endl;                                                                        \
+  } while (0)
+#else
+#define NODE_LIBCURL_DEBUG_LOG(obj, message, extra) \
+  do {                                              \
+  } while (0)
+#define NODE_LIBCURL_DEBUG_LOG_STATIC(env, message) \
+  do {                                              \
+  } while (0)
+#endif
+
 #endif

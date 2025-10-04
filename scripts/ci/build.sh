@@ -1,7 +1,7 @@
 #!/bin/bash
 # This must be run from the root of the repo, and the following variables must be available:
 #  GIT_COMMIT
-#  GIT_TAG
+#  GIT_REF_NAME
 # In case it's needed to use the vars declared here, this should be sourced on the current shell
 #  . ./scripts/ci/build.sh
 set -euvo pipefail
@@ -11,9 +11,6 @@ curr_dirname=$(dirname "$0")
 . $curr_dirname/utils/gsort.sh
 
 FORCE_REBUILD_DEFAULT=false
-# if [[ ! -z "$GIT_TAG" ]]; then
-#   FORCE_REBUILD_DEFAULT=true
-# fi
 
 export FORCE_REBUILD=${FORCE_REBUILD:-$FORCE_REBUILD_DEFAULT}
 
@@ -100,19 +97,31 @@ if [ "$(uname)" == "Darwin" ]; then
   if ! command -v cmake &>/dev/null; then
     (>&2 echo "Could not find cmake, we need it to build some dependencies (such as brotli)")
     (>&2 echo "You can get it by installing the cmake package:")
-    (>&2 echo "brew install cmake")
+    (>&2 echo "> brew install cmake")
     exit 1
   fi
   if ! command -v autoreconf &>/dev/null; then
     (>&2 echo "Could not find autoreconf, we need it to build some dependencies (such as libssh2)")
     (>&2 echo "You can get it by installing the autoconf package:")
-    (>&2 echo "brew install autoconf")
+    (>&2 echo "> brew install autoconf")
     exit 1
   fi
   if ! command -v aclocal &>/dev/null; then
     (>&2 echo "Could not find aclocal, we need it to build some dependencies (such as libssh2)")
     (>&2 echo "You can get it by installing the automake package:")
-    (>&2 echo "brew install automake")
+    (>&2 echo "> brew install automake")
+    exit 1
+  fi
+fi
+
+if ! command -v soelim &>/dev/null; then
+  (>&2 echo "Could not find soelim, we need it to build some dependencies (such as openldap)")
+  (>&2 echo "You can get it by installing the groff package")
+  if [ "$(uname)" == "Darwin" ]; then
+    (>&2 echo "> brew install groff")
+    exit 1
+  elif [ "$(uname)" == "Linux" ]; then
+    (>&2 echo "> apt-get install groff")
     exit 1
   fi
 fi
@@ -321,16 +330,12 @@ RUN_TESTS=${RUN_TESTS:-"true"}
 if [ -z "$PUBLISH_BINARY" ]; then
   PUBLISH_BINARY=false
   COMMIT_MESSAGE=$(git show -s --format=%B $GIT_COMMIT | tr -d '\n')
-  if [[ $GIT_TAG == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
+  if [[ $GIT_REF_NAME == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
     PUBLISH_BINARY=true;
   fi
 fi
 
 echo "Publish binary is: $PUBLISH_BINARY"
-
-# Configure Yarn cache
-mkdir -p ~/.cache/yarn
-yarn config set cache-folder ~/.cache/yarn
 
 run_tests_electron=false
 has_display=$(xdpyinfo -display $DISPLAY >/dev/null 2>&1 && echo "true" || echo "false")
@@ -344,12 +349,12 @@ elif [ -n "$NWJS_VERSION" ]; then
   dist_url=''
   target="$NWJS_VERSION"
 
-  yarn global add nw-gyp nw@$target
+  pnpm i -g nw-gyp nw@$target
 
   # On macOS node-pre-gyp uses node-webkit instead of nw, see:
   # https://github.com/mapbox/node-pre-gyp/blob/d60bc992d20500e8ceb6fe3242df585a28c56413/lib/testbinary.js#L43
   if [ "$(uname)" == "Darwin" ]; then
-    ln -s $(yarn global bin)/nw $(yarn global bin)/node-webkit
+    ln -s $(pnpm bin --global)/nw $(pnpm bin --global)/node-webkit
   fi
 
 else
@@ -360,9 +365,18 @@ fi
 
 target=`echo $target | sed 's/^v//'`
 # ia32, x64, armv7, etc
-target_arch=${TARGET_ARCH:-"x64"}
+if [[ -z "${TARGET_ARCH:-}" ]]; then
+  case "$(uname -m)" in
+    x86_64) target_arch="x64" ;;
+    aarch64|arm64) target_arch="arm64" ;;
+    armv7l) target_arch="arm" ;;
+    *) target_arch="$(uname -m)" ;;
+  esac
+else
+  target_arch="$TARGET_ARCH"
+fi
 
-NODE_LIBCURL_CPP_STD=${NODE_LIBCURL_CPP_STD:-$(node $curr_dirname/../cpp-std.js)}
+NODE_LIBCURL_CPP_STD=${NODE_LIBCURL_CPP_STD:-"c++20"}
 
 # Build Addon
 export npm_config_curl_config_bin="$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin/curl-config"
@@ -385,7 +399,9 @@ echo "npm_config_dist_url=$npm_config_dist_url"
 echo "npm_config_target=$npm_config_target"
 echo "npm_config_target_arch=$npm_config_target_arch"
 
-yarn install --frozen-lockfile --network-timeout 300000
+pnpm install --frozen-lockfile --fetch-timeout 300000
+
+touch built-and-installed.hidden.txt
 
 if [ "$STOP_ON_INSTALL" == "true" ]; then
   set +uv
@@ -410,40 +426,45 @@ sleep 1
 
 if [ "$RUN_TESTS" == "true" ]; then
   if [ -n "$ELECTRON_VERSION" ]; then
-    [ $run_tests_electron == "true" ] && yarn test:electron || echo "Tests for this version of electron were disabled"
+    [ $run_tests_electron == "true" ] && pnpm test:electron || echo "Tests for this version of electron were disabled"
   elif [ -n "$NWJS_VERSION" ]; then
     echo "No tests available for node-webkit (nw.js)"
   else
-    yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
-    yarn test
+    pnpm ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
+    pnpm test
   fi
+fi
+
+# Create the tarballs
+if [[ "$MACOS_UNIVERSAL_BUILD" == "true" ]]; then
+  # Need to publish two binaries when doing a universal build.
+  #
+  # Could also publish the universal build twice instead, but it might not
+  # play well with electron-builder which will try to lipo native add-ons
+  # for different architectures.
+  # --
+  lipo build/Release/node_libcurl.node -thin x86_64 -output lib/binding/node_libcurl.node
+  lipo build/Release/node_libcurl.node -thin arm64 -output lib/binding/node_libcurl.node
+
+  npm_config_target_arch=arm64 pnpm pregyp package testpackage --verbose
+  npm_config_target_arch=x64 pnpm pregyp package testpackage --verbose
+else
+  pnpm pregyp package testpackage --verbose
 fi
 
 # If we are here, it means the addon worked
 # Check if we need to publish the binaries
+# Notice, this is only useful if publishing locally, as the CI has a separate
+# step defined on the workflow itself, which uses attestations.
 if [[ $PUBLISH_BINARY == true && $LIBCURL_RELEASE == $LATEST_LIBCURL_RELEASE ]]; then
-  echo "Publish binary is true - Testing and publishing package with pregyp"
+  echo "Publish binary is true - Publishing package with pregyp"
   if [[ "$MACOS_UNIVERSAL_BUILD" == "true" ]]; then
-    # Need to publish two binaries when doing a universal build.
-    #
-    # Could also publish the universal build twice instead, but it might not
-    # play well with electron-builder which will try to lipo native add-ons
-    # for different architectures.
-    # --
-    # Build and publish x64 package
-    lipo build/Release/node_libcurl.node -thin x86_64 -output lib/binding/node_libcurl.node
-    npm_config_target_arch=x64 yarn pregyp package testpackage --verbose
-    npm_config_target_arch=x64 node scripts/module-packaging.js --publish \
-      "$(npm_config_target_arch=x64 yarn --silent pregyp reveal staged_tarball --silent)"
-  
-    # Build and publish arm64 package.
-    lipo build/Release/node_libcurl.node -thin arm64 -output lib/binding/node_libcurl.node
-    npm_config_target_arch=arm64 yarn pregyp package --verbose  # Can't testpackage for arm64 yet.
-    npm_config_target_arch=arm64 node scripts/module-packaging.js --publish \
-      "$(npm_config_target_arch=arm64 yarn --silent pregyp reveal staged_tarball --silent)"
+    node scripts/module-packaging.js --publish \
+      "$(npm_config_target_arch=x64 pnpm --silent pregyp reveal staged_tarball --silent)"
+    node scripts/module-packaging.js --publish \
+      "$(npm_config_target_arch=arm64 pnpm --silent pregyp reveal staged_tarball --silent)"
   else
-    yarn pregyp package testpackage --verbose
-    node scripts/module-packaging.js --publish "$(yarn --silent pregyp reveal staged_tarball --silent)"
+    node scripts/module-packaging.js --publish "$(pnpm --silent pregyp reveal staged_tarball --silent)"
   fi
 fi
 
@@ -452,17 +473,17 @@ fi
 INSTALL_RESULT=0
 if [[ $PUBLISH_BINARY == true ]]; then
   echo "Publish binary is true - Testing if it was published correctly"
-  INSTALL_RESULT=$(npm_config_fallback_to_build=false yarn install --frozen-lockfile --network-timeout 300000 > /dev/null)$? || true
+  INSTALL_RESULT=$(npm_config_fallback_to_build=false pnpm install --frozen-lockfile --fetch-timeout 300000 > /dev/null)$? || true
 fi
 if [[ $INSTALL_RESULT != 0 ]]; then
   echo "Failed to install package from npm after being published"
-  node scripts/module-packaging.js --unpublish "$(yarn --silent pregyp reveal hosted_tarball --silent)"
+  node scripts/module-packaging.js --unpublish "$(pnpm --silent pregyp reveal hosted_tarball --silent)"
   false
 fi
 
 # Clean everything
 if [[ $RUN_PREGYP_CLEAN == true ]]; then
-  yarn pregyp clean
+  pnpm pregyp clean
 fi
 
 set +uv

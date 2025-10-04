@@ -7,6 +7,9 @@
 // https://github.com/curl/curl/blob/c4e0be44089/include/curl/curl.h#L2630
 /**
  * @public
+ *
+ * @deprecated This will be removed
+ * TODO(jonathan, changelog): remove it, add to changelog
  */
 export const enum CurlGlobalInit {
   Nothing = 0,

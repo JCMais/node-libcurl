@@ -6,7 +6,7 @@
  */
 
 /**
- * Flags to be used with {@link "Curl".Curl.enable | `Curl#enable`} and {@link "Curl".Curl.disable | `Curl#disable`}
+ * Flags to be used with {@link Curl.enable | `Curl#enable`} and {@link Curl.disable | `Curl#disable`}
  * @public
  */
 export enum CurlFeature {
@@ -83,7 +83,7 @@ export enum CurlFeature {
    *
    * Using this implies `NoDataStorage`.
    *
-   * To control the `highWaterMark` option of the response stream, see {@link "Curl".Curl.setStreamResponseHighWaterMark | `Curl#setStreamResponseHighWaterMark`}
+   * To control the `highWaterMark` option of the response stream, see {@link Curl.setStreamResponseHighWaterMark | `Curl#setStreamResponseHighWaterMark`}
    *
    * @remarks
    *

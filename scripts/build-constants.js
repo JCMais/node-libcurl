@@ -62,7 +62,7 @@ const run = async () => {
       import { CurlSslVersion } from '../enum/CurlSslVersion'
       import { CurlTimeCond } from '../enum/CurlTimeCond'
       import { CurlUseSsl } from '../enum/CurlUseSsl'
-      import { EasyNativeBinding } from "../types/EasyNativeBinding"
+      import { Easy } from "../Easy"
       import { Share } from "../Share"
     `,
   })
@@ -150,10 +150,7 @@ const run = async () => {
     flag: 'a+',
   })
 
-  const easyBindingFilePath = path.resolve(
-    __dirname,
-    '../lib/types/EasyNativeBinding.ts',
-  )
+  const easyBindingFilePath = path.resolve(__dirname, '../lib/types/Easy.ts')
   const curlClassFilePath = path.resolve(__dirname, '../lib/Curl.ts')
 
   createSetOptOverloads(easyBindingFilePath)

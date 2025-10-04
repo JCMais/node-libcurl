@@ -4,39 +4,39 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-#ifndef NODELIBCURL_HTTP_2_PUSH_FRAME_HEADERS_H
-#define NODELIBCURL_HTTP_2_PUSH_FRAME_HEADERS_H
+#pragma once
 
 #include <curl/curl.h>
-#include <nan.h>
-#include <node.h>
+
+#include <napi.h>
 
 namespace NodeLibcurl {
 
-class Http2PushFrameHeaders : public Nan::ObjectWrap {
-  // Private as this can only be created using NewInstance
-  Http2PushFrameHeaders(struct curl_pushheaders* headers, size_t numberOfHeaders);
-  // Copy constructors cannot be used.
-  Http2PushFrameHeaders(const Http2PushFrameHeaders& that);
-  Http2PushFrameHeaders& operator=(const Http2PushFrameHeaders& that);
+// Type tag for curl_pushheaders external
+extern const napi_type_tag HTTP2_PUSH_FRAME_HEADERS_TYPE_TAG;
 
+class Http2PushFrameHeaders : public Napi::ObjectWrap<Http2PushFrameHeaders> {
+ public:
+  static Napi::Function Init(Napi::Env env, Napi::Object exports);
+
+  // Constructor - must be public for ObjectWrap
+  Http2PushFrameHeaders(const Napi::CallbackInfo& info);
+
+ private:
+  // Copy constructors cannot be used
+  Http2PushFrameHeaders(const Http2PushFrameHeaders& that) = delete;
+  Http2PushFrameHeaders& operator=(const Http2PushFrameHeaders& that) = delete;
+
+  // Instance methods
+  Napi::Value GetByIndex(const Napi::CallbackInfo& info);
+  Napi::Value GetByName(const Napi::CallbackInfo& info);
+
+  // Property getters
+  Napi::Value GetNumberOfHeaders(const Napi::CallbackInfo& info);
+
+  // Members
   struct curl_pushheaders* headers;
   size_t numberOfHeaders;
-
-  // js object template
-  static Nan::Persistent<v8::ObjectTemplate> objectTemplate;
-
-  // js available Methods
-  static NAN_METHOD(GetByIndex);
-  static NAN_METHOD(GetByName);
-  static NAN_GETTER(GetterNumberOfHeaders);
-
- public:
-  static v8::Local<v8::Object> NewInstance(struct curl_pushheaders* headers,
-                                           size_t numberOfHeaders);
-
-  static NAN_MODULE_INIT(Initialize);
 };
 
 }  // namespace NodeLibcurl
-#endif

@@ -38,5 +38,8 @@ api/
 
 yarn-error.log
 
-.cache/
+.cache
 compile_commands.json
+
+*.hidden.*
+docs/

@@ -84,7 +84,7 @@ describe('setOpt()', () => {
       try {
         // @ts-expect-error
         curl.setOpt(...optionTuple)
-      } catch (error) {
+      } catch {
         errorsCaught += 1
       }
     }
@@ -192,7 +192,7 @@ describe('setOpt()', () => {
         try {
           // @ts-ignore
           curl.setOpt('HTTPPOST', [{ name: arg }])
-        } catch (error) {
+        } catch {
           invalidArgs = [...invalidArgs, arg === null ? 'null' : typeof arg]
         }
       }

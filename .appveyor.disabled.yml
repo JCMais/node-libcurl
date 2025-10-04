@@ -14,43 +14,22 @@ environment:
   NODE_LIBCURL_POSTINSTALL_SKIP_CLEANUP: 'true'
   matrix:
     # node.js
-    - nodejs_version: '18'
-    - nodejs_version: '20'
-    - nodejs_version: '21'
-    - nodejs_version: '22'
-    # https://github.com/nodejs/nan/pull/979
-    # - nodejs_version: '23'
-    - nodejs_version: '22'
-      ELECTRON_VERSION: '33.2.1'
-    - nodejs_version: '22'
-      ELECTRON_VERSION: '32.2.6'
-    - nodejs_version: '22'
-      ELECTRON_VERSION: '31.7.5'
-    - nodejs_version: '20'
-      ELECTRON_VERSION: '28.3.3'
-    - nodejs_version: '20'
-      ELECTRON_VERSION: '27.1.3'
-    - nodejs_version: '20'
-      ELECTRON_VERSION: '26.6.2'
-    # disabled until nwjs supports newer node-gyp versions + python 3
-    # - nodejs_version: '12'
-    #   NWJS_VERSION: '0.44.5'
-    # - nodejs_version: '12'
-    #   NWJS_VERSION: '0.43.6'
-    # - nodejs_version: '12'
-    #   NWJS_VERSION: '0.42.6'
+    - nodejs_version: '24'
+    # TODO(jonathan, migration): add Node v22
+    - nodejs_version: '24'
+      ELECTRON_VERSION: '38.1.2'
+    # TODO(jonathan, migration): add Electron v37
 
-matrix:
-  allow_failures:
-    - nodejs_version: '21'
-  # exclude:
-  #   - nodejs_version: '23'
-  #     platform: x86
+# matrix:
+#   allow_failures:
+#     - nodejs_version: '25'
+#   # exclude:
+#   #   - nodejs_version: '23'
+#   #     platform: x86
 
 skip_branch_with_pr: true
 
 platform:
-  - x86
   - x64
 
 # git clone depth
@@ -61,7 +40,8 @@ cache:
   - '%USERPROFILE%\.node-gyp'
   - '%USERPROFILE%\.nw-gyp'
   - '%USERPROFILE%\.nw'
-  - '%LOCALAPPDATA%\Yarn\cache'
+  - '%LOCALAPPDATA%\pnpm\store'
+  - '"%LOCALAPPDATA%\pnpm\store" -> pnpm-lock.yaml'
   - '%LOCALAPPDATA%\electron\Cache'
 
 # Install scripts. (runs after repo cloning)
@@ -84,7 +64,12 @@ install:
   # Output useful info for debugging.
   - node --version
   - npm --version
-  - yarn --version
+  - npm install --global corepack@latest
+  - corepack enable
+  - corepack prepare --activate
+  - pnpm --version
+  # Set store path
+  - pnpm config set store-dir "%LOCALAPPDATA%\pnpm\store"
   # Check if we need to publish the package
   - SET PUBLISH_BINARY=false
   # we are creating a empty file named publish
@@ -110,21 +95,21 @@ install:
         $dist_url = "https://electronjs.org/headers"
         $target = $env:ELECTRON_VERSION
 
-        yarn global add electron@${env:ELECTRON_VERSION}
+        npm i -g electron@${env:ELECTRON_VERSION}
 
       } elseif ($null -ne $env:NWJS_VERSION) {
         $runtime = "node-webkit"
         $target = $env:NWJS_VERSION
 
-        yarn global add nw-gyp@3.6.5
-        yarn global add nw@$target
+        npm i -g nw-gyp@3.6.5
+        npm i -g nw@$target
         # We had this issue on nw-gyp 3.6.4
         # https://github.com/nwjs/nw-gyp/issues/116
         # patch tool for Windows
         # https://stackoverflow.com/a/9485089/710693
         pip install patch
         # apply patch to nw-gyp fixing issue
-        python -m patch -d "$(yarn global dir)/node_modules/nw-gyp/src" ./scripts/ci/patches/win_delay_load_hook.cc.patch
+        python -m patch -d "$(pnpm global dir)/node_modules/nw-gyp/src" ./scripts/ci/patches/win_delay_load_hook.cc.patch
 
         $arch = if ($env:PLATFORM -eq "x86") { "ia32" } else { "x64" }
 
@@ -165,7 +150,7 @@ install:
       Write-Host $env:npm_config_target
 
 build_script:
-  - yarn install --frozen-lockfile
+  - pnpm install --frozen-lockfile
   - dir .
 
 # Post-install test scripts.
@@ -178,8 +163,8 @@ test_script:
         if ($null -ne $env:NWJS_VERSION) {
           Write-Host "No tests available for nw.js, skipping tests..."
         } else {
-          yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())"
-          yarn test
+          pnpm exec ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())"
+          pnpm test
         }
       }
 
@@ -200,7 +185,7 @@ after_test:
 on_success:
   - SET INSTALL_RESULT=0
   - set npm_config_fallback_to_build=false
-  - IF "%PUBLISH_BINARY%" == "true" (yarn install --frozen-lockfile)
+  - IF "%PUBLISH_BINARY%" == "true" (pnpm install --frozen-lockfile)
   - IF "%PUBLISH_BINARY%" == "true" (SET INSTALL_RESULT=%ERRORLEVEL%)
   - IF NOT %INSTALL_RESULT% == 0 (for /f "usebackq delims=" %%x in (`node-pre-gyp reveal hosted_tarball --silent`) do node scripts\module-packaging.js --unpublish %%x)
   - IF NOT %INSTALL_RESULT% == 0 (echo "Package unpublished since we got an error while installing it.")

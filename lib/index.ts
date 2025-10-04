@@ -9,10 +9,24 @@
  * @packageDocumentation
  */
 export { Curl } from './Curl'
-export { Easy } from './Easy'
+export { Easy, GetInfoReturn } from './Easy'
+// import { Easy as EasyCls } from './Easy'
+// // @ts-expect-error
+// import type { Easy } from './types'
+// /** @class Easy */
+// export const Easy = EasyCls
+
 export { Multi } from './Multi'
 export { Share } from './Share'
-export { curly, CurlyFunction, CurlyResult } from './curly'
+export {
+  curly,
+  CurlyFunction,
+  CurlyResult,
+  type CurlyHttpMethodCall,
+  type CurlyOptions,
+  type CurlyResponseBodyParsersProperty,
+  type CurlyResponseBodyParser,
+} from './curly'
 
 // enums
 export * from './enum/CurlAuth'
@@ -33,6 +47,7 @@ export * from './enum/CurlIpResolve'
 export * from './enum/CurlNetrc'
 export * from './enum/CurlPause'
 export * from './enum/CurlPipe'
+export * from './enum/CurlPreReqFunc'
 export * from './enum/CurlProgressFunc'
 export * from './enum/CurlProtocol'
 export * from './enum/CurlProxy'
@@ -59,7 +74,16 @@ export {
   CurlOption,
   CurlOptionName,
   CurlOptionValueType,
+  DataCallbackOptions,
+  ProgressCallbackOptions,
+  BlobOptions,
+  type StringListOptions,
 } from './generated/CurlOption'
 export { MultiOption, MultiOptionName } from './generated/MultiOption'
 
-export { FileInfo, Http2PushFrameHeaders, HttpPostField } from './types'
+export {
+  FileInfo,
+  Http2PushFrameHeaders,
+  HttpPostField,
+  CurlVersionInfoNativeBindingObject,
+} from './types'

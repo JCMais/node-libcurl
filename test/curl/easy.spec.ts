@@ -4,16 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { describe, beforeEach, afterEach, it, expect } from 'vitest'
+import { describe, beforeEach, afterEach, it, expect, inject } from 'vitest'
 
 import { Curl, CurlCode, Easy, CurlHttpVersion } from '../../lib'
 import { withCommonTestOptions } from '../helper/commonOptions'
-
-const url = 'http://example.com/'
-
-// This is the only test that does not uses a express server
-// It makes a request to a live server, which can cause issues if there are network problems
-// @TODO Run a server side by side with the test suite to remove the need to make a external request
 
 let curl: Easy
 
@@ -21,7 +15,7 @@ describe('easy', () => {
   beforeEach(() => {
     curl = new Easy()
     withCommonTestOptions(curl)
-    curl.setOpt('URL', url)
+    curl.setOpt('URL', inject('httpServerUrl'))
   })
 
   afterEach(async () => {
@@ -74,7 +68,7 @@ describe('easy', () => {
 
     it('READFUNCTION - should rethrow error', () => {
       const msg = `Error thrown on callback: ${Date.now()}`
-      curl.setOpt('URL', 'https://httpbin.org/put')
+      curl.setOpt('URL', inject('httpsServerUrl') + '/put')
       curl.setOpt('SSL_VERIFYPEER', false)
       curl.setOpt('UPLOAD', true)
       // @ts-ignore
@@ -85,7 +79,7 @@ describe('easy', () => {
     })
 
     it('READFUNCTION - should throw error if has invalid return type', () => {
-      curl.setOpt('URL', 'https://httpbin.org/put')
+      curl.setOpt('URL', inject('httpsServerUrl') + '/put')
       curl.setOpt('SSL_VERIFYPEER', false)
       curl.setOpt('UPLOAD', true)
       // @ts-ignore
@@ -101,7 +95,7 @@ describe('easy', () => {
       'TRAILERFUNCTION - should rethrow error',
       () => {
         const msg = `Error thrown on callback: ${Date.now()}`
-        curl.setOpt('URL', 'https://httpbin.org/put')
+        curl.setOpt('URL', inject('httpsServerUrl') + '/put')
         curl.setOpt('SSL_VERIFYPEER', false)
         curl.setOpt('UPLOAD', true)
         curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])
@@ -126,7 +120,7 @@ describe('easy', () => {
     it.runIf(Curl.isVersionGreaterOrEqualThan(7, 64, 0))(
       'TRAILERFUNCTION - should throw error if has invalid return type',
       () => {
-        curl.setOpt('URL', 'https://httpbin.org/put')
+        curl.setOpt('URL', inject('httpsServerUrl') + '/put')
         curl.setOpt('SSL_VERIFYPEER', false)
         curl.setOpt('UPLOAD', true)
         curl.setOpt('HTTPHEADER', ['x-random-header: random-value'])

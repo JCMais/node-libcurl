@@ -32,7 +32,7 @@ import { CurlSslOpt } from '../enum/CurlSslOpt'
 import { CurlSslVersion } from '../enum/CurlSslVersion'
 import { CurlTimeCond } from '../enum/CurlTimeCond'
 import { CurlUseSsl } from '../enum/CurlUseSsl'
-import { EasyNativeBinding } from '../types/EasyNativeBinding'
+import { Easy } from '../Easy'
 import { Share } from '../Share'
 
 /**
@@ -4176,11 +4176,7 @@ export type CurlOptionValueType = {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_CHUNK_BGN_FUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_CHUNK_BGN_FUNCTION.html)
    */
   CHUNK_BGN_FUNCTION?:
-    | ((
-        this: EasyNativeBinding,
-        fileInfo: FileInfo,
-        remains: number,
-      ) => CurlChunk)
+    | ((this: Easy, fileInfo: FileInfo, remains: number) => CurlChunk)
     | null
 
   /**
@@ -4189,11 +4185,7 @@ export type CurlOptionValueType = {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_CHUNK_BGN_FUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_CHUNK_BGN_FUNCTION.html)
    */
   chunkBgnFunction?:
-    | ((
-        this: EasyNativeBinding,
-        fileInfo: FileInfo,
-        remains: number,
-      ) => CurlChunk)
+    | ((this: Easy, fileInfo: FileInfo, remains: number) => CurlChunk)
     | null
 
   /**
@@ -4201,14 +4193,14 @@ export type CurlOptionValueType = {
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_CHUNK_END_FUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_CHUNK_END_FUNCTION.html)
    */
-  CHUNK_END_FUNCTION?: ((this: EasyNativeBinding) => CurlChunk) | null
+  CHUNK_END_FUNCTION?: ((this: Easy) => CurlChunk) | null
 
   /**
    * Callback for wildcard download end of chunk.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_CHUNK_END_FUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_CHUNK_END_FUNCTION.html)
    */
-  chunkEndFunction?: ((this: EasyNativeBinding) => CurlChunk) | null
+  chunkEndFunction?: ((this: Easy) => CurlChunk) | null
 
   /**
    * Only connect, nothing else.
@@ -4383,18 +4375,14 @@ export type CurlOptionValueType = {
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_DEBUGFUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_DEBUGFUNCTION.html)
    */
-  DEBUGFUNCTION?:
-    | ((this: EasyNativeBinding, type: CurlInfoDebug, data: Buffer) => 0)
-    | null
+  DEBUGFUNCTION?: ((this: Easy, type: CurlInfoDebug, data: Buffer) => 0) | null
 
   /**
    * Callback for debug information.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_DEBUGFUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_DEBUGFUNCTION.html)
    */
-  debugFunction?:
-    | ((this: EasyNativeBinding, type: CurlInfoDebug, data: Buffer) => 0)
-    | null
+  debugFunction?: ((this: Easy, type: CurlInfoDebug, data: Buffer) => 0) | null
 
   /**
    * Default protocol.
@@ -4654,11 +4642,7 @@ export type CurlOptionValueType = {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_FNMATCH_FUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_FNMATCH_FUNCTION.html)
    */
   FNMATCH_FUNCTION?:
-    | ((
-        this: EasyNativeBinding,
-        pattern: string,
-        value: string,
-      ) => CurlFnMatchFunc)
+    | ((this: Easy, pattern: string, value: string) => CurlFnMatchFunc)
     | null
 
   /**
@@ -4667,11 +4651,7 @@ export type CurlOptionValueType = {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_FNMATCH_FUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_FNMATCH_FUNCTION.html)
    */
   fnMatchFunction?:
-    | ((
-        this: EasyNativeBinding,
-        pattern: string,
-        value: string,
-      ) => CurlFnMatchFunc)
+    | ((this: Easy, pattern: string, value: string) => CurlFnMatchFunc)
     | null
 
   /**
@@ -4932,12 +4912,7 @@ export type CurlOptionValueType = {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html)
    */
   HEADERFUNCTION?:
-    | ((
-        this: EasyNativeBinding,
-        data: Buffer,
-        size: number,
-        nmemb: number,
-      ) => number)
+    | ((this: Easy, data: Buffer, size: number, nmemb: number) => number)
     | null
 
   /**
@@ -4946,12 +4921,7 @@ export type CurlOptionValueType = {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html)
    */
   headerFunction?:
-    | ((
-        this: EasyNativeBinding,
-        data: Buffer,
-        size: number,
-        nmemb: number,
-      ) => number)
+    | ((this: Easy, data: Buffer, size: number, nmemb: number) => number)
     | null
 
   /**
@@ -5006,9 +4976,7 @@ export type CurlOptionValueType = {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_HSTSREADFUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_HSTSREADFUNCTION.html)
    */
   HSTSREADFUNCTION?:
-    | ((
-        this: EasyNativeBinding,
-      ) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])
+    | ((this: Easy) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])
     | null
 
   /**
@@ -5021,9 +4989,7 @@ export type CurlOptionValueType = {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_HSTSREADFUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_HSTSREADFUNCTION.html)
    */
   hstsReadFunction?:
-    | ((
-        this: EasyNativeBinding,
-      ) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])
+    | ((this: Easy) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])
     | null
 
   /**
@@ -5033,7 +4999,7 @@ export type CurlOptionValueType = {
    */
   HSTSWRITEFUNCTION?:
     | ((
-        this: EasyNativeBinding,
+        this: Easy,
         cacheEntry: CurlHstsCacheEntry,
         cacheCount: CurlHstsCacheCount,
       ) => any)
@@ -5046,7 +5012,7 @@ export type CurlOptionValueType = {
    */
   hstsWriteFunction?:
     | ((
-        this: EasyNativeBinding,
+        this: Easy,
         cacheEntry: CurlHstsCacheEntry,
         cacheCount: CurlHstsCacheCount,
       ) => any)
@@ -5871,7 +5837,7 @@ export type CurlOptionValueType = {
    */
   PREREQFUNCTION?:
     | ((
-        this: EasyNativeBinding,
+        this: Easy,
         connPrimaryIp: string,
         connLocalIp: string,
         connPrimaryPort: number,
@@ -5886,7 +5852,7 @@ export type CurlOptionValueType = {
    */
   preReqFunction?:
     | ((
-        this: EasyNativeBinding,
+        this: Easy,
         connPrimaryIp: string,
         connLocalIp: string,
         connPrimaryPort: number,
@@ -5901,7 +5867,7 @@ export type CurlOptionValueType = {
    */
   PROGRESSFUNCTION?:
     | ((
-        this: EasyNativeBinding,
+        this: Easy,
         dltotal: number,
         dlnow: number,
         ultotal: number,
@@ -5916,7 +5882,7 @@ export type CurlOptionValueType = {
    */
   progressFunction?:
     | ((
-        this: EasyNativeBinding,
+        this: Easy,
         dltotal: number,
         dlnow: number,
         ultotal: number,
@@ -6490,12 +6456,7 @@ export type CurlOptionValueType = {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html)
    */
   READFUNCTION?:
-    | ((
-        this: EasyNativeBinding,
-        data: Buffer,
-        size: number,
-        nmemb: number,
-      ) => number)
+    | ((this: Easy, data: Buffer, size: number, nmemb: number) => number)
     | null
 
   /**
@@ -6504,12 +6465,7 @@ export type CurlOptionValueType = {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html)
    */
   readFunction?:
-    | ((
-        this: EasyNativeBinding,
-        data: Buffer,
-        size: number,
-        nmemb: number,
-      ) => number)
+    | ((this: Easy, data: Buffer, size: number, nmemb: number) => number)
     | null
 
   /**
@@ -6727,18 +6683,14 @@ export type CurlOptionValueType = {
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_SEEKFUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_SEEKFUNCTION.html)
    */
-  SEEKFUNCTION?:
-    | ((this: EasyNativeBinding, offset: number, origin: number) => number)
-    | null
+  SEEKFUNCTION?: ((this: Easy, offset: number, origin: number) => number) | null
 
   /**
    * Callback for seek operations.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_SEEKFUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_SEEKFUNCTION.html)
    */
-  seekFunction?:
-    | ((this: EasyNativeBinding, offset: number, origin: number) => number)
-    | null
+  seekFunction?: ((this: Easy, offset: number, origin: number) => number) | null
 
   /**
    * Timeout for server responses.
@@ -7445,14 +7397,14 @@ export type CurlOptionValueType = {
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_TRAILERFUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_TRAILERFUNCTION.html)
    */
-  TRAILERFUNCTION?: ((this: EasyNativeBinding) => string[] | false) | null
+  TRAILERFUNCTION?: ((this: Easy) => string[] | false) | null
 
   /**
    * Set callback for sending trailing headers.
    *
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_TRAILERFUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_TRAILERFUNCTION.html)
    */
-  trailerFunction?: ((this: EasyNativeBinding) => string[] | false) | null
+  trailerFunction?: ((this: Easy) => string[] | false) | null
 
   /**
    * Request Transfer-Encoding.
@@ -7656,12 +7608,7 @@ export type CurlOptionValueType = {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html)
    */
   WRITEFUNCTION?:
-    | ((
-        this: EasyNativeBinding,
-        data: Buffer,
-        size: number,
-        nmemb: number,
-      ) => number)
+    | ((this: Easy, data: Buffer, size: number, nmemb: number) => number)
     | null
 
   /**
@@ -7670,12 +7617,7 @@ export type CurlOptionValueType = {
    * Official libcurl documentation: : [https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html](https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html)
    */
   writeFunction?:
-    | ((
-        this: EasyNativeBinding,
-        data: Buffer,
-        size: number,
-        nmemb: number,
-      ) => number)
+    | ((this: Easy, data: Buffer, size: number, nmemb: number) => number)
     | null
 
   /**
@@ -7685,7 +7627,7 @@ export type CurlOptionValueType = {
    */
   XFERINFOFUNCTION?:
     | ((
-        this: EasyNativeBinding,
+        this: Easy,
         dltotal: number,
         dlnow: number,
         ultotal: number,
@@ -7700,7 +7642,7 @@ export type CurlOptionValueType = {
    */
   xferInfoFunction?:
     | ((
-        this: EasyNativeBinding,
+        this: Easy,
         dltotal: number,
         dlnow: number,
         ultotal: number,

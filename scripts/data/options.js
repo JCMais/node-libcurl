@@ -60,33 +60,31 @@ const optionKindMap = {
 
 const optionKindValueMap = {
   dataCallback:
-    '((this: EasyNativeBinding, data: Buffer, size: number, nmemb: number) => number)',
+    '((this: Easy, data: Buffer, size: number, nmemb: number) => number)',
   progressCallback:
-    '((this: EasyNativeBinding, dltotal: number,dlnow: number,ultotal: number,ulnow: number) => number | CurlProgressFunc)',
+    '((this: Easy, dltotal: number,dlnow: number,ultotal: number,ulnow: number) => number | CurlProgressFunc)',
   stringList: 'string[]',
   blob: 'ArrayBuffer | Buffer | string',
   /* @TODO Add type definitions, they are on Curl.chunk */
   CHUNK_BGN_FUNCTION:
-    '((this: EasyNativeBinding, fileInfo: FileInfo, remains: number) => CurlChunk)',
+    '((this: Easy, fileInfo: FileInfo, remains: number) => CurlChunk)',
   /* @TODO Add type definitions, they are on Curl.chunk */
-  CHUNK_END_FUNCTION: '((this: EasyNativeBinding) => CurlChunk)',
+  CHUNK_END_FUNCTION: '((this: Easy) => CurlChunk)',
   /* @TODO Add type definitions, they are on Curl.info.debug */
-  DEBUGFUNCTION:
-    '((this: EasyNativeBinding, type: CurlInfoDebug, data: Buffer) => 0)',
+  DEBUGFUNCTION: '((this: Easy, type: CurlInfoDebug, data: Buffer) => 0)',
   /* @TODO Add type definitions, they are on Curl.fnmatchfunc */
   FNMATCH_FUNCTION:
-    '((this: EasyNativeBinding, pattern: string, value: string) => CurlFnMatchFunc)',
+    '((this: Easy, pattern: string, value: string) => CurlFnMatchFunc)',
   HSTSREADFUNCTION:
-    '((this: EasyNativeBinding) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])',
+    '((this: Easy) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])',
   HSTSWRITEFUNCTION:
-    '((this: EasyNativeBinding, cacheEntry: CurlHstsCacheEntry, cacheCount: CurlHstsCacheCount) => any)',
+    '((this: Easy, cacheEntry: CurlHstsCacheEntry, cacheCount: CurlHstsCacheCount) => any)',
   PREREQFUNCTION:
-    '((this: EasyNativeBinding, connPrimaryIp: string, connLocalIp: string, connPrimaryPort: number, conLocalPort: number) => CurlPreReqFunc)',
+    '((this: Easy, connPrimaryIp: string, connLocalIp: string, connPrimaryPort: number, conLocalPort: number) => CurlPreReqFunc)',
   HTTPPOST: 'HttpPostField[]',
-  TRAILERFUNCTION: '((this: EasyNativeBinding) => string[] | false)',
+  TRAILERFUNCTION: '((this: Easy) => string[] | false)',
   /* @TODO Add CURL_SEEKFUNC_* type definitions */
-  SEEKFUNCTION:
-    '((this: EasyNativeBinding, offset: number, origin: number) => number)',
+  SEEKFUNCTION: '((this: Easy, offset: number, origin: number) => number)',
   SHARE: 'Share',
 
   // enums

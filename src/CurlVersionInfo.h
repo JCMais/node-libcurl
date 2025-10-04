@@ -4,39 +4,39 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-#ifndef NODELIBCURL_CURLVERSIONINFO_H
-#define NODELIBCURL_CURLVERSIONINFO_H
+#pragma once
 
-#include "Curl.h"
+#include "macros.h"
 
 #include <curl/curl.h>
-#include <nan.h>
-#include <node.h>
+
+#include <napi.h>
+#include <string>
+#include <vector>
 
 namespace NodeLibcurl {
 
 class CurlVersionInfo {
-  // instance methods
-  CurlVersionInfo();
-  ~CurlVersionInfo();
-
-  CurlVersionInfo(const CurlVersionInfo& that);
-  CurlVersionInfo& operator=(const CurlVersionInfo& that);
-
+ private:
   struct feature {
     const char* name;
     int bitmask;
   };
 
   static const std::vector<feature> features;
-
   static const curl_version_info_data* versionInfo;
 
- public:
-  static NAN_MODULE_INIT(Initialize);
+  // Helper function for setting properties
+  template <typename TValue>
+  static void SetObjPropertyToNullOrValue(Napi::Object obj, const std::string& key, TValue value);
 
-  static NAN_GETTER(GetterProtocols);
-  static NAN_GETTER(GetterFeatures);
+ public:
+  // Initialize the CurlVersionInfo object for export
+  static void Init(Napi::Env env, Napi::Object exports);
+
+  // Property getters
+  static Napi::Value GetProtocols(const Napi::CallbackInfo& info);
+  static Napi::Value GetFeatures(const Napi::CallbackInfo& info);
 };
+
 }  // namespace NodeLibcurl
-#endif
