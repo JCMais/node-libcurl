@@ -157,8 +157,7 @@ jobs:
             --verify-tag \
             --prerelease=$IS_PRE_RELEASE \
             --latest=$IS_LATEST \
-            --title=v$VERSION \
-            --draft
+            --title=v$VERSION
 
       - name: Ensure clean git state
         run: git diff --exit-code
