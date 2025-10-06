@@ -107,6 +107,14 @@ jobs:
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
     steps:
+      - name: Should publish binary?
+        id: should-publish
+        run: |
+          if [ "${{ inputs.publish-binary }}" = "true" ] || [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "result=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=false" >> "$GITHUB_OUTPUT"
+          fi
       - if: matrix.os == 'alpine'
         name: Install Alpine Packages
         shell: sh
@@ -119,6 +127,7 @@ jobs:
           perl linux-headers \
           autoconf automake libtool \
           texinfo flex bison build-base libedit-dev mandoc-soelim
+
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
         run: brew install coreutils wget automake libtool cmake gnu-sed m4 groff
@@ -219,26 +228,26 @@ jobs:
 
       - name: Create attestations
         uses: actions/attest-build-provenance@v3
-        if: inputs.publish-binary
+        if: steps.should-publish.outputs.result == 'true'
         with:
           subject-path: 'build/**/node_libcurl-*.tar.gz'
 
       - name: 'Publish Binary [macos arm64]'
-        if: runner.os == 'macOS' && inputs.publish-binary
+        if: runner.os == 'macOS' && steps.should-publish.outputs.result == 'true'
         env:
           npm_config_target_arch: arm64
         run: |
           node scripts/module-packaging.js --publish "$(pnpm --silent pregyp reveal staged_tarball --silent)"
 
       - name: 'Publish Binary [macos x64]'
-        if: runner.os == 'macOS' && inputs.publish-binary
+        if: runner.os == 'macOS' && steps.should-publish.outputs.result == 'true'
         env:
           npm_config_target_arch: x64
         run: |
           node scripts/module-packaging.js --publish "$(pnpm --silent pregyp reveal staged_tarball --silent)"
 
       - name: 'Publish Binary [non macos]'
-        if: runner.os != 'macOS' && inputs.publish-binary
+        if: runner.os != 'macOS' && steps.should-publish.outputs.result == 'true'
         run: |
           node scripts/module-packaging.js --publish "$(pnpm --silent pregyp reveal staged_tarball --silent)"
 
