@@ -43,3 +43,13 @@ compile_commands.json
 
 *.hidden.*
 docs/
+
+# vcpkg
+/deps/vcpkg/
+/vcpkg_installed/
+
+# ignore main vcpkg config, as we use a template file
+vcpkg.json
+# Keep other vcpkg config
+!/vcpkg-configuration.json
+!/overlays/

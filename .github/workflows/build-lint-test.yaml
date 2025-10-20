@@ -8,7 +8,7 @@ on:
   pull_request:
 
 env:
-  LATEST_LIBCURL_RELEASE: 7.86.0
+  LATEST_LIBCURL_RELEASE: 8.16.0
   OLDEST_LIBCURL_RELEASE: 7.77.0
   NODE_LIBCURL_CPP_STD: c++20
   # https://www.electronjs.org/docs/latest/tutorial/installation#cache

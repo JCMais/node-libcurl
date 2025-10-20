@@ -7,9 +7,9 @@ The idea is just to hit some webpage  doing a GET request to `/` and receiving t
 
 For libraries that do not return the data as string, code to do that should be added, as is the case with Node.js `http.request`, `node-fetch` and `node-libcurl.Easy`.
 
-A local server can be started with `yarn start-server`.
+A local server can be started with `pnpm start-server`.
 
-Benchmark can be started with `yarn start`.
+Benchmark can be started with `pnpm start`.
 
 ### Results
 #### Win64 i7-7700HQ 3.4GHz

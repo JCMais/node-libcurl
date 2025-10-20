@@ -73,6 +73,9 @@ class Curl {
   Napi::FunctionReference Http2PushFrameHeadersConstructor;
   Napi::Env env;
 
+  std::string caCertificatesData;
+  struct curl_blob caCertificatesBlob;
+
   void AdjustHandleMemory(CurlHandleType handleType, int delta);
 
   static Napi::Object Init(Napi::Env env, Napi::Object exports);
@@ -87,6 +90,8 @@ class Curl {
   int64_t addonAllocatedMemory;
   std::unordered_map<CurlHandleType, int> activeHandleCount = {
       {CURL_HANDLE_TYPE_EASY, 0}, {CURL_HANDLE_TYPE_MULTI, 0}, {CURL_HANDLE_TYPE_SHARE, 0}};
+
+  void InitTLS();
 };
 
 }  // namespace NodeLibcurl

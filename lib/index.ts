@@ -8,6 +8,8 @@
  * node-libcurl
  * @packageDocumentation
  */
+import './moduleSetup'
+
 export { Curl } from './Curl'
 export { Easy, GetInfoReturn } from './Easy'
 // import { Easy as EasyCls } from './Easy'
@@ -44,6 +46,7 @@ export * from './enum/CurlHsts'
 export * from './enum/CurlHttpVersion'
 export * from './enum/CurlInfoDebug'
 export * from './enum/CurlIpResolve'
+export * from './enum/CurlMultiNetworkChanged'
 export * from './enum/CurlNetrc'
 export * from './enum/CurlPause'
 export * from './enum/CurlPipe'
@@ -61,6 +64,7 @@ export * from './enum/CurlSshAuth'
 export * from './enum/CurlSslOpt'
 export * from './enum/CurlSslVersion'
 export * from './enum/CurlTimeCond'
+export * from './enum/CurlUploadFlag'
 export * from './enum/CurlUseSsl'
 export * from './enum/CurlVersion'
 export * from './enum/CurlWriteFunc'

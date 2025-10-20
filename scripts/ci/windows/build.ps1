@@ -45,13 +45,15 @@ try {
     Write-Warning "Failed to update hosts file: $($_.Exception.Message)"
 }
 
-# Install NASM (needed for OpenSSL compilation)
-Write-Host "Installing NASM..." -ForegroundColor Blue
+# Git is used for a couple of steps
+Write-Host "Git Check..." -ForegroundColor Blue
 try {
-    choco install nasm -y --no-progress
-    $env:PATH = "$env:PROGRAMFILES\NASM;$env:PATH"
+    # vcpkg will be set up by the preinstall script
+    # Just verify git is available for vcpkg bootstrap
+    $gitVersion = git --version
+    Write-Host "Git version: $gitVersion" -ForegroundColor Cyan
 } catch {
-    Write-Error "Failed to install NASM: $($_.Exception.Message)"
+    Write-Error "Git is required but not found in PATH: $($_.Exception.Message)"
 }
 
 # Display system information
@@ -97,23 +99,8 @@ if (-not $env:PUBLISH_BINARY) {
     Write-Host "Binary publish setting overridden via environment variable: $env:PUBLISH_BINARY" -ForegroundColor Cyan
 }
 
-# Initialize git submodules for curl-for-windows dependencies
-Write-Host "Initializing git submodules..." -ForegroundColor Blue
-git submodule update --init --recursive
-
-# Install Python dependencies
-Write-Host "Setting up Python environment..." -ForegroundColor Blue
-python -m pip install --upgrade pip
-try {
-    python -c "import distutils"
-} catch {
-    Write-Host "Installing setuptools..." -ForegroundColor Blue
-    pip install setuptools
-}
-
-# Configure curl-for-windows dependencies
-Write-Host "Configuring curl-for-windows dependencies..." -ForegroundColor Blue
-python deps\curl-for-windows\configure.py
+# Note: vcpkg setup will be handled by the preinstall script in package.json
+# No need for git submodules or Python configuration anymore
 
 # Set up build environment variables
 Write-Host "Setting up build environment..." -ForegroundColor Blue

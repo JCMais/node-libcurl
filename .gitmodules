@@ -1,5 +1,4 @@
-[submodule "deps/curl-for-windows"]
-	path = deps/curl-for-windows
-	url = https://github.com/JCMais/curl-for-windows.git
+[submodule "vcpkg"]
+	path   = vcpkg
 	ignore = dirty
-	branch = master
+	url 	 = https://github.com/microsoft/vcpkg.git

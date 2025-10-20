@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { describe, beforeEach, afterEach, it, expect } from 'vitest'
-import tls from 'tls'
 
 import {
   Curl,
@@ -52,11 +51,6 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 74, 0))('Callbacks', () => {
     curl = new Curl()
     withCommonTestOptions(curl)
     curl.setOpt('URL', url)
-    if (process.version.startsWith('v10.')) {
-      curl.setOpt('SSL_VERIFYPEER', false)
-    } else {
-      curl.setOpt('CAINFO_BLOB', tls.rootCertificates.join('\n'))
-    }
   })
 
   afterEach(() => {
@@ -279,17 +273,28 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 74, 0))('Callbacks', () => {
           expire: false,
         },
         {
-          host: 'a'.repeat(1024),
+          host: '{{TOO_LONG}}',
         },
       ]
 
       const initialValuesLength = values.length
 
       // @ts-expect-error this should give an error because the values we are returning are not the ones HSTSREADFUNCTION expects
-      curl.setOpt('HSTSREADFUNCTION', function () {
+      curl.setOpt('HSTSREADFUNCTION', function ({ maxHostLengthBytes }) {
         hstsReadFunctionCallCount++
 
-        return values.pop() ?? null
+        const result = values.pop() ?? null
+
+        if (
+          !!result &&
+          typeof result === 'object' &&
+          typeof result.host === 'string' &&
+          result.host.includes('{{TOO_LONG}}')
+        ) {
+          result.host = 'a'.repeat(maxHostLengthBytes + 1)
+        }
+
+        return result
       })
 
       await new Promise<void>((resolve, reject) => {
@@ -317,12 +322,16 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 74, 0))('Callbacks', () => {
             return
           }
 
-          expect(error.message).toMatch(/fix the HSTS callback/)
-          expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+          try {
+            expect(error.message).toMatch(/fix the HSTS callback/)
+            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+            expect(hstsReadFunctionCallCount).toBe(onErrorCallCount)
 
-          expect(hstsReadFunctionCallCount).toBe(onErrorCallCount)
-
-          curl.perform()
+            console.log('Calling perform again!')
+            curl.perform()
+          } catch (error) {
+            reject(error)
+          }
         })
 
         curl.perform()

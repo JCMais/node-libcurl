@@ -20,13 +20,18 @@ const retrieveConstantList = async ({ url, constantPrefix, blacklist }) => {
     .map((i, el) => {
       const $descriptionEl = $(el).parent().next()
 
-      $descriptionEl.find('a').remove()
+      $descriptionEl.find('a').replaceWith(function () {
+        return $(this).text()
+      })
 
       let description = $descriptionEl
         .text()
         .trim()
         .replace(/See$/, '')
         .replace(/>/g, '\\>')
+        .replace(/See [A-Z_]+$/, '')
+        .replace(/(\S.+)CURLOPT_[\w_]+$/, '$1')
+        .replace('We recommend using curl_easy_header instead.', '')
         .trim()
 
       const constantOriginal = $(el).text()

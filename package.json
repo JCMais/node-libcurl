@@ -28,7 +28,9 @@
     "dist",
     "scripts",
     "src",
-    "LIBCURL_VERSION_WIN_DEPS"
+    "vcpkg.template.json",
+    "vcpkg-configuration.json",
+    "overlays"
   ],
   "binary": {
     "module_name": "node_libcurl",
@@ -50,6 +52,7 @@
     "gen:compile_commands:release": "node-pre-gyp -- configure -f compile_commands_json",
     "gen:constants": "node scripts/build-constants.js",
     "gen:docs": "typedoc",
+    "preinstall": "node scripts/vcpkg-setup.js",
     "install": "node-pre-gyp install --fallback-to-build",
     "postinstall": "node scripts/postinstall",
     "lint": "eslint lib/ scripts/ test/ examples/",

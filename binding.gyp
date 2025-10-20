@@ -76,9 +76,15 @@
                 '/std:<(node_libcurl_cpp_std)',
                 '/MP', #compile across multiple CPUs
               ],
+              "ExceptionHandling": 1, 
             },
             'VCLinkerTool': {
               'GenerateDebugInformation': 'true',
+              'AdditionalOptions': [
+                '/FORCE:MULTIPLE',
+                # Symbol already defined. Impossible to avoid given Node.js exposes OpenSSL symbols from their own build.
+                '/IGNORE:4006'
+              ],
             },
           },
           'configurations': {
@@ -94,22 +100,38 @@
                   'EnableFunctionLevelLinking': 'true',
                   'EnableIntrinsicFunctions': 'true',
                   'WarnAsError': 'true',
+                  'RuntimeLibrary': 2,
                 }
               }
             },
             'Debug': {
               'msvs_settings': {
                 'VCCLCompilerTool': {
-                  'WarnAsError': 'false'
+                  'WarnAsError': 'false',
+                  'RuntimeLibrary': 3,
                 }
               }
             }
           },
           'dependencies': [
-            '<!@(node "<(module_root_dir)/scripts/retrieve-win-deps.js")'
+            '<!@(node "<(module_root_dir)/scripts/openssl-disable.js")'
           ],
           'defines': [
             'CURL_STATICLIB'
+          ],
+          'conditions': [
+            ['curl_include_dirs==""', {
+              'include_dirs': [
+                '<!@(node "<(module_root_dir)/scripts/vcpkg-get-info.js" --include-dir)'
+              ],
+              'libraries': [
+                '<!@(node "<(module_root_dir)/scripts/vcpkg-get-info.js" --libs)'
+              ]
+            }],
+            ['curl_include_dirs!=""', {
+              'include_dirs': ['<@(curl_include_dirs)'],
+              'libraries': ['<@(curl_libraries)']
+            }]
           ]
         }, { # OS != "win"
             # Use level 2 optimizations

@@ -76,7 +76,7 @@ const optionKindValueMap = {
   FNMATCH_FUNCTION:
     '((this: Easy, pattern: string, value: string) => CurlFnMatchFunc)',
   HSTSREADFUNCTION:
-    '((this: Easy) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])',
+    '((this: Easy, options: { maxHostLengthBytes: number }) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])',
   HSTSWRITEFUNCTION:
     '((this: Easy, cacheEntry: CurlHstsCacheEntry, cacheCount: CurlHstsCacheCount) => any)',
   PREREQFUNCTION:

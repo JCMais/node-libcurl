@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(test:*)",
+      "Bash(pnpm pregyp:*)",
+      "Bash(node:*)",
+      "Read(//f/open-source/vcpkg/**)",
+      "WebSearch",
+      "WebFetch(domain:curl.se)",
+      "Bash(chmod:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "fast-markdown"
+  ]
+}
