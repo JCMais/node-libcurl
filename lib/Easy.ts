@@ -4,6 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import './moduleSetup'
+
 import { Share } from './Share'
 import {
   CurlOptionName,
@@ -224,7 +226,10 @@ declare class Easy {
   setOpt(
     option: 'HSTSREADFUNCTION',
     value:
-      | ((this: Easy) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])
+      | ((
+          this: Easy,
+          options: { maxHostLengthBytes: number },
+        ) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])
       | null,
   ): CurlCode
   /**

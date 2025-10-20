@@ -150,14 +150,14 @@ const run = async () => {
     flag: 'a+',
   })
 
-  const easyBindingFilePath = path.resolve(__dirname, '../lib/types/Easy.ts')
+  const easyBindingFilePath = path.resolve(__dirname, '../lib/Easy.ts')
   const curlClassFilePath = path.resolve(__dirname, '../lib/Curl.ts')
 
   createSetOptOverloads(easyBindingFilePath)
   createSetOptOverloads(curlClassFilePath, 'this')
 
   execSync(
-    `yarn prettier ${curlOptionsFilePath} ${curlInfoFilePath} ${multiOptionFilePath} ${easyBindingFilePath} ${curlClassFilePath}`,
+    `pnpm prettier ${curlOptionsFilePath} ${curlInfoFilePath} ${multiOptionFilePath} ${easyBindingFilePath} ${curlClassFilePath}`,
   )
 }
 

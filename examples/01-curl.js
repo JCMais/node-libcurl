@@ -22,6 +22,8 @@ Curl.defaultUserAgent = null
 
 const curl = new Curl()
 
+console.log(Curl.getVersion())
+
 // if you want to change the user agent for an already created instance you will need
 //  to use their respective libcurl option, USERAGENT
 

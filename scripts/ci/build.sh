@@ -4,6 +4,10 @@
 #  GIT_REF_NAME
 # In case it's needed to use the vars declared here, this should be sourced on the current shell
 #  . ./scripts/ci/build.sh
+
+# Eventually this will be replaced by vcpkg, only thing remaining is for vcpkg to support
+# musl: https://github.com/microsoft/vcpkg/issues/21218
+
 set -euvo pipefail
 
 curr_dirname=$(dirname "$0")
@@ -194,6 +198,39 @@ echo "Building nghttp2 v$NGHTTP2_RELEASE"
 ./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER >$LOGS_FOLDER/build-nghttp2.log 2>&1
 export NGHTTP2_BUILD_FOLDER=$NGHTTP2_DEST_FOLDER/build/$NGHTTP2_RELEASE
 ls -al $NGHTTP2_BUILD_FOLDER/lib
+
+###################
+# Build HTTP/3 deps (nghttp3 and ngtcp2) if OpenSSL >= 3.5
+###################
+# Check if OpenSSL version is >= 3.5.0
+is_openssl_ge_3_5_0=0
+(printf '%s\n%s' "3.5.0" "$OPENSSL_RELEASE" | $gsort -CV) && is_openssl_ge_3_5_0=1 || true
+
+if [ "$is_openssl_ge_3_5_0" == "1" ]; then
+  echo "OpenSSL version $OPENSSL_RELEASE is >= 3.5.0, building HTTP/3 support (nghttp3 and ngtcp2)"
+
+  ###################
+  # Build nghttp3
+  ###################
+  NGHTTP3_RELEASE=${NGHTTP3_RELEASE:-1.6.0}
+  NGHTTP3_DEST_FOLDER=$PREFIX_DIR/deps/nghttp3
+  echo "Building nghttp3 v$NGHTTP3_RELEASE"
+  ./scripts/ci/build-nghttp3.sh $NGHTTP3_RELEASE $NGHTTP3_DEST_FOLDER >$LOGS_FOLDER/build-nghttp3.log 2>&1
+  export NGHTTP3_BUILD_FOLDER=$NGHTTP3_DEST_FOLDER/build/$NGHTTP3_RELEASE
+  ls -al $NGHTTP3_BUILD_FOLDER/lib
+
+  ###################
+  # Build ngtcp2
+  ###################
+  NGTCP2_RELEASE=${NGTCP2_RELEASE:-1.9.1}
+  NGTCP2_DEST_FOLDER=$PREFIX_DIR/deps/ngtcp2
+  echo "Building ngtcp2 v$NGTCP2_RELEASE"
+  ./scripts/ci/build-ngtcp2.sh $NGTCP2_RELEASE $NGTCP2_DEST_FOLDER >$LOGS_FOLDER/build-ngtcp2.log 2>&1
+  export NGTCP2_BUILD_FOLDER=$NGTCP2_DEST_FOLDER/build/$NGTCP2_RELEASE
+  ls -al $NGTCP2_BUILD_FOLDER/lib
+else
+  echo "OpenSSL version $OPENSSL_RELEASE is < 3.5.0, skipping HTTP/3 support (nghttp3 and ngtcp2)"
+fi
 
 ###################
 # Build GSS API Lib

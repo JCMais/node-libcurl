@@ -11,15 +11,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Mininum supported libcurl version is now libcurl 7.77.0.
 - Windows 32-bit support is now dropped.
 - Minimum supported versions:
-  - Node.js >= v22.14.0.
+  - Node.js >= v22.20.0 (which bundles OpenSSL 3.5.2).
   - Electron >= v37.0.0.
   - libcurl >= v7.77.0.
   - Ubuntu >= v22.04.
   - Alpine >= 3.21
   - C++ compilers supporting c++20
+- The prebuilt binary is now built with libcurl 8.5.0. Every breaking change introduced by libcurl 8 is also a breaking change for this version. See 
+- Every Easy handle is now initialized with default CA certificates from Node.js's tls module, by using the result of the "getCACertificates" function. This is done using `CURLOPT_CAINFO_BLOB`. This is a breaking change if you were passing custom CA certificates before using `CAINFO`, as `CURLOPT_CAINFO_BLOB` takes priority over it. If that is the case, you can avoid the default behavior by calling `setOpt("CAINFO_BLOB", null)` on the Easy handle.
+- `HSTSREADFUNCTION` callback now receives an object with the `maxHostLengthBytes` property, which is the maximum length of the host name that can be returned by the callback.
+
 ### Fixed  
+
 ### Added
+- Prebuilt binaries have HTTP/3 support enabled across all platforms. This is supported by licurl when building with OpenSSL >= 3.5 and nghttp3 [>= 1.66](https://nghttp2.org/blog/2025/06/17/nghttp2-v1-66-0/). To use OpenSSL >= 3.5 a Node.js version >= 22.20.0 is required.
+
+- Added support for the following multi options:
+  - `CURLMOPT_NETWORK_CHANGED` (with `CurlMultiNetworkChanged` enum)
+
 ### Changed  
+
 ### Removed  
 
 ## [4.1.0] - 2024-12-26

@@ -4,6 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import './moduleSetup'
+
 import { MultiOptionName } from './generated/MultiOption'
 import { CurlMultiCode, CurlCode } from './enum/CurlCode'
 import { CurlPipe } from './enum/CurlPipe'

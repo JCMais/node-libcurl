@@ -92,6 +92,11 @@ const std::vector<CurlConstant> curlOptionInteger = {
     {"APPEND", CURLOPT_APPEND},
     {"AUTOREFERER", CURLOPT_AUTOREFERER},
     {"BUFFERSIZE", CURLOPT_BUFFERSIZE},
+
+#if NODE_LIBCURL_VER_GE(7, 87, 0)
+    {"CA_CACHE_TIMEOUT", CURLOPT_CA_CACHE_TIMEOUT},
+#endif
+
     {"CERTINFO", CURLOPT_CERTINFO},
     {"CONNECTTIMEOUT", CURLOPT_CONNECTTIMEOUT},
     {"CONNECTTIMEOUT_MS", CURLOPT_CONNECTTIMEOUT_MS},
@@ -180,6 +185,9 @@ const std::vector<CurlConstant> curlOptionInteger = {
 #if NODE_LIBCURL_VER_GE(7, 69, 0)
     {"MAIL_RCPT_ALLLOWFAILS", CURLOPT_MAIL_RCPT_ALLLOWFAILS},
 #endif
+#if NODE_LIBCURL_VER_GE(8, 2, 0)
+    {"MAIL_RCPT_ALLOWFAILS", CURLOPT_MAIL_RCPT_ALLOWFAILS},
+#endif
 
 #if NODE_LIBCURL_VER_GE(7, 65, 0)
     {"MAXAGE_CONN", CURLOPT_MAXAGE_CONN},
@@ -236,6 +244,10 @@ const std::vector<CurlConstant> curlOptionInteger = {
 
     {"SERVER_RESPONSE_TIMEOUT", CURLOPT_SERVER_RESPONSE_TIMEOUT},
 
+#if NODE_LIBCURL_VER_GE(8, 6, 0)
+    {"SERVER_RESPONSE_TIMEOUT_MS", CURLOPT_SERVER_RESPONSE_TIMEOUT_MS},
+#endif
+
 #if NODE_LIBCURL_VER_GE(7, 55, 0)
     {"SOCKS5_AUTH", CURLOPT_SOCKS5_AUTH},
 #endif
@@ -274,6 +286,11 @@ const std::vector<CurlConstant> curlOptionInteger = {
 #endif
 
     {"TCP_KEEPALIVE", CURLOPT_TCP_KEEPALIVE},
+
+#if NODE_LIBCURL_VER_GE(8, 9, 0)
+    {"TCP_KEEPCNT", CURLOPT_TCP_KEEPCNT},
+#endif
+
     {"TCP_KEEPIDLE", CURLOPT_TCP_KEEPIDLE},
     {"TCP_KEEPINTVL", CURLOPT_TCP_KEEPINTVL},
     {"TCP_NODELAY", CURLOPT_TCP_NODELAY},
@@ -289,6 +306,9 @@ const std::vector<CurlConstant> curlOptionInteger = {
 
 #if NODE_LIBCURL_VER_GE(7, 62, 0)
     {"UPLOAD_BUFFERSIZE", CURLOPT_UPLOAD_BUFFERSIZE},
+#if NODE_LIBCURL_VER_GE(8, 13, 0)
+    {"UPLOAD_FLAGS", CURLOPT_UPLOAD_FLAGS},
+#endif
     {"UPKEEP_INTERVAL_MS", CURLOPT_UPKEEP_INTERVAL_MS},
 #endif
 
@@ -364,19 +384,22 @@ const std::vector<CurlConstant> curlOptionNotImplemented = {
     {"XFERINFODATA", CURLOPT_XFERINFODATA},
 #endif
 
-    {"DEBUGDATA", CURLOPT_DEBUGDATA},
-    {"SEEKDATA", CURLOPT_SEEKDATA},
-    {"IOCTLDATA", CURLOPT_IOCTLDATA},
-    {"SOCKOPTDATA", CURLOPT_SOCKOPTDATA},
-    {"OPENSOCKETDATA", CURLOPT_OPENSOCKETDATA},
-    {"CLOSESOCKETDATA", CURLOPT_CLOSESOCKETDATA},
-    {"SSL_CTX_DATA", CURLOPT_SSL_CTX_DATA},
-    {"INTERLEAVEDATA", CURLOPT_INTERLEAVEDATA},
     {"CHUNK_DATA", CURLOPT_CHUNK_DATA},
-    {"FNMATCH_DATA", CURLOPT_FNMATCH_DATA},
-    {"ERRORBUFFER", CURLOPT_ERRORBUFFER},
+    {"CLOSESOCKETDATA", CURLOPT_CLOSESOCKETDATA},
     {"COPYPOSTFIELDS", CURLOPT_COPYPOSTFIELDS},
+    {"DEBUGDATA", CURLOPT_DEBUGDATA},
+    {"ERRORBUFFER", CURLOPT_ERRORBUFFER},
+    {"FNMATCH_DATA", CURLOPT_FNMATCH_DATA},
+    {"INTERLEAVEDATA", CURLOPT_INTERLEAVEDATA},
+    {"IOCTLDATA", CURLOPT_IOCTLDATA},
+#if NODE_LIBCURL_VER_GE(7, 87, 0)
+    {"QUICK_EXIT", CURLOPT_QUICK_EXIT},
+#endif
+    {"OPENSOCKETDATA", CURLOPT_OPENSOCKETDATA},
+    {"SEEKDATA", CURLOPT_SEEKDATA},
+    {"SOCKOPTDATA", CURLOPT_SOCKOPTDATA},
     {"SSH_KEYDATA", CURLOPT_SSH_KEYDATA},
+    {"SSL_CTX_DATA", CURLOPT_SSL_CTX_DATA},
 
 #if NODE_LIBCURL_VER_GE(7, 64, 0)
     {"TRAILERDATA", CURLOPT_TRAILERDATA},
@@ -430,11 +453,20 @@ const std::vector<CurlConstant> curlOptionString = {
     {"DOH_URL", CURLOPT_DOH_URL},
 #endif
 
+#if NODE_LIBCURL_VER_GE(8, 8, 0)
+    {"ECH", CURLOPT_ECH},
+#endif
+
     {"EGDSOCKET", CURLOPT_EGDSOCKET},
     {"ENCODING", CURLOPT_ENCODING},  // should use ACCEPT_ENCODING
     {"FTPPORT", CURLOPT_FTPPORT},
     {"FTP_ACCOUNT", CURLOPT_FTP_ACCOUNT},
     {"FTP_ALTERNATIVE_TO_USER", CURLOPT_FTP_ALTERNATIVE_TO_USER},
+
+#if NODE_LIBCURL_VER_GE(8, 2, 0)
+    {"HAPROXY_CLIENT_IP", CURLOPT_HAPROXY_CLIENT_IP},
+#endif
+
     {"HTTP200ALIASES", CURLOPT_HTTP200ALIASES},
 
 #if NODE_LIBCURL_VER_GE(7, 74, 0)
@@ -546,6 +578,9 @@ const std::vector<CurlConstant> curlOptionString = {
 #if NODE_LIBCURL_VER_GE(7, 73, 0)
     {"SSL_EC_CURVES", CURLOPT_SSL_EC_CURVES},
 #endif
+#if NODE_LIBCURL_VER_GE(8, 14, 0)
+    {"SSL_SIGNATURE_ALGORITHMS", CURLOPT_SSL_SIGNATURE_ALGORITHMS},
+#endif
 
     {"TELNETOPTIONS", CURLOPT_TELNETOPTIONS},
 
@@ -583,6 +618,9 @@ const std::vector<CurlConstant> curlMultiOptionInteger = {
 #if NODE_LIBCURL_VER_GE(7, 67, 0)
     {"MAX_CONCURRENT_STREAMS", CURLMOPT_MAX_CONCURRENT_STREAMS},
 #endif
+#if NODE_LIBCURL_VER_GE(8, 17, 0)
+    {"NETWORK_CHANGED", CURLMOPT_NETWORK_CHANGED},
+#endif
     {"MAX_HOST_CONNECTIONS", CURLMOPT_MAX_HOST_CONNECTIONS},
     {"MAX_TOTAL_CONNECTIONS", CURLMOPT_MAX_TOTAL_CONNECTIONS},
     {"MAXCONNECTS", CURLMOPT_MAXCONNECTS},
@@ -602,6 +640,10 @@ const std::vector<CurlConstant> curlMultiOptionNotImplemented = {
 // Unnecessary
 #if NODE_LIBCURL_VER_GE(7, 44, 0)
     {"PUSHDATA", CURLMOPT_PUSHDATA},
+#endif
+#if NODE_LIBCURL_VER_GE(8, 17, 0)
+    {"NOTIFYFUNCTION", CURLMOPT_NOTIFYFUNCTION},
+    {"NOTIFYDATA", CURLMOPT_NOTIFYDATA},
 #endif
 };
 
@@ -760,6 +802,8 @@ static void AddConstants(Napi::Object obj, const std::vector<CurlConstant>& cons
 }
 
 Curl::Curl(Napi::Env env, Napi::Object exports) : env(env), addonAllocatedMemory(0) {
+  this->InitTLS();
+
   this->EasyConstructor = Napi::Persistent(Easy::Init(env, exports));
   this->MultiConstructor = Napi::Persistent(Multi::Init(env, exports));
   this->ShareConstructor = Napi::Persistent(Share::Init(env, exports));
@@ -771,6 +815,42 @@ Curl::Curl(Napi::Env env, Napi::Object exports) : env(env), addonAllocatedMemory
 
 Curl::~Curl() {
   // Destructor implementation - cleanup handled by N-API automatically
+}
+
+void Curl::InitTLS() {
+  // This is setup on moduleSetup.ts
+  Napi::Object tls = env.Global().Get("__libcurlTls").ToObject();
+
+  // get CA certificates from Node.js's tls module and set them on the easy handle
+  // See: https://nodejs.org/api/tls.html#tlsgetcacertificatestype
+  Napi::Function getCACertificates = tls.Get("getCACertificates").As<Napi::Function>();
+  Napi::Array caCertificates =
+      getCACertificates.Call({Napi::String::New(env, "default")}).As<Napi::Array>();
+
+  std::vector<std::string> certs;
+  for (uint32_t i = 0; i < caCertificates.Length(); i++) {
+    Napi::Value cert = caCertificates[i];
+    if (cert.IsString()) {
+      certs.push_back(cert.As<Napi::String>().Utf8Value());
+    }
+  }
+
+  // Join all certificates with newline
+  if (!certs.empty()) {
+    for (size_t i = 0; i < certs.size(); ++i) {
+      if (i > 0) {
+        this->caCertificatesData += "\n";
+      }
+      this->caCertificatesData += certs[i];
+    }
+
+    // Set up the curl_blob structure with CURL_BLOB_NOCOPY flag
+    // We use NOCOPY because the data is stored in this->caCertificatesData which persists
+    // for the lifetime of the Curl instance
+    this->caCertificatesBlob.data = const_cast<char*>(this->caCertificatesData.c_str());
+    this->caCertificatesBlob.len = this->caCertificatesData.length();
+    this->caCertificatesBlob.flags = CURL_BLOB_NOCOPY;
+  }
 }
 
 void Curl::AdjustHandleMemory(CurlHandleType handleType, int delta) {

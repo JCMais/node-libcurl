@@ -4,6 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import './moduleSetup'
+
 import { EventEmitter } from 'events'
 import { StringDecoder } from 'string_decoder'
 import assert from 'assert'
@@ -1300,7 +1302,10 @@ interface Curl {
   setOpt(
     option: 'HSTSREADFUNCTION',
     value:
-      | ((this: Easy) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])
+      | ((
+          this: Easy,
+          options: { maxHostLengthBytes: number },
+        ) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])
       | null,
   ): this
   /**

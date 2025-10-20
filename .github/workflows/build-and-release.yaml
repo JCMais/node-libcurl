@@ -20,7 +20,7 @@ on:
         required: true
 
 env:
-  LATEST_LIBCURL_RELEASE: 7.86.0
+  LATEST_LIBCURL_RELEASE: 8.16.0
   OLDEST_LIBCURL_RELEASE: 7.77.0
   NODE_LIBCURL_CPP_STD: c++20
   # https://www.electronjs.org/docs/latest/tutorial/installation#cache
@@ -145,6 +145,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          submodules: true
 
       # see https://github.com/nodejs/node/issues/40537
       - name: Enforce IPv4 Connectivity
@@ -161,6 +163,32 @@ jobs:
           node-version: '${{ matrix.node }}'
           cache: 'pnpm'
           package-manager-cache: true
+
+      - name: Setup vcpkg (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd vcpkg
+          .\bootstrap-vcpkg.bat
+          echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
+          node scripts/vcpkg-setup.js
+
+      - name: Enable vcpkg binary caching (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          echo "VCPKG_FEATURE_FLAGS=manifests,binarycaching" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "VCPKG_DEFAULT_BINARY_CACHE=${{ runner.temp }}\vcpkg-cache" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Cache vcpkg (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\vcpkg\installed
+            ${{ runner.temp }}\vcpkg-cache
+          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'overlays/**') }}
+          restore-keys: vcpkg-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Libcurl Deps Cache (Restore)
         uses: actions/cache/restore@v4

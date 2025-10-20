@@ -33,6 +33,8 @@ HEIMDAL_BUILD_FOLDER=${HEIMDAL_BUILD_FOLDER:-}
 OPENLDAP_BUILD_FOLDER=${OPENLDAP_BUILD_FOLDER:-}
 LIBSSH2_BUILD_FOLDER=${LIBSSH2_BUILD_FOLDER:-}
 NGHTTP2_BUILD_FOLDER=${NGHTTP2_BUILD_FOLDER:-}
+NGHTTP3_BUILD_FOLDER=${NGHTTP3_BUILD_FOLDER:-}
+NGTCP2_BUILD_FOLDER=${NGTCP2_BUILD_FOLDER:-}
 OPENSSL_BUILD_FOLDER=${OPENSSL_BUILD_FOLDER:-}
 CARES_BUILD_FOLDER=${CARES_BUILD_FOLDER:-}
 BROTLI_BUILD_FOLDER=${BROTLI_BUILD_FOLDER:-}
@@ -143,6 +145,16 @@ else
   libcurl_args+=("--without-ssl")
 fi
 
+# --with-apple-sectrust was added on 8.7.0
+# So this script only adds it for versions >= that one.
+is_less_than_8_7_0=0
+(printf '%s\n%s' "8.7.0" "$1" | $gsort -CV) || is_less_than_8_7_0=$?
+if [ "$is_less_than_8_7_0" == "0" ]; then
+  if [ "$(uname)" == "Darwin" ]; then
+    libcurl_args+=("--with-apple-sectrust")
+  fi
+fi
+
 ######
 # gss-api
 #####
@@ -223,6 +235,18 @@ if [ ! -z "$NGHTTP2_BUILD_FOLDER" ]; then
   libcurl_args+=("--with-nghttp2=$NGHTTP2_BUILD_FOLDER")
 else
   libcurl_args+=("--without-nghttp2")
+fi
+
+#####
+# nghttp3 and ngtcp2 (HTTP/3 support)
+####
+if [ ! -z "$NGHTTP3_BUILD_FOLDER" ] && [ ! -z "$NGTCP2_BUILD_FOLDER" ]; then
+  echo "Enabling HTTP/3 support with nghttp3 and ngtcp2"
+  libcurl_args+=("--with-nghttp3=$NGHTTP3_BUILD_FOLDER")
+  libcurl_args+=("--with-ngtcp2=$NGTCP2_BUILD_FOLDER")
+else
+  libcurl_args+=("--without-nghttp3")
+  libcurl_args+=("--without-ngtcp2")
 fi
 
 #####

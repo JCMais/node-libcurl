@@ -209,6 +209,16 @@ void Easy::ResetRequiredHandleOptions(bool isFromDuplicate) {
     curl_easy_setopt(this->ch, CURLOPT_HSTSWRITEDATA, this);
 #endif
   }
+
+  // Set CURLOPT_CAINFO_BLOB with CA certificates from Node.js's tls module
+  // This provides default CA certificates for SSL/TLS connections
+  // Only available in libcurl >= 7.77.0
+#if NODE_LIBCURL_VER_GE(7, 77, 0)
+  const auto curl = this->Env().GetInstanceData<Curl>();
+  if (curl->caCertificatesBlob.data != nullptr && curl->caCertificatesBlob.len > 0) {
+    curl_easy_setopt(this->ch, CURLOPT_CAINFO_BLOB, &curl->caCertificatesBlob);
+  }
+#endif
 }
 
 void Easy::CopyOtherData(Easy* orig) {
@@ -1838,7 +1848,10 @@ int Easy::CbHstsRead(CURL* handle, struct curl_hstsentry* sts, void* userdata) {
       // TODO(jonathan, migration): capture this when perform is called (either on Easy or Multi)
       Napi::AsyncContext asyncContext(env, "Easy::CbHstsRead");
 
-      Napi::Value result = cb.MakeCallback(obj->Value(), {}, asyncContext);
+      Napi::Object cbArg = Napi::Object::New(env);
+      cbArg.Set("maxHostLengthBytes", Napi::Number::New(env, sts->namelen));
+
+      Napi::Value result = cb.MakeCallback(obj->Value(), {cbArg}, asyncContext);
 
       // This is in theory not needed, as we have exceptions enabled
       if (env.IsExceptionPending()) {

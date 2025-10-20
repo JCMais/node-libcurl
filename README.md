@@ -69,6 +69,13 @@
 > - There is no worker threads support at the moment. See [#169](https://github.com/JCMais/node-libcurl/issues/169)
 
 ### Install
+
+TODO:
+- add ca cert, look on Selecting TLS Trust Anchors Defaults here: https://curl.se/docs/install.html
+- see if possible to use rustls with libcurl, http2/http3 while still support tls v1.3+ and not causing weird symbols errors
+- 
+
+
 ```shell
 npm i node-libcurl --save
 ```
@@ -86,7 +93,7 @@ yarn add node-libcurl
 ```javascript
 const { curly } = require('node-libcurl');
 
-const { statusCode, data, headers } = await curly.get('http://www.google.com')
+const { statusCode, data, headers } = await curly.get('https://www.google.com')
 ```
 
 Any option can be passed using their `FULLNAME` or a `lowerPascalCase` format:
@@ -94,7 +101,7 @@ Any option can be passed using their `FULLNAME` or a `lowerPascalCase` format:
 const querystring = require('querystring');
 const { curly } = require('node-libcurl');
 
-const { statusCode, data, headers } = await curly.post('http://httpbin.com/post', {
+const { statusCode, data, headers } = await curly.post('https://httpbin.com/post', {
   postFields: querystring.stringify({
     field: 'value',
   }),
@@ -105,7 +112,7 @@ const { statusCode, data, headers } = await curly.post('http://httpbin.com/post'
 JSON POST example:
 ```javascript
 const { curly } = require('node-libcurl')
-const { data } = await curly.post('http://httpbin.com/post', {
+const { data } = await curly.post('https://httpbin.com/post', {
   postFields: JSON.stringify({ field: 'value' }),
   httpHeader: [
     'Content-Type: application/json',
@@ -202,6 +209,8 @@ curl.enable(CurlFeature.Raw)
 The reasoning behind this is that by default, the `Curl` instance will try to decode the received data and headers to utf8 strings, as can be seen here: https://github.com/JCMais/node-libcurl/blob/b55b13529c9d11fdcdd7959137d8030b39427800/lib/Curl.ts#L391
 
 For more examples check the [examples folder](./examples).
+
+## SSL
 
 ## API
 
