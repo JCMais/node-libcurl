@@ -55,7 +55,9 @@ LDFLAGS="$LDFLAGS_VALUE" \
 ./configure \
   --prefix=$build_folder \
   --enable-lib-only \
+  --enable-static \
+  --disable-shared \
   --with-openssl \
-  --disable-shared
+  --with-libnghttp3
 
 make && make install

@@ -250,10 +250,10 @@ if [ ! -z "$NGHTTP3_BUILD_FOLDER" ] && [ ! -z "$NGTCP2_BUILD_FOLDER" ]; then
 
   CPPFLAGS="$CPPFLAGS -I$NGTCP2_BUILD_FOLDER/include"
   LDFLAGS="$LDFLAGS -L$NGTCP2_BUILD_FOLDER/lib -Wl,-rpath,$NGTCP2_BUILD_FOLDER/lib"
+  PKG_CONFIG_PATH="$NGTCP2_BUILD_FOLDER/lib/pkgconfig:$PKG_CONFIG_PATH"
   # no path, we set pkg config path instead
   # see https://github.com/curl/curl/issues/18188
   libcurl_args+=("--with-ngtcp2")
-  PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$NGTCP2_BUILD_FOLDER/lib/pkgconfig"
 else
   libcurl_args+=("--without-nghttp3")
   libcurl_args+=("--without-ngtcp2")
@@ -296,6 +296,7 @@ fi
 export LIBS=$LIBS
 export CPPFLAGS=$CPPFLAGS
 export LDFLAGS=$LDFLAGS
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH
 
 # Debug
     # --enable-debug \

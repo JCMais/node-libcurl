@@ -62,7 +62,6 @@ int32_t IsInsideCurlConstantStruct(const std::vector<CurlConstant>& curlConstant
                                    const Napi::Value& searchFor);
 
 // This is our main class that holds our "global" state, per v8 Agent (environment)
-// TODO(jonathan, migration): this could be a napi addon directly!
 class Curl {
  public:
   Curl(Napi::Env env, Napi::Object exports);

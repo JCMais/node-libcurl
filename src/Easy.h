@@ -28,12 +28,6 @@ class Multi;
 class Easy : public Napi::ObjectWrap<Easy> {
  public:
   Easy(const Napi::CallbackInfo& info);
-  // TODO(jonathan, migration): missing implementation for these
-  // explicit Easy(Easy* orig);
-  // explicit Easy(CURL* easy);
-
-  // Easy(const Easy& that);
-  // Easy& operator=(const Easy& that);
   ~Easy();
 
   static Napi::Function Init(Napi::Env env, Napi::Object exports);

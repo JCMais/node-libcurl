@@ -105,10 +105,19 @@ declare class Easy {
    * This will be `true` if the handle was added to a {@link Multi | `Multi`} handle.
    */
   readonly isInsideMultiHandle: boolean
+
+  /**
+   * This is the unique ID of the Easy handle.
+   *
+   * This ID is also unique across threads.
+   */
+  readonly id: number
+
   /**
    * This will be `true` if {@link monitorSocketEvents | `monitorSocketEvents`} was called.
    */
   readonly isMonitoringSockets: boolean
+
   /**
    * This will be `true` if {@link close | `close`} was not called.
    */

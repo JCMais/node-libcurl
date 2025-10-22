@@ -13,5 +13,14 @@
  * @public
  */
 export enum CurlWriteFunc {
+  /**
+   * This is a magic return code for the write callback that, when returned,
+   * will signal libcurl to pause receiving on the current transfer.
+   */
   Pause = 0x10000001,
+  /**
+   * This is a magic return code for the write callback that, when returned,
+   * will signal an error from the callback.
+   */
+  Abort = 0xffffffff,
 }

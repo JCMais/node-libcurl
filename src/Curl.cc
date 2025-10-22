@@ -708,6 +708,13 @@ const std::vector<CurlConstant> curlInfoInteger = {
     {"RTSP_CSEQ_RECV", CURLINFO_RTSP_CSEQ_RECV},
     {"RTSP_SERVER_CSEQ", CURLINFO_RTSP_SERVER_CSEQ},
     {"SSL_VERIFYRESULT", CURLINFO_SSL_VERIFYRESULT},
+#if NODE_LIBCURL_VER_GE(8, 7, 0)
+    {"USED_PROXY", CURLINFO_USED_PROXY},
+#endif
+#if NODE_LIBCURL_VER_GE(8, 12, 0)
+    {"PROXYAUTH_USED", CURLINFO_PROXYAUTH_USED},
+    {"HTTPAUTH_USED", CURLINFO_HTTPAUTH_USED},
+#endif
 };
 
 const std::vector<CurlConstant> curlInfoLinkedList = {
@@ -752,6 +759,19 @@ const std::vector<CurlConstant> curlInfoOffT = {
 #endif
 #if NODE_LIBCURL_VER_GE(7, 66, 0)
     {"RETRY_AFTER", CURLINFO_RETRY_AFTER},
+#endif
+#if NODE_LIBCURL_VER_GE(8, 2, 0)
+    {"CONN_ID", CURLINFO_CONN_ID},
+    {"XFER_ID", CURLINFO_XFER_ID},
+#endif
+#if NODE_LIBCURL_VER_GE(8, 6, 0)
+    {"QUEUE_TIME_T", CURLINFO_QUEUE_TIME_T},
+#endif
+#if NODE_LIBCURL_VER_GE(8, 10, 0)
+    {"POSTTRANSFER_TIME_T", CURLINFO_POSTTRANSFER_TIME_T},
+#endif
+#if NODE_LIBCURL_VER_GE(8, 11, 0)
+    {"EARLYDATA_SENT_T", CURLINFO_EARLYDATA_SENT_T},
 #endif
 };
 
@@ -950,13 +970,6 @@ Napi::Object Curl::Init(Napi::Env env, Napi::Object exports) {
 
   return exports;
 }
-
-// TODO(jonathan, changelog): removed, add to changelog
-// Napi::Value GlobalCleanup(const Napi::CallbackInfo& info) {
-//   Napi::Env env = info.Env();
-//   curl_global_cleanup();
-//   return env.Undefined();
-// }
 
 Napi::Value Curl::GetVersion(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
