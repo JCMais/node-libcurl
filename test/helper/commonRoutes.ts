@@ -19,6 +19,20 @@ export const allMethodsWithMultipleReqResTypes = (
         return res.redirect(301, '/all?type=redirect-a')
       case 'redirect-a':
         return res.redirect(301, '/all?type=json')
+      case 'put-return-read':
+        req.on('data', (chunk) => {
+          dataAcc.push(chunk)
+        })
+        req.on('end', () => {
+          const data = Buffer.concat(dataAcc)
+          res
+            .set({
+              'content-type': 'application/octet-stream',
+            })
+            .send(data)
+            .end()
+        })
+        break
       case 'put-upload':
         req.on('data', (chunk) => {
           dataAcc.push(chunk)
@@ -29,7 +43,7 @@ export const allMethodsWithMultipleReqResTypes = (
           res
             .set({
               'content-type': 'application/octet-stream',
-              'x-is-same-buffer': Buffer.compare(data, putUploadBuffer),
+              'x-is-same-buffer': Buffer.compare(data, putUploadBuffer) === 0,
             })
             .send(putUploadBuffer)
             .end()

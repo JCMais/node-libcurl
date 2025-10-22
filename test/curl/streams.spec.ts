@@ -22,7 +22,8 @@ interface GetReadableStreamForBufferOptions {
 // @ts-ignore
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-// 1mb
+const UPLOAD_STREAM_HIGH_WATER_MARK = 1 * 1024
+
 const getRandomBuffer = (size: number = 1024 * 1024) => crypto.randomBytes(size)
 
 const getReadableStreamForBuffer = (
@@ -36,7 +37,7 @@ const getReadableStreamForBuffer = (
   let canRead = true
   const stream = new Readable({
     // this defaults to 16kb
-    highWaterMark: 4 * 1024,
+    highWaterMark: UPLOAD_STREAM_HIGH_WATER_MARK,
     async read(size) {
       if (!canRead) return
 
@@ -90,11 +91,13 @@ const getUploadOptions = (curlyStreamUpload: Readable) => {
   return options
 }
 
-const getDownloadOptions = () => ({
+/**
+ * The highWaterMark defaults to undefined, which means using the Node.js default value of 16kb.
+ * Here we are explicitly setting it to 4kb.
+ */
+const getDownloadOptions = (highWaterMark = 4 * 1024) => ({
   curlyStreamResponse: true,
-  // This defaults to undefined, which means using the Node.js default value of 16kb.
-  // Here we are explicitly setting it to 4kb.
-  curlyStreamResponseHighWaterMark: 4 * 1024,
+  curlyStreamResponseHighWaterMark: highWaterMark,
 })
 
 let randomBuffer: Buffer
@@ -119,15 +122,38 @@ describe('streams', () => {
 
   describe('curly', () => {
     // libcurl versions older than this are not really reliable for streams usage.
-    it.runIf(Curl.isVersionGreaterOrEqualThan(7, 69, 1))(
-      'works for uploading and downloading',
-      async () => {
-        const curlyStreamUpload = getReadableStreamForBuffer(randomBuffer, {
+    it.runIf(Curl.isVersionGreaterOrEqualThan(7, 69, 1)).each([
+      {
+        highWaterMark: 1024 * 4,
+        bufferSize: 1024 * 32,
+      },
+      {
+        highWaterMark: 1024 * 16,
+        bufferSize: 1024 * 16,
+      },
+      {
+        highWaterMark: 1024 * 8,
+        bufferSize: 1024 * 1024,
+      },
+      {
+        highWaterMark: 1024 * 4,
+        bufferSize: 'same',
+      },
+    ])(
+      'works for uploading and downloading with highWaterMark: $highWaterMark, bufferSize: $bufferSize',
+      async ({ highWaterMark, bufferSize }) => {
+        const bufferToUse =
+          bufferSize === 'same' ? randomBuffer : getRandomBuffer(bufferSize)
+        const path =
+          bufferSize === 'same'
+            ? '/all?type=put-upload'
+            : `/all?type=put-return-read`
+        const curlyStreamUpload = getReadableStreamForBuffer(bufferToUse, {
           filterDataToPush: async (pushIteration, data) => {
-            // we are waiting 1200 ms at the 5th iteration just to cause
+            // we are waiting a few ms on the 5th iteration just to cause
             // some pauses in the READFUNCTION
             if (pushIteration === 5) {
-              await sleep(1200)
+              await sleep(600)
             }
 
             return data
@@ -139,10 +165,10 @@ describe('streams', () => {
           data: downloadStream,
           headers,
         } = await curly.put<Readable>(
-          `${serverInstance.url}/all?type=put-upload`,
+          `${serverInstance.url}${path}`,
           withCommonTestOptions({
             ...getUploadOptions(curlyStreamUpload),
-            ...getDownloadOptions(),
+            ...getDownloadOptions(highWaterMark),
             curlyProgressCallback() {
               return 0
             },
@@ -150,12 +176,11 @@ describe('streams', () => {
         )
 
         expect(statusCode).toBe(200)
-        expect(headers[headers.length - 1]['x-is-same-buffer']).toBe('0')
-
-        // TODO: add snapshot testing for headers
+        if (bufferSize === 'same') {
+          expect(headers[headers.length - 1]['x-is-same-buffer']).toBe('true')
+        }
 
         // we cannot use async iterators here because we need to support Node.js v8
-
         return new Promise<void>((resolve, reject) => {
           const acc: Buffer[] = []
           let iteration = 0
@@ -164,10 +189,13 @@ describe('streams', () => {
           // some pauses in the PUSHFUNCTION
           downloadStream.on('data', (data) => {
             acc.push(data)
+            expect(data.length).toBeLessThanOrEqual(highWaterMark)
 
             if (iteration++ === 2) {
               downloadStream.pause()
-              setTimeout(() => downloadStream.resume(), 1200)
+              setTimeout(() => {
+                downloadStream.resume()
+              }, 1000)
             }
           })
 
@@ -176,9 +204,14 @@ describe('streams', () => {
           })
 
           downloadStream.on('end', () => {
-            const finalBuffer = Buffer.concat(acc)
-            const result = finalBuffer.compare(randomBuffer)
-            expect(result).toBe(0)
+            try {
+              const finalBuffer = Buffer.concat(acc)
+              expect(finalBuffer.byteLength).toBe(bufferToUse.byteLength)
+              const result = finalBuffer.compare(bufferToUse)
+              expect(result).toBe(0)
+            } catch (error) {
+              reject(error)
+            }
             resolve(undefined)
           })
 

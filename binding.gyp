@@ -283,7 +283,7 @@
             'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES', # -fvisibility=hidden
             'GCC_ENABLE_CPP_RTTI': 'YES',
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
-            'MACOSX_DEPLOYMENT_TARGET': '11.6',
+            'MACOSX_DEPLOYMENT_TARGET': '13',
             'CLANG_CXX_LIBRARY': 'libc++',
             'CLANG_CXX_LANGUAGE_STANDARD': '<(node_libcurl_cpp_std)',
             'WARNING_CFLAGS': [

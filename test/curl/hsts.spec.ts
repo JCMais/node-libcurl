@@ -327,7 +327,6 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 74, 0))('Callbacks', () => {
             expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
             expect(hstsReadFunctionCallCount).toBe(onErrorCallCount)
 
-            console.log('Calling perform again!')
             curl.perform()
           } catch (error) {
             reject(error)

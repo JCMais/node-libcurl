@@ -62,11 +62,15 @@ class Easy : public Napi::ObjectWrap<Easy> {
   Napi::Value GetterIsInsideMultiHandle(const Napi::CallbackInfo& info);
   Napi::Value GetterIsMonitoringSockets(const Napi::CallbackInfo& info);
   Napi::Value GetterIsOpen(const Napi::CallbackInfo& info);
+  Napi::Value GetterPauseFlags(const Napi::CallbackInfo& info);
+  Napi::Value GetterIsPausedRecv(const Napi::CallbackInfo& info);
+  Napi::Value GetterIsPausedSend(const Napi::CallbackInfo& info);
 
   // Public members
   CURL* ch;
   bool isInsideMultiHandle = false;
   bool isOpen = true;
+  int32_t pauseState = 0;
   uint64_t id;
 
   // Callback error for Multi interface

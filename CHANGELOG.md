@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The prebuilt binary is now built with libcurl 8.5.0. Every breaking change introduced by libcurl 8 is also a breaking change for this version. See 
 - Every Easy handle is now initialized with default CA certificates from Node.js's tls module, by using the result of the "getCACertificates" function. This is done using `CURLOPT_CAINFO_BLOB`. This is a breaking change if you were passing custom CA certificates before using `CAINFO`, as `CURLOPT_CAINFO_BLOB` takes priority over it. If that is the case, you can avoid the default behavior by calling `setOpt("CAINFO_BLOB", null)` on the Easy handle.
 - `HSTSREADFUNCTION` callback now receives an object with the `maxHostLengthBytes` property, which is the maximum length of the host name that can be returned by the callback.
+- The minimum macOS version is now Sonoma (13)
 
 ### Fixed  
 

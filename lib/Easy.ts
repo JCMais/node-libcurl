@@ -114,6 +114,12 @@ declare class Easy {
    */
   readonly isOpen: boolean
 
+  readonly pauseFlags: CurlPause
+
+  readonly isPausedRecv: boolean
+
+  readonly isPausedSend: boolean
+
   /**
    * You can set this to anything - Use it to bind some data to this Easy instance.
    *
