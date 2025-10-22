@@ -40,7 +40,7 @@ if [ "$(uname)" == "Darwin" ]; then
     export MACOS_ARCH_FLAGS=""
   fi
 
-  export MACOSX_DEPLOYMENT_TARGET=11.6
+  export MACOSX_DEPLOYMENT_TARGET=13
   export MACOS_TARGET_FLAGS="-mmacosx-version-min=$MACOSX_DEPLOYMENT_TARGET"
 
   export CFLAGS="$MACOS_TARGET_FLAGS $MACOS_ARCH_FLAGS"
@@ -212,7 +212,7 @@ if [ "$is_openssl_ge_3_5_0" == "1" ]; then
   ###################
   # Build nghttp3
   ###################
-  NGHTTP3_RELEASE=${NGHTTP3_RELEASE:-1.6.0}
+  NGHTTP3_RELEASE=${NGHTTP3_RELEASE:-1.12.0}
   NGHTTP3_DEST_FOLDER=$PREFIX_DIR/deps/nghttp3
   echo "Building nghttp3 v$NGHTTP3_RELEASE"
   ./scripts/ci/build-nghttp3.sh $NGHTTP3_RELEASE $NGHTTP3_DEST_FOLDER >$LOGS_FOLDER/build-nghttp3.log 2>&1
@@ -222,7 +222,7 @@ if [ "$is_openssl_ge_3_5_0" == "1" ]; then
   ###################
   # Build ngtcp2
   ###################
-  NGTCP2_RELEASE=${NGTCP2_RELEASE:-1.9.1}
+  NGTCP2_RELEASE=${NGTCP2_RELEASE:-1.17.0}
   NGTCP2_DEST_FOLDER=$PREFIX_DIR/deps/ngtcp2
   echo "Building ngtcp2 v$NGTCP2_RELEASE"
   ./scripts/ci/build-ngtcp2.sh $NGTCP2_RELEASE $NGTCP2_DEST_FOLDER >$LOGS_FOLDER/build-ngtcp2.log 2>&1
@@ -436,7 +436,7 @@ echo "npm_config_dist_url=$npm_config_dist_url"
 echo "npm_config_target=$npm_config_target"
 echo "npm_config_target_arch=$npm_config_target_arch"
 
-pnpm install --frozen-lockfile --fetch-timeout 300000
+pnpm install --frozen-lockfile --force --fetch-timeout 300000
 
 touch built-and-installed.hidden.txt
 
@@ -467,7 +467,7 @@ if [ "$RUN_TESTS" == "true" ]; then
   elif [ -n "$NWJS_VERSION" ]; then
     echo "No tests available for node-webkit (nw.js)"
   else
-    pnpm ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
+    pnpm exec ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
     pnpm test
   fi
 fi

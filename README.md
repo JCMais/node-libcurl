@@ -39,6 +39,7 @@
   - [Form Submission (Content-Type: application/x-www-form-urlencoded)](#form-submission-content-type-applicationx-www-form-urlencoded)
   - [MultiPart Upload / HttpPost libcurl Option (Content-Type: multipart/form-data)](#multipart-upload--httppost-libcurl-option-content-type-multipartform-data)
   - [Binary Data](#binary-data)
+- [SSL](#ssl)
 - [API](#api)
 - [Special Notes](#special-notes)
   - [`READFUNCTION` option](#readfunction-option)
@@ -396,7 +397,7 @@ In case you want some examples check the CI configuration files ([`.travis.yml`]
 ### Building on macOS
 
 On macOS you must have:
-- macOS >= 11.6 (Big Sur)
+- macOS >= 13 (Sonoma)
 - Xcode Command Line Tools
 
 You can check if you have Xcode Command Line Tools be running:

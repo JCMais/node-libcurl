@@ -40,6 +40,8 @@ CARES_BUILD_FOLDER=${CARES_BUILD_FOLDER:-}
 BROTLI_BUILD_FOLDER=${BROTLI_BUILD_FOLDER:-}
 ZLIB_BUILD_FOLDER=${ZLIB_BUILD_FOLDER:-}
 
+PKG_CONFIG_PATH=${PKG_CONFIG_PATH:-}
+
 LIBS=${LIBS:-}
 CPPFLAGS=${CPPFLAGS:-}
 LDFLAGS=${LDFLAGS:-}
@@ -242,8 +244,16 @@ fi
 ####
 if [ ! -z "$NGHTTP3_BUILD_FOLDER" ] && [ ! -z "$NGTCP2_BUILD_FOLDER" ]; then
   echo "Enabling HTTP/3 support with nghttp3 and ngtcp2"
+  CPPFLAGS="$CPPFLAGS -I$NGHTTP3_BUILD_FOLDER/include"
+  LDFLAGS="$LDFLAGS -L$NGHTTP3_BUILD_FOLDER/lib -Wl,-rpath,$NGHTTP3_BUILD_FOLDER/lib"
   libcurl_args+=("--with-nghttp3=$NGHTTP3_BUILD_FOLDER")
-  libcurl_args+=("--with-ngtcp2=$NGTCP2_BUILD_FOLDER")
+
+  CPPFLAGS="$CPPFLAGS -I$NGTCP2_BUILD_FOLDER/include"
+  LDFLAGS="$LDFLAGS -L$NGTCP2_BUILD_FOLDER/lib -Wl,-rpath,$NGTCP2_BUILD_FOLDER/lib"
+  # no path, we set pkg config path instead
+  # see https://github.com/curl/curl/issues/18188
+  libcurl_args+=("--with-ngtcp2")
+  PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$NGTCP2_BUILD_FOLDER/lib/pkgconfig"
 else
   libcurl_args+=("--without-nghttp3")
   libcurl_args+=("--without-ngtcp2")

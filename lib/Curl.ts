@@ -233,15 +233,14 @@ class Curl extends EventEmitter {
   protected streamReadFunctionPaused = false
   // WRITEFUNCTION / download related
   protected streamWriteFunctionHighWaterMark: number | undefined
-  protected streamWriteFunctionShouldPause = false
-  protected streamWriteFunctionPaused = false
-  protected streamWriteFunctionFirstRun = true
+  protected streamPendingReadSize = 0
   // common
   protected streamPauseNext = false
   protected streamContinueNext = false
   protected streamError: false | Error = false
   protected streamUserSuppliedProgressFunction: CurlOptionValueType['xferInfoFunction'] =
     null
+  protected nextPauseFlags: CurlPause | null = null
 
   /**
    * @param cloneHandle {@link Easy | `Easy`} handle that should be used instead of creating a new one.
@@ -640,6 +639,18 @@ class Curl extends EventEmitter {
    */
   setStreamResponseHighWaterMark(highWaterMark: number | null) {
     this.streamWriteFunctionHighWaterMark = highWaterMark || undefined
+    const bufferSize = highWaterMark
+      ? Math.max(
+          1024,
+          Math.min(
+            highWaterMark,
+            Curl.isVersionGreaterOrEqualThan(7, 88, 1)
+              ? 10 * 1024 * 1024
+              : 512 * 1024,
+          ),
+        )
+      : 16 * 1024
+    this.setOpt('BUFFERSIZE', bufferSize)
     return this
   }
 
@@ -860,10 +871,6 @@ class Curl extends EventEmitter {
     this.streamReadFunctionShouldEnd = false
     this.streamReadFunctionShouldPause = false
     this.streamReadFunctionPaused = false
-    // WRITEFUNCTION / download related
-    this.streamWriteFunctionShouldPause = false
-    this.streamWriteFunctionPaused = false
-    this.streamWriteFunctionFirstRun = true
     // common
     this.streamPauseNext = false
     this.streamContinueNext = false
@@ -914,6 +921,14 @@ class Curl extends EventEmitter {
     ultotal: number,
     ulnow: number,
   ) {
+    if (this.nextPauseFlags !== null) {
+      const pauseFlags = this.nextPauseFlags
+      this.nextPauseFlags = null
+      this.pause(pauseFlags)
+    } else if (this.handle.isPausedRecv && this.streamPendingReadSize) {
+      this.pause(this.handle.pauseFlags & ~CurlPause.Recv)
+    }
+
     if (this.streamError) throw this.streamError
 
     const ret = this.streamUserSuppliedProgressFunction
@@ -957,18 +972,20 @@ class Curl extends EventEmitter {
     size: number,
     nmemb: number,
   ) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const handle = this
+
     if (!this.writeFunctionStream) {
-      // eslint-disable-next-line @typescript-eslint/no-this-alias
-      const handle = this
       // create the response stream we are going to use
-      this.writeFunctionStream = new Readable({
+      this.streamPendingReadSize = 0
+      const writeFunctionStream = new Readable({
+        autoDestroy: true,
         highWaterMark: this.streamWriteFunctionHighWaterMark,
         destroy(error, cb) {
           handle.streamError =
             error ||
             new Error('Curl response stream was unexpectedly destroyed')
 
-          // let the event loop run one more time before we do anything
           // if the handle is not running anymore it means that the
           // error we set above was caught, if it is still running, then it means that:
           // - the handle is paused
@@ -977,39 +994,35 @@ class Curl extends EventEmitter {
           // - the WRITEFUNCTION callback will be called
           // - this will pause the handle again (because we cannot throw the error in here)
           // - the PROGRESSFUNCTION callback will be called, and then the error will be thrown.
-          setImmediate(() => {
-            if (handle.isRunning && handle.streamWriteFunctionPaused) {
-              handle.streamWriteFunctionPaused = false
-              handle.streamWriteFunctionShouldPause = true
-              try {
-                handle.pause(CurlPause.RecvCont)
-              } catch (error) {
-                cb(error as Error)
-                return
-              }
+          if (handle.isRunning && handle.handle.isPausedRecv) {
+            try {
+              handle.pause(handle.handle.pauseFlags & ~CurlPause.Recv)
+            } catch (error) {
+              cb(error as Error)
+              return
             }
+          }
 
-            cb(null)
-          })
+          cb(null)
         },
-        read(_size) {
-          if (
-            handle.streamWriteFunctionFirstRun ||
-            handle.streamWriteFunctionPaused
-          ) {
-            if (handle.streamWriteFunctionFirstRun) {
-              handle.streamWriteFunctionFirstRun = false
-            }
-            // we must allow Node.js to process the whole event queue
-            // before we unpause
-            setImmediate(() => {
-              if (handle.isRunning) {
-                handle.streamWriteFunctionPaused = false
-                handle.pause(CurlPause.RecvCont)
-              }
-            })
+        read(size) {
+          handle.streamPendingReadSize += size
+
+          if (handle.handle.isPausedRecv && handle.isRunning) {
+            handle.nextPauseFlags = handle.handle.pauseFlags & ~CurlPause.Recv
           }
         },
+      })
+      this.writeFunctionStream = writeFunctionStream
+
+      writeFunctionStream.on('pause', () => {
+        handle.nextPauseFlags = handle.handle.pauseFlags | CurlPause.Recv
+      })
+
+      writeFunctionStream.on('resume', () => {
+        if (handle.isRunning) {
+          handle.pause(handle.handle.pauseFlags & ~CurlPause.Recv)
+        }
       })
 
       // as soon as we have the stream, we need to emit the "stream" event
@@ -1024,35 +1037,26 @@ class Curl extends EventEmitter {
       if (code !== CurlCode.CURLE_OK) {
         const error = new Error('Could not get status code of request')
         this.emit('error', error, code, this)
-        return 0
+        return -1
       }
 
       // let's emit the event only in the next iteration of the event loop
       // We need to do this otherwise the event listener callbacks would run
-      // before the pause below, and this is probably not what we want.
+      // before the pause below, which could potentially lead to a deadlock,
+      // as the stream would unpause the handle before it is actually paused.
       setImmediate(() =>
         this.emit('stream', this.writeFunctionStream, status, headers, this),
       )
-
-      this.streamWriteFunctionPaused = true
-      return CurlWriteFunc.Pause
-    }
-
-    // pause this req
-    if (this.streamWriteFunctionShouldPause) {
-      this.streamWriteFunctionShouldPause = false
-      this.streamWriteFunctionPaused = true
       return CurlWriteFunc.Pause
     }
 
     // write to the stream
-    const ok = this.writeFunctionStream.push(chunk)
-
-    // pause connection until there is more data
-    if (!ok) {
-      this.streamWriteFunctionPaused = true
-      this.pause(CurlPause.Recv)
+    if (!this.streamPendingReadSize) {
+      return CurlWriteFunc.Pause
     }
+
+    this.streamPendingReadSize -= chunk.length
+    this.writeFunctionStream!.push(chunk)
 
     return size * nmemb
   }

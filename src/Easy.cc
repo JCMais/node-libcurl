@@ -371,6 +371,9 @@ Napi::Function Easy::Init(Napi::Env env, Napi::Object exports) {
        InstanceAccessor("id", &Easy::GetterId, nullptr),
        InstanceAccessor("isInsideMultiHandle", &Easy::GetterIsInsideMultiHandle, nullptr),
        InstanceAccessor("isMonitoringSockets", &Easy::GetterIsMonitoringSockets, nullptr),
+       InstanceAccessor("pauseFlags", &Easy::GetterPauseFlags, nullptr),
+       InstanceAccessor("isPausedSend", &Easy::GetterIsPausedSend, nullptr),
+       InstanceAccessor("isPausedRecv", &Easy::GetterIsPausedRecv, nullptr),
        InstanceAccessor("isOpen", &Easy::GetterIsOpen, nullptr)});
 
   exports.Set("Easy", func);
@@ -393,6 +396,18 @@ Napi::Value Easy::GetterIsMonitoringSockets(const Napi::CallbackInfo& info) {
 
 Napi::Value Easy::GetterIsOpen(const Napi::CallbackInfo& info) {
   return Napi::Boolean::New(info.Env(), this->isOpen);
+}
+
+Napi::Value Easy::GetterPauseFlags(const Napi::CallbackInfo& info) {
+  return Napi::Number::New(info.Env(), this->pauseState);
+}
+
+Napi::Value Easy::GetterIsPausedRecv(const Napi::CallbackInfo& info) {
+  return Napi::Boolean::New(info.Env(), (this->pauseState & CURLPAUSE_RECV) != 0);
+}
+
+Napi::Value Easy::GetterIsPausedSend(const Napi::CallbackInfo& info) {
+  return Napi::Boolean::New(info.Env(), (this->pauseState & CURLPAUSE_SEND) != 0);
 }
 
 // SetOpt method - simplified version
@@ -628,6 +643,27 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
     auto valueNumber = value.ToNumber();
 
     switch (optionId) {
+      case CURLOPT_BUFFERSIZE: {
+        auto bufferSize = static_cast<long>(valueNumber.Int32Value());
+        // See https://curl.se/libcurl/c/CURLOPT_BUFFERSIZE.html
+#if NODE_LIBCURL_VER_GE(7, 88, 0)
+        constexpr long kMaxBufferSize = 10 * 1024 * 1024;
+#else
+        constexpr long kMaxBufferSize = 512 * 1024;
+#endif
+        constexpr long kMinBufferSize = 1024;
+        if (bufferSize < kMinBufferSize || bufferSize > kMaxBufferSize) {
+          std::string errMsg = "BUFFERSIZE must be between " + std::to_string(kMinBufferSize) +
+#if NODE_LIBCURL_VER_GE(7, 88, 0)
+                               " and 10485760 (10MB) for libcurl >= 7.88.0";
+#else
+                               " and 524288 (512KB) for libcurl <= 7.88.0";
+#endif
+          throw Napi::RangeError::New(env, errMsg);
+        }
+        setOptRetCode = curl_easy_setopt(this->ch, CURLOPT_BUFFERSIZE, bufferSize);
+        break;
+      }
       case CURLOPT_INFILESIZE_LARGE:
       case CURLOPT_MAXFILESIZE_LARGE:
       case CURLOPT_MAX_RECV_SPEED_LARGE:
@@ -1148,6 +1184,8 @@ Napi::Value Easy::Pause(const Napi::CallbackInfo& info) {
   }
 
   int32_t bitmask = info[0].As<Napi::Number>().Int32Value();
+  this->pauseState = bitmask;
+
   CURLcode code = curl_easy_pause(this->ch, bitmask);
 
   return Napi::Number::New(env, static_cast<int>(code));
@@ -1263,6 +1301,10 @@ size_t Easy::OnData(char* data, size_t size, size_t nmemb) {
   } catch (const Napi::Error& e) {
     this->throwErrorMultiInterfaceAware(e);
     return returnValue;
+  }
+
+  if (returnValue == CURL_WRITEFUNC_PAUSE) {
+    this->pauseState |= CURLPAUSE_RECV;
   }
 
   return returnValue;
@@ -1412,6 +1454,10 @@ size_t Easy::ReadFunction(char* ptr, size_t size, size_t nmemb, void* userdata) 
 
   if (returnValue < 0) {
     return CURL_READFUNC_ABORT;
+  }
+
+  if (returnValue == CURL_READFUNC_PAUSE) {
+    obj->pauseState |= CURLPAUSE_SEND;
   }
 
   return static_cast<size_t>(returnValue);
