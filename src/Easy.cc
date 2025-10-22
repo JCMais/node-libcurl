@@ -381,7 +381,6 @@ Napi::Function Easy::Init(Napi::Env env, Napi::Object exports) {
 }
 
 // Getters
-// TODO(jonathan, migration): mention this ID is unique across threads too
 Napi::Value Easy::GetterId(const Napi::CallbackInfo& info) {
   return Napi::Number::New(info.Env(), this->id);
 }

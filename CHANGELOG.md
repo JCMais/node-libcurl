@@ -21,16 +21,52 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Every Easy handle is now initialized with default CA certificates from Node.js's tls module, by using the result of the "getCACertificates" function. This is done using `CURLOPT_CAINFO_BLOB`. This is a breaking change if you were passing custom CA certificates before using `CAINFO`, as `CURLOPT_CAINFO_BLOB` takes priority over it. If that is the case, you can avoid the default behavior by calling `setOpt("CAINFO_BLOB", null)` on the Easy handle.
 - `HSTSREADFUNCTION` callback now receives an object with the `maxHostLengthBytes` property, which is the maximum length of the host name that can be returned by the callback.
 - The minimum macOS version is now Sonoma (13)
-
+- Curl.globalCleanup is a no-op now. The addon will automatically call `curl_global_cleanup` when the process exits.
+- Curl.globalInit is a no-op now. The addon will automatically call `curl_global_init` when the process starts.
 ### Fixed  
+
+- `CurlHttpVersion.V3` not being set to the proper value (was not set to `30`)
 
 ### Added
 - Prebuilt binaries have HTTP/3 support enabled across all platforms. This is supported by licurl when building with OpenSSL >= 3.5 and nghttp3 [>= 1.66](https://nghttp2.org/blog/2025/06/17/nghttp2-v1-66-0/). To use OpenSSL >= 3.5 a Node.js version >= 22.20.0 is required.
 
 - Added support for the following multi options:
   - `CURLMOPT_NETWORK_CHANGED` (with `CurlMultiNetworkChanged` enum)
-
+- Added the following new enums:
+  - `CurlFollow`
+  - `CurlMultiNetworkChanged`
+- Added following enum members:
+  - `CurlWriteFunc.Abort`
+  - `CurlShareLock.DataShare`
+  - `CurlHttpVersion.V3Only`
+  - `CurlProxy.Https2`
+  - `CurlCode.CURLE_UNRECOVERABLE_POLL`
+  - `CurlCode.CURLE_TOO_LARGE`
+  - `CurlCode.CURLE_ECH_REQUIRED`
+  - `CurlSslOpt.Earlydata`
+- Added support for the following easy options:
+  - https://curl.se/libcurl/c/CURLOPT_CA_CACHE_TIMEOUT.html
+  - https://curl.se/libcurl/c/CURLOPT_MAIL_RCPT_ALLOWFAILS.html
+  - https://curl.se/libcurl/c/CURLOPT_HAPROXY_CLIENT_IP.html
+  - https://curl.se/libcurl/c/CURLOPT_SERVER_RESPONSE_TIMEOUT_MS.html
+  - https://curl.se/libcurl/c/CURLOPT_ECH.html
+  - https://curl.se/libcurl/c/CURLOPT_TCP_KEEPCNT.html
+  - https://curl.se/libcurl/c/CURLOPT_UPLOAD_FLAGS.html
+  - https://curl.se/libcurl/c/CURLOPT_SSL_SIGNATURE_ALGORITHMS.html
+- Added following info options:
+  - https://curl.se/libcurl/c/CURLINFO_CONN_ID.html
+  - https://curl.se/libcurl/c/CURLINFO_XFER_ID.html
+  - https://curl.se/libcurl/c/CURLINFO_QUEUE_TIME_T.html
+  - https://curl.se/libcurl/c/CURLINFO_USED_PROXY.html
+  - https://curl.se/libcurl/c/CURLINFO_POSTTRANSFER_TIME_T.html
+  - https://curl.se/libcurl/c/CURLINFO_EARLYDATA_SENT_T.html
+  - https://curl.se/libcurl/c/CURLINFO_PROXYAUTH_USED.html
+  - https://curl.se/libcurl/c/CURLINFO_HTTPAUTH_USED.html
+- Added the following multi options:
+  - https://curl.se/libcurl/c/CURLMOPT_NETWORK_CHANGED.html
+- Added `Curl.id` and `Easy.id` properties, which return the unique ID of the Easy handle. The value is unique across threads.
 ### Changed  
+- `CurlGlobalInit` enum is deprecated and should not be used.
 
 ### Removed  
 

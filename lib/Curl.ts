@@ -268,6 +268,15 @@ class Curl extends EventEmitter {
   }
 
   /**
+   * Returns the unique ID of the Easy handle.
+   *
+   * The value is unique across threads.
+   */
+  get id() {
+    return this.handle.id
+  }
+
+  /**
    * Callback called when an error is thrown on this handle.
    *
    * This is called from the internal callback we use with the {@link Multi.onMessage | `onMessage`}
@@ -1126,7 +1135,6 @@ class Curl extends EventEmitter {
    * This is a no-op now, and the call itself is deprecated.
    *
    * @deprecated
-   * TODO(jonathan, changelog): add to changelog - remove it
    */
   static globalInit = () => {
     /* noop */
@@ -1139,7 +1147,6 @@ class Curl extends EventEmitter {
    *
    * @deprecated Does nothing, do not call. This is called by the addon itself when the environment
    * is being unloaded.
-   * TODO(jonathan, changelog): add to changelog - remove it
    */
   static globalCleanup = () => {
     /* noop */

@@ -8,8 +8,7 @@
 /**
  * @public
  *
- * @deprecated This will be removed
- * TODO(jonathan, changelog): remove it, add to changelog
+ * @deprecated This will be removed in the next major version.
  */
 export const enum CurlGlobalInit {
   Nothing = 0,
