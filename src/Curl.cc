@@ -839,7 +839,13 @@ Curl::~Curl() {
 
 void Curl::InitTLS() {
   // This is setup on moduleSetup.ts
-  Napi::Object tls = env.Global().Get("__libcurlTls").ToObject();
+  Napi::Value maybeTls = env.Global().Get("__libcurlTls");
+
+  if (!(maybeTls.IsObject())) {
+    return;
+  }
+
+  Napi::Object tls = maybeTls.ToObject();
 
   // get CA certificates from Node.js's tls module and set them on the easy handle
   // See: https://nodejs.org/api/tls.html#tlsgetcacertificatestype
