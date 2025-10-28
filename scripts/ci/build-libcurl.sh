@@ -54,6 +54,11 @@ libcurl_args=()
 is_less_than_7_54_0=0
 (printf '%s\n%s' "7.54.0" "$1" | $gsort -CV) || is_less_than_7_54_0=$?
 
+# This is way faster than using distclean
+if [ -d $2/source/$1 ] && [ -f $2/source/$1/configure ]; then
+  rm -rf $2/source/$1
+fi
+
 if [ ! -d $2/source/$1 ]; then
   if [ "$is_less_than_7_54_0" == "1" ]; then
     echo "Using source tarball instead of release because this libcurl version does not have releases"
@@ -77,12 +82,7 @@ if [ ! -d $2/source/$1 ]; then
     cd $2/source/$1
   fi
 else
-  cd $2/source/$1
-  if [ -f ./configure ]; then
-    make distclean || true;
-  else
-    ./buildconf
-  fi
+  ./buildconf
 fi
 
 #   https://github.com/curl/curl/pull/1427#issuecomment-295783852
@@ -242,12 +242,18 @@ fi
 #####
 # nghttp3 and ngtcp2 (HTTP/3 support)
 ####
-if [ ! -z "$NGHTTP3_BUILD_FOLDER" ] && [ ! -z "$NGTCP2_BUILD_FOLDER" ]; then
+# Only enable HTTP/3 if libcurl > 8.0.0 and both nghttp3 and ngtcp2 are available
+is_less_than_8_0_0=0
+(printf '%s\n%s' "8.0.0" "$1"| $gsort -CV) || is_less_than_8_0_0=$?
+
+if [ "$is_less_than_8_0_0" == "0" ] && [ ! -z "$NGHTTP3_BUILD_FOLDER" ] && [ ! -z "$NGTCP2_BUILD_FOLDER" ]; then
   echo "Enabling HTTP/3 support with nghttp3 and ngtcp2"
+  # nghttp3 support
   CPPFLAGS="$CPPFLAGS -I$NGHTTP3_BUILD_FOLDER/include"
   LDFLAGS="$LDFLAGS -L$NGHTTP3_BUILD_FOLDER/lib -Wl,-rpath,$NGHTTP3_BUILD_FOLDER/lib"
   libcurl_args+=("--with-nghttp3=$NGHTTP3_BUILD_FOLDER")
 
+  # ngtcp2 support
   CPPFLAGS="$CPPFLAGS -I$NGTCP2_BUILD_FOLDER/include"
   LDFLAGS="$LDFLAGS -L$NGTCP2_BUILD_FOLDER/lib -Wl,-rpath,$NGTCP2_BUILD_FOLDER/lib"
   PKG_CONFIG_PATH="$NGTCP2_BUILD_FOLDER/lib/pkgconfig:$PKG_CONFIG_PATH"
