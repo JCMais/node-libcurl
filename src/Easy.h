@@ -32,6 +32,7 @@ class Easy : public Napi::ObjectWrap<Easy> {
 
   static Napi::Function Init(Napi::Env env, Napi::Object exports);
 
+  Napi::Value DebugLog(const Napi::CallbackInfo& info);
   Napi::Value SetOpt(const Napi::CallbackInfo& info);
   Napi::Value GetInfo(const Napi::CallbackInfo& info);
   Napi::Value Send(const Napi::CallbackInfo& info);

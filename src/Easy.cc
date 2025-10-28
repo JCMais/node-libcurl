@@ -354,6 +354,7 @@ Napi::Function Easy::Init(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(
       env, "Easy",
       {// Instance methods
+       InstanceMethod("debugLog", &Easy::DebugLog), InstanceMethod("getInfo", &Easy::GetInfo),
        InstanceMethod("setOpt", &Easy::SetOpt), InstanceMethod("getInfo", &Easy::GetInfo),
        InstanceMethod("send", &Easy::Send), InstanceMethod("recv", &Easy::Recv),
        InstanceMethod("perform", &Easy::Perform), InstanceMethod("upkeep", &Easy::Upkeep),
@@ -407,6 +408,19 @@ Napi::Value Easy::GetterIsPausedRecv(const Napi::CallbackInfo& info) {
 
 Napi::Value Easy::GetterIsPausedSend(const Napi::CallbackInfo& info) {
   return Napi::Boolean::New(info.Env(), (this->pauseState & CURLPAUSE_SEND) != 0);
+}
+
+Napi::Value Easy::DebugLog(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
+
+  if (info.Length() < 1) {
+    throw Napi::TypeError::New(env, "Wrong number of arguments.");
+  }
+
+  NODE_LIBCURL_DEBUG_LOG(this, "Easy::DebugLog", info[0].ToString().Utf8Value());
+
+  return env.Null();
 }
 
 // SetOpt method - simplified version
@@ -1038,6 +1052,8 @@ Napi::Value Easy::Perform(const Napi::CallbackInfo& info) {
     throw Napi::TypeError::New(env, "Curl handle is closed");
   }
 
+  NODE_LIBCURL_DEBUG_LOG(this, "Easy::Perform", "performing request");
+
   SETLOCALE_WRAPPER(CURLcode code = curl_easy_perform(this->ch););
 
   return Napi::Number::New(env, static_cast<int>(code));
@@ -1049,6 +1065,8 @@ Napi::Value Easy::Reset(const Napi::CallbackInfo& info) {
   if (!this->isOpen) {
     throw Napi::Error::New(env, "Curl handle is closed");
   }
+
+  NODE_LIBCURL_DEBUG_LOG(this, "Easy::Reset", "resetting request");
 
   curl_easy_reset(this->ch);
 
@@ -1254,6 +1272,8 @@ size_t Easy::HeaderFunction(char* ptr, size_t size, size_t nmemb, void* userdata
 }
 
 size_t Easy::OnData(char* data, size_t size, size_t nmemb) {
+  NODE_LIBCURL_DEBUG_LOG(this, "Easy::OnData", "received data");
+
   Napi::Env env = Env();
   Napi::HandleScope scope(env);
 
