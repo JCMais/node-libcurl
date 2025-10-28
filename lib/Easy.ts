@@ -136,6 +136,11 @@ declare class Easy {
    */
   private: any
 
+  /**
+   * @private
+   */
+  debugLog(message: string): void
+
   // START AUTOMATICALLY GENERATED CODE - DO NOT EDIT
   /**
    * Use {@link Curl.option|`Curl.option`} for predefined constants.
