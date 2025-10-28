@@ -81,6 +81,8 @@ class Multi : public Napi::ObjectWrap<Multi> {
   napi_async_cleanup_hook_handle removeHandle;
   uint64_t id;
 
+  std::map<curl_socket_t, CurlSocketContext*> socketContextMap;
+
   // Static members
   static std::atomic<uint64_t> nextId;
 
