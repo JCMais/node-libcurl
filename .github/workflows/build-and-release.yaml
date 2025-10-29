@@ -107,14 +107,6 @@ jobs:
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
     steps:
-      - name: Should publish binary?
-        id: should-publish
-        run: |
-          if [ "${{ inputs.publish-binary }}" = "true" ] || [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "result=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "result=false" >> "$GITHUB_OUTPUT"
-          fi
       - if: matrix.os == 'alpine'
         name: Install Alpine Packages
         shell: sh
@@ -128,6 +120,14 @@ jobs:
           autoconf automake libtool \
           texinfo flex bison build-base libedit-dev mandoc-soelim
 
+      - name: Should publish binary?
+        id: should-publish
+        run: |
+          if [ "${{ inputs.publish-binary }}" = "true" ] || [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "result=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=false" >> "$GITHUB_OUTPUT"
+          fi
       - if: runner.os == 'macOS'
         name: Install Needed packages on macOS
         run: brew install coreutils wget automake libtool cmake gnu-sed m4 groff
@@ -167,10 +167,13 @@ jobs:
       - name: Setup vcpkg (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
+        env:
+          VCPKG_DISABLE_METRICS: false
         run: |
           cd vcpkg
           .\bootstrap-vcpkg.bat
           echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
+          cd ..
           node scripts/vcpkg-setup.js
 
       - name: Enable vcpkg binary caching (Windows)
