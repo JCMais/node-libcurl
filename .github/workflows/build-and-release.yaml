@@ -252,13 +252,9 @@ jobs:
             echo "status=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: "Print Outputs"
-        run: |
-          echo "libcurl-deps-cache.outputs.cache-hit: ${{ steps.libcurl-deps-cache.outputs.cache-hit }}"
-          echo "built-and-installed.outputs.status: ${{ steps.built-and-installed.outputs.status }}"
       - name: Libcurl Deps Cache (Save)
         uses: actions/cache/save@v4
-        if: runner.os != 'Windows' && steps.libcurl-deps-cache.outputs.cache-hit == 'false' && steps.built-and-installed.outputs.status == 'true'
+        if: runner.os != 'Windows' && steps.libcurl-deps-cache.outputs.cache-hit != 'true' && steps.built-and-installed.outputs.status == 'true'
         with:
           path: |
             ~/.node-gyp
