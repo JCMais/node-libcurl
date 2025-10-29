@@ -118,7 +118,7 @@ jobs:
           python3 py3-pip make g++ \
           perl linux-headers \
           autoconf automake libtool \
-          texinfo flex bison build-base libedit-dev mandoc-soelim
+          texinfo flex bison build-base libedit-dev mandoc-soelim zlib zlib-dev zlib-static
 
       - name: Should publish binary?
         id: should-publish
@@ -185,6 +185,7 @@ jobs:
 
       - name: Cache vcpkg (Windows)
         if: runner.os == 'Windows'
+        id: vcpkg-cache
         uses: actions/cache@v4
         with:
           path: |
@@ -192,6 +193,12 @@ jobs:
             ${{ runner.temp }}\vcpkg-cache
           key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'overlays/**') }}
           restore-keys: vcpkg-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Create vcpkg cache folder (Windows)
+        if: runner.os == 'Windows' && steps.vcpkg-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "${{ runner.temp }}\vcpkg-cache"
 
       - name: Libcurl Deps Cache (Restore)
         uses: actions/cache/restore@v4
@@ -201,9 +208,9 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v4-${{ matrix.os }}-libcurl-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
+          key: v4-${{ matrix.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
           restore-keys: |
-            v4-${{ matrix.os }}-libcurl-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
+            v4-${{ matrix.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
 
       - name: Restore Electron Cache
         uses: actions/cache@v4
@@ -233,11 +240,17 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           if [[ -f built-and-installed.hidden.txt ]]; then
+            echo "built-and-installed.hidden.txt exists"
             echo "status=true" >> $GITHUB_OUTPUT
           else
+            echo "built-and-installed.hidden.txt does not exist"
             echo "status=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: "Print Outputs"
+        run: |
+          echo "libcurl-deps-cache.outputs.cache-hit: ${{ steps.libcurl-deps-cache.outputs.cache-hit }}"
+          echo "built-and-installed.outputs.status: ${{ steps.built-and-installed.outputs.status }}"
       - name: Libcurl Deps Cache (Save)
         uses: actions/cache/save@v4
         if: runner.os != 'Windows' && steps.libcurl-deps-cache.outputs.cache-hit == 'false' && steps.built-and-installed.outputs.status == 'true'
@@ -245,7 +258,7 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v4-${{ matrix.os }}-libcurl-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
+          key: v4-${{ matrix.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
 
       - name: 'Build and Package Binary Windows'
         if: runner.os == 'Windows'
