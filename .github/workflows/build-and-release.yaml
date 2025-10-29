@@ -212,11 +212,6 @@ jobs:
           restore-keys: |
             v4-${{ matrix.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
 
-      - name: Libcurl
-        run: |
-          echo "${{ toJson(steps.libcurl-deps-cache.outputs) }}"
-          exit 1
-            
       - name: Restore Electron Cache
         uses: actions/cache@v4
         if: matrix.electron-version && runner.os != 'Windows'
