@@ -309,7 +309,11 @@ export PKG_CONFIG_PATH=$PKG_CONFIG_PATH
 
 # Release - Static
 ./configure \
-    --enable-debug \
+    --disable-debug \
+    --enable-optimize \
+    --disable-warnings \
+    --disable-curldebug \
+    --disable-dependency-tracking \
     --without-nss \
     --without-libpsl \
     --without-librtmp \

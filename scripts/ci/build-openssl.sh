@@ -85,6 +85,7 @@ else
     --libdir=lib \
     --prefix=$build_folder \
     --openssldir=$build_folder \
+    --disable-debug \
     no-shared "${@:3}"
 
   # Release - Both

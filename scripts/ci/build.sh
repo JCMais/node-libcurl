@@ -116,6 +116,12 @@ if [ "$(uname)" == "Darwin" ]; then
     (>&2 echo "> brew install automake")
     exit 1
   fi
+  if ! command -v glibtoolize &>/dev/null; then
+    (>&2 echo "Could not find glibtoolize, we need it to build some dependencies (such as libssh2)")
+    (>&2 echo "You can get it by installing the glibtool package:")
+    (>&2 echo "> brew install libtool")
+    exit 1
+  fi
 fi
 
 if ! command -v soelim &>/dev/null; then

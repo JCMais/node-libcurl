@@ -1,11 +1,20 @@
-## Benchmarks
+# Benchmarks
+
 > Disclaimer: Those benchmarks are probably far from real world usage scenarios and should not be taken too seriously before doing tests with your use-case in mind first.
 
 If you feel any of the code available is wrong, please open a PR with a suggested fix.
 
-The idea is just to hit some webpage  doing a GET request to `/` and receiving the result body back.
+The idea is just to hit some webpage doing a GET request to `/` and receiving the result body back.
 
 For libraries that do not return the data as string, code to do that should be added, as is the case with Node.js `http.request`, `node-fetch` and `node-libcurl.Easy`.
+
+## Setup
+
+```bash
+pnpm --ignore-workspace install
+```
+
+## Start
 
 A local server can be started with `pnpm start-server`.
 

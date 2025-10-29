@@ -79,7 +79,6 @@
               "ExceptionHandling": 1, 
             },
             'VCLinkerTool': {
-              'GenerateDebugInformation': 'true',
               'AdditionalOptions': [
                 '/FORCE:MULTIPLE',
                 # Symbol already defined. Impossible to avoid given Node.js exposes OpenSSL symbols from their own build.
@@ -109,6 +108,9 @@
                 'VCCLCompilerTool': {
                   'WarnAsError': 'false',
                   'RuntimeLibrary': 3,
+                },
+                'VCLinkerTool': {
+                  'GenerateDebugInformation': 'true',
                 }
               }
             }

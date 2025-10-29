@@ -33,6 +33,7 @@ export CFLAGS="$CFLAGS -fPIC"
 ./configure \
   --prefix=$build_folder \
   --enable-lib-only \
+  --disable-debug \
   --disable-shared
 
 make && make install
