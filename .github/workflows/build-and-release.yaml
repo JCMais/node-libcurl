@@ -83,25 +83,25 @@ jobs:
           - ''
         os:
           - macos-15
-          - ubuntu-22.04
+          # - ubuntu-22.04
           # - ubuntu-24.04-arm
-          - alpine
-          - windows-2025
+          # - alpine
+          # - windows-2025
         libcurl-release:
           - ${{ needs.set-params.outputs.latest-libcurl-release }}
         node:
           - 24
-          - 22
-        include:
-          # electron builds
-          - os: ubuntu-22.04
-            libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
-            node: 24
-            electron-version: 38.1.2
-          - os: macos-15
-            libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
-            node: 24
-            electron-version: 38.1.2
+          # - 22
+        # include:
+        #   # electron builds
+        #   - os: ubuntu-22.04
+        #     libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
+        #     node: 24
+        #     electron-version: 38.1.2
+        #   - os: macos-15
+        #     libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
+        #     node: 24
+        #     electron-version: 38.1.2
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -212,6 +212,11 @@ jobs:
           restore-keys: |
             v4-${{ matrix.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
 
+      - name: Libcurl
+        run: |
+          echo "${{ toJson(steps.libcurl-deps-cache.outputs) }}"
+          exit 1
+            
       - name: Restore Electron Cache
         uses: actions/cache@v4
         if: matrix.electron-version && runner.os != 'Windows'
