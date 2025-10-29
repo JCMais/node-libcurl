@@ -164,26 +164,14 @@ jobs:
           cache: 'pnpm'
           package-manager-cache: true
 
-      - name: Setup vcpkg (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        env:
-          VCPKG_DISABLE_METRICS: false
-        run: |
-          cd vcpkg
-          .\bootstrap-vcpkg.bat
-          echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
-          cd ..
-          node scripts/vcpkg-setup.js
-
-      - name: Enable vcpkg binary caching (Windows)
+      - name: (Windows) Enable vcpkg binary caching
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           echo "VCPKG_FEATURE_FLAGS=manifests,binarycaching" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "VCPKG_DEFAULT_BINARY_CACHE=${{ runner.temp }}\vcpkg-cache" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Cache vcpkg (Windows)
+      - name: (Windows) Cache vcpkg
         if: runner.os == 'Windows'
         id: vcpkg-cache
         uses: actions/cache@v4
@@ -194,11 +182,23 @@ jobs:
           key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'overlays/**') }}
           restore-keys: vcpkg-${{ runner.os }}-${{ runner.arch }}-
 
-      - name: Create vcpkg cache folder (Windows)
+      - name: (Windows) Create vcpkg cache folder
         if: runner.os == 'Windows' && steps.vcpkg-cache.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path "${{ runner.temp }}\vcpkg-cache"
+
+      - name: (Windows) Setup vcpkg
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          VCPKG_DISABLE_METRICS: false
+        run: |
+          cd vcpkg
+          .\bootstrap-vcpkg.bat
+          echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
+          cd ..
+          node scripts/vcpkg-setup.js
 
       - name: Libcurl Deps Cache (Restore)
         uses: actions/cache/restore@v4
