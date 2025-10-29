@@ -13,7 +13,8 @@
   - [Changing libcurl Version Used on Prebuilt Binaries for Windows](#changing-libcurl-version-used-on-prebuilt-binaries-for-windows)
   - [Building Electron](#building-electron)
   - [Debugging with lldb](#debugging-with-lldb)
-  - [Publishing New Releases](#publishing-new-releases)
+- [Publishing New Releases](#publishing-new-releases)
+  - [Manual Publishing](#manual-publishing)
     - [Semver Major / Minor / Patch](#semver-major--minor--patch)
     - [Prereleases](#prereleases)
     - [Build Matrix](#build-matrix)
@@ -154,7 +155,12 @@ llnode -- /path/to/bin/node --abort_on_uncaught_exception script.js
 
 More information go to https://github.com/nodejs/llnode
 
-### Publishing New Releases
+## Publishing New Releases
+
+For publishing there is a GitHub action workflow to publish new releases at: https://github.com/JCMais/node-libcurl/actions/workflows/publish.yml
+
+
+### Manual Publishing
 
 We are using [`np`](https://github.com/sindresorhus/np) for releases.
 
