@@ -118,9 +118,9 @@ jobs:
           path: |
             ~/.node-gyp
             ~/deps
-          key: v4-${{ runner.os }}-libcurl-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
+          key: v4-${{ runner.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
           restore-keys: |
-            v4-${{ runner.os }}-libcurl-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
+            v4-${{ runner.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
 
       - name: Restore Electron Cache
         uses: actions/cache@v4
