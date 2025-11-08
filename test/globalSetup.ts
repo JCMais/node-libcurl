@@ -35,13 +35,20 @@ export default async function setup({ provide }: TestProject) {
   const wsServer = createWebSocketServer()
 
   // Setup WebSocket server to echo all messages with proper frame types
-  wsServer.wss!.on('connection', (ws) => {
+  wsServer.wss!.on('connection', (ws, req) => {
+    const url = req.url
+    const fullUrl = `ws://${req.headers.host}${url}`
+
+    if (fullUrl.includes('/close-immediately')) {
+      ws.send('Hello!')
+      ws.close()
+      return
+    }
+
     ws.on('message', (data, isBinary) => {
-      // Echo back with the same frame type
       ws.send(data, { binary: isBinary })
     })
 
-    // Handle ping frames - respond with pong
     ws.on('ping', (data) => {
       ws.pong(data)
     })

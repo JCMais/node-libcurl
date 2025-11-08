@@ -8,9 +8,18 @@
  * NOTE: These tests require the 'ws' package to be installed as a devDependency:
  * pnpm add -D ws @types/ws
  */
-import { describe, it, expect, inject } from 'vitest'
+import { describe, it, assert, expect, inject } from 'vitest'
 
-import { Curl, CurlCode, Easy, Multi, CurlWs, SocketState } from '../../lib'
+import {
+  Curl,
+  CurlCode,
+  Easy,
+  Multi,
+  CurlWs,
+  SocketState,
+  CurlReadFunc,
+  CurlPause,
+} from '../../lib'
 import { withCommonTestOptions } from '../helper/commonOptions'
 import { setTimeout } from 'node:timers/promises'
 
@@ -50,7 +59,7 @@ describe.runIf(isWebSocketSupported)(
           if (recvResult.code !== CurlCode.CURLE_AGAIN) {
             break
           }
-          await setTimeout(100)
+          await setTimeout(10)
         }
 
         expect(recvResult.code).toBe(CurlCode.CURLE_OK)
@@ -96,7 +105,7 @@ describe.runIf(isWebSocketSupported)(
           if (recvResult.code !== CurlCode.CURLE_AGAIN) {
             break
           }
-          await setTimeout(100)
+          await setTimeout(10)
         }
 
         expect(recvResult.code).toBe(CurlCode.CURLE_OK)
@@ -161,22 +170,28 @@ describe.runIf(isWebSocketSupported)(
         easy.wsSend(message, CurlWs.Text)
 
         const recvBuffer = Buffer.alloc(1024)
-        await setTimeout(100)
+        await setTimeout(10)
 
-        const recvResult = easy.wsRecv(recvBuffer)
-
-        expect(recvResult.meta).not.toBeNull()
-        if (recvResult.meta) {
-          expect(recvResult.meta).toHaveProperty('age')
-          expect(recvResult.meta).toHaveProperty('flags')
-          expect(recvResult.meta).toHaveProperty('offset')
-          expect(recvResult.meta).toHaveProperty('bytesleft')
-          expect(recvResult.meta).toHaveProperty('len')
-
-          expect(recvResult.meta.age).toBe(0)
-          expect(recvResult.meta.len).toBeGreaterThan(0)
-          expect(recvResult.meta.offset).toBeGreaterThanOrEqual(0)
+        let recvResult: ReturnType<typeof easy.wsRecv>
+        while (true) {
+          recvResult = easy.wsRecv(recvBuffer)
+          if (recvResult.code !== CurlCode.CURLE_AGAIN) {
+            break
+          }
+          await setTimeout(10)
         }
+
+        expect(recvResult.code).toBe(CurlCode.CURLE_OK)
+        expect(recvResult.meta).not.toBeNull()
+        expect(recvResult.meta).toMatchInlineSnapshot(`
+          {
+            "age": 0,
+            "bytesleft": 0,
+            "flags": 1,
+            "len": 13,
+            "offset": 0,
+          }
+        `)
 
         easy.close()
       })
@@ -207,13 +222,11 @@ describe.runIf(isWebSocketSupported)(
         // Use a smaller buffer to force fragmentation handling
         const recvBuffer = Buffer.alloc(16384) // 16KB buffer
 
-        await setTimeout(200) // Give server time to send
-
         while (true) {
           const recvResult = easy.wsRecv(recvBuffer)
 
           if (recvResult.code === CurlCode.CURLE_AGAIN) {
-            await setTimeout(50)
+            await setTimeout(10)
             continue
           }
 
@@ -258,49 +271,205 @@ describe.runIf(isWebSocketSupported)(
 
         easy.close()
       })
-    })
 
-    describe('wsMeta() in WRITEFUNCTION', () => {
-      it('should provide frame metadata in callback', async () => {
-        // wsMeta() is designed to work inside WRITEFUNCTION callbacks
-        // In CONNECT_ONLY mode, metadata is returned directly from wsRecv()
-        // This test verifies that wsRecv returns proper metadata
+      it('should work with Multi handle', () => {
         const easy = new Easy()
+        const multi = new Multi()
+
         withCommonTestOptions(easy)
         easy.setOpt('URL', getWsUrl())
         easy.setOpt('CONNECT_ONLY', 2)
 
+        let connectionEstablished = false
+        let messageSent = false
+        let messageReceived = false
+
+        return new Promise<void>((resolve, reject) => {
+          // Handle socket events for async I/O
+          easy.onSocketEvent((error, events) => {
+            if (error) {
+              reject(error)
+              return
+            }
+
+            const isWritable = events & SocketState.Writable
+            const isReadable = events & SocketState.Readable
+
+            // Send when writable
+            if (isWritable && connectionEstablished && !messageSent) {
+              const message = Buffer.from('Multi test')
+              const sendResult = easy.wsSend(message, CurlWs.Text)
+
+              expect(sendResult.code).toBe(CurlCode.CURLE_OK)
+              expect(sendResult.bytesSent).toBe(message.length)
+              messageSent = true
+            }
+
+            // Receive when readable
+            if (isReadable && messageSent && !messageReceived) {
+              const buffer = Buffer.alloc(1024)
+              const recvResult = easy.wsRecv(buffer)
+
+              expect(recvResult.code).toBe(CurlCode.CURLE_OK)
+              expect(recvResult.bytesReceived).toBeGreaterThan(0)
+              expect(recvResult.meta).not.toBeNull()
+
+              const received = buffer.toString(
+                'utf8',
+                0,
+                recvResult.bytesReceived,
+              )
+              expect(received).toBe('Multi test')
+
+              messageReceived = true
+
+              // Clean up
+              easy.unmonitorSocketEvents()
+              multi.removeHandle(easy)
+              multi.close()
+              easy.close()
+
+              resolve()
+            }
+          })
+
+          // Handle connection
+          multi.onMessage((error) => {
+            if (error) {
+              reject(error)
+              return
+            }
+
+            connectionEstablished = true
+            easy.monitorSocketEvents()
+          })
+
+          // Start connection
+          multi.addHandle(easy)
+        })
+      })
+    })
+
+    describe('wsMeta() in WRITEFUNCTION', () => {
+      it('should provide frame metadata in callback', async () => {
+        const easy = new Easy()
+        withCommonTestOptions(easy)
+        easy.setOpt('URL', `${getWsUrl()}/close-immediately`)
+        easy.setOpt('UPLOAD', 1)
+        easy.setOpt('CONNECT_ONLY', 0)
+        easy.setOpt('VERBOSE', true)
+
+        const flags = [CurlWs.Text, CurlWs.Close]
+
+        easy.setOpt('WRITEFUNCTION', (buffer, size, nmemb) => {
+          process.stdout.write(`WRITEFUNCTION ${buffer} ${size} ${nmemb}\n`)
+          const meta = easy.wsMeta()
+
+          assert(meta)
+
+          expect(meta.flags).toBe(flags.shift())
+          expect(meta.bytesleft).toBe(0)
+
+          if (meta.flags & CurlWs.Close) {
+            easy.wsSend(Buffer.alloc(0), CurlWs.Close)
+          }
+
+          return size * nmemb
+        })
+
+        easy.setOpt('READFUNCTION', () => {
+          return 0
+        })
+
         const performCode = easy.perform()
         expect(performCode).toBe(CurlCode.CURLE_OK)
+      })
 
-        // Send a message to trigger an echo
-        const message = Buffer.from('Hello metadata!')
-        easy.wsSend(message, CurlWs.Text)
+      it('should work with Multi handle', () => {
+        const multi = new Multi()
+        const easy = new Easy()
+        withCommonTestOptions(easy)
+        easy.setOpt('URL', getWsUrl())
+        easy.setOpt('UPLOAD', 1)
+        easy.setOpt('CONNECT_ONLY', 0)
+        easy.setOpt('VERBOSE', true)
 
-        // Receive the echo - metadata comes with wsRecv result
-        const recvBuffer = Buffer.alloc(1024)
-        let recvResult: ReturnType<typeof easy.wsRecv>
-        while (true) {
-          recvResult = easy.wsRecv(recvBuffer)
-          if (recvResult.code !== CurlCode.CURLE_AGAIN) {
-            break
+        const flags = [
+          // these are the messages we have below
+          CurlWs.Binary,
+          CurlWs.Binary,
+          // we send the third one as a Text!
+          CurlWs.Text,
+          // final closing frame
+          CurlWs.Close,
+        ]
+
+        const messagesToSend = [
+          Buffer.from('Hello'),
+          Buffer.from('World'),
+          Buffer.from('!'),
+        ]
+
+        let lastMessageSent: null | Buffer = null
+
+        let shouldSendNextMessage = true
+
+        easy.setOpt('WRITEFUNCTION', (buffer, size, nmemb) => {
+          process.stdout.write(`WRITEFUNCTION ${buffer} ${size} ${nmemb}\n`)
+          const meta = easy.wsMeta()
+
+          assert(meta)
+
+          expect(meta.flags).toBe(flags.shift())
+          expect(meta.bytesleft).toBe(0)
+
+          if (messagesToSend.length > 0) {
+            setTimeout(10).then(() => {
+              easy.pause(CurlPause.Send)
+            })
           }
-          await setTimeout(100)
-        }
 
-        expect(recvResult.code).toBe(CurlCode.CURLE_OK)
-        expect(recvResult.meta).not.toBeNull()
+          return size * nmemb
+        })
 
-        if (recvResult.meta) {
-          // Verify metadata properties are present
-          expect(recvResult.meta).toHaveProperty('age')
-          expect(recvResult.meta).toHaveProperty('flags')
-          expect(recvResult.meta).toHaveProperty('bytesleft')
-          expect(recvResult.meta).toHaveProperty('len')
-          expect(recvResult.meta.flags & CurlWs.Text).not.toBe(0)
-        }
+        easy.setOpt('READFUNCTION', (data) => {
+          if (!shouldSendNextMessage) {
+            process.stdout.write(`READFUNCTION pausing\n`)
+            return CurlReadFunc.Pause
+          }
 
-        easy.close()
+          process.stdout.write(
+            `READFUNCTION sending message ${lastMessageSent}\n`,
+          )
+
+          const message = messagesToSend.shift()
+          if (!message) {
+            shouldSendNextMessage = false
+            easy.wsStartFrame(CurlWs.Close, 0)
+            return 0
+          }
+
+          if (messagesToSend.length === 0) {
+            easy.wsStartFrame(CurlWs.Text, message.length)
+          }
+
+          lastMessageSent = message
+
+          message.copy(data)
+          return message.length
+        })
+
+        return new Promise<void>((resolve, reject) => {
+          multi.onMessage((error) => {
+            if (error) {
+              reject(error)
+            }
+
+            resolve()
+          })
+
+          multi.addHandle(easy)
+        })
       })
 
       it('should return null when not in WebSocket context', () => {
@@ -388,6 +557,12 @@ describe.runIf(isWebSocketSupported)(
 
         easy.close()
       })
+
+      it('calling wsStartFrame outside of READFUNCTION is undefined behavior', () => {
+        const easy = new Easy()
+        const result = easy.wsStartFrame(CurlWs.Text, 0)
+        expect(result).not.toBe(CurlCode.CURLE_OK)
+      })
     })
 
     describe('Frame types', () => {
@@ -407,7 +582,7 @@ describe.runIf(isWebSocketSupported)(
           if (result.code !== CurlCode.CURLE_AGAIN) {
             break
           }
-          await setTimeout(100)
+          await setTimeout(10)
         }
 
         expect(result.meta).not.toBeNull()
@@ -440,7 +615,7 @@ describe.runIf(isWebSocketSupported)(
           if (result.code !== CurlCode.CURLE_AGAIN) {
             break
           }
-          await setTimeout(100)
+          await setTimeout(10)
         }
 
         expect(result.meta).not.toBeNull()
@@ -453,122 +628,6 @@ describe.runIf(isWebSocketSupported)(
         }
 
         easy.close()
-      })
-    })
-
-    describe('Integration with Curl wrapper', () => {
-      it('should work with Easy handle directly', async () => {
-        const easy = new Easy()
-        withCommonTestOptions(easy)
-        easy.setOpt('URL', getWsUrl())
-        easy.setOpt('CONNECT_ONLY', 2)
-
-        const code = easy.perform()
-        expect(code).toBe(CurlCode.CURLE_OK)
-
-        const message = Buffer.from('Integration test')
-        const { code: sendCode, bytesSent } = easy.wsSend(message, CurlWs.Text)
-
-        expect(sendCode).toBe(CurlCode.CURLE_OK)
-        expect(bytesSent).toBe(message.length)
-
-        const buffer = Buffer.alloc(1024)
-        let result: ReturnType<typeof easy.wsRecv>
-        while (true) {
-          result = easy.wsRecv(buffer)
-          if (result.code !== CurlCode.CURLE_AGAIN) {
-            break
-          }
-          await setTimeout(100)
-        }
-
-        expect(result.code).toBe(CurlCode.CURLE_OK)
-        expect(result.bytesReceived).toBeGreaterThan(0)
-        expect(result.meta).not.toBeNull()
-
-        const received = buffer.toString('utf8', 0, result.bytesReceived)
-        expect(received).toBe('Integration test')
-
-        easy.close()
-      })
-    })
-
-    describe('Multi interface integration', () => {
-      it('should work with Multi handle for async operations', async () => {
-        const easy = new Easy()
-        const multi = new Multi()
-
-        withCommonTestOptions(easy)
-        easy.setOpt('URL', getWsUrl())
-        easy.setOpt('CONNECT_ONLY', 2)
-
-        let connectionEstablished = false
-        let messageSent = false
-        let messageReceived = false
-
-        return new Promise<void>((resolve, reject) => {
-          // Handle socket events for async I/O
-          easy.onSocketEvent((error, events) => {
-            if (error) {
-              reject(error)
-              return
-            }
-
-            const isWritable = events & SocketState.Writable
-            const isReadable = events & SocketState.Readable
-
-            // Send when writable
-            if (isWritable && connectionEstablished && !messageSent) {
-              const message = Buffer.from('Multi test')
-              const sendResult = easy.wsSend(message, CurlWs.Text)
-
-              expect(sendResult.code).toBe(CurlCode.CURLE_OK)
-              expect(sendResult.bytesSent).toBe(message.length)
-              messageSent = true
-            }
-
-            // Receive when readable
-            if (isReadable && messageSent && !messageReceived) {
-              const buffer = Buffer.alloc(1024)
-              const recvResult = easy.wsRecv(buffer)
-
-              expect(recvResult.code).toBe(CurlCode.CURLE_OK)
-              expect(recvResult.bytesReceived).toBeGreaterThan(0)
-              expect(recvResult.meta).not.toBeNull()
-
-              const received = buffer.toString(
-                'utf8',
-                0,
-                recvResult.bytesReceived,
-              )
-              expect(received).toBe('Multi test')
-
-              messageReceived = true
-
-              // Clean up
-              easy.unmonitorSocketEvents()
-              multi.removeHandle(easy)
-              multi.close()
-              easy.close()
-
-              resolve()
-            }
-          })
-
-          // Handle connection
-          multi.onMessage((error) => {
-            if (error) {
-              reject(error)
-              return
-            }
-
-            connectionEstablished = true
-            easy.monitorSocketEvents()
-          })
-
-          // Start connection
-          multi.addHandle(easy)
-        })
       })
     })
   },
