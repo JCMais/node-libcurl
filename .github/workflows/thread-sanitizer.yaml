@@ -1,0 +1,110 @@
+name: thread-sanitizer
+
+defaults:
+  run:
+    shell: bash
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'lib/**'
+      - 'test/**'
+      - 'examples/**'
+      - 'tsan-suppressions.txt'
+      - '.github/workflows/thread-sanitizer.yaml'
+
+env:
+  LATEST_LIBCURL_RELEASE: 8.16.0
+  NODE_LIBCURL_CPP_STD: c++20
+
+concurrency:
+  group: thread-sanitizer-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  thread-sanitizer-test:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: true
+      matrix:
+        node:
+          - 24
+        libcurl-release:
+          - '8.16.0'
+    env:
+      LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
+      LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
+      # ThreadSanitizer compiler flags
+      CFLAGS: '-fsanitize=thread -g -O1'
+      CXXFLAGS: '-fsanitize=thread -g -O1'
+      LDFLAGS: '-fsanitize=thread'
+    steps:
+      - name: Install required packages
+        run: sudo apt-get update && sudo apt-get install -y cmake
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # See https://github.com/nodejs/node/issues/40537
+      - name: Enforce IPv4 Connectivity
+        uses: ./.github/actions/force-ipv4
+
+      # PNPM / Node.js
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node ${{ matrix.node }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: '${{ matrix.node }}'
+          cache: 'pnpm'
+          package-manager-cache: 'pnpm'
+
+      - name: Restore libcurl deps cache
+        uses: actions/cache@v4
+        id: libcurl-deps-cache
+        with:
+          path: |
+            ~/.node-gyp
+            ~/deps
+          key: v4-tsan-${{ runner.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-node-${{ matrix.node }}
+          restore-keys: |
+            v4-tsan-${{ runner.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-node-${{ matrix.node }}
+
+      - name: 'Build node-libcurl with ThreadSanitizer'
+        run: |
+          RUN_TESTS=false \
+          RUN_PREGYP_CLEAN=true \
+          PUBLISH_BINARY=false \
+            ./scripts/ci/build.sh
+
+      - name: 'Find TSan library path'
+        id: tsan-lib
+        run: |
+          TSAN_LIB=$(find /usr/lib -name "libtsan.so.0" 2>/dev/null | head -1)
+          if [ -z "$TSAN_LIB" ]; then
+            echo "Error: libtsan.so.0 not found"
+            exit 1
+          fi
+          echo "tsan_lib=$TSAN_LIB" >> $GITHUB_OUTPUT
+          echo "Found TSan library at: $TSAN_LIB"
+
+      - name: 'Run worker thread test'
+        env:
+          LD_PRELOAD: ${{ steps.tsan-lib.outputs.tsan_lib }}
+          TSAN_OPTIONS: 'second_deadlock_stack=1 history_size=7 halt_on_error=1 suppressions=${{ github.workspace }}/tsan-suppressions.txt'
+        run: |
+          echo "Running worker thread test with ThreadSanitizer"
+          echo "This test exercises multi-threaded scenarios to detect race conditions"
+          node examples/22-worker-threads.js
+
+      - name: Upload TSan logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsan-logs-${{ matrix.node }}-${{ matrix.libcurl-release }}
+          path: |
+            ./logs/
+            ./test-results/
+          retention-days: 7

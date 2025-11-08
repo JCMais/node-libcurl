@@ -1,7 +1,6 @@
 {
   "name": "http-request-libs-performance",
   "version": "1.0.0",
-  "type": "module",
   "description": "Benchmark between Node.js http request libraries",
   "keywords": [
     "axios",
@@ -12,21 +11,22 @@
   ],
   "license": "MIT",
   "author": "Jonathan Cardoso Machado",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "start-server": "http-server . -p 8080 -s",
+    "start": "node --allow-natives-syntax index.js",
+    "start-server": "PORT=8080 node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
     "axios": "1.13.1",
+    "bench-node": "0.12.0",
     "benchmark": "2.1.4",
     "benny": "3.7.1",
-    "http-server": "14.1.1",
+    "got": "14.6.1",
+    "ky": "1.13.0",
     "node-libcurl": "4.1.0",
     "request": "2.88.2",
-    "superagent": "10.2.3",
-    "got": "14.6.1",
-    "ky": "1.13.0"
+    "superagent": "10.2.3"
   }
 }

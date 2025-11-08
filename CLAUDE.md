@@ -39,3 +39,4 @@ npm run typecheck
 - Uses Node.js native addons
 - Requires libcurl to be installed on the system
 - Main branch for PRs: `develop`
+- Always use pnpm pregyp build to build the addon, do not use pnpm run build.

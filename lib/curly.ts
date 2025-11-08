@@ -264,14 +264,77 @@ export interface CurlyFunction extends HttpMethodCalls {
    * - *
    */
   defaultResponseBodyParsers: CurlyResponseBodyParsersProperty
+
+  /**
+   * Set the object pool limit for Curl instances.
+   *
+   * When set to 0 (default), pooling is disabled and Curl instances are created/destroyed on each request.
+   * When set to a positive number, that many Curl instances will be pre-created and reused.
+   *
+   * @param limit - Number of Curl instances to keep in the pool. 0 disables pooling.
+   */
+  setObjectPoolLimit: (limit: number) => void
 }
 
 const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
+  // Object pool for Curl instances
+  let poolLimit = 0
+  const pool: Curl[] = []
+
+  const getFromPool = (): Curl => {
+    if (poolLimit === 0) {
+      // Pooling disabled, create new instance
+      return new Curl()
+    }
+
+    if (pool.length > 0) {
+      // Get from pool
+      return pool.pop()!
+    }
+
+    // Pool empty, create new instance
+    return new Curl()
+  }
+
+  const returnToPool = (curlHandle: Curl): void => {
+    if (poolLimit === 0) {
+      // Pooling disabled, close the handle
+      curlHandle.close()
+      return
+    }
+
+    if (pool.length < poolLimit) {
+      // Reset the handle for reuse
+      curlHandle.reset()
+      pool.push(curlHandle)
+    } else {
+      // Pool full, close the handle
+      curlHandle.close()
+    }
+  }
+
+  const setObjectPoolLimit = (limit: number): void => {
+    poolLimit = limit
+
+    if (limit <= 0) {
+      for (const handle of pool) {
+        handle.close()
+      }
+      pool.length = 0
+    } else {
+      // If reducing limit, close excess instances
+      while (pool.length > limit) {
+        const handle = pool.pop()!
+        handle.close()
+      }
+    }
+  }
+
   function curly<ResultData>(
     url: string,
     options: CurlyOptions = {},
   ): Promise<CurlyResult<ResultData>> {
-    const curlHandle = new Curl()
+    const curlHandle = getFromPool()
 
     curlHandle.enable(CurlFeature.NoDataParsing)
 
@@ -375,7 +438,7 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
       curlHandle.on(
         'end',
         (statusCode, data: Buffer, headers: HeaderInfo[]) => {
-          curlHandle.close()
+          returnToPool(curlHandle)
 
           // only need to the remaining here if we did not enabled
           // the stream response
@@ -463,7 +526,7 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
       )
 
       curlHandle.on('error', (error, errorCode) => {
-        curlHandle.close()
+        returnToPool(curlHandle)
 
         // @ts-ignore
         error.code = errorCode
@@ -484,13 +547,15 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
       try {
         curlHandle.perform()
       } catch (error) /* istanbul ignore next: this should never happen 🤷‍♂️ */ {
-        curlHandle.close()
+        returnToPool(curlHandle)
         reject(error)
       }
     })
   }
 
   curly.create = create
+
+  curly.setObjectPoolLimit = setObjectPoolLimit
 
   curly.defaultResponseBodyParsers = {
     'application/json': (data, _headers) => {

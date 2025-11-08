@@ -93,3 +93,8 @@ After building, you can rebuild the addon so it uses that version of Node.js:
 ```bash
 pnpm pregyp rebuild --debug --nodedir=~/node-from-source/$NODEVERSION
 ```
+
+## Thread Sanitizer
+```bash
+CFLAGS="-fsanitize=thread -g -O1" CXXFLAGS="-fsanitize=thread -g -O1" LDFLAGS="-fsanitize=thread" npm_config_curl_config_bin=/home/jcm/deps/libcurl/build/$LIBCURL_RELEASE/bin/curl-config npm_config_curl_static_build=true pnpm pregyp build && TSAN_OPTIONS="second_deadlock_stack=1 history_size=7 halt_on_error=1 suppressions=$(pwd)/tsan-suppressions.txt" LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtsan.so.0 node examples/22-worker-threads.js
+```

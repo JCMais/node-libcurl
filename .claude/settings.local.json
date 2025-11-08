@@ -8,7 +8,11 @@
       "Read(//f/open-source/vcpkg/**)",
       "WebSearch",
       "WebFetch(domain:curl.se)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(pnpm test:*)",
+      "Bash(timeout 30 node:*)",
+      "Bash(addr2line:*)",
+      "WebFetch(domain:man7.org)"
     ]
   },
   "enableAllProjectMcpServers": true,

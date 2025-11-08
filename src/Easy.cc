@@ -16,6 +16,7 @@
 #include "Curl.h"
 #include "CurlHttpPost.h"
 #include "Easy.h"
+#include "LocaleGuard.h"
 #include "Share.h"
 #include "macros.h"
 
@@ -1054,7 +1055,8 @@ Napi::Value Easy::Perform(const Napi::CallbackInfo& info) {
 
   NODE_LIBCURL_DEBUG_LOG(this, "Easy::Perform", "performing request");
 
-  SETLOCALE_WRAPPER(CURLcode code = curl_easy_perform(this->ch););
+  LocaleGuard localeGuard;
+  CURLcode code = curl_easy_perform(this->ch);
 
   return Napi::Number::New(env, static_cast<int>(code));
 }

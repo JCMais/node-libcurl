@@ -19,6 +19,7 @@
 #include "Curl.h"
 #include "Easy.h"
 #include "Http2PushFrameHeaders.h"
+#include "LocaleGuard.h"
 #include "Multi.h"
 
 #include <cstring>
@@ -287,8 +288,8 @@ Napi::Value Multi::AddHandle(const Napi::CallbackInfo& info) {
   easy->callbackError.Reset();
 
   // Check comment on node_libcurl.cc
-  SETLOCALE_WRAPPER(CURLMcode code =
-                        curl_multi_add_handle(this->mh, easy->ch););  // NOLINT(whitespace/newline)
+  LocaleGuard localeGuard;
+  CURLMcode code = curl_multi_add_handle(this->mh, easy->ch);
 
   if (code != CURLM_OK) {
     throw Napi::TypeError::New(env, "Could not add easy handle to the multi handle.");
@@ -611,7 +612,6 @@ int Multi::HandleTimeout(CURLM* multi,
   }
 
   if (timeoutMs < 0) {
-    NODE_LIBCURL_DEBUG_LOG(obj, "Multi::HandleTimeout", "stopping timer");
     int uvStop = uv_timer_stop(&obj->timeout);
     return uvStop;
   }
@@ -619,8 +619,7 @@ int Multi::HandleTimeout(CURLM* multi,
   // we should not call libcurl functions directly from this callback
   //  see https://github.com/curl/curl/issues/3537
   if (timeoutMs >= 0) {
-    NODE_LIBCURL_DEBUG_LOG(obj, "Multi::HandleTimeout", "starting timer");
-    return uv_timer_start(&obj->timeout, Multi::OnTimeout, timeoutMs == 0 ? 1 : timeoutMs, 0);
+    return uv_timer_start(&obj->timeout, Multi::OnTimeout, timeoutMs, 0);
   }
 
   return 0;
@@ -706,9 +705,8 @@ UV_TIMER_CB(Multi::OnTimeout) {
   NODE_LIBCURL_DEBUG_LOG(obj, "Multi::OnTimeout", "");
 
   // Check comment on node_libcurl.cc
-  SETLOCALE_WRAPPER(CURLMcode code = curl_multi_socket_action(
-                        obj->mh, CURL_SOCKET_TIMEOUT, 0,
-                        &obj->runningHandles););  // NOLINT(whitespace/newline)
+  LocaleGuard localeGuard;
+  CURLMcode code = curl_multi_socket_action(obj->mh, CURL_SOCKET_TIMEOUT, 0, &obj->runningHandles);
 
   assert((CURLM_OK == code || true) &&
          "Calling curl_multi_socket_action from within Multi::OnTimeout failed. This is possibly a "
@@ -731,18 +729,17 @@ void Multi::OnSocket(uv_poll_t* handle, int status, int events) {
   NODE_LIBCURL_DEBUG_LOG(ctx->multi, "Multi::OnSocket", "events: " + std::to_string(events));
 
   // Check comment on node_libcurl.cc
-  SETLOCALE_WRAPPER(
-      // Before version 7.20.0: If you receive CURLM_CALL_MULTI_PERFORM, this
-      // basically means that you should call curl_multi_socket_action again
-      // before you wait for more actions on libcurl's sockets.
-      // You don't have to do it immediately, but the return code means that
-      // libcurl
-      //  may have more data available to return or that there may be more data
-      //  to send off before it is "satisfied".
-      do {
-        code = curl_multi_socket_action(ctx->multi->mh, ctx->sockfd, flags,
-                                        &ctx->multi->runningHandles);
-      } while (code == CURLM_CALL_MULTI_PERFORM););  // NOLINT(whitespace/newline)
+  LocaleGuard localeGuard;
+  // Before version 7.20.0: If you receive CURLM_CALL_MULTI_PERFORM, this
+  // basically means that you should call curl_multi_socket_action again
+  // before you wait for more actions on libcurl's sockets.
+  // You don't have to do it immediately, but the return code means that
+  // libcurl may have more data available to return or that there may be more data
+  // to send off before it is "satisfied".
+  do {
+    code =
+        curl_multi_socket_action(ctx->multi->mh, ctx->sockfd, flags, &ctx->multi->runningHandles);
+  } while (code == CURLM_CALL_MULTI_PERFORM);
 
   if (code != CURLM_OK) {
     auto env = ctx->multi->Env();
