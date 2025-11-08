@@ -5,17 +5,33 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// This code is pretty big, but shows how to use node-libcurl
-// as a VERY simple websockets client. There are many scenarios
-// that are not currently handled, so keep that in mind :)
-// How to run this example:
-//  1. start the server (install the deps in there first)
-//    node examples/21-websockets-server/index.js
-//  2. start the client
-//    node examples/21-websockets-client.js
-// type "connect" in the terminal running the client and hit enter
-// There are more commands available, in both server and client.
-// Take a look at the respective stdin on data handlers.
+/**
+ * Interactive WebSocket client using manual frame handling
+ *
+ * Note: This example was created before libcurl had better WebSocket support.
+ * Check out the 21-websockets-native.js example for a newer approach using
+ * libcurl's native WebSocket API (wsRecv/wsSend/wsMeta).
+ *
+ * This code shows how to use node-libcurl as a VERY simple websockets client
+ * by manually handling WebSocket frame packing/unpacking according to RFC 6455.
+ * There are many scenarios that are not currently handled, so keep that in mind.
+ *
+ * How to run this example:
+ *  1. start the server (install the deps in there first)
+ *    node examples/21-websockets-server/index.js
+ *  2. start the client
+ *    node examples/21-websockets-client.js
+ *
+ * Type commands in the terminal:
+ *  - connect: establish WebSocket connection
+ *  - close: send close frame
+ *  - big:N: send large message (N repeats of alphabet)
+ *  - multiple: send multiple messages
+ *  - ping:msg: send ping frame
+ *  - binary: send binary frame
+ *  - quit/exit: close connection and exit
+ *  - anything else: send as text message
+ */
 
 // The following source-code/article was very useful when writing this:
 // https://blog.pusher.com/websockets-from-scratch/
@@ -33,7 +49,9 @@ const os = require('os')
 const { CurlCode, Easy, Multi, SocketState } = require('node-libcurl')
 const {
   packCloseFrame,
+  packFrame,
   packMessageFrame,
+  packPingFrame,
   packPongFrame,
   readFrame,
   WEBSOCKET_FRAME_OPCODE,
@@ -55,6 +73,10 @@ let state = getCleanState()
 
 const closeHandle = (easyHandle) => {
   state = getCleanState()
+
+  if (easyHandle.isMonitoringSockets) {
+    easyHandle.unmonitorSocketEvents()
+  }
 
   if (easyHandle.private.multi) {
     easyHandle.private.multi.removeHandle(easyHandle)
@@ -135,6 +157,16 @@ const onConnected = (easyHandle) => {
             // mark the connection as upgraded, we are ready!
             state.hasRequestBeenUpgraded = true
 
+            console.log('✓ Connected! WebSocket ready.\n')
+            console.log('Commands:')
+            console.log('  close - close connection')
+            console.log('  big:N - send large message (N repeats)')
+            console.log('  multiple - send multiple messages')
+            console.log('  ping:msg - send ping frame')
+            console.log('  binary - send binary frame')
+            console.log('  quit/exit - close and exit')
+            console.log('  <message> - send text message\n')
+
             // the message may already include some
             // ws frames, let's handle them
             receivedData = receivedData.slice(headersEnd + 4)
@@ -144,6 +176,7 @@ const onConnected = (easyHandle) => {
               Buffer.from('hello :)', 'utf8'),
             )
             sendData(easyHandle, packedFrame)
+            console.log('-> sent initial greeting: hello :)')
           }
 
           // no ws data was received - we are done here.
@@ -154,31 +187,31 @@ const onConnected = (easyHandle) => {
           // if we are here, it means we got a frame!
           // remember, a single message can include multiple frames.
 
-          console.log('-> received ws frame(s) =', receivedData)
+          console.log('<- received ws frame(s) =', receivedData)
 
           try {
             const frames = []
             let frame
             do {
               frame = readFrame(frame ? frame.remaining : receivedData)
-              console.log('-> frame =', frame)
+              console.log('<- frame =', frame)
 
               if (frame) {
                 switch (frame.opc) {
                   case WEBSOCKET_FRAME_OPCODE.CONT:
                     console.log(
-                      '-> frame is a continuation frame from the previous data',
+                      '<- frame is a continuation frame from the previous data',
                     )
                     break
                   case WEBSOCKET_FRAME_OPCODE.NON_CONTROL_TEXT:
                     console.log(
-                      '-> frame is a text frame - payload =',
+                      '<- frame is a text frame - payload =',
                       frame.payload && frame.payload.toString(),
                     )
                     break
                   case WEBSOCKET_FRAME_OPCODE.NON_CONTROL_BINARY:
                     console.log(
-                      '-> frame is a binary frame - payload =',
+                      '<- frame is a binary frame - payload =',
                       frame.payload,
                     )
                     break
@@ -199,6 +232,7 @@ const onConnected = (easyHandle) => {
               (f) => f.opc === WEBSOCKET_FRAME_OPCODE.CONTROL_CLOSE,
             )
             if (closeFrame) {
+              console.log('<- received close frame')
               // send close frame if the connection close was not requested by us
               if (!state.closeRequestedByUs) {
                 // TODO: use code from req
@@ -215,12 +249,23 @@ const onConnected = (easyHandle) => {
               (f) => f.opc === WEBSOCKET_FRAME_OPCODE.CONTROL_PING,
             )
             if (pingFrame) {
+              console.log('<- received ping frame - sending pong')
               sendData(
                 easyHandle,
                 packPongFrame(
                   Buffer.from('random number here: 5 (got with a dice =D)'),
                 ),
               )
+            }
+
+            ///////////////////////
+            // Handle pong opcode
+            ///////////////////////
+            const pongFrame = frames.find(
+              (f) => f.opc === WEBSOCKET_FRAME_OPCODE.CONTROL_PONG,
+            )
+            if (pongFrame) {
+              console.log('<- received pong frame')
             }
           } catch (error) {
             if (error instanceof WebSocketError) {
@@ -323,31 +368,61 @@ process.stdin.on(
       // two special handlers
       switch (dataStr) {
         case 'connect':
+          if (state.connectionOpen) {
+            console.log('Already connected!')
+            return
+          }
           easyHandle = connect()
           return
+        case 'quit':
         case 'exit':
-          process.exit(0)
+          process.stdin.pause()
+          console.log('Closing connection...')
+          if (easyHandle && state.connectionOpen) {
+            try {
+              state.closeRequestedByUs = true
+              sendData(easyHandle, packCloseFrame())
+            } catch {
+              // ignore
+            }
+            closeHandle(easyHandle)
+          }
+          if (multi) {
+            multi.close()
+          }
+          console.log('Goodbye!')
           return
       }
 
-      if (state.hasRequestBeenUpgraded && state.connectionOpen) {
+      if (!easyHandle || !state.connectionOpen) {
+        console.log('Not connected. Type "connect" first.')
+        return
+      }
+
+      if (!state.hasRequestBeenUpgraded) {
+        console.log('Connection not yet upgraded. Please wait...')
+        return
+      }
+
+      try {
         switch (dataStr) {
-          case 'big':
-            sendData(
-              easyHandle,
-              packMessageFrame(
-                Buffer.from(
-                  'abcdefghijklmnopqrstuvwxyz'.repeat(args[0] || 100),
-                  'utf8',
-                ),
-              ),
+          case 'big': {
+            const repeats = parseInt(args[0]) || 100
+            const message = Buffer.from(
+              'abcdefghijklmnopqrstuvwxyz'.repeat(repeats),
+              'utf8',
             )
+            sendData(easyHandle, packMessageFrame(message))
+            console.log(`-> sent big message: ${message.length} bytes`)
             break
+          }
           case 'close':
             state.closeRequestedByUs = true
             sendData(easyHandle, packCloseFrame())
+            console.log('-> sent close frame')
             break
           case 'multiple':
+            console.log('-> sending multiple messages')
             sendData(
               easyHandle,
               packMessageFrame(Buffer.from('double1!', 'utf8')),
@@ -365,13 +440,37 @@ process.stdin.on(
               packMessageFrame(Buffer.from('double2!', 'utf8')),
             )
             break
-          default:
-            sendData(easyHandle, packMessageFrame(Buffer.from(dataStr, 'utf8')))
+          case 'ping': {
+            const payload = Buffer.from(args[0] || 'ping', 'utf8')
+            sendData(easyHandle, packPingFrame(payload))
+            console.log('-> sent ping frame')
+            break
+          }
+          case 'binary': {
+            const binaryData = Buffer.from([0x00, 0x01, 0x02, 0x03, 0xff])
+            const binaryFrame = packFrame(
+              binaryData,
+              0b10000010, // FIN=1, opcode=2 (binary)
+            )
+            sendData(easyHandle, binaryFrame)
+            console.log('-> sent binary frame:', binaryData)
+            break
+          }
+          default: {
+            const message = Buffer.from(dataStr, 'utf8')
+            sendData(easyHandle, packMessageFrame(message))
+            console.log(`-> sent: "${dataStr}" (${message.length} bytes)`)
+          }
         }
+      } catch (error) {
+        console.error('Error sending:', error)
       }
     }
   })(),
 )
+
+console.log('WebSocket Client Ready')
+console.log('Type "connect" to start\n')
 
 //////////////////////
 // Helpers Functions

@@ -49,7 +49,7 @@ import { SocketState } from './enum/SocketState'
 import { Curl } from './Curl'
 import { Multi } from './Multi'
 
-import { FileInfo, HttpPostField } from './'
+import { CurlWsFrame, FileInfo, HttpPostField } from './'
 
 export interface GetInfoReturn<DataType = number | string | null> {
   data: DataType
@@ -494,6 +494,58 @@ declare class Easy {
    * Official libcurl documentation: [`curl_easy_recv()`](http://curl.haxx.se/libcurl/c/curl_easy_recv.html)
    */
   recv(storage: Buffer): { code: CurlCode; bytesReceived: number }
+
+  /**
+   * Receive WebSocket data when using CONNECT_ONLY mode.
+   *
+   * Retrieves as much as possible of a received WebSocket frame into the buffer, but not more than buflen bytes.
+   * Check `meta.bytesleft` to determine whether the complete frame has been received.
+   * If more payload is pending, call this function again with an updated buffer to resume receiving.
+   *
+   * Requires libcurl >= 7.86.0
+   *
+   * Official libcurl documentation: [`curl_ws_recv()`](https://curl.se/libcurl/c/curl_ws_recv.html)
+   */
+  wsRecv(buffer: Buffer): {
+    code: CurlCode
+    bytesReceived: number
+    meta: CurlWsFrame | null
+  }
+
+  /**
+   * Send WebSocket data when using CONNECT_ONLY mode.
+   *
+   * Sends a specific message chunk over an established WebSocket connection.
+   * `flags` must contain at least one flag indicating the type of the message (Text, Binary, Close, Ping, Pong).
+   * For fragmented messages, set the Cont bit in all frames except the final one.
+   *
+   * Requires libcurl >= 7.86.0
+   *
+   * Official libcurl documentation: [`curl_ws_send()`](https://curl.se/libcurl/c/curl_ws_send.html)
+   *
+   * @param buffer The data to send
+   * @param flags Frame type and flags from {@link CurlWs | `CurlWs`}
+   * @param fragsize Optional fragment size, only used with CURLWS_OFFSET flag
+   */
+  wsSend(
+    buffer: Buffer,
+    flags: number,
+    fragsize?: number,
+  ): { code: CurlCode; bytesSent: number }
+
+  /**
+   * Get WebSocket frame metadata when called from within a WRITEFUNCTION callback.
+   *
+   * This function provides additional information about the current WebSocket frame being received.
+   * It only works from within the callback, and only when receiving WebSocket data.
+   *
+   * Requires libcurl >= 7.86.0
+   *
+   * Official libcurl documentation: [`curl_ws_meta()`](https://curl.se/libcurl/c/curl_ws_meta.html)
+   *
+   * @returns Frame metadata or null if not available
+   */
+  wsMeta(): CurlWsFrame | null
 
   /**
    * Performs the entire request in a blocking manner and returns when done.

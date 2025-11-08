@@ -4,7 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { createServer, createHttpsServer } from './helper/server'
+import {
+  createServer,
+  createHttpsServer,
+  createWebSocketServer,
+} from './helper/server'
 import type { TestProject } from 'vitest/node'
 let teardown = false
 
@@ -27,13 +31,31 @@ export default async function setup({ provide }: TestProject) {
     res.json({ success: true })
   })
 
+  // Create WebSocket server with echo functionality
+  const wsServer = createWebSocketServer()
+
+  // Setup WebSocket server to echo all messages with proper frame types
+  wsServer.wss!.on('connection', (ws) => {
+    ws.on('message', (data, isBinary) => {
+      // Echo back with the same frame type
+      ws.send(data, { binary: isBinary })
+    })
+
+    // Handle ping frames - respond with pong
+    ws.on('ping', (data) => {
+      ws.pong(data)
+    })
+  })
+
   // Start servers
   const httpPort = await httpServer.listen()
   const httpsPort = await httpsServer.listen()
+  const wsPort = await wsServer.listen()
 
   // Provide server URLs to tests
   provide('httpServerUrl', `http://localhost:${httpPort}`)
   provide('httpsServerUrl', `https://localhost:${httpsPort}`)
+  provide('wsServerUrl', `ws://localhost:${wsPort}`)
 
   // Return teardown function
   return async () => {
@@ -42,7 +64,11 @@ export default async function setup({ provide }: TestProject) {
     }
     teardown = true
 
-    await Promise.all([httpServer.close(), httpsServer.close()])
+    await Promise.all([
+      httpServer.close(),
+      httpsServer.close(),
+      wsServer.close(),
+    ])
   }
 }
 
@@ -50,5 +76,6 @@ declare module 'vitest' {
   export interface ProvidedContext {
     httpServerUrl: string
     httpsServerUrl: string
+    wsServerUrl: string
   }
 }

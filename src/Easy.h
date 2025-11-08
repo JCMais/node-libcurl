@@ -37,6 +37,9 @@ class Easy : public Napi::ObjectWrap<Easy> {
   Napi::Value GetInfo(const Napi::CallbackInfo& info);
   Napi::Value Send(const Napi::CallbackInfo& info);
   Napi::Value Recv(const Napi::CallbackInfo& info);
+  Napi::Value WsRecv(const Napi::CallbackInfo& info);
+  Napi::Value WsSend(const Napi::CallbackInfo& info);
+  Napi::Value WsMeta(const Napi::CallbackInfo& info);
   Napi::Value Perform(const Napi::CallbackInfo& info);
   Napi::Value Upkeep(const Napi::CallbackInfo& info);
   Napi::Value Pause(const Napi::CallbackInfo& info);

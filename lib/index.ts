@@ -69,6 +69,7 @@ export * from './enum/CurlUploadFlag'
 export * from './enum/CurlUseSsl'
 export * from './enum/CurlVersion'
 export * from './enum/CurlWriteFunc'
+export * from './enum/CurlWs'
 export * from './enum/SocketState'
 
 // types that can be helpful for library consumer
@@ -87,6 +88,7 @@ export {
 export { MultiOption, MultiOptionName } from './generated/MultiOption'
 
 export {
+  CurlWsFrame,
   FileInfo,
   Http2PushFrameHeaders,
   HttpPostField,
