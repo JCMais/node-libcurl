@@ -13,6 +13,8 @@ import { CurlWs } from '../enum/CurlWs'
  * It is returned by {@link Easy.wsMeta | `Easy#wsMeta`} when called from within a
  * WRITEFUNCTION callback, or as part of the return value from {@link Easy.wsRecv | `Easy#wsRecv`}.
  *
+ * The naming convention of the fields is following libcurl's own naming convention.
+ *
  * @public
  */
 export interface CurlWsFrame {
@@ -24,7 +26,7 @@ export interface CurlWsFrame {
   /**
    * Bitmask describing the WebSocket frame. See {@link CurlWs | `CurlWs`} for flag values.
    */
-  flags: number
+  flags: CurlWs
 
   /**
    * When this chunk is a continuation of frame data already delivered,

@@ -90,9 +90,7 @@ Multi::Multi(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Multi>(info), id
     CURLMcode code = curl_multi_notify_enable(this->mh, CURLMNOTIFY_INFO_READ);
     if (code == CURLM_OK) {
       this->useNotificationsApi = true;
-      NODE_LIBCURL_DEBUG_LOG(
-          this, "Multi::Constructor",
-          "Notification API enabled (libcurl " + std::string(version->version) + ")");
+      NODE_LIBCURL_DEBUG_LOG(this, "Multi::Constructor", "Notification API enabled");
     } else {
       NODE_LIBCURL_DEBUG_LOG(this, "Multi::Constructor",
                              "Failed to enable notifications, falling back to ProcessMessages");

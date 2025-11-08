@@ -359,9 +359,10 @@ Napi::Function Easy::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("setOpt", &Easy::SetOpt), InstanceMethod("getInfo", &Easy::GetInfo),
        InstanceMethod("send", &Easy::Send), InstanceMethod("recv", &Easy::Recv),
        InstanceMethod("wsRecv", &Easy::WsRecv), InstanceMethod("wsSend", &Easy::WsSend),
-       InstanceMethod("wsMeta", &Easy::WsMeta), InstanceMethod("perform", &Easy::Perform),
-       InstanceMethod("upkeep", &Easy::Upkeep), InstanceMethod("pause", &Easy::Pause),
-       InstanceMethod("reset", &Easy::Reset), InstanceMethod("dupHandle", &Easy::DupHandle),
+       InstanceMethod("wsMeta", &Easy::WsMeta), InstanceMethod("wsStartFrame", &Easy::WsStartFrame),
+       InstanceMethod("perform", &Easy::Perform), InstanceMethod("upkeep", &Easy::Upkeep),
+       InstanceMethod("pause", &Easy::Pause), InstanceMethod("reset", &Easy::Reset),
+       InstanceMethod("dupHandle", &Easy::DupHandle),
        InstanceMethod("onSocketEvent", &Easy::OnSocketEvent),
        InstanceMethod("monitorSocketEvents", &Easy::MonitorSocketEvents),
        InstanceMethod("unmonitorSocketEvents", &Easy::UnmonitorSocketEvents),
@@ -1292,6 +1293,28 @@ Napi::Value Easy::WsMeta(const Napi::CallbackInfo& info) {
   meta.Set("len", Napi::Number::New(env, metaPtr->len));
 
   return meta;
+#else
+  throw Napi::Error::New(env, "WebSocket support requires libcurl >= 7.86.0");
+#endif
+}
+
+Napi::Value Easy::WsStartFrame(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (!this->isOpen) {
+    throw Napi::Error::New(env, "Curl handle is closed.");
+  }
+
+#if NODE_LIBCURL_VER_GE(7, 86, 0)
+  if (info.Length() < 2 || !info[0].IsNumber() || !info[1].IsNumber()) {
+    throw Napi::Error::New(env, "Missing flags and/or frame length arguments.");
+  }
+
+  unsigned int flags = info[0].As<Napi::Number>().Uint32Value();
+  curl_off_t frameLength = static_cast<curl_off_t>(info[1].As<Napi::Number>().Int64Value());
+
+  CURLcode result = curl_ws_start_frame(this->ch, flags, frameLength);
+  return Napi::Number::New(env, static_cast<int32_t>(result));
 #else
   throw Napi::Error::New(env, "WebSocket support requires libcurl >= 7.86.0");
 #endif

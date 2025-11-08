@@ -548,6 +548,15 @@ declare class Easy {
   wsMeta(): CurlWsFrame | null
 
   /**
+   * Start a new WebSocket frame.
+   *
+   * This should only be called from within a READFUNCTION callback. Calling it from anywhere else is undefined behavior.
+   *
+   * Official libcurl documentation: [`curl_ws_start_frame()`](https://curl.se/libcurl/c/curl_ws_start_frame.html)
+   */
+  wsStartFrame(flags: number, frameLength: number): CurlCode
+
+  /**
    * Performs the entire request in a blocking manner and returns when done.
    *
    * Official libcurl documentation: [`curl_easy_perform()`](http://curl.haxx.se/libcurl/c/curl_easy_perform.html)
