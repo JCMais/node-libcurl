@@ -41,17 +41,17 @@ Multi::Multi(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Multi>(info), id
   auto curl = env.GetInstanceData<Curl>();
 
 #if NODE_LIBCURL_VER_GE(8, 17, 0)
-  bool shouldEnableNotificationsApi = true;
+  bool shouldUseNotificationsApi = true;
 #else
-  bool shouldEnableNotificationsApi = false;
+  bool shouldUseNotificationsApi = false;
 #endif
 
   if (info.Length() >= 1 && info[0].IsObject()) {
     Napi::Object options = info[0].As<Napi::Object>();
-    if (options.Has("shouldEnableNotificationsApi")) {
-      Napi::Value value = options.Get("shouldEnableNotificationsApi");
+    if (options.Has("shouldUseNotificationsApi")) {
+      Napi::Value value = options.Get("shouldUseNotificationsApi");
       if (value.IsBoolean()) {
-        shouldEnableNotificationsApi = value.As<Napi::Boolean>().Value();
+        shouldUseNotificationsApi = value.As<Napi::Boolean>().Value();
       }
     }
   }
@@ -80,7 +80,7 @@ Multi::Multi(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Multi>(info), id
   this->Ref();
 
   // Enable notification API if requested and supported
-  if (shouldEnableNotificationsApi) {
+  if (shouldUseNotificationsApi) {
 #if NODE_LIBCURL_VER_GE(8, 17, 0)
     // Enable notification callback
     curl_multi_setopt(this->mh, CURLMOPT_NOTIFYFUNCTION, Multi::NotifyCallback);
@@ -99,7 +99,7 @@ Multi::Multi(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Multi>(info), id
     }
 #else
     NODE_LIBCURL_DEBUG_LOG(this, "Multi::Constructor",
-                           "shouldEnableNotificationsApi enabled but compiled against "
+                           "shouldUseNotificationsApi enabled but compiled against "
                            "libcurl < 8.17, falling back to ProcessMessages");
 #endif
   }
