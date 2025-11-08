@@ -125,7 +125,8 @@
     "typedoc-plugin-nojekyll": "1.0.1",
     "typescript": "5.9.2",
     "typescript-eslint": "8.44.1",
-    "vitest": "3.2.4"
+    "vitest": "3.2.4",
+    "ws": "8.18.3"
   },
   "packageManager": "pnpm@10.16.1+sha512.0e155aa2629db8672b49e8475da6226aa4bdea85fdcdfdc15350874946d4f3c91faaf64cbdc4a5d1ab8002f473d5c3fcedcd197989cf0390f9badd3c04678706",
   "engines": {

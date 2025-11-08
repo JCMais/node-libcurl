@@ -6,6 +6,7 @@
  */
 export { CurlNativeBindingObject } from './CurlNativeBinding'
 export { CurlVersionInfoNativeBindingObject } from './CurlVersionInfoNativeBinding'
+export { CurlWsFrame } from './CurlWsFrame'
 export { FileInfo } from './FileInfo'
 export { Http2PushFrameHeaders } from './Http2PushFrameHeaders'
 export { HttpPostField } from './HttpPostField'

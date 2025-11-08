@@ -14,6 +14,7 @@ import { AddressInfo } from 'net'
 
 import express from 'express'
 import cookieParser from 'cookie-parser'
+import { WebSocketServer } from 'ws'
 
 const DEFAULT_HOST = 'localhost'
 
@@ -41,6 +42,7 @@ export interface ServerInstance<S extends http.Server | http2.Http2Server> {
   path: (path: string) => string
   url: string
   port: number
+  wss?: WebSocketServer
 }
 
 function _createServer<
@@ -123,4 +125,15 @@ export const createHttp2Server = (): ServerInstance<http2.Http2Server> => {
   const server = http2.createSecureServer({ key, cert })
 
   return _createServer(app, server)
+}
+
+export const createWebSocketServer = (): ServerInstance<http.Server> => {
+  const app = createApp()
+  const server = http.createServer(app)
+  const wss = new WebSocketServer({ server })
+
+  const instance = _createServer(app, server)
+  instance.wss = wss
+
+  return instance
 }

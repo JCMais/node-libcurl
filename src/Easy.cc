@@ -358,9 +358,10 @@ Napi::Function Easy::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("debugLog", &Easy::DebugLog), InstanceMethod("getInfo", &Easy::GetInfo),
        InstanceMethod("setOpt", &Easy::SetOpt), InstanceMethod("getInfo", &Easy::GetInfo),
        InstanceMethod("send", &Easy::Send), InstanceMethod("recv", &Easy::Recv),
-       InstanceMethod("perform", &Easy::Perform), InstanceMethod("upkeep", &Easy::Upkeep),
-       InstanceMethod("pause", &Easy::Pause), InstanceMethod("reset", &Easy::Reset),
-       InstanceMethod("dupHandle", &Easy::DupHandle),
+       InstanceMethod("wsRecv", &Easy::WsRecv), InstanceMethod("wsSend", &Easy::WsSend),
+       InstanceMethod("wsMeta", &Easy::WsMeta), InstanceMethod("perform", &Easy::Perform),
+       InstanceMethod("upkeep", &Easy::Upkeep), InstanceMethod("pause", &Easy::Pause),
+       InstanceMethod("reset", &Easy::Reset), InstanceMethod("dupHandle", &Easy::DupHandle),
        InstanceMethod("onSocketEvent", &Easy::OnSocketEvent),
        InstanceMethod("monitorSocketEvents", &Easy::MonitorSocketEvents),
        InstanceMethod("unmonitorSocketEvents", &Easy::UnmonitorSocketEvents),
@@ -1174,6 +1175,126 @@ Napi::Value Easy::Recv(const Napi::CallbackInfo& info) {
   ret.Set("bytesReceived", Napi::Number::New(env, static_cast<int32_t>(n)));
 
   return ret;
+}
+
+Napi::Value Easy::WsRecv(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (!this->isOpen) {
+    throw Napi::Error::New(env, "Curl handle is closed.");
+  }
+
+#if NODE_LIBCURL_VER_GE(7, 86, 0)
+  if (info.Length() == 0) {
+    throw Napi::Error::New(env, "Missing buffer argument.");
+  }
+
+  Napi::Value buf = info[0];
+  if (!buf.IsBuffer()) {
+    throw Napi::Error::New(env, "Invalid Buffer instance given.");
+  }
+
+  Napi::Buffer<char> buffer = buf.As<Napi::Buffer<char>>();
+  char* bufContent = buffer.Data();
+  size_t bufLength = buffer.Length();
+  size_t n = 0;
+  const struct curl_ws_frame* metaPtr = nullptr;
+
+  CURLcode curlRet = curl_ws_recv(this->ch, bufContent, bufLength, &n, &metaPtr);
+
+  Napi::Object ret = Napi::Object::New(env);
+  ret.Set("code", Napi::Number::New(env, static_cast<int32_t>(curlRet)));
+  ret.Set("bytesReceived", Napi::Number::New(env, static_cast<int32_t>(n)));
+
+  // Create frame metadata object if available
+  if (metaPtr) {
+    Napi::Object meta = Napi::Object::New(env);
+    meta.Set("age", Napi::Number::New(env, metaPtr->age));
+    meta.Set("flags", Napi::Number::New(env, metaPtr->flags));
+    meta.Set("offset", Napi::Number::New(env, static_cast<double>(metaPtr->offset)));
+    meta.Set("bytesleft", Napi::Number::New(env, static_cast<double>(metaPtr->bytesleft)));
+    meta.Set("len", Napi::Number::New(env, metaPtr->len));
+    ret.Set("meta", meta);
+  } else {
+    ret.Set("meta", env.Null());
+  }
+
+  return ret;
+#else
+  throw Napi::Error::New(env, "WebSocket support requires libcurl >= 7.86.0");
+#endif
+}
+
+Napi::Value Easy::WsSend(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (!this->isOpen) {
+    throw Napi::Error::New(env, "Curl handle is closed.");
+  }
+
+#if NODE_LIBCURL_VER_GE(7, 86, 0)
+  if (info.Length() < 2) {
+    throw Napi::Error::New(env, "Missing buffer and/or flags arguments.");
+  }
+
+  Napi::Value buf = info[0];
+  if (!buf.IsBuffer()) {
+    throw Napi::Error::New(env, "Invalid Buffer instance given.");
+  }
+
+  if (!info[1].IsNumber()) {
+    throw Napi::Error::New(env, "Flags argument must be a number.");
+  }
+
+  Napi::Buffer<char> buffer = buf.As<Napi::Buffer<char>>();
+  const char* bufContent = buffer.Data();
+  size_t bufLength = buffer.Length();
+  size_t n = 0;
+  unsigned int flags = info[1].As<Napi::Number>().Uint32Value();
+  curl_off_t fragsize = 0;
+
+  // Optional fragsize parameter for CURLWS_OFFSET mode
+  if (info.Length() >= 3 && info[2].IsNumber()) {
+    fragsize = static_cast<curl_off_t>(info[2].As<Napi::Number>().Int64Value());
+  }
+
+  CURLcode curlRet = curl_ws_send(this->ch, bufContent, bufLength, &n, fragsize, flags);
+
+  Napi::Object ret = Napi::Object::New(env);
+  ret.Set("code", Napi::Number::New(env, static_cast<int32_t>(curlRet)));
+  ret.Set("bytesSent", Napi::Number::New(env, static_cast<int32_t>(n)));
+
+  return ret;
+#else
+  throw Napi::Error::New(env, "WebSocket support requires libcurl >= 7.86.0");
+#endif
+}
+
+Napi::Value Easy::WsMeta(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (!this->isOpen) {
+    throw Napi::Error::New(env, "Curl handle is closed.");
+  }
+
+#if NODE_LIBCURL_VER_GE(7, 86, 0)
+  const struct curl_ws_frame* metaPtr = curl_ws_meta(this->ch);
+
+  if (!metaPtr) {
+    return env.Null();
+  }
+
+  Napi::Object meta = Napi::Object::New(env);
+  meta.Set("age", Napi::Number::New(env, metaPtr->age));
+  meta.Set("flags", Napi::Number::New(env, metaPtr->flags));
+  meta.Set("offset", Napi::Number::New(env, static_cast<double>(metaPtr->offset)));
+  meta.Set("bytesleft", Napi::Number::New(env, static_cast<double>(metaPtr->bytesleft)));
+  meta.Set("len", Napi::Number::New(env, metaPtr->len));
+
+  return meta;
+#else
+  throw Napi::Error::New(env, "WebSocket support requires libcurl >= 7.86.0");
+#endif
 }
 
 Napi::Value Easy::Upkeep(const Napi::CallbackInfo& info) {
