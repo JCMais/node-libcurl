@@ -14,8 +14,7 @@
     'node_libcurl_debug%': 'false',
     'node_libcurl_asan_debug%': 'false',
     'node_libcurl_cpp_std%': 'c++20',
-    'macos_universal_build%': 'false',
-    'napi_build_version%': '10',
+    'macos_universal_build%': 'false'
   },
   'targets': [
     {
@@ -41,7 +40,7 @@
       ],
       'defines': [
         'NAPI_VERSION=10',
-        # 'NAPI_VERSION=<(napi_build_version)',
+        'NAPI_EXPERIMENTAL=1',
       ],
       'conditions': [
         ['node_libcurl_no_setlocale=="true"', {

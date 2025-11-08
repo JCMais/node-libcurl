@@ -19,8 +19,9 @@
 #include "curl/curl.h"
 #include "macros.h"
 
-#include <algorithm>  // for std::transform
+#include <algorithm>
 #include <iostream>
+#include <mutex>
 #include <sstream>
 #include <thread>
 namespace NodeLibcurl {
@@ -29,6 +30,11 @@ namespace NodeLibcurl {
 std::unordered_map<CurlHandleType, int> handleMemoryMap = {{CURL_HANDLE_TYPE_EASY, 30000},
                                                            {CURL_HANDLE_TYPE_MULTI, 60000},
                                                            {CURL_HANDLE_TYPE_SHARE, 60000}};
+
+// Optimized hash map lookups for curl constants with category information
+// Note: Stores vectors to handle duplicate names (e.g., CERTINFO as both option and info)
+std::unordered_map<std::string, std::vector<CurlConstantLookup>> curlConstantsByName;
+std::unordered_map<int64_t, std::vector<CurlConstantLookup>> curlConstantsByValue;
 
 const std::vector<CurlConstant> curlOptionBlob = {
 #if NODE_LIBCURL_VER_GE(7, 77, 0)
@@ -979,8 +985,15 @@ Napi::Object Curl::Init(Napi::Env env, Napi::Object exports) {
 
 Napi::Value Curl::GetVersion(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  const char* version = curl_version();
-  return Napi::String::New(env, version);
+
+  // Thread-safe lazy initialization of curl version string
+  // curl_version() uses a static buffer and is not thread-safe
+  static std::once_flag versionInitFlag;
+  static std::string cachedVersion;
+
+  std::call_once(versionInitFlag, []() { cachedVersion = curl_version(); });
+
+  return Napi::String::New(env, cachedVersion);
 }
 
 Napi::Value Curl::GetCount(const Napi::CallbackInfo& info) {
@@ -1002,28 +1015,78 @@ Napi::Value Curl::GetThreadId(const Napi::CallbackInfo& info) {
 }
 
 // Helper methods implementation
+
+static std::once_flag curlConstantMapsInitFlag;
+
+void InitializeCurlConstantMaps() {
+  std::call_once(curlConstantMapsInitFlag, []() {
+    const std::vector<CurlConstant>* allConstantVectors[] = {
+        &curlOptionBlob,
+        &curlOptionFunction,
+        &curlOptionHttpPost,
+        &curlOptionInteger,
+        &curlOptionLinkedList,
+        &curlOptionNotImplemented,
+        &curlOptionSpecific,
+        &curlOptionString,
+        &curlInfoDouble,
+        &curlInfoInteger,
+        &curlInfoLinkedList,
+        &curlInfoNotImplemented,
+        &curlInfoOffT,
+        &curlInfoSocket,
+        &curlInfoString,
+        &curlMultiOptionFunction,
+        &curlMultiOptionInteger,
+        &curlMultiOptionNotImplemented,
+        &curlMultiOptionStringArray,
+    };
+
+    curlConstantsByName.reserve(500);
+    curlConstantsByValue.reserve(500);
+
+    for (const auto* vec : allConstantVectors) {
+      for (const auto& constant : *vec) {
+        int32_t value = static_cast<int32_t>(constant.value);
+
+        // Push entries to support duplicate names across different contexts
+        curlConstantsByName[constant.name].push_back({value, vec});
+        curlConstantsByValue[constant.value].push_back({value, vec});
+      }
+    }
+  });
+}
+
 int32_t IsInsideCurlConstantStruct(const std::vector<CurlConstant>& curlConstants,
                                    const Napi::Value& searchFor) {
   int32_t ret = 0;  // Return 0 (falsy) when no match found
 
   if (searchFor.IsString()) {
     std::string optionName = searchFor.As<Napi::String>().Utf8Value();
-
     std::transform(optionName.begin(), optionName.end(), optionName.begin(), ::toupper);
 
-    for (const auto& constant : curlConstants) {
-      if (optionName == constant.name) {
-        ret = static_cast<int32_t>(constant.value);
-        break;
+    auto it = curlConstantsByName.find(optionName);
+    if (it != curlConstantsByName.end()) {
+      // Iterate through all entries with this name to find one matching the target vector
+      // This handles duplicate names across different contexts (e.g., CERTINFO as option and info)
+      for (const auto& lookup : it->second) {
+        if (lookup.sourceVector == &curlConstants) {
+          ret = lookup.value;
+          break;
+        }
       }
     }
   } else if (searchFor.IsNumber()) {
-    double searchForNumber = searchFor.As<Napi::Number>().DoubleValue();
+    int64_t searchForNumber = searchFor.As<Napi::Number>().Int64Value();
 
-    for (const auto& constant : curlConstants) {
-      if (searchForNumber == static_cast<double>(constant.value)) {
-        ret = static_cast<int32_t>(constant.value);
-        break;
+    auto it = curlConstantsByValue.find(searchForNumber);
+    if (it != curlConstantsByValue.end()) {
+      // Iterate through all entries with this value to find one matching the target vector
+      for (const auto& lookup : it->second) {
+        if (lookup.sourceVector == &curlConstants) {
+          ret = lookup.value;
+          break;
+        }
       }
     }
   }

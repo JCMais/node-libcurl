@@ -1,0 +1,26 @@
+# Suppress known false positives in V8/Node.js internals
+# These are benign data races in V8's JIT compiler and garbage collector
+# that are intentionally allowed for performance reasons
+
+# Broad V8 suppressions - catches all V8 internals and base libraries
+race:^v8::internal::
+race:^v8::base::
+
+# Specific V8 subsystems (kept for documentation)
+race:^v8::internal::Scavenger
+race:^v8::internal::ScavengerCollector
+race:^v8::internal::baseline::BaselineBatchCompiler
+race:^v8::internal::Malloced
+race:^v8::base::RegionAllocator
+
+# V8 heap management
+race:heap::base::Worklist
+
+# V8 cppgc (C++ garbage collector) heap registry
+race:cppgc::internal::HeapRegistry
+
+# libuv thread creation
+race:uv_thread_create
+
+# libuv worker threads
+race:uv_thread_create_ex

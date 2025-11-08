@@ -86,7 +86,9 @@ describe('Put Upload', () => {
   afterEach(() => {
     curl.close()
 
-    fs.unlinkSync(fileName)
+    if (fs.existsSync(fileName)) {
+      fs.unlinkSync(fileName)
+    }
     if (fs.existsSync(uploadLocation)) {
       fs.unlinkSync(uploadLocation)
     }

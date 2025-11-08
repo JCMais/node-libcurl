@@ -40,19 +40,6 @@
 #define NODE_LIBCURL_VER_LE(MAJ, MIN, PAT) \
   (LIBCURL_VERSION_NUM <= NODE_LIBCURL_MAKE_VERSION(MAJ, MIN, PAT))
 
-#if !defined(NODE_LIBCURL_NO_SETLOCALE) && !defined(_WIN32)
-#define SETLOCALE_WRAPPER(code)                         \
-  std::string localeOriginal = setlocale(LC_ALL, NULL); \
-  bool hasLocaleChanged = false;                        \
-  if (localeOriginal == "C") {                          \
-    hasLocaleChanged = true;                            \
-    setlocale(LC_ALL, "");                              \
-  }                                                     \
-  code if (hasLocaleChanged) { setlocale(LC_ALL, localeOriginal.c_str()); }
-#else
-#define SETLOCALE_WRAPPER(code) code
-#endif
-
 #define THROW_ERROR_OR_SET_MULTI_CALLBACK_ERROR_IF_INSIDE_MULTI(typeError) \
   if (obj->isInsideMultiHandle) {                                          \
     obj->callbackError.Reset(typeError);                                   \

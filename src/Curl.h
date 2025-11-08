@@ -57,6 +57,22 @@ extern const std::vector<CurlConstant> curlMultiOptionInteger;
 extern const std::vector<CurlConstant> curlMultiOptionNotImplemented;
 extern const std::vector<CurlConstant> curlMultiOptionStringArray;
 
+struct CurlConstantLookup {
+  int32_t value;
+  const std::vector<CurlConstant>* sourceVector;  // Which vector contains this constant
+};
+
+// Thread-safe global hash maps for O(1) curl constant lookups
+// These maps are initialized once via InitializeCurlConstantMaps() using std::call_once
+// and are safe for concurrent reads after initialization completes.
+// IMPORTANT: These maps must only be written to during initialization.
+// Note: Maps store vectors to handle duplicate constant names across different contexts
+// (e.g., CERTINFO exists as both CURLOPT_CERTINFO and CURLINFO_CERTINFO)
+extern std::unordered_map<std::string, std::vector<CurlConstantLookup>> curlConstantsByName;
+extern std::unordered_map<int64_t, std::vector<CurlConstantLookup>> curlConstantsByValue;
+
+void InitializeCurlConstantMaps();
+
 // Namespace helper methods
 int32_t IsInsideCurlConstantStruct(const std::vector<CurlConstant>& curlConstants,
                                    const Napi::Value& searchFor);
