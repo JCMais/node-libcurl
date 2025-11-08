@@ -14,7 +14,7 @@ pnpm pregyp rebuild --debug --node_libcurl_debug=true
 # Or build with AddressSanitizer for memory error detection
 pnpm pregyp rebuild --debug --node_libcurl_asan_debug=true
 # If building statically
-npm_config_node_libcurl_debug=true npm_config_curl_config_bin=~/deps/libcurl/build/8.16.0/bin/curl-config npm_config_curl_static_build="true" pnpm pregyp rebuild
+npm_config_node_libcurl_debug=true npm_config_curl_config_bin=~/deps/libcurl/build/8.17.0/bin/curl-config npm_config_curl_static_build="true" pnpm pregyp rebuild
 ```
 
 ### 2. Create a Test File

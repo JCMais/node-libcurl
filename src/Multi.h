@@ -83,6 +83,9 @@ class Multi : public Napi::ObjectWrap<Multi> {
 
   std::map<curl_socket_t, CurlSocketContext*> socketContextMap;
 
+  // Notification API support (libcurl >= 8.17.0)
+  bool useNotificationsApi = false;
+
   // Static members
   static std::atomic<uint64_t> nextId;
 
@@ -97,6 +100,11 @@ class Multi : public Napi::ObjectWrap<Multi> {
   static void OnSocket(uv_poll_t* handle, int status, int events);
   static void CleanupHook(void* data);
   static void CleanupHookAsync(napi_async_cleanup_hook_handle handle, void* data);
+
+#if NODE_LIBCURL_VER_GE(8, 17, 0)
+  // libcurl notification callback (available since 8.17.0)
+  static void NotifyCallback(CURLM* multi, unsigned int notification, CURL* easy, void* notifyp);
+#endif
 
   // Debug logging removed - now using NODE_LIBCURL_DEBUG_LOG macros
 

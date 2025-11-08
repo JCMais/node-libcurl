@@ -40,6 +40,22 @@ Multi::Multi(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Multi>(info), id
   Napi::Env env = info.Env();
   auto curl = env.GetInstanceData<Curl>();
 
+#if NODE_LIBCURL_VER_GE(8, 17, 0)
+  bool shouldEnableNotificationsApi = true;
+#else
+  bool shouldEnableNotificationsApi = false;
+#endif
+
+  if (info.Length() >= 1 && info[0].IsObject()) {
+    Napi::Object options = info[0].As<Napi::Object>();
+    if (options.Has("shouldEnableNotificationsApi")) {
+      Napi::Value value = options.Get("shouldEnableNotificationsApi");
+      if (value.IsBoolean()) {
+        shouldEnableNotificationsApi = value.As<Napi::Boolean>().Value();
+      }
+    }
+  }
+
   // Initialize multi handle
   this->mh = curl_multi_init();
   if (!this->mh) {
@@ -62,6 +78,31 @@ Multi::Multi(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Multi>(info), id
   this->timeout.data = this;
   // We need to keep the reference alive for the duration of the timer.
   this->Ref();
+
+  // Enable notification API if requested and supported
+  if (shouldEnableNotificationsApi) {
+#if NODE_LIBCURL_VER_GE(8, 17, 0)
+    // Enable notification callback
+    curl_multi_setopt(this->mh, CURLMOPT_NOTIFYFUNCTION, Multi::NotifyCallback);
+    curl_multi_setopt(this->mh, CURLMOPT_NOTIFYDATA, this);
+
+    // Enable INFO_READ notifications
+    CURLMcode code = curl_multi_notify_enable(this->mh, CURLMNOTIFY_INFO_READ);
+    if (code == CURLM_OK) {
+      this->useNotificationsApi = true;
+      NODE_LIBCURL_DEBUG_LOG(
+          this, "Multi::Constructor",
+          "Notification API enabled (libcurl " + std::string(version->version) + ")");
+    } else {
+      NODE_LIBCURL_DEBUG_LOG(this, "Multi::Constructor",
+                             "Failed to enable notifications, falling back to ProcessMessages");
+    }
+#else
+    NODE_LIBCURL_DEBUG_LOG(this, "Multi::Constructor",
+                           "shouldEnableNotificationsApi enabled but compiled against "
+                           "libcurl < 8.17, falling back to ProcessMessages");
+#endif
+  }
 
   napi_add_async_cleanup_hook(env, Multi::CleanupHookAsync, this, &removeHandle);
 
@@ -698,6 +739,20 @@ int Multi::CbPushFunction(CURL* parent, CURL* child, size_t numberOfHeaders,
   return returnValue;
 }
 
+#if NODE_LIBCURL_VER_GE(8, 17, 0)
+void Multi::NotifyCallback(CURLM* multi, unsigned int notification, CURL* easy, void* notifyp) {
+  Multi* obj = static_cast<Multi*>(notifyp);
+  assert(obj && "Multi::NotifyCallback - Invalid Multi instance");
+
+  NODE_LIBCURL_DEBUG_LOG(obj, "Multi::NotifyCallback",
+                         "notification: " + std::to_string(notification));
+
+  if (notification == CURLMNOTIFY_INFO_READ) {
+    obj->ProcessMessages();
+  }
+}
+#endif
+
 // function called when the previous timeout set reaches 0
 UV_TIMER_CB(Multi::OnTimeout) {
   Multi* obj = static_cast<Multi*>(timer->data);
@@ -712,7 +767,10 @@ UV_TIMER_CB(Multi::OnTimeout) {
          "Calling curl_multi_socket_action from within Multi::OnTimeout failed. This is possibly a "
          "bug on node-libcurl or libcurl itself. Please report this issue to node-libcurl.");
 
-  obj->ProcessMessages();
+  // When notifications are enabled, libcurl will call our NotifyCallback when needed
+  if (!obj->useNotificationsApi) {
+    obj->ProcessMessages();
+  }
 }
 
 void Multi::OnSocket(uv_poll_t* handle, int status, int events) {
@@ -751,7 +809,10 @@ void Multi::OnSocket(uv_poll_t* handle, int status, int events) {
     return;
   }
 
-  ctx->multi->ProcessMessages();
+  // When notifications are enabled, libcurl will call our NotifyCallback when needed
+  if (!ctx->multi->useNotificationsApi) {
+    ctx->multi->ProcessMessages();
+  }
 }
 
 }  // namespace NodeLibcurl

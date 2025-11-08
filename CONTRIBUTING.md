@@ -109,9 +109,9 @@ We use vcpkg for this. Simply change the version on the file [`vcpkg.template.js
 Sample command you could use from the root of this repository:
 
 ```sh
-LIBCURL_RELEASE=8.16.0 PUBLISH_BINARY="false" ./scripts/ci/build.sh
+LIBCURL_RELEASE=8.17.0 PUBLISH_BINARY="false" ./scripts/ci/build.sh
 
-npm_config_curl_config_bin=~/deps/libcurl/build/8.16.0/bin/curl-config \
+npm_config_curl_config_bin=~/deps/libcurl/build/8.17.0/bin/curl-config \
  npm_config_curl_static_build=true \
  npm_config_runtime=electron \
  npm_config_target=21.2.0 \
@@ -123,7 +123,7 @@ You can also use `electron-rebuild`, e.g for macOS:
 ```sh
 npm_config_curl_static_build=true \
 npm_config_macos_universal_build=true \
-npm_config_curl_config_bin=~/deps/libcurl/build/8.16.0/bin/curl-config \
+npm_config_curl_config_bin=~/deps/libcurl/build/8.17.0/bin/curl-config \
 pnpm exec electron-rebuild
 ```
 

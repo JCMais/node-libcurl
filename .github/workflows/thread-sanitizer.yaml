@@ -15,7 +15,7 @@ on:
       - '.github/workflows/thread-sanitizer.yaml'
 
 env:
-  LATEST_LIBCURL_RELEASE: 8.16.0
+  LATEST_LIBCURL_RELEASE: 8.17.0
   NODE_LIBCURL_CPP_STD: c++20
 
 concurrency:
@@ -31,7 +31,7 @@ jobs:
         node:
           - 24
         libcurl-release:
-          - '8.16.0'
+          - '8.17.0'
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}

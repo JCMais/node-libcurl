@@ -4,7 +4,7 @@
   "dependencies": [
     {
       "name": "curl",
-      "version>=": "8.16.0",
+      "version>=": "8.17.0",
       "features": [
         "brotli",
         "c-ares",

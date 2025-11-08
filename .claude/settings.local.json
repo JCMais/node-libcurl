@@ -12,7 +12,8 @@
       "Bash(pnpm test:*)",
       "Bash(timeout 30 node:*)",
       "Bash(addr2line:*)",
-      "WebFetch(domain:man7.org)"
+      "WebFetch(domain:man7.org)",
+      "WebFetch(domain:eissing.org)"
     ]
   },
   "enableAllProjectMcpServers": true,

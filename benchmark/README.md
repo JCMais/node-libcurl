@@ -60,6 +60,26 @@ node-libcurl Curl - reusing instance - GET    | ██████████�
 node-libcurl Easy - GET                       | ████████████████───────── | 3,594 ops/sec | 19 samples 
 node-libcurl Easy - reusing instance - GET    | █████████████████████████ | 5,470 ops/sec | 21 samples 
 ```
+```bash
+libcurl/8.17.0 OpenSSL/3.5.2 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.1.1 libssh2/1.10.0 nghttp2/1.66.0 ngtcp2/1.17.0 nghttp3/1.12.0 OpenLDAP/2.6.9
+Node.js version: v24.8.0
+Platform: linux x64
+CPU Cores: 16 vCPUs | 47.0GB Mem
+
+node.js http.request - GET                    | █████████████████──────── | 4,418 ops/sec | 19 samples 
+axios - GET                                   | ███████████────────────── | 2,867 ops/sec | 21 samples 
+superagent - GET                              | ███████████────────────── | 2,960 ops/sec | 21 samples 
+request - GET                                 | ████████████▌──────────── | 3,232 ops/sec | 19 samples 
+fetch - GET                                   | ███████████████▌───────── | 4,022 ops/sec | 21 samples 
+got - GET                                     | ███████████────────────── | 2,877 ops/sec | 21 samples 
+ky - GET                                      | ████████████▌──────────── | 3,326 ops/sec | 21 samples 
+node-libcurl curly - GET                      | █████████████████▌─────── | 4,592 ops/sec | 19 samples 
+node-libcurl curly with object pool - GET     | ███████████████████▌───── | 5,079 ops/sec | 20 samples 
+node-libcurl Curl - GET                       | ██████████████████─────── | 4,729 ops/sec | 20 samples 
+node-libcurl Curl - reusing instance - GET    | █████████████████████──── | 5,530 ops/sec | 19 samples 
+node-libcurl Easy - GET                       | ███████████████────────── | 3,985 ops/sec | 20 samples 
+node-libcurl Easy - reusing instance - GET    | █████████████████████████ | 6,444 ops/sec | 20 samples 
+```
 
 #### Windows 11 - AMD Ryzen 7 5700X3D 16 vCPUs
 ##### node server.js
