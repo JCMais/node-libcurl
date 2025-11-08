@@ -30,11 +30,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Prebuilt binaries have HTTP/3 support enabled across all platforms. This is supported by licurl when building with OpenSSL >= 3.5 and nghttp3 [>= 1.66](https://nghttp2.org/blog/2025/06/17/nghttp2-v1-66-0/). To use OpenSSL >= 3.5 a Node.js version >= 22.20.0 is required.
 
+- Added native WebSocket support (requires libcurl >= 7.86.0):
+  - `Easy.wsRecv(buffer)` - Receive WebSocket frames with metadata
+  - `Easy.wsSend(buffer, flags, fragsize?)` - Send WebSocket frames (text, binary, ping, pong, close)
+  - `Easy.wsMeta()` - Get WebSocket frame metadata
+  - `CurlWs` enum for WebSocket frame flags (Text, Binary, Close, Ping, Pong, Cont, Offset)
+  - `CurlWsOptions` enum for WebSocket options (RawMode, NoAutoPong)
+  - `CurlWsFrame` interface for frame metadata (age, flags, offset, bytesleft, len)
+  - Support for CONNECT_ONLY mode with value 2 for WebSocket connections
+  - See `examples/21-websockets-native.js` for usage example
+
 - Added support for the following multi options:
   - `CURLMOPT_NETWORK_CHANGED` (with `CurlMultiNetworkChanged` enum)
 - Added the following new enums:
   - `CurlFollow`
   - `CurlMultiNetworkChanged`
+  - `CurlWs`
+  - `CurlWsOptions`
 - Added following enum members:
   - `CurlWriteFunc.Abort`
   - `CurlShareLock.DataShare`
