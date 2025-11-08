@@ -35,10 +35,6 @@ jobs:
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-      # ThreadSanitizer compiler flags
-      CFLAGS: '-fsanitize=thread -g -O1'
-      CXXFLAGS: '-fsanitize=thread -g -O1'
-      LDFLAGS: '-fsanitize=thread'
     steps:
       - name: Install required packages
         run: sudo apt-get update && sudo apt-get install -y cmake
@@ -76,8 +72,17 @@ jobs:
         run: |
           RUN_TESTS=false \
           RUN_PREGYP_CLEAN=true \
+          STOP_ON_INSTALL=true \
           PUBLISH_BINARY=false \
             ./scripts/ci/build.sh
+
+      - name: 'Rebuild node-libcurl with ThreadSanitizer'
+        env:
+          CFLAGS: '-fsanitize=thread -g -O1'
+          CXXFLAGS: '-fsanitize=thread -g -O1'
+          LDFLAGS: '-fsanitize=thread'
+        run: |
+           npm_config_curl_config_bin=~/deps/libcurl/build/$LIBCURL_RELEASE/bin/curl-config npm_config_curl_static_build=true pnpm pregyp rebuild  
 
       - name: 'Find TSan library path'
         id: tsan-lib
