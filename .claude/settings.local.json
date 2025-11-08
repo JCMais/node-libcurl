@@ -13,7 +13,17 @@
       "Bash(timeout 30 node:*)",
       "Bash(addr2line:*)",
       "WebFetch(domain:man7.org)",
-      "WebFetch(domain:eissing.org)"
+      "WebFetch(domain:eissing.org)",
+      "Bash(export npm_config_curl_config_bin=\"/Users/jcm/deps/libcurl/build/8.17.0/bin/curl-config\")",
+      "Bash(export npm_config_curl_static_build=\"true\")",
+      "Bash(export npm_config_node_libcurl_cpp_std=\"c++20\")",
+      "Bash(export npm_config_build_from_source=\"true\")",
+      "Bash(export npm_config_macos_universal_build=\"true\")",
+      "Bash(export npm_config_target_arch=\"arm64\")",
+      "Bash(pnpm run:*)",
+      "Bash(cat:*)",
+      "Bash(/Users/jcm/deps/libcurl/build/8.17.0/bin/curl-config --static-libs)",
+      "Bash(grep:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
