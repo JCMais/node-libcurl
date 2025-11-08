@@ -18,6 +18,44 @@ import { Easy } from './Easy'
 type SpecificOptions = 'PIPELINING'
 
 /**
+ * Options for constructing a new Multi instance.
+ *
+ * @public
+ */
+export interface MultiOptions {
+  /**
+   * Enable libcurl's notification API for better performance.
+   *
+   * @remarks
+   * When enabled, this uses libcurl's notification callback system (available in libcurl >= 8.17.0)
+   * instead of polling for messages. This can improve performance by 50-100% for short transfers,
+   * especially when handling many connections.
+   *
+   * The notification API works by having libcurl call a callback when transfer events occur,
+   * eliminating the need to call `curl_multi_info_read()` after every operation.
+   *
+   * **Behavior:**
+   * - If `true` and libcurl >= 8.17.0 is available: Uses notification API
+   * - If `true` and libcurl < 8.17.0: Falls back to polling (no error, debug log only)
+   * - If `false` or not specified: Uses traditional polling approach
+   * - When compiled against libcurl < 8.17.0: Always falls back to polling
+   *
+   * **Defaults:**
+   * - `true` when compiled against libcurl >= 8.17.0
+   * - `false` when compiled against libcurl < 8.17.0
+   *
+   * @defaultValue `true` (if compiled with libcurl >= 8.17.0), `false` otherwise
+   *
+   * @see {@link https://curl.se/libcurl/c/curl_multi_notify_enable.html | curl_multi_notify_enable()}
+   * @see {@link https://curl.se/libcurl/c/CURLMOPT_NOTIFYFUNCTION.html | CURLMOPT_NOTIFYFUNCTION}
+   * @see {@link https://eissing.org/icing/posts/curl-notifications/ | Curl Notifications Blog Post}
+   *
+   * @since 5.0.0
+   */
+  shouldUseNotificationsApi?: boolean
+}
+
+/**
  * `Multi` class that acts as an wrapper around the native libcurl multi handle.
  * > [C++ source code](https://github.com/JCMais/node-libcurl/blob/master/src/Multi.cc)
  *
@@ -31,6 +69,24 @@ type SpecificOptions = 'PIPELINING'
  */
 // @ts-expect-error - we are abusing TS merging here to have sane types for the addon classes
 declare class Multi {
+  /**
+   * Creates a new Multi instance.
+   *
+   * @param options - Optional configuration for the Multi instance
+   *
+   * @example
+   * ```typescript
+   * // Use default settings (notifications enabled if libcurl >= 8.17.0)
+   * const multi = new Multi()
+   *
+   * // Explicitly enable notifications (recommended for libcurl >= 8.17.0)
+   * const multiWithNotifications = new Multi({ shouldUseNotificationsApi: true })
+   *
+   * // Use traditional polling (compatible with all libcurl versions)
+   * const multiWithPolling = new Multi({ shouldUseNotificationsApi: false })
+   * ```
+   */
+  constructor(options?: MultiOptions)
   /**
    * Sets the [`PIPELINING`](https://curl.haxx.se/libcurl/c/CURLMOPT_PIPELINING.html) option.
    *
