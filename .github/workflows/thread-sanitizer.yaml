@@ -68,11 +68,11 @@ jobs:
           restore-keys: |
             v4-tsan-${{ runner.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-node-${{ matrix.node }}
 
-      - name: 'Build node-libcurl with ThreadSanitizer'
+      - name: 'Build node-libcurl deps'
         run: |
           RUN_TESTS=false \
           RUN_PREGYP_CLEAN=true \
-          STOP_ON_INSTALL=true \
+          ONLY_BUILD_DEPS=true \
           PUBLISH_BINARY=false \
             ./scripts/ci/build.sh
 
