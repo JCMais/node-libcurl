@@ -363,6 +363,13 @@ curl-config --static-libs
 curl-config --prefix
 curl-config --cflags
 
+if [ "$ONLY_BUILD_DEPS" == "true" ]; then
+  echo "Only building dependencies, exiting"
+  exit 0
+fi
+
+echo "Building node-libcurl"
+
 # Some vars we will need below
 DISPLAY=${DISPLAY:-}
 PUBLISH_BINARY=${PUBLISH_BINARY:-}
