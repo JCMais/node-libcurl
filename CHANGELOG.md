@@ -7,23 +7,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Breaking Change  
-- Minimum supported Electron version is now Electron v37.0.0.
+- The prebuilt binary is now built with libcurl 8.17.0. Every breaking change introduced by libcurl 8 is also a breaking change for this version.
+  ```
+  Version: libcurl/8.17.0 OpenSSL/3.5.2 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.1.1 libssh2/1.10.0 nghttp2/1.66.0 ngtcp2/1.17.0 nghttp3/1.12.0 OpenLDAP/2.6.9
+  Protocols: dict, file, ftp, ftps, gopher, gophers, http, https, imap, imaps, ldap, ldaps, mqtt, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp, ws, wss
+  Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, SSL, libz, brotli, TLS-SRP, HTTP2, UnixSockets, HTTPS-proxy, alt-svc
+  ```
+- Minimum supported Electron version is now Electron v38.0.0 (moving forward prebuilt binaries will only be available for the latest 2 versions of Electron).
 - Mininum supported libcurl version is now libcurl 7.81.0.
 - Windows 32-bit support is now dropped.
 - Minimum supported versions:
   - Node.js >= v22.20.0 (which bundles OpenSSL 3.5.2).
-  - Electron >= v37.0.0.
+  - Electron >= v38.0.0.
   - libcurl >= v7.81.0.
   - Ubuntu >= v22.04.
   - Alpine >= 3.21
   - C++ compilers supporting c++20
-- The prebuilt binary is now built with libcurl 8.17.0. Every breaking change introduced by libcurl 8 is also a breaking change for this version.
 - Errors thrown by the addon are now instances of one of the following classes:
   - `CurlEasyError`
   - `CurlMultiError`
   - `CurlSharedError`
   These classes extends the `CurlError` class. Previously the addon used to throw only native Javascript errors, such as `Error`, `TypeError`, etc.
-- The curly related errors now inherit from the `CurlError` class, and do not have a `isCurlError` property anymore.
+  The curly related errors also inherit from the `CurlError` class, and do not have a `isCurlError` property anymore.
 - Every Easy handle is now initialized with default CA certificates from Node.js's tls module, by using the result of the `getCACertificates` function. This is done using `CURLOPT_CAINFO_BLOB`. This is a breaking change if you were passing custom CA certificates before using `CAINFO`, as `CURLOPT_CAINFO_BLOB` takes priority over it. If that is the case, you can avoid the default behavior by calling `setOpt("CAINFO_BLOB", null)` on the Easy handle. The TLS certificate is loaded into memory once for each JavaScript context.
 - `HSTSREADFUNCTION` callback now receives an object with the `maxHostLengthBytes` property, which is the maximum length of the host name that can be returned by the callback.
 - The minimum macOS version is now Sonoma (13)
@@ -44,9 +49,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `CurlWsFrame` interface for frame metadata (age, flags, offset, bytesleft, len)
   - Support for CONNECT_ONLY mode with value 2 for WebSocket connections
   - See `examples/21-websockets-native.js` for usage example
-- Added new `
-- Added support for the following multi options:
-  - `CURLMOPT_NETWORK_CHANGED` (with `CurlMultiNetworkChanged` enum)
+- Added new `Multi.perform` method for adding `Easy` instances to a `Multi` instance. This will eventually replace the `Multi.addHandle` and `Multi.onMessage` methods, which are now deprecated.
 - Added the following new enums:
   - `CurlFollow`
   - `CurlMultiNetworkChanged`
@@ -81,14 +84,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - https://curl.se/libcurl/c/CURLINFO_HTTPAUTH_USED.html
 - Added the following multi options:
   - https://curl.se/libcurl/c/CURLMOPT_NETWORK_CHANGED.html
-- Added `Curl.id` and `Easy.id` properties, which return the unique ID of the Easy handle. The value is unique across threads.
+- Added `Curl.id`, `Easy.id`, `Multi.id`, and `Share.id` properties, which return the unique ID of each instance. The value is unique across threads.
 
 ### Changed  
 - `CurlGlobalInit` enum is deprecated and should not be used.
 - Closing a Curl instance is now a no-op if the handle is already closed.
 - `Multi.onMessage` and `Multi.addHandle` are now deprecated and will be removed in a future major version. Use `Multi.perform` instead.
-
-### Removed  
 
 ## [4.1.0] - 2024-12-26
 
