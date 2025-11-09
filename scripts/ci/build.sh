@@ -62,6 +62,7 @@ function cat_slower() {
 CI=${CI:-}
 PREFIX_DIR=${PREFIX_DIR:-$HOME}
 STOP_ON_INSTALL=${STOP_ON_INSTALL:-false}
+ONLY_BUILD_DEPS=${ONLY_BUILD_DEPS:-false}
 RUN_PREGYP_CLEAN=${RUN_PREGYP_CLEAN:-true}
 
 # Disabled by default

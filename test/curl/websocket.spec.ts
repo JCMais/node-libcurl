@@ -357,12 +357,10 @@ describe.runIf(isWebSocketSupported)(
         easy.setOpt('URL', `${getWsUrl()}/close-immediately`)
         easy.setOpt('UPLOAD', 1)
         easy.setOpt('CONNECT_ONLY', 0)
-        easy.setOpt('VERBOSE', true)
 
         const flags = [CurlWs.Text, CurlWs.Close]
 
         easy.setOpt('WRITEFUNCTION', (buffer, size, nmemb) => {
-          process.stdout.write(`WRITEFUNCTION ${buffer} ${size} ${nmemb}\n`)
           const meta = easy.wsMeta()
 
           assert(meta)
@@ -392,7 +390,6 @@ describe.runIf(isWebSocketSupported)(
         easy.setOpt('URL', getWsUrl())
         easy.setOpt('UPLOAD', 1)
         easy.setOpt('CONNECT_ONLY', 0)
-        easy.setOpt('VERBOSE', true)
 
         const flags = [
           // these are the messages we have below
@@ -410,12 +407,9 @@ describe.runIf(isWebSocketSupported)(
           Buffer.from('!'),
         ]
 
-        let lastMessageSent: null | Buffer = null
-
         let shouldSendNextMessage = true
 
         easy.setOpt('WRITEFUNCTION', (buffer, size, nmemb) => {
-          process.stdout.write(`WRITEFUNCTION ${buffer} ${size} ${nmemb}\n`)
           const meta = easy.wsMeta()
 
           assert(meta)
@@ -434,13 +428,8 @@ describe.runIf(isWebSocketSupported)(
 
         easy.setOpt('READFUNCTION', (data) => {
           if (!shouldSendNextMessage) {
-            process.stdout.write(`READFUNCTION pausing\n`)
             return CurlReadFunc.Pause
           }
-
-          process.stdout.write(
-            `READFUNCTION sending message ${lastMessageSent}\n`,
-          )
 
           const message = messagesToSend.shift()
           if (!message) {
@@ -452,8 +441,6 @@ describe.runIf(isWebSocketSupported)(
           if (messagesToSend.length === 0) {
             easy.wsStartFrame(CurlWs.Text, message.length)
           }
-
-          lastMessageSent = message
 
           message.copy(data)
           return message.length
