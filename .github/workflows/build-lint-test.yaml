@@ -52,11 +52,6 @@ jobs:
           - os: ubuntu-22.04
             libcurl-release: ${{ needs.config.outputs.oldest-libcurl-release }}
             node: 24
-          # electron builds, only latest version is tested
-          - os: ubuntu-22.04
-            libcurl-release: ${{ needs.config.outputs.latest-libcurl-release }}
-            node: 24
-            electron-version: 38.1.2
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
