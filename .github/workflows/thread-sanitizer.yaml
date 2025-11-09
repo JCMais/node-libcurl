@@ -96,9 +96,6 @@ jobs:
         run: |
           pnpm build:dist
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-  
       - name: 'Run worker thread test'
         env:
           LD_PRELOAD: ${{ steps.tsan-lib.outputs.tsan_lib }}
