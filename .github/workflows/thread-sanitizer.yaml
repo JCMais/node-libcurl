@@ -98,6 +98,10 @@ jobs:
           echo "tsan_lib=$TSAN_LIB" >> $GITHUB_OUTPUT
           echo "Found TSan library at: $TSAN_LIB"
 
+      - name: 'Build dist'
+        run: |
+          pnpm build:dist
+
       - name: 'Run worker thread test'
         env:
           LD_PRELOAD: ${{ steps.tsan-lib.outputs.tsan_lib }}
