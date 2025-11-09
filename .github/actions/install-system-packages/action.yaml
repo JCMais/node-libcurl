@@ -1,0 +1,39 @@
+name: Install System Packages
+description: Installs required system packages on macOS and Linux (incl. Alpine)
+
+runs:
+  using: composite
+  steps:
+    - name: Detect alpine
+      id: detect-alpine
+      shell: bash
+      run: |
+        if [ -f /etc/alpine-release ]; then
+          echo "result=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "result=false" >> "$GITHUB_OUTPUT"
+        fi
+    - name: Install Needed packages on macOS
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        brew install coreutils wget automake libtool cmake gnu-sed m4 groff
+
+    - name: Install Needed packages on Linux
+      if: runner.os == 'Linux' && steps.detect-alpine.outputs.result == 'false'
+      shell: bash
+      run: |
+        sudo apt-get update && sudo apt-get install -y cmake groff
+
+    - name: Install Needed packages on Alpine
+      if: steps.detect-alpine.outputs.result == 'true'
+      shell: sh
+      run: |
+        apk --no-cache add --virtual .rundeps \
+        bash ca-certificates cmake curl docker git \
+        gnupg openssh-client openssl parallel pkgconfig \
+        coreutils \
+        python3 py3-pip make g++ \
+        perl linux-headers \
+        autoconf automake libtool \
+        texinfo flex bison build-base libedit-dev mandoc-soelim zlib zlib-dev zlib-static

@@ -1,0 +1,43 @@
+name: Setup vcpkg for Windows
+description: Sets up vcpkg with caching for Windows builds
+
+outputs:
+  cache-hit:
+    description: 'Whether the vcpkg cache was hit'
+    value: ${{ steps.vcpkg-cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - name: Enable vcpkg binary caching
+      shell: pwsh
+      run: |
+        echo "VCPKG_FEATURE_FLAGS=manifests,binarycaching" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "VCPKG_DEFAULT_BINARY_CACHE=${{ runner.temp }}\vcpkg-cache" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+    - name: Cache vcpkg
+      id: vcpkg-cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          C:\vcpkg\installed
+          ${{ runner.temp }}\vcpkg-cache
+        key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'overlays/**') }}
+        restore-keys: vcpkg-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Create vcpkg cache folder
+      if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force -Path "${{ runner.temp }}\vcpkg-cache"
+
+    - name: Setup vcpkg
+      shell: pwsh
+      env:
+        VCPKG_DISABLE_METRICS: false
+      run: |
+        cd vcpkg
+        .\bootstrap-vcpkg.bat
+        echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
+        cd ..
+        node scripts/vcpkg-setup.js

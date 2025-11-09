@@ -1,0 +1,77 @@
+name: Setup Libcurl Cache
+description: Sets up caching for libcurl dependencies and Electron
+
+inputs:
+  libcurl-release:
+    description: 'Libcurl release version'
+    required: true
+  node-version:
+    description: 'Node.js version'
+    required: true
+  electron-version:
+    description: 'Electron version (if building for Electron)'
+    required: false
+    default: ''
+  cache-key-prefix:
+    description: 'Prefix for cache key (e.g., "v4-tsan-" for thread sanitizer)'
+    required: false
+    default: 'v4-'
+  electron-config-cache:
+    description: 'Electron cache directory path'
+    required: false
+    default: '~/.cache/electron'
+  mode:
+    description: 'Cache mode: "restore-only", "save-only", or "restore-and-save"'
+    required: false
+    default: 'restore-and-save'
+
+outputs:
+  cache-hit:
+    description: 'Whether the cache was hit'
+    value: ${{ steps.libcurl-deps-cache-restore.outputs.cache-hit || steps.libcurl-deps-cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    # Restore-only mode (for workflows that save separately)
+    - name: Restore libcurl deps cache
+      if: inputs.mode == 'restore-only'
+      uses: actions/cache/restore@v4
+      id: libcurl-deps-cache-restore
+      with:
+        path: |
+          ~/.node-gyp
+          ~/deps
+        key: ${{ inputs.cache-key-prefix }}${{ runner.os }}-libcurl-${{ inputs.libcurl-release }}-deps-cache-${{ inputs.electron-version && 'electron' || 'node' }}-${{ inputs.electron-version || inputs.node-version }}
+
+    # Restore and save mode (for most workflows)
+    - name: Restore and save libcurl deps cache
+      if: inputs.mode == 'restore-and-save'
+      uses: actions/cache@v4
+      id: libcurl-deps-cache
+      with:
+        path: |
+          ~/.node-gyp
+          ~/deps
+        key: ${{ inputs.cache-key-prefix }}${{ runner.os }}-libcurl-${{ inputs.libcurl-release }}-deps-cache-${{ inputs.electron-version && 'electron' || 'node' }}-${{ inputs.electron-version || inputs.node-version }}
+
+    # Save-only mode (for workflows that restore separately)
+    - name: Save libcurl deps cache
+      if: inputs.mode == 'save-only'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.node-gyp
+          ~/deps
+        key: ${{ inputs.cache-key-prefix }}${{ runner.os }}-libcurl-${{ inputs.libcurl-release }}-deps-cache-${{ inputs.electron-version && 'electron' || 'node' }}-${{ inputs.electron-version || inputs.node-version }}
+
+    # Electron cache (conditional)
+    - name: Restore Electron Cache
+      uses: actions/cache@v4
+      if: inputs.electron-version != '' && runner.os != 'Windows'
+      with:
+        path: ${{ inputs.electron-config-cache }}
+        key: v1-${{ runner.os }}-electron-cache-${{ inputs.electron-version }}
+        restore-keys: |
+          v1-${{ runner.os }}-electron-cache-${{ inputs.electron-version }}
+          v1-${{ runner.os }}-electron-cache-

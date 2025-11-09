@@ -1,0 +1,24 @@
+name: Setup Node and PNPM
+description: Sets up pnpm and Node.js with caching
+
+inputs:
+  node-version:
+    description: 'Node.js version to install'
+    required: true
+  skip-node-setup:
+    description: 'Skip Node.js setup (useful for Alpine)'
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+
+    - name: Set up Node ${{ inputs.node-version }}
+      if: inputs.skip-node-setup != 'true'
+      uses: actions/setup-node@v5
+      with:
+        node-version: '${{ inputs.node-version }}'
+        cache: 'pnpm'
+        package-manager-cache: 'pnpm'

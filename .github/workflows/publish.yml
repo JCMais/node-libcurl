@@ -71,13 +71,10 @@ jobs:
           git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
   
       # Node.js / PNPM
-      - uses: pnpm/action-setup@v4
-      - name: Set up Node ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v5
+      - name: Setup Node and PNPM
+        uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: '${{ env.NODE_VERSION }}'
-          cache: 'pnpm'
-          package-manager-cache: 'pnpm'
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3

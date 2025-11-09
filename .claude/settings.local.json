@@ -24,7 +24,9 @@
       "Bash(cat:*)",
       "Bash(/Users/jcm/deps/libcurl/build/8.17.0/bin/curl-config --static-libs)",
       "Bash(grep:*)",
-      "mcp__firecrawl-mcp__firecrawl_scrape"
+      "mcp__firecrawl-mcp__firecrawl_scrape",
+      "Bash(ls:*)",
+      "Bash(find:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

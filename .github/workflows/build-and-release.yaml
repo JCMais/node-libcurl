@@ -20,11 +20,6 @@ on:
         required: true
 
 env:
-  LATEST_LIBCURL_RELEASE: 8.17.0
-  OLDEST_LIBCURL_RELEASE: 7.77.0
-  NODE_LIBCURL_CPP_STD: c++20
-  # https://www.electronjs.org/docs/latest/tutorial/installation#cache
-  electron_config_cache: ~/.cache/electron
   NODE_LIBCURL_GITHUB_TOKEN: ${{ secrets.NODE_LIBCURL_GITHUB_TOKEN }}
 
 concurrency:
@@ -34,35 +29,11 @@ concurrency:
 # all jobs here must have a matrix identical to the ones inside build-and-release.yaml
 
 jobs:
-  set-params:
-    runs-on: ubuntu-22.04
-    outputs:
-      latest-libcurl-release: ${{ env.LATEST_LIBCURL_RELEASE }}
-      oldest-libcurl-release: ${{ env.OLDEST_LIBCURL_RELEASE }}
-    steps:
-      - run: exit 0
+  config:
+    uses: ./.github/workflows/reusable-config.yaml
 
   lint-and-tsc:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      # Node.js / PNPM
-      - uses: pnpm/action-setup@v4
-      - name: Set up Node ${{ matrix.node }}
-        uses: actions/setup-node@v5
-        with:
-          node-version: '${{ matrix.node }}'
-          cache: 'pnpm'
-          package-manager-cache: 'pnpm'
-
-      - name: Install node dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Run lint
-        run: pnpm lint
-      - name: Run tsc
-        run: pnpm build:dist
+    uses: ./.github/workflows/reusable-lint-tsc.yaml
 
   build-and-release:
     permissions:
@@ -73,7 +44,7 @@ jobs:
     runs-on: ${{ matrix.os == 'alpine' && 'ubuntu-22.04' || matrix.os }}
     container: ${{ matrix.os == 'alpine' && format('node:{0}-alpine3.21', matrix.node) || '' }}
     needs:
-      - set-params
+      - config
       - lint-and-tsc
 
     strategy:
@@ -88,18 +59,18 @@ jobs:
           - alpine
           - windows-2025
         libcurl-release:
-          - ${{ needs.set-params.outputs.latest-libcurl-release }}
+          - ${{ needs.config.outputs.latest-libcurl-release }}
         node:
           - 24
           # - 22
         include:
           # electron builds
           - os: ubuntu-22.04
-            libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
+            libcurl-release: ${{ needs.config.outputs.latest-libcurl-release }}
             node: 24
             electron-version: 38.1.2
           - os: macos-15
-            libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
+            libcurl-release: ${{ needs.config.outputs.latest-libcurl-release }}
             node: 24
             electron-version: 38.1.2
     env:
@@ -107,18 +78,13 @@ jobs:
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
     steps:
-      - if: matrix.os == 'alpine'
-        name: Install Alpine Packages
-        shell: sh
-        run: |
-          apk --no-cache add --virtual .rundeps \
-          bash ca-certificates cmake curl docker git \
-          gnupg openssh-client openssl parallel pkgconfig \
-          coreutils \
-          python3 py3-pip make g++ \
-          perl linux-headers \
-          autoconf automake libtool \
-          texinfo flex bison build-base libedit-dev mandoc-soelim zlib zlib-dev zlib-static
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Install System Packages
+        uses: ./.github/actions/install-system-packages
 
       - name: Should publish binary?
         id: should-publish
@@ -128,13 +94,6 @@ jobs:
           else
             echo "result=false" >> "$GITHUB_OUTPUT"
           fi
-      - if: runner.os == 'macOS'
-        name: Install Needed packages on macOS
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4 groff
-
-      - if: runner.os == 'Linux' && matrix.os != 'alpine'
-        name: Install Needed packages on Linux
-        run: sudo apt-get update && sudo apt-get install -y cmake groff
 
       - name: Export Electron npm_config envs
         if: matrix.electron-version
@@ -143,84 +102,32 @@ jobs:
           echo "npm_config_dist_url=https://electronjs.org/headers" >> $GITHUB_ENV
           echo "npm_config_target=${{ matrix.electron-version }}" >> $GITHUB_ENV
 
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          submodules: true
-
       # see https://github.com/nodejs/node/issues/40537
       - name: Enforce IPv4 Connectivity
         if: matrix.os != 'alpine'
         uses: ./.github/actions/force-ipv4
 
-        # PNPM / Node.js
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-      - name: Set up Node ${{ matrix.node }}
-        if: matrix.os != 'alpine'
-        uses: actions/setup-node@v5
+      # PNPM / Node.js
+      - name: Setup Node and PNPM
+        uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: '${{ matrix.node }}'
-          cache: 'pnpm'
-          package-manager-cache: true
+          skip-node-setup: ${{ matrix.os == 'alpine' && 'true' || 'false' }}
 
-      - name: (Windows) Enable vcpkg binary caching
+      - name: Setup vcpkg (Windows)
         if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          echo "VCPKG_FEATURE_FLAGS=manifests,binarycaching" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "VCPKG_DEFAULT_BINARY_CACHE=${{ runner.temp }}\vcpkg-cache" | Out-File -FilePath $env:GITHUB_ENV -Append
+        uses: ./.github/actions/setup-vcpkg-windows
 
-      - name: (Windows) Cache vcpkg
-        if: runner.os == 'Windows'
-        id: vcpkg-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            C:\vcpkg\installed
-            ${{ runner.temp }}\vcpkg-cache
-          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'overlays/**') }}
-          restore-keys: vcpkg-${{ runner.os }}-${{ runner.arch }}-
-
-      - name: (Windows) Create vcpkg cache folder
-        if: runner.os == 'Windows' && steps.vcpkg-cache.outputs.cache-hit != 'true'
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path "${{ runner.temp }}\vcpkg-cache"
-
-      - name: (Windows) Setup vcpkg
-        if: runner.os == 'Windows'
-        shell: pwsh
-        env:
-          VCPKG_DISABLE_METRICS: false
-        run: |
-          cd vcpkg
-          .\bootstrap-vcpkg.bat
-          echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" | Out-File -FilePath $env:GITHUB_ENV -Append
-          cd ..
-          node scripts/vcpkg-setup.js
-
-      - name: Libcurl Deps Cache (Restore)
-        uses: actions/cache/restore@v4
-        id: libcurl-deps-cache
+      - name: Setup Libcurl Cache (Restore)
         if: runner.os != 'Windows'
+        id: libcurl-deps-cache
+        uses: ./.github/actions/setup-libcurl-cache
         with:
-          path: |
-            ~/.node-gyp
-            ~/deps
-          key: v4-${{ matrix.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
-          restore-keys: |
-            v4-${{ matrix.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
-
-      - name: Restore Electron Cache
-        uses: actions/cache@v4
-        if: matrix.electron-version && runner.os != 'Windows'
-        with:
-          path: ${{ env.electron_config_cache }}
-          key: v1-${{ matrix.os }}-electron-cache-${{ matrix.electron-version }}
-          restore-keys: |
-            v1-${{ matrix.os }}-electron-cache-${{ matrix.electron-version }}
-            v1-${{ matrix.os }}-electron-cache-
+          libcurl-release: ${{ matrix.libcurl-release }}
+          node-version: ${{ matrix.node }}
+          electron-version: ${{ matrix.electron-version }}
+          electron-config-cache: ${{ needs.config.outputs.electron-config-cache }}
+          mode: 'restore-only'
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -247,14 +154,15 @@ jobs:
             echo "status=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Libcurl Deps Cache (Save)
-        uses: actions/cache/save@v4
+      - name: Setup Libcurl Cache (Save)
         if: runner.os != 'Windows' && steps.libcurl-deps-cache.outputs.cache-hit != 'true' && steps.built-and-installed.outputs.status == 'true'
+        uses: ./.github/actions/setup-libcurl-cache
         with:
-          path: |
-            ~/.node-gyp
-            ~/deps
-          key: v4-${{ matrix.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
+          libcurl-release: ${{ matrix.libcurl-release }}
+          node-version: ${{ matrix.node }}
+          electron-version: ${{ matrix.electron-version }}
+          electron-config-cache: ${{ needs.config.outputs.electron-config-cache }}
+          mode: 'save-only'
 
       - name: 'Build and Package Binary Windows'
         if: runner.os == 'Windows'
@@ -291,10 +199,9 @@ jobs:
         run: |
           node scripts/module-packaging.js --publish "$(pnpm --silent pregyp reveal staged_tarball --silent)"
 
-      - name: Upload artifacts
+      - name: Upload Build Logs
         if: always() && runner.os != 'Windows'
-        uses: actions/upload-artifact@v4
+        uses: ./.github/actions/upload-build-logs
         with:
-          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
-          path: ./logs/
-          retention-days: 3
+          artifact-name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
+          retention-days: '3'

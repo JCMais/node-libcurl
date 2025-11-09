@@ -7,12 +7,6 @@ defaults:
 on:
   pull_request:
 
-env:
-  LATEST_LIBCURL_RELEASE: 8.17.0
-  OLDEST_LIBCURL_RELEASE: 7.77.0
-  NODE_LIBCURL_CPP_STD: c++20
-  # https://www.electronjs.org/docs/latest/tutorial/installation#cache
-  electron_config_cache: ~/.cache/electron
 
 concurrency:
   group: build-lint-test-${{ github.head_ref }}
@@ -21,39 +15,15 @@ concurrency:
 # all jobs here must have a matrix identical to the ones inside build-and-release.yaml
 
 jobs:
-  set-params:
-    runs-on: ubuntu-22.04
-    outputs:
-      latest-libcurl-release: ${{ env.LATEST_LIBCURL_RELEASE }}
-      oldest-libcurl-release: ${{ env.OLDEST_LIBCURL_RELEASE }}
-    steps:
-      - run: exit 0
+  config:
+    uses: ./.github/workflows/reusable-config.yaml
 
   lint-and-tsc:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      # Node.js / PNPM
-      - uses: pnpm/action-setup@v4
-      - name: Set up Node ${{ matrix.node }}
-        uses: actions/setup-node@v5
-        with:
-          node-version: '${{ matrix.node }}'
-          cache: 'pnpm'
-          package-manager-cache: 'pnpm'
-
-      - name: Install node dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Run lint
-        run: pnpm lint
-      - name: Run tsc
-        run: pnpm build:dist
+    uses: ./.github/workflows/reusable-lint-tsc.yaml
 
   build-and-test:
     runs-on: ${{ matrix.os }}
-    needs: set-params
+    needs: config
     strategy:
       fail-fast: false
       matrix:
@@ -63,23 +33,23 @@ jobs:
           - macos-15
           - ubuntu-22.04
         libcurl-release:
-          - ${{ needs.set-params.outputs.latest-libcurl-release }}
+          - ${{ needs.config.outputs.latest-libcurl-release }}
         node:
           - 24
           # TODO(jonathan, migration): add Node v22
         include:
           # we only want to record coverage in one of the jobs, in this case, the one for the latest stable Node.js version
           - os: ubuntu-22.04
-            libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
+            libcurl-release: ${{ needs.config.outputs.latest-libcurl-release }}
             node: 24
             record-coverage: true
           # we also want to build a job for old libcurl versions
           - os: ubuntu-22.04
-            libcurl-release: ${{ needs.set-params.outputs.oldest-libcurl-release }}
+            libcurl-release: ${{ needs.config.outputs.oldest-libcurl-release }}
             node: 24
           # electron builds, only latest version is tested
           - os: ubuntu-22.04
-            libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
+            libcurl-release: ${{ needs.config.outputs.latest-libcurl-release }}
             node: 24
             electron-version: 38.1.2
     env:
@@ -87,62 +57,32 @@ jobs:
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
     steps:
-      - if: runner.os == 'macOS'
-        name: Install Needed packages on macOS
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4 groff
-
-      - if: runner.os == 'Linux' && matrix.os != 'alpine'
-        name: Install Needed packages on Linux
-        run: sudo apt-get update && sudo apt-get install -y cmake groff
-
-      - name: Export Electron npm_config envs
-        if: matrix.electron-version
-        run: |
-          echo "npm_config_runtime=electron" >> $GITHUB_ENV
-          echo "npm_config_dist_url=https://electronjs.org/headers" >> $GITHUB_ENV
-          echo "npm_config_target=${{ matrix.electron-version }}" >> $GITHUB_ENV
-
       - name: Checkout
         uses: actions/checkout@v5
         with:
           submodules: true
+
+      - name: Install System Packages
+        uses: ./.github/actions/install-system-packages
 
       # see https://github.com/nodejs/node/issues/40537
       - name: Enforce IPv4 Connectivity
         if: matrix.os != 'alpine'
         uses: ./.github/actions/force-ipv4
 
-        # PNPM / Node.js
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-      - name: Set up Node ${{ matrix.node }}
-        if: matrix.os != 'alpine'
-        uses: actions/setup-node@v5
+      # PNPM / Node.js
+      - name: Setup Node and PNPM
+        uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: '${{ matrix.node }}'
-          cache: 'pnpm'
-          package-manager-cache: true
 
-      - name: Restore libcurl deps cache
-        uses: actions/cache@v4
-        id: libcurl-deps-cache
+      - name: Setup Libcurl Cache
+        uses: ./.github/actions/setup-libcurl-cache
         with:
-          path: |
-            ~/.node-gyp
-            ~/deps
-          key: v4-${{ runner.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
-          restore-keys: |
-            v4-${{ runner.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
-
-      - name: Restore Electron Cache
-        uses: actions/cache@v4
-        if: matrix.electron-version
-        with:
-          path: ${{ env.electron_config_cache }}
-          key: v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
-          restore-keys: |
-            v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
-            v1-${{ runner.os }}-electron-cache-
+          libcurl-release: ${{ matrix.libcurl-release }}
+          node-version: ${{ matrix.node }}
+          electron-version: ${{ matrix.electron-version }}
+          electron-config-cache: ${{ needs.config.outputs.electron-config-cache }}
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -168,10 +108,9 @@ jobs:
           file: ./coverage/**
           fail_ci_if_error: false
       
-      - name: Upload artifacts
+      - name: Upload Build Logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: ./.github/actions/upload-build-logs
         with:
-          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
-          path: ./logs/
-          retention-days: 3
+          artifact-name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
+          retention-days: '3'

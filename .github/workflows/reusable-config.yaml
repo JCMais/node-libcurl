@@ -1,0 +1,33 @@
+name: Reusable Configuration
+
+on:
+  workflow_call:
+    outputs:
+      latest-libcurl-release:
+        description: "Latest libcurl release version"
+        value: ${{ jobs.config.outputs.latest-libcurl-release }}
+      oldest-libcurl-release:
+        description: "Oldest libcurl release version"
+        value: ${{ jobs.config.outputs.oldest-libcurl-release }}
+      node-libcurl-cpp-std:
+        description: "C++ standard version"
+        value: ${{ jobs.config.outputs.node-libcurl-cpp-std }}
+      electron-config-cache:
+        description: "Electron cache path"
+        value: ${{ jobs.config.outputs.electron-config-cache }}
+
+jobs:
+  config:
+    runs-on: ubuntu-22.04
+    outputs:
+      latest-libcurl-release: ${{ env.LATEST_LIBCURL_RELEASE }}
+      oldest-libcurl-release: ${{ env.OLDEST_LIBCURL_RELEASE }}
+      node-libcurl-cpp-std: ${{ env.NODE_LIBCURL_CPP_STD }}
+      electron-config-cache: ${{ env.electron_config_cache }}
+    env:
+      LATEST_LIBCURL_RELEASE: 8.17.0
+      OLDEST_LIBCURL_RELEASE: 7.77.0
+      NODE_LIBCURL_CPP_STD: c++20
+      electron_config_cache: ~/.cache/electron
+    steps:
+      - run: exit 0
