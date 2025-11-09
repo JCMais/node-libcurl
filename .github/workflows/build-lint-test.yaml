@@ -60,7 +60,7 @@ jobs:
         electron-version:
           - ''
         os:
-          # - macos-15
+          - macos-15
           - ubuntu-22.04
         libcurl-release:
           - ${{ needs.set-params.outputs.latest-libcurl-release }}
@@ -68,7 +68,7 @@ jobs:
           - 24
           # TODO(jonathan, migration): add Node v22
         include:
-          # we only want to run lint in one of the jobs, in this case, the one for the latest stable Node.js version
+          # we only want to record coverage in one of the jobs, in this case, the one for the latest stable Node.js version
           - os: ubuntu-22.04
             libcurl-release: ${{ needs.set-params.outputs.latest-libcurl-release }}
             node: 24

@@ -81,8 +81,11 @@ jobs:
           CFLAGS: '-fsanitize=thread -g -O1'
           CXXFLAGS: '-fsanitize=thread -g -O1'
           LDFLAGS: '-fsanitize=thread'
+          npm_config_curl_static_build: 'true'
+          npm_config_build_from_source: 'true'
         run: |
-           npm_config_curl_config_bin=~/deps/libcurl/build/$LIBCURL_RELEASE/bin/curl-config npm_config_curl_static_build=true pnpm pregyp rebuild  
+          export npm_config_curl_config_bin=~/deps/libcurl/build/$LIBCURL_RELEASE/bin/curl-config
+          pnpm install --frozen-lockfile --force --fetch-timeout 300000
 
       - name: 'Find TSan library path'
         id: tsan-lib
