@@ -14,9 +14,6 @@ on:
       - 'tsan-suppressions.txt'
       - '.github/workflows/thread-sanitizer.yaml'
 
-env:
-  LATEST_LIBCURL_RELEASE: 8.17.0
-  NODE_LIBCURL_CPP_STD: c++20
 
 concurrency:
   group: thread-sanitizer-${{ github.head_ref }}
@@ -24,7 +21,7 @@ concurrency:
 
 jobs:
   thread-sanitizer-test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: true
       matrix:
@@ -36,37 +33,30 @@ jobs:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
     steps:
-      - name: Install required packages
-        run: sudo apt-get update && sudo apt-get install -y cmake
-
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Install System Packages
+        uses: ./.github/actions/install-system-packages
 
       # See https://github.com/nodejs/node/issues/40537
       - name: Enforce IPv4 Connectivity
         uses: ./.github/actions/force-ipv4
 
       # PNPM / Node.js
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node ${{ matrix.node }}
-        uses: actions/setup-node@v5
+      - name: Setup Node and PNPM
+        uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: '${{ matrix.node }}'
-          cache: 'pnpm'
-          package-manager-cache: 'pnpm'
 
-      - name: Restore libcurl deps cache
-        uses: actions/cache@v4
-        id: libcurl-deps-cache
+      - name: Setup Libcurl Cache
+        uses: ./.github/actions/setup-libcurl-cache
         with:
-          path: |
-            ~/.node-gyp
-            ~/deps
-          key: v4-tsan-${{ runner.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-node-${{ matrix.node }}
-          restore-keys: |
-            v4-tsan-${{ runner.os }}-libcurl-${{ matrix.libcurl-release }}-deps-cache-node-${{ matrix.node }}
+          libcurl-release: ${{ matrix.libcurl-release }}
+          node-version: ${{ matrix.node }}
+          cache-key-prefix: 'v4-tsan-'
 
       - name: 'Build node-libcurl deps'
         run: |
@@ -90,13 +80,17 @@ jobs:
       - name: 'Find TSan library path'
         id: tsan-lib
         run: |
-          TSAN_LIB=$(find /usr/lib -name "libtsan.so.0" 2>/dev/null | head -1)
-          if [ -z "$TSAN_LIB" ]; then
-            echo "Error: libtsan.so.0 not found"
-            exit 1
-          fi
-          echo "tsan_lib=$TSAN_LIB" >> $GITHUB_OUTPUT
-          echo "Found TSan library at: $TSAN_LIB"
+          # TSAN_LIB=$(find /usr/lib -name "libtsan.so.0" 2>/dev/null | head -1)
+          # if [ -z "$TSAN_LIB" ]; then
+          #   echo "Error: libtsan.so.0 not found"
+          #   exit 1
+          # fi
+          # echo "tsan_lib=$TSAN_LIB" >> $GITHUB_OUTPUT
+          # echo "Found TSan library at: $TSAN_LIB"
+          echo "tsan_lib=/usr/lib/x86_64-linux-gnu/libtsan.so.0" >> $GITHUB_OUTPUT
+
+      - name: Debugging Tmate
+        uses: mxschmitt/action-tmate@v3
 
       - name: 'Build dist'
         run: |
@@ -108,18 +102,16 @@ jobs:
       - name: 'Run worker thread test'
         env:
           LD_PRELOAD: ${{ steps.tsan-lib.outputs.tsan_lib }}
-          TSAN_OPTIONS: 'second_deadlock_stack=1 history_size=7 halt_on_error=1 suppressions=${{ github.workspace }}/tsan-suppressions.txt'
+          TSAN_OPTIONS: 'verbosity=1 second_deadlock_stack=1 history_size=7 halt_on_error=1 suppressions=${{ github.workspace }}/tsan-suppressions.txt'
         run: |
           echo "Running worker thread test with ThreadSanitizer"
           echo "This test exercises multi-threaded scenarios to detect race conditions"
           node examples/22-worker-threads.js
 
-      - name: Upload TSan logs on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
+      - name: Upload TSan Logs
+        if: always()
+        uses: ./.github/actions/upload-build-logs
         with:
-          name: tsan-logs-${{ matrix.node }}-${{ matrix.libcurl-release }}
-          path: |
-            ./logs/
-            ./test-results/
-          retention-days: 7
+          artifact-name: tsan-logs-${{ matrix.node }}-${{ matrix.libcurl-release }}
+          retention-days: '3'
+          include-test-results: 'true'
