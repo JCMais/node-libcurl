@@ -256,22 +256,21 @@ The maintainers of node-libcurl and thousands of other packages are working with
 
 The latest version of this package has prebuilt binaries (thanks to [node-pre-gyp](https://github.com/mapbox/node-pre-gyp/)) 
  available for:
-* Node.js: Latest two versions on active LTS (see https://github.com/nodejs/Release)
-* Electron: Latest 3 major versions
-* NW.js (node-webkit): Latest 3 major (minor for nw.js case) versions
+* Node.js: Latest two versions on active LTS + Current version (see https://github.com/nodejs/Release)
+* Electron: Latest 2 major versions
 
 And on the following platforms:
-* Linux 64 bits
-* macOS Intel & ARM64 (M1+)
-* Windows 32 and 64 bits
+* Linux 64 bits & ARM64 & Alpine (musl, 64 bits)
+* macOS 64 bits (Intel) & ARM64 (M1+)
+* Windows 64 bits
 
 Installing with `yarn add node-libcurl` or `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed. However if you are trying to install on `nw.js` or `electron` additional steps will be required, check their corresponding section below.
 
 The prebuilt binary is statically built with the following library versions, features and protocols (library versions may change between Node.js versions):
 ```
-Version: libcurl/7.73.0 OpenSSL/1.1.1g zlib/1.2.11 brotli/1.0.7 zstd/1.4.9 c-ares/1.16.1 libidn2/2.1.1 libssh2/1.9.0 nghttp2/1.41.0
-Protocols: dict, file, ftp, ftps, gopher, http, https, imap, imaps, ldap, ldaps, mqtt, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp
-Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, NTLM_WB, SSL, libz, brotli, TLS-SRP, HTTP2, UnixSockets, HTTPS-proxy
+Version: libcurl/8.17.0 OpenSSL/3.5.2 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.1.1 libssh2/1.10.0 nghttp2/1.66.0 ngtcp2/1.17.0 nghttp3/1.12.0 OpenLDAP/2.6.9
+Protocols: dict, file, ftp, ftps, gopher, gophers, http, https, imap, imaps, ldap, ldaps, mqtt, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp, ws, wss
+Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, SSL, libz, brotli, TLS-SRP, HTTP2, UnixSockets, HTTPS-proxy, alt-svc
 ```
 
 If there is no prebuilt binary available that matches your system, or if the installation fails, then you will need an environment capable of compiling Node.js addons, which means:
