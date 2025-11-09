@@ -9,7 +9,7 @@ import { describe, beforeAll, afterAll, it, expect } from 'vitest'
 import { Readable } from 'stream'
 import crypto from 'crypto'
 
-import { Curl, CurlCode, curly } from '../../lib'
+import { Curl, CurlCode, CurlEasyError, curly } from '../../lib'
 
 import { createServer } from '../helper/server'
 import { allMethodsWithMultipleReqResTypes } from '../helper/commonRoutes'
@@ -143,7 +143,9 @@ describe('streams', () => {
       'works for uploading and downloading with highWaterMark: $highWaterMark, bufferSize: $bufferSize',
       async ({ highWaterMark, bufferSize }) => {
         const bufferToUse =
-          bufferSize === 'same' ? randomBuffer : getRandomBuffer(bufferSize)
+          bufferSize === 'same'
+            ? randomBuffer
+            : getRandomBuffer(bufferSize as number)
         const path =
           bufferSize === 'same'
             ? '/all?type=put-upload'
@@ -247,9 +249,13 @@ describe('streams', () => {
         })
 
         downloadStream.on('end', () => {
-          const finalBuffer = Buffer.concat(acc)
-          expect(finalBuffer.byteLength).toBe(0)
-          resolve(undefined)
+          try {
+            const finalBuffer = Buffer.concat(acc)
+            expect(finalBuffer.byteLength).toBe(0)
+            resolve(undefined)
+          } catch (error) {
+            reject(error)
+          }
         })
 
         downloadStream.on('error', (error) => {
@@ -283,9 +289,13 @@ describe('streams', () => {
         })
 
         downloadStream.on('end', () => {
-          const finalBuffer = Buffer.concat(acc)
-          expect(finalBuffer.byteLength).toBe(0)
-          resolve(undefined)
+          try {
+            const finalBuffer = Buffer.concat(acc)
+            expect(finalBuffer.byteLength).toBe(0)
+            resolve(undefined)
+          } catch (error) {
+            reject(error)
+          }
         })
 
         downloadStream.on('error', (error) => {
@@ -296,26 +306,28 @@ describe('streams', () => {
 
     it('returns an error when the upload stream throws an error', async () => {
       const errorMessage = 'custom error'
+      let errorObject!: Error
       const curlyStreamUpload = getReadableStreamForBuffer(randomBuffer, {
         async filterDataToPush(iteration, buffer) {
           if (iteration === 5) {
-            throw new Error(errorMessage)
+            errorObject = new Error(errorMessage)
+            throw errorObject
           }
 
           return buffer
         },
       })
 
-      await expect(
-        curly.put(
+      const error = await curly
+        .put(
           `${serverInstance.url}/all?type=put-upload`,
           withCommonTestOptions(getUploadOptions(curlyStreamUpload)),
-        ),
-      ).rejects.toMatchObject({
-        message: errorMessage,
-        isCurlError: true,
-        code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
-      })
+        )
+        .catch((error) => error)
+
+      expect(error).toBeInstanceOf(CurlEasyError)
+      expect(error.cause).toBe(errorObject)
+      expect(error.code).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
     })
 
     it('returns an error when the upload stream is destroyed unexpectedly', async () => {
@@ -329,40 +341,44 @@ describe('streams', () => {
         },
       })
 
-      await expect(
-        curly.put(
+      const error = await curly
+        .put(
           `${serverInstance.url}/all?type=put-upload`,
           withCommonTestOptions(getUploadOptions(curlyStreamUpload)),
-        ),
-      ).rejects.toMatchObject({
-        message: 'Curl upload stream was unexpectedly destroyed',
-        isCurlError: true,
-        code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
-      })
+        )
+        .catch((error) => error)
+
+      expect(error).toBeInstanceOf(CurlEasyError)
+      expect(error.cause).toMatchInlineSnapshot(
+        `[Error: Curl upload stream was unexpectedly destroyed]`,
+      )
+      expect(error.code).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
     })
 
     it('returns an error when the upload stream is destroyed unexpectedly with a specific error', async () => {
       const errorMessage = 'Custom error message'
+      let errorObject!: Error
       const curlyStreamUpload = getReadableStreamForBuffer(randomBuffer, {
         async filterDataToPush(iteration, buffer) {
           if (iteration === 5) {
-            curlyStreamUpload.destroy(new Error(errorMessage))
+            errorObject = new Error(errorMessage)
+            curlyStreamUpload.destroy(errorObject)
           }
 
           return buffer
         },
       })
 
-      await expect(
-        curly.put(
+      const error = await curly
+        .put(
           `${serverInstance.url}/all?type=put-upload`,
           withCommonTestOptions(getUploadOptions(curlyStreamUpload)),
-        ),
-      ).rejects.toMatchObject({
-        message: errorMessage,
-        isCurlError: true,
-        code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
-      })
+        )
+        .catch((error) => error)
+
+      expect(error).toBeInstanceOf(CurlEasyError)
+      expect(error.cause).toBe(errorObject)
+      expect(error.code).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
     })
 
     it('emits an error when the download stream is destroyed unexpectedly', async () => {
@@ -388,13 +404,17 @@ describe('streams', () => {
           )
         })
 
-        downloadStream.on('error', (error) => {
-          expect(error).toMatchObject({
-            message: 'Curl response stream was unexpectedly destroyed',
-            isCurlError: true,
-            code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
-          })
-          resolve(undefined)
+        downloadStream.on('error', (error: CurlEasyError) => {
+          try {
+            expect(error).toBeInstanceOf(CurlEasyError)
+            expect(error.cause).toMatchInlineSnapshot(
+              `[Error: Curl response stream was unexpectedly destroyed]`,
+            )
+            expect(error.code).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+            resolve(undefined)
+          } catch (error) {
+            reject(error)
+          }
         })
       })
     })
@@ -416,8 +436,10 @@ describe('streams', () => {
       // we cannot use async iterators here because we need to support Node.js v8
 
       return new Promise<void>((resolve, reject) => {
+        let errorObject!: Error
         downloadStream.on('data', () => {
-          downloadStream.destroy(new Error(errorMessage))
+          errorObject = new Error(errorMessage)
+          downloadStream.destroy(errorObject)
         })
 
         downloadStream.on('end', () => {
@@ -426,13 +448,16 @@ describe('streams', () => {
           )
         })
 
-        downloadStream.on('error', (error) => {
-          expect(error).toMatchObject({
-            message: errorMessage,
-            isCurlError: true,
-            code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
-          })
-          resolve(undefined)
+        downloadStream.on('error', (error: CurlEasyError) => {
+          try {
+            expect(error).toBeInstanceOf(CurlEasyError)
+            expect(error.cause).toBe(errorObject)
+            expect(error.code).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+
+            resolve(undefined)
+          } catch (error) {
+            reject(error)
+          }
         })
       })
     })

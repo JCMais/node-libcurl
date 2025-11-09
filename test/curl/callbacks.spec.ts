@@ -5,8 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { createServer } from '../helper/server'
-import { Curl, CurlCode } from '../../lib'
-import { CurlPreReqFunc } from '../../lib/enum/CurlPreReqFunc'
+import { Curl, CurlCode, CurlEasyError, CurlPreReqFunc } from '../../lib'
 import {
   describe,
   beforeAll,
@@ -132,9 +131,18 @@ describe('Callbacks', () => {
           reject(new Error('end called - request was not aborted by request'))
         })
 
-        curl.on('error', (error) => {
-          expect(error).toBeInstanceOf(TypeError)
-          resolve()
+        curl.on('error', (error: CurlEasyError, errorCode) => {
+          try {
+            expect(error).toBeInstanceOf(CurlEasyError)
+            expect((error.cause as Error).message).toMatch(
+              /Return value from the (.*) callback must be an integer/,
+            )
+            expect(error.code).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+            expect(error.code).toBe(errorCode)
+            resolve()
+          } catch (error) {
+            reject(error)
+          }
         })
 
         curl.perform()
@@ -168,25 +176,29 @@ describe('Callbacks', () => {
 
         await new Promise<void>((resolve, reject) => {
           curl.on('end', (statusCode, body) => {
-            if (isFirstCall) {
-              expect(wasCalled).toBe(true)
-              expect(statusCode).toBe(200)
+            try {
+              if (isFirstCall) {
+                expect(wasCalled).toBe(true)
+                expect(statusCode).toBe(200)
 
-              curl.setOpt('URL', `${serverInstance.url}/trailers`)
-              curl.setOpt('UPLOAD', 0)
-              curl.setOpt('HTTPHEADER', null)
-              curl.setOpt('TRAILERFUNCTION', null)
+                curl.setOpt('URL', `${serverInstance.url}/trailers`)
+                curl.setOpt('UPLOAD', 0)
+                curl.setOpt('HTTPHEADER', null)
+                curl.setOpt('TRAILERFUNCTION', null)
 
-              isFirstCall = false
-              wasCalled = false
+                isFirstCall = false
+                wasCalled = false
 
-              curl.perform()
-            } else {
-              expect(wasCalled).toBe(false)
-              expect(
-                JSON.parse(body as string).trailers['x-random-header'],
-              ).toBe('random-value2')
-              resolve()
+                curl.perform()
+              } else {
+                expect(wasCalled).toBe(false)
+                expect(
+                  JSON.parse(body as string).trailers['x-random-header'],
+                ).toBe('random-value2')
+                resolve()
+              }
+            } catch (error) {
+              reject(error)
             }
           })
 
@@ -219,8 +231,12 @@ describe('Callbacks', () => {
           })
 
           curl.on('error', (error, errorCode) => {
-            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
-            resolve()
+            try {
+              expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
           })
 
           curl.perform()
@@ -250,10 +266,18 @@ describe('Callbacks', () => {
             reject(new Error('end called - request was not aborted by request'))
           })
 
-          curl.on('error', (error, errorCode) => {
-            expect(error.message).toBe('thrown error inside callback')
-            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
-            resolve()
+          curl.on('error', (error: CurlEasyError, errorCode) => {
+            try {
+              expect(error).toBeInstanceOf(CurlEasyError)
+              expect((error.cause as Error).message).toBe(
+                'thrown error inside callback',
+              )
+              expect(error.code).toBe(errorCode)
+              expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
           })
 
           curl.perform()
@@ -283,12 +307,18 @@ describe('Callbacks', () => {
             reject(new Error('end called - request was not aborted by request'))
           })
 
-          curl.on('error', (error, errorCode) => {
-            expect(error.message).toBe(
-              'Return value from the Trailer callback must be an array of strings or false.',
-            )
-            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
-            resolve()
+          curl.on('error', (error: CurlEasyError, errorCode) => {
+            try {
+              expect(error).toBeInstanceOf(CurlEasyError)
+              expect((error.cause as Error).message).toBe(
+                'Return value from the Trailer callback must be an array of strings or false.',
+              )
+              expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+              expect(error.code).toBe(errorCode)
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
           })
 
           curl.perform()
@@ -311,8 +341,12 @@ describe('Callbacks', () => {
 
         await new Promise<void>((resolve, reject) => {
           curl.on('end', () => {
-            expect(wasCalled).toBe(true)
-            resolve()
+            try {
+              expect(wasCalled).toBe(true)
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
           })
 
           curl.on('error', reject)
@@ -336,9 +370,13 @@ describe('Callbacks', () => {
           })
 
           curl.on('error', (_error, errorCode) => {
-            expect(wasCalled).toBe(true)
-            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
-            resolve()
+            try {
+              expect(wasCalled).toBe(true)
+              expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
           })
 
           curl.perform()
@@ -347,11 +385,12 @@ describe('Callbacks', () => {
 
       it('should rethrow error thrown inside callback', async () => {
         let wasCalled = false
-
+        let errorObject!: Error
         curl.setOpt('URL', `${serverInstance.url}/headers`)
         curl.setOpt('PREREQFUNCTION', () => {
           wasCalled = true
-          throw new Error('thrown error inside callback')
+          errorObject = new Error('thrown error inside callback')
+          throw errorObject
         })
 
         await new Promise<void>((resolve, reject) => {
@@ -359,11 +398,17 @@ describe('Callbacks', () => {
             reject(new Error('end called - request was not aborted by request'))
           })
 
-          curl.on('error', (error, errorCode) => {
-            expect(wasCalled).toBe(true)
-            expect(error.message).toBe('thrown error inside callback')
-            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
-            resolve()
+          curl.on('error', (error: CurlEasyError, errorCode) => {
+            try {
+              expect(wasCalled).toBe(true)
+              expect(error).toBeInstanceOf(CurlEasyError)
+              expect(error.cause).toBe(errorObject)
+              expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+              expect(error.code).toBe(errorCode)
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
           })
 
           curl.perform()
@@ -386,12 +431,17 @@ describe('Callbacks', () => {
           })
 
           curl.on('error', (error, errorCode) => {
-            expect(wasCalled).toBe(true)
-            expect(error.message).toBe(
-              'Return value from the PREREQ callback must be a number.',
-            )
-            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
-            resolve()
+            try {
+              expect(wasCalled).toBe(true)
+              expect(error).toBeInstanceOf(CurlEasyError)
+              expect((error.cause as Error).message).toBe(
+                'Return value from the PREREQ callback must be a number.',
+              )
+              expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
           })
 
           curl.perform()

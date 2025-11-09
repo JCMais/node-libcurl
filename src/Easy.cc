@@ -14,6 +14,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 #include "Curl.h"
+#include "CurlError.h"
 #include "CurlHttpPost.h"
 #include "Easy.h"
 #include "LocaleGuard.h"
@@ -74,16 +75,15 @@ Easy::Easy(const Napi::CallbackInfo& info)
       auto possiblyAnotherEasy = info[0].As<Napi::Object>();
 
       if (!possiblyAnotherEasy.InstanceOf(easyConstructor)) {
-        throw Napi::TypeError::New(env, "Argument must be an instance of an Easy handle.");
+        throw CurlError::New(env, "Argument must be an instance of an Easy handle.",
+                             CURLE_BAD_FUNCTION_ARGUMENT);
       }
 
       Easy* orig = Easy::Unwrap(possiblyAnotherEasy);
 
       // Duplicate the handle
       this->ch = curl_easy_duphandle(orig->ch);
-      if (!this->ch) {
-        throw Napi::Error::New(env, "Could not duplicate libcurl easy handle.");
-      }
+      assert(this->ch && "Failed to duplicate libcurl easy handle");
 
       this->CopyOtherData(orig);
 
@@ -92,7 +92,8 @@ Easy::Easy(const Napi::CallbackInfo& info)
       auto maybeHandleExternal = info[0].As<Napi::External<CURL>>();
 
       if (!maybeHandleExternal.CheckTypeTag(&EASY_TYPE_TAG)) {
-        throw Napi::TypeError::New(env, "Argument must be an external CURL handle.");
+        throw CurlError::New(env, "Argument must be an external CURL handle.",
+                             CURLE_BAD_FUNCTION_ARGUMENT);
       }
 
       CURL* curlEasyHandle = maybeHandleExternal.Data();
@@ -104,24 +105,20 @@ Easy::Easy(const Napi::CallbackInfo& info)
 
       if (code == CURLE_OK && origEasyPtr != nullptr) {
         Easy* orig = reinterpret_cast<Easy*>(origEasyPtr);
-
-        if (!orig) {
-          throw Napi::TypeError::New(
-              env, "Could not get original Easy instance from the handle's private data.");
-        }
-
+        assert(orig && "Failed to get original Easy instance from the handle's private data");
         this->CopyOtherData(orig);
       }
 
     } else {
-      throw Napi::TypeError::New(
-          env, "Argument must be an instance of an Easy handle or external CURL handle.");
+      throw CurlError::New(
+          env, "Argument must be an instance of an Easy handle or external CURL handle.",
+          CURLE_BAD_FUNCTION_ARGUMENT);
     }
   } else {
     // Case 3: Default constructor - create new handle
     this->ch = curl_easy_init();
     if (!this->ch) {
-      throw Napi::Error::New(env, "Could not initialize libcurl easy handle.");
+      throw CurlError::New(env, "Could not initialize libcurl easy handle.", CURLE_FAILED_INIT);
     }
   }
 
@@ -263,7 +260,7 @@ void Easy::MonitorSockets() {
   int events = 0 | UV_READABLE | UV_WRITABLE;
 
   if (this->socketPollHandle) {
-    throw Napi::Error::New(this->Env(), "Already monitoring sockets!");
+    throw CurlError::New(this->Env(), "Already monitoring sockets!", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   // TODO(jonathan, migration): drop if defs if we stop supporting old libcurl versions
@@ -272,7 +269,8 @@ void Easy::MonitorSockets() {
   retCurl = curl_easy_getinfo(this->ch, CURLINFO_ACTIVESOCKET, &socket);
 
   if (socket == CURL_SOCKET_BAD) {
-    throw Napi::Error::New(this->Env(), "Received invalid socket from the current connection!");
+    throw CurlError::New(this->Env(), "Received invalid socket from the current connection!",
+                         CURLE_BAD_FUNCTION_ARGUMENT);
   }
 #else
   long socket;  // NOLINT(runtime/int)
@@ -280,34 +278,24 @@ void Easy::MonitorSockets() {
 #endif
 
   if (retCurl != CURLE_OK) {
-    std::string errorMsg;
-
-    errorMsg += std::string("Failed to receive socket. Reason: ") + curl_easy_strerror(retCurl);
-
-    throw Napi::Error::New(this->Env(), errorMsg.c_str());
+    throw CurlError::New(this->Env(), "Failed to receive socket", retCurl, true);
   }
 
   this->socketPollHandle = new uv_poll_t;
 
   uv_loop_t* loop = nullptr;
   auto napi_result = napi_get_uv_event_loop(this->Env(), &loop);
-
-  if (napi_result != napi_ok) {
-    throw Napi::Error::New(this->Env(), "Failed to get UV event loop.");
-  }
+  assert(napi_result == napi_ok && "Failed to get UV event loop");
 
   // uv_default_loop is not thread safe, but this will run on the same thread as the current Node.js
   // environment.
   retUv = uv_poll_init_socket(loop, this->socketPollHandle, socket);
 
   if (retUv < 0) {
-    std::string errorMsg;
+    std::string errorMsg =
+        std::string("Failed to poll on connection socket. Reason: ") + UV_ERROR_STRING(retUv);
 
-    errorMsg +=
-        std::string("Failed to poll on connection socket. Reason:") + UV_ERROR_STRING(retUv);
-
-    throw Napi::Error::New(this->Env(), errorMsg.c_str());
-    return;
+    throw CurlError::New(this->Env(), errorMsg.c_str(), CURLE_INTERFACE_FAILED);
   }
 
   this->socketPollHandle->data = this;
@@ -326,11 +314,10 @@ void Easy::UnmonitorSockets() {
   retUv = uv_poll_stop(this->socketPollHandle);
 
   if (retUv < 0) {
-    std::string errorMsg;
+    std::string errorMsg =
+        std::string("Failed to stop polling on socket. Reason: ") + UV_ERROR_STRING(retUv);
 
-    errorMsg += std::string("Failed to stop polling on socket. Reason: ") + UV_ERROR_STRING(retUv);
-
-    throw Napi::Error::New(this->Env(), errorMsg.c_str());
+    throw CurlError::New(this->Env(), errorMsg.c_str(), CURLE_INTERFACE_FAILED);
   }
 
   uv_close(reinterpret_cast<uv_handle_t*>(this->socketPollHandle),
@@ -432,7 +419,7 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
   auto curl = env.GetInstanceData<Curl>();
 
   if (!this->isOpen) {
-    throw Napi::Error::New(env, "Curl handle is closed.");
+    throw CurlError::New(env, "Curl handle is closed.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   if (info.Length() < 2) {
@@ -450,10 +437,11 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
   // we probably could use these here for newer libcurl versions...
 
   if ((optionId = IsInsideCurlConstantStruct(curlOptionNotImplemented, opt))) {
-    throw Napi::Error::New(env,
-                           "Unsupported option, probably because it's too complex to implement "
-                           "using javascript or unecessary when using javascript (like the _DATA "
-                           "options).");
+    throw CurlError::New(env,
+                         "Unsupported option, probably because it's too complex to implement "
+                         "using javascript or unecessary when using javascript (like the _DATA "
+                         "options).",
+                         CURLE_UNKNOWN_OPTION);
   } else if ((optionId = IsInsideCurlConstantStruct(curlOptionSpecific, opt))) {
     switch (optionId) {
       case CURLOPT_SHARE:
@@ -470,7 +458,8 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
           Share* share = Share::Unwrap(value.As<Napi::Object>());
 
           if (!share->isOpen) {
-            throw Napi::Error::New(env, "Share handle is already closed.");
+            throw CurlError::New(env, "Share handle is already closed.",
+                                 CURLE_BAD_FUNCTION_ARGUMENT);
           }
 
           setOptRetCode = curl_easy_setopt(this->ch, CURLOPT_SHARE, share->sh);
@@ -549,7 +538,7 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
               std::string errorMsg = "Invalid property given: \"" + optionName +
                                      "\". Valid properties are file, type, contents, name "
                                      "and filename.";
-              throw Napi::Error::New(env, errorMsg.c_str());
+              throw CurlError::New(env, errorMsg.c_str(), CURLE_BAD_FUNCTION_ARGUMENT);
           }
 
           // check if value is a string.
@@ -560,7 +549,7 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
         }
 
         if (!hasName) {
-          throw Napi::Error::New(env, "Missing field \"name\".");
+          throw CurlError::New(env, "Missing field \"name\".", CURLE_BAD_FUNCTION_ARGUMENT);
         }
 
         std::string fieldName = postData.Get("name").As<Napi::String>().Utf8Value();
@@ -589,12 +578,12 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
           curlFormCode = httpPost->AddField(fieldName.data(), fieldName.length(), fieldValue.data(),
                                             fieldValue.length());
         } else {
-          throw Napi::Error::New(env, "Missing field \"contents\".");
+          throw CurlError::New(env, "Missing field \"contents\".", CURLE_BAD_FUNCTION_ARGUMENT);
         }
 
         if (curlFormCode != CURL_FORMADD_OK) {
           std::string errorMsg = "Error while adding field \"" + fieldName + "\" to post data.";
-          throw Napi::Error::New(env, errorMsg.c_str());
+          throw CurlError::New(env, errorMsg.c_str(), CURLE_BAD_FUNCTION_ARGUMENT);
         }
       }
 
@@ -899,7 +888,7 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
       throw Napi::TypeError::New(env, "Option value must be a string or Buffer.");
     }
 #else
-    throw Napi::Error::New(env, "Blob options require curl 7.71 or newer.");
+    throw CurlError::New(env, "Blob options require curl 7.71 or newer.", CURLE_NOT_BUILT_IN);
 #endif
   }
   return Napi::Number::New(env, setOptRetCode);
@@ -913,8 +902,7 @@ Napi::Value Easy::GetInfoTmpl(const Easy* obj, int infoId) {
   CURLcode code = curl_easy_getinfo(obj->ch, info, &result);
 
   if (code != CURLE_OK) {
-    std::string str = std::to_string(static_cast<int>(code));
-    throw Napi::Error::New(obj->Env(), str);
+    throw CurlError::New(obj->Env(), "Failed to get info", code, true);
   }
 
   // Handle string case - if result is char* and null, return empty string
@@ -933,7 +921,7 @@ Napi::Value Easy::GetInfo(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->isOpen) {
-    throw Napi::Error::New(env, "Curl handle is closed.");
+    throw CurlError::New(env, "Curl handle is closed.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   if (info.Length() < 1) {
@@ -948,9 +936,10 @@ Napi::Value Easy::GetInfo(const Napi::CallbackInfo& info) {
 
   // Special case for unsupported info
   if ((infoId = IsInsideCurlConstantStruct(curlInfoNotImplemented, infoVal))) {
-    throw Napi::Error::New(env,
-                           "Unsupported info, probably because it's too complex to implement "
-                           "using javascript or unecessary when using javascript.");
+    throw CurlError::New(env,
+                         "Unsupported info, probably because it's too complex to implement "
+                         "using javascript or unecessary when using javascript.",
+                         CURLE_UNKNOWN_OPTION);
   }
 
   try {
@@ -1067,7 +1056,7 @@ Napi::Value Easy::Reset(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->isOpen) {
-    throw Napi::Error::New(env, "Curl handle is closed");
+    throw CurlError::New(env, "Curl handle is closed", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   NODE_LIBCURL_DEBUG_LOG(this, "Easy::Reset", "resetting request");
@@ -1092,12 +1081,12 @@ Napi::Value Easy::Close(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->isOpen) {
-    throw Napi::Error::New(env, "Curl handle already closed.");
+    throw CurlError::New(env, "Curl handle already closed.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   if (this->isInsideMultiHandle) {
-    throw Napi::Error::New(env,
-                           "Curl handle is inside a Multi instance, you must remove it first.");
+    throw CurlError::New(env, "Curl handle is inside a Multi instance, you must remove it first.",
+                         CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   this->Dispose();
@@ -1122,16 +1111,16 @@ Napi::Value Easy::Send(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->isOpen) {
-    throw Napi::Error::New(env, "Curl handle is closed.");
+    throw CurlError::New(env, "Curl handle is closed.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   if (info.Length() == 0) {
-    throw Napi::Error::New(env, "Missing buffer argument.");
+    throw CurlError::New(env, "Missing buffer argument.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   Napi::Value buf = info[0];
   if (!buf.IsBuffer()) {
-    throw Napi::Error::New(env, "Invalid Buffer instance given.");
+    throw CurlError::New(env, "Invalid Buffer instance given.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   Napi::Buffer<char> buffer = buf.As<Napi::Buffer<char>>();
@@ -1152,16 +1141,16 @@ Napi::Value Easy::Recv(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->isOpen) {
-    throw Napi::Error::New(env, "Curl handle is closed.");
+    throw CurlError::New(env, "Curl handle is closed.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   if (info.Length() == 0) {
-    throw Napi::Error::New(env, "Missing buffer argument.");
+    throw CurlError::New(env, "Missing buffer argument.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   Napi::Value buf = info[0];
   if (!buf.IsBuffer()) {
-    throw Napi::Error::New(env, "Invalid Buffer instance given.");
+    throw CurlError::New(env, "Invalid Buffer instance given.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   Napi::Buffer<char> buffer = buf.As<Napi::Buffer<char>>();
@@ -1182,17 +1171,17 @@ Napi::Value Easy::WsRecv(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->isOpen) {
-    throw Napi::Error::New(env, "Curl handle is closed.");
+    throw CurlError::New(env, "Curl handle is closed.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
 #if NODE_LIBCURL_VER_GE(7, 86, 0)
   if (info.Length() == 0) {
-    throw Napi::Error::New(env, "Missing buffer argument.");
+    throw CurlError::New(env, "Missing buffer argument.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   Napi::Value buf = info[0];
   if (!buf.IsBuffer()) {
-    throw Napi::Error::New(env, "Invalid Buffer instance given.");
+    throw CurlError::New(env, "Invalid Buffer instance given.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   Napi::Buffer<char> buffer = buf.As<Napi::Buffer<char>>();
@@ -1222,7 +1211,7 @@ Napi::Value Easy::WsRecv(const Napi::CallbackInfo& info) {
 
   return ret;
 #else
-  throw Napi::Error::New(env, "WebSocket support requires libcurl >= 7.86.0");
+  throw CurlError::New(env, "WebSocket support requires libcurl >= 7.86.0", CURLE_NOT_BUILT_IN);
 #endif
 }
 
@@ -1230,21 +1219,22 @@ Napi::Value Easy::WsSend(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->isOpen) {
-    throw Napi::Error::New(env, "Curl handle is closed.");
+    throw CurlError::New(env, "Curl handle is closed.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
 #if NODE_LIBCURL_VER_GE(7, 86, 0)
   if (info.Length() < 2) {
-    throw Napi::Error::New(env, "Missing buffer and/or flags arguments.");
+    throw CurlError::New(env, "Missing buffer and/or flags arguments.",
+                         CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   Napi::Value buf = info[0];
   if (!buf.IsBuffer()) {
-    throw Napi::Error::New(env, "Invalid Buffer instance given.");
+    throw CurlError::New(env, "Invalid Buffer instance given.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   if (!info[1].IsNumber()) {
-    throw Napi::Error::New(env, "Flags argument must be a number.");
+    throw CurlError::New(env, "Flags argument must be a number.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   Napi::Buffer<char> buffer = buf.As<Napi::Buffer<char>>();
@@ -1267,7 +1257,7 @@ Napi::Value Easy::WsSend(const Napi::CallbackInfo& info) {
 
   return ret;
 #else
-  throw Napi::Error::New(env, "WebSocket support requires libcurl >= 7.86.0");
+  throw CurlError::New(env, "WebSocket support requires libcurl >= 7.86.0", CURLE_NOT_BUILT_IN);
 #endif
 }
 
@@ -1275,7 +1265,7 @@ Napi::Value Easy::WsMeta(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->isOpen) {
-    throw Napi::Error::New(env, "Curl handle is closed.");
+    throw CurlError::New(env, "Curl handle is closed.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
 #if NODE_LIBCURL_VER_GE(7, 86, 0)
@@ -1294,7 +1284,7 @@ Napi::Value Easy::WsMeta(const Napi::CallbackInfo& info) {
 
   return meta;
 #else
-  throw Napi::Error::New(env, "WebSocket support requires libcurl >= 7.86.0");
+  throw CurlError::New(env, "WebSocket support requires libcurl >= 7.86.0", CURLE_NOT_BUILT_IN);
 #endif
 }
 
@@ -1302,12 +1292,13 @@ Napi::Value Easy::WsStartFrame(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->isOpen) {
-    throw Napi::Error::New(env, "Curl handle is closed.");
+    throw CurlError::New(env, "Curl handle is closed.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
 #if NODE_LIBCURL_VER_GE(7, 86, 0)
   if (info.Length() < 2 || !info[0].IsNumber() || !info[1].IsNumber()) {
-    throw Napi::Error::New(env, "Missing flags and/or frame length arguments.");
+    throw CurlError::New(env, "Missing flags and/or frame length arguments.",
+                         CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   unsigned int flags = info[0].As<Napi::Number>().Uint32Value();
@@ -1316,7 +1307,7 @@ Napi::Value Easy::WsStartFrame(const Napi::CallbackInfo& info) {
   CURLcode result = curl_ws_start_frame(this->ch, flags, frameLength);
   return Napi::Number::New(env, static_cast<int32_t>(result));
 #else
-  throw Napi::Error::New(env, "WebSocket support requires libcurl >= 7.86.0");
+  throw CurlError::New(env, "WebSocket support requires libcurl >= 7.86.0", CURLE_NOT_BUILT_IN);
 #endif
 }
 
@@ -1331,7 +1322,7 @@ Napi::Value Easy::Upkeep(const Napi::CallbackInfo& info) {
   CURLcode code = curl_easy_upkeep(this->ch);
   return Napi::Number::New(env, static_cast<int>(code));
 #else
-  throw Napi::Error::New(env, "Upkeep requires libcurl >= 7.62.0");
+  throw CurlError::New(env, "Upkeep requires libcurl >= 7.62.0", CURLE_NOT_BUILT_IN);
 #endif
 }
 
@@ -1371,7 +1362,8 @@ Napi::Value Easy::OnSocketEvent(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (info.Length() == 0) {
-    throw Napi::Error::New(env, "You must specify the callback function.");
+    throw CurlError::New(env, "You must specify the callback function.",
+                         CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
   Napi::Value arg = info[0];

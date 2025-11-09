@@ -10,6 +10,7 @@ import { curly } from '../../lib'
 import { createServer } from '../helper/server'
 import { allMethodsWithMultipleReqResTypes } from '../helper/commonRoutes'
 import { withCommonTestOptions } from '../helper/commonOptions'
+import { CurlEasyError } from '../../lib/CurlEasyError'
 
 let serverInstance: ReturnType<typeof createServer>
 
@@ -308,7 +309,9 @@ describe('curly', () => {
         curly.get<string>(`${serverInstance.url}/abc`, {
           failOnError: true,
         }),
-      ).rejects.toThrow(/^HTTP response code said error/)
+      ).rejects.toThrowError(
+        new CurlEasyError('Request failed: HTTP response code said error', 22),
+      )
     })
   })
 })

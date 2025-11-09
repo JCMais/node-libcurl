@@ -8,7 +8,6 @@ import './moduleSetup'
 
 import { EventEmitter } from 'events'
 import { StringDecoder } from 'string_decoder'
-import assert from 'assert'
 import { Readable } from 'stream'
 
 import pkg from '../package.json'
@@ -70,24 +69,6 @@ const { Curl: _Curl, CurlVersionInfo } = bindings
 const decoder = new StringDecoder('utf8')
 // Handle used by curl instances created by the Curl wrapper.
 const multiHandle = new Multi()
-const curlInstanceMap = new WeakMap<Easy, Curl>()
-
-multiHandle.onMessage((error, handle, errorCode) => {
-  multiHandle.removeHandle(handle)
-
-  const curlInstance = curlInstanceMap.get(handle)
-
-  assert(
-    curlInstance,
-    'Could not retrieve curl instance from easy handle on onMessage callback',
-  )
-
-  if (error) {
-    curlInstance!.onError(error, errorCode)
-  } else {
-    curlInstance!.onEnd()
-  }
-})
 
 /**
  * Wrapper around {@link Easy | `Easy`} class with a more *nodejs-friendly* interface.
@@ -186,6 +167,12 @@ class Curl extends EventEmitter {
   protected handle: Easy
 
   /**
+   * Optional Multi instance to use for performing requests.
+   * If not set, uses the default shared Multi instance.
+   */
+  protected multiInstance?: Multi
+
+  /**
    * Stores current response payload.
    *
    * This will not store anything in case {@link CurlFeature.NoDataStorage | `NoDataStorage`} flag is enabled
@@ -263,8 +250,6 @@ class Curl extends EventEmitter {
     )
 
     handle.setOpt(Curl.option.USERAGENT, Curl.defaultUserAgent)
-
-    curlInstanceMap.set(handle, this)
   }
 
   /**
@@ -709,6 +694,30 @@ class Curl extends EventEmitter {
   }
 
   /**
+   * Sets a custom Multi instance to use for performing requests.
+   *
+   * This allows for HTTP/2 connection isolation - each Multi instance
+   * maintains its own connection pool, ensuring requests don't share
+   * connections between different Multi instances.
+   *
+   * @param multi - The Multi instance to use, or undefined to use the default shared instance
+   * @returns This Curl instance for method chaining
+   *
+   * @example
+   * ```
+   * const multi = new Multi()
+   * const curl = new Curl()
+   * curl.setMulti(multi)
+   * curl.setOpt('URL', 'https://example.com')
+   * curl.perform()
+   * ```
+   */
+  setMulti(multi: Multi | undefined): this {
+    this.multiInstance = multi
+    return this
+  }
+
+  /**
    * Add this instance to the processing queue.
    * This method should be called only one time per request,
    *  otherwise it will throw an error.
@@ -732,7 +741,19 @@ class Curl extends EventEmitter {
       this.setOpt('NOPROGRESS', false)
     }
 
-    multiHandle.addHandle(this.handle)
+    // Use custom Multi instance if set, otherwise use the default global one
+    const multi = this.multiInstance || multiHandle
+
+    multi
+      .perform(this.handle)
+      .then(() => {
+        multi.removeHandle(this.handle)
+        this.onEnd()
+      })
+      .catch((error) => {
+        multi.removeHandle(this.handle)
+        this.onError(error, error.code)
+      })
 
     return this
   }
@@ -835,8 +856,9 @@ class Curl extends EventEmitter {
    * Official libcurl documentation: [`curl_easy_cleanup()`](http://curl.haxx.se/libcurl/c/curl_easy_cleanup.html)
    */
   close() {
-    // TODO(jonathan): on next semver major check if this.handle.isOpen is false and if it is, return immediately.
-    curlInstanceMap.delete(this.handle)
+    if (!this.handle.isOpen) {
+      return
+    }
 
     this.removeAllListeners()
 

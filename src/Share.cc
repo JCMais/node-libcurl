@@ -12,6 +12,7 @@
 #include "Share.h"
 
 #include "Curl.h"
+#include "CurlError.h"
 
 #include <cassert>
 #include <iostream>
@@ -39,7 +40,7 @@ Share::Share(const Napi::CallbackInfo& info)
   this->sh = curl_share_init();
 
   if (!this->sh) {
-    throw Napi::Error::New(env, "Failed to initialize share handle");
+    throw CurlError::New(env, "Failed to initialize share handle", CURLSHE_NOMEM);
   }
 
   curl->AdjustHandleMemory(CURL_HANDLE_TYPE_SHARE, 1);
@@ -87,7 +88,7 @@ Napi::Value Share::SetOpt(const Napi::CallbackInfo& info) {
   Napi::HandleScope scope(env);
 
   if (!this->isOpen) {
-    throw Napi::Error::New(env, "Share handle is closed.");
+    throw CurlError::New(env, "Share handle is closed.", CURLSHE_INVALID);
   }
 
   if (info.Length() < 2) {
@@ -128,7 +129,7 @@ Napi::Value Share::Close(const Napi::CallbackInfo& info) {
   Napi::HandleScope scope(env);
 
   if (!this->isOpen) {
-    throw Napi::Error::New(env, "Share handle already closed.");
+    throw CurlError::New(env, "Share handle already closed.", CURLSHE_INVALID);
   }
 
   this->Dispose();
