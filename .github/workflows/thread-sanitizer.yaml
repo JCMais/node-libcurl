@@ -13,11 +13,7 @@ on:
       - 'examples/**'
       - 'tsan-suppressions.txt'
       - '.github/workflows/thread-sanitizer.yaml'
-
-
-concurrency:
-  group: thread-sanitizer-${{ github.head_ref }}
-  cancel-in-progress: true
+  workflow_dispatch:
 
 jobs:
   thread-sanitizer-test:
@@ -33,13 +29,13 @@ jobs:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
     steps:
+      - name: Install System Packages
+        uses: ./.github/actions/install-system-packages
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
           submodules: true
-
-      - name: Install System Packages
-        uses: ./.github/actions/install-system-packages
 
       # See https://github.com/nodejs/node/issues/40537
       - name: Enforce IPv4 Connectivity

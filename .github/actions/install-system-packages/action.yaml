@@ -23,7 +23,7 @@ runs:
       if: runner.os == 'Linux' && steps.detect-alpine.outputs.result == 'false'
       shell: bash
       run: |
-        sudo apt-get update && sudo apt-get install -y cmake groff
+        sudo apt-get update && sudo apt-get install -y cmake groff libtsan0
 
     - name: Install Needed packages on Alpine
       if: steps.detect-alpine.outputs.result == 'true'
