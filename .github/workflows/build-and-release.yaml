@@ -119,10 +119,6 @@ jobs:
           node-version: '${{ matrix.node }}'
           skip-node-setup: ${{ matrix.os == 'alpine' && 'true' || 'false' }}
 
-      - name: Setup vcpkg (Windows)
-        if: runner.os == 'Windows'
-        uses: ./.github/actions/setup-vcpkg-windows
-
       - name: Setup Libcurl Cache (Restore, Non-Windows)
         if: runner.os != 'Windows'
         id: libcurl-deps-cache
@@ -163,6 +159,10 @@ jobs:
           electron-version: ${{ matrix.electron-version }}
           electron-config-cache: ${{ needs.config.outputs.electron-config-cache }}
           mode: 'save-only'
+
+      - name: Setup vcpkg (Windows)
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/setup-vcpkg-windows
 
       - name: 'Build and Package Binary (Windows)'
         if: runner.os == 'Windows'
