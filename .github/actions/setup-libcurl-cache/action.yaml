@@ -33,6 +33,11 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Cache Key
+      id: cache-key
+      shell: sh
+      run: |
+        echo "cache-key=${{ inputs.cache-key-prefix }}${{ runner.os }}${{ runner.arch == 'ARM64' && '-arm64' || '' }}-libcurl-${{ inputs.libcurl-release }}-deps-cache-${{ inputs.electron-version && 'electron' || 'node' }}-${{ inputs.electron-version || inputs.node-version }}" >> $GITHUB_OUTPUT
     # Restore-only mode (for workflows that save separately)
     - name: Restore libcurl deps cache
       if: inputs.mode == 'restore-only'
@@ -42,7 +47,7 @@ runs:
         path: |
           ~/.node-gyp
           ~/deps
-        key: ${{ inputs.cache-key-prefix }}${{ runner.os }}-libcurl-${{ inputs.libcurl-release }}-deps-cache-${{ inputs.electron-version && 'electron' || 'node' }}-${{ inputs.electron-version || inputs.node-version }}
+        key: ${{ steps.cache-key.outputs.cache-key }}
 
     # Restore and save mode (for most workflows)
     - name: Restore and save libcurl deps cache
@@ -53,7 +58,7 @@ runs:
         path: |
           ~/.node-gyp
           ~/deps
-        key: ${{ inputs.cache-key-prefix }}${{ runner.os }}-libcurl-${{ inputs.libcurl-release }}-deps-cache-${{ inputs.electron-version && 'electron' || 'node' }}-${{ inputs.electron-version || inputs.node-version }}
+        key: ${{ steps.cache-key.outputs.cache-key }}
 
     # Save-only mode (for workflows that restore separately)
     - name: Save libcurl deps cache
@@ -63,7 +68,7 @@ runs:
         path: |
           ~/.node-gyp
           ~/deps
-        key: ${{ inputs.cache-key-prefix }}${{ runner.os }}-libcurl-${{ inputs.libcurl-release }}-deps-cache-${{ inputs.electron-version && 'electron' || 'node' }}-${{ inputs.electron-version || inputs.node-version }}
+        key: ${{ steps.cache-key.outputs.cache-key }}
 
     # Electron cache (conditional)
     - name: Restore Electron Cache
@@ -71,7 +76,7 @@ runs:
       if: inputs.electron-version != '' && runner.os != 'Windows'
       with:
         path: ${{ inputs.electron-config-cache }}
-        key: v1-${{ runner.os }}-electron-cache-${{ inputs.electron-version }}
+        key: v1-${{ runner.os }}${{ runner.arch == 'ARM64' && '-arm64' || '' }}-electron-cache-${{ inputs.electron-version }}
         restore-keys: |
-          v1-${{ runner.os }}-electron-cache-${{ inputs.electron-version }}
-          v1-${{ runner.os }}-electron-cache-
+          v1-${{ runner.os }}${{ runner.arch == 'ARM64' && '-arm64' || '' }}-electron-cache-${{ inputs.electron-version }}
+          v1-${{ runner.os }}${{ runner.arch == 'ARM64' && '-arm64' || '' }}-electron-cache-
