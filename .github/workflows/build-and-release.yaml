@@ -52,6 +52,9 @@ jobs:
       matrix:
         electron-version:
           - ''
+          - 37.9.0
+          - 38.6.0
+          - 39.1.1
         os:
           - macos-15
           - ubuntu-22.04
@@ -64,16 +67,19 @@ jobs:
           - 25
           - 24
           - 22
-        include:
-          # electron builds
-          - os: ubuntu-22.04
-            libcurl-release: ${{ needs.config.outputs.latest-libcurl-release }}
-            node: 24
-            electron-version: 38.1.2
-          - os: macos-15
-            libcurl-release: ${{ needs.config.outputs.latest-libcurl-release }}
-            node: 24
-            electron-version: 38.1.2
+        exclude:
+          - electron-version: 37.9.0
+            os: alpine
+          - electron-version: 37.9.0
+            os: ubuntu-24.04-arm
+          - electron-version: 38.6.0
+            os: alpine
+          - electron-version: 38.6.0
+            os: ubuntu-24.04-arm
+          - electron-version: 39.1.1
+            os: alpine
+          - electron-version: 39.1.1
+            os: ubuntu-24.04-arm
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
