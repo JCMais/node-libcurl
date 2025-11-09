@@ -14,6 +14,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "context-switching": "node --allow-natives-syntax context-switching.js",
     "start": "node --allow-natives-syntax index.js",
     "start-server": "PORT=8080 node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"

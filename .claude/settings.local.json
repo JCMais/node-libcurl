@@ -26,7 +26,9 @@
       "Bash(grep:*)",
       "mcp__firecrawl-mcp__firecrawl_scrape",
       "Bash(ls:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git log:*)",
+      "mcp__zen__codereview"
     ]
   },
   "enableAllProjectMcpServers": true,

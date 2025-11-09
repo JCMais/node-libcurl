@@ -67,15 +67,8 @@
 
 > **Note**:
 > - This library cannot be used in a browser, it depends on native code.
-> - There is no worker threads support at the moment. See [#169](https://github.com/JCMais/node-libcurl/issues/169)
 
 ### Install
-
-TODO:
-- add ca cert, look on Selecting TLS Trust Anchors Defaults here: https://curl.se/docs/install.html
-- see if possible to use rustls with libcurl, http2/http3 while still support tls v1.3+ and not causing weird symbols errors
-- 
-
 
 ```shell
 npm i node-libcurl --save
@@ -247,9 +240,11 @@ See [SECURITY.md](./SECURITY.md)
 
 ## Supported Libcurl Versions
 
-The addon is only tested against libcurl version `7.50.0` and the latest one available.
+The addon is only tested against libcurl version `7.81.0` and the latest one available.
 
-The code itself is made to compile with any version greater than `7.32.0`, any libcurl version lower than that is **not** supported.
+The code itself is only made to compile with versions greater than or equal to `7.81.0`, any libcurl version lower than that is **not** supported.
+
+The 7.81.0 version was released on Jan 5 2022, and it is the version shipped with Ubuntu 22.04. There has been more than 5541 bug fixes on libcurl since then.
 
 ## For Enterprise
 
