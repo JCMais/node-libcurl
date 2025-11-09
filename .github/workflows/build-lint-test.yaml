@@ -30,14 +30,17 @@ jobs:
         electron-version:
           - ''
         os:
-          # - macos-15
-          # - ubuntu-22.04
+          - macos-15
+          - ubuntu-22.04
           - ubuntu-24.04-arm
+          - alpine
+          - windows-2025
         libcurl-release:
           - ${{ needs.config.outputs.latest-libcurl-release }}
         node:
+          - 25
           - 24
-          # TODO(jonathan, migration): add Node v22
+          - 22
         include:
           # we only want to record coverage in one of the jobs, in this case, the one for the latest stable Node.js version
           - os: ubuntu-22.04
@@ -57,6 +60,12 @@ jobs:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
+      # these are false because we run tests separately
+      PUBLISH_BINARY: false
+      RUN_TESTS: false
+      RUN_PREGYP_CLEAN: false
+      GIT_COMMIT: ${{ github.sha }}
+      GIT_REF_NAME: ${{ github.ref_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -77,24 +86,51 @@ jobs:
         with:
           node-version: '${{ matrix.node }}'
 
-      - name: Setup Libcurl Cache
+      - name: Setup Libcurl Cache (Restore, Non-Windows)
+        if: runner.os != 'Windows'
+        id: libcurl-deps-cache
         uses: ./.github/actions/setup-libcurl-cache
         with:
           libcurl-release: ${{ matrix.libcurl-release }}
           node-version: ${{ matrix.node }}
           electron-version: ${{ matrix.electron-version }}
           electron-config-cache: ${{ needs.config.outputs.electron-config-cache }}
+          mode: 'restore-only'
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         if: matrix.enable-debugging
 
-      - name: 'Build node-libcurl'
+      - name: 'Build and Package Binary (Non-Windows)'
+        if: runner.os != 'Windows'
+        run: ./scripts/ci/build.sh
+
+      - name: 'Check if fully installed and built (Non-Windows)'
+        id: built-and-installed
+        if: runner.os != 'Windows'
         run: |
-          RUN_TESTS=false \
-          RUN_PREGYP_CLEAN=false \
-          PUBLISH_BINARY=false \
-            ./scripts/ci/build.sh
+          if [[ -f built-and-installed.hidden.txt ]]; then
+            echo "built-and-installed.hidden.txt exists"
+            echo "status=true" >> $GITHUB_OUTPUT
+          else
+            echo "built-and-installed.hidden.txt does not exist"
+            echo "status=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Libcurl Cache (Save, Non-Windows)
+        if: runner.os != 'Windows' && steps.libcurl-deps-cache.outputs.cache-hit != 'true' && steps.built-and-installed.outputs.status == 'true'
+        uses: ./.github/actions/setup-libcurl-cache
+        with:
+          libcurl-release: ${{ matrix.libcurl-release }}
+          node-version: ${{ matrix.node }}
+          electron-version: ${{ matrix.electron-version }}
+          electron-config-cache: ${{ needs.config.outputs.electron-config-cache }}
+          mode: 'save-only'
+
+      - name: 'Build and Package Binary (Windows)'
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/ci/windows/build.ps1
 
       - name: 'Run tests'
         # no way to run vitest tests using electron's main process, so no point doing this here
@@ -110,7 +146,7 @@ jobs:
           fail_ci_if_error: false
       
       - name: Upload Build Logs
-        if: always()
+        if: always() && runner.os != 'Windows'
         uses: ./.github/actions/upload-build-logs
         with:
           artifact-name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
