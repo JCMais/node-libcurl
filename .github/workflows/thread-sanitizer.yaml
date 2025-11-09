@@ -89,8 +89,8 @@ jobs:
           # echo "Found TSan library at: $TSAN_LIB"
           echo "tsan_lib=/usr/lib/x86_64-linux-gnu/libtsan.so.0" >> $GITHUB_OUTPUT
 
-      - name: Debugging Tmate
-        uses: mxschmitt/action-tmate@v3
+      # - name: Debugging Tmate
+      #   uses: mxschmitt/action-tmate@v3
 
       - name: 'Build dist'
         run: |
