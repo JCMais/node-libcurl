@@ -1,6 +1,6 @@
 # Benchmarks
 
-> Disclaimer: Those benchmarks are probably far from real world usage scenarios and should not be taken too seriously before doing tests with your use-case in mind first.
+> Disclaimer: These benchmarks may not reflect real-world usage scenarios and should not be taken too seriously without first conducting tests tailored to your specific use case.
 
 If you feel any of the code available is wrong, please open a PR with a suggested fix.
 
@@ -13,6 +13,14 @@ For libraries that do not return the data as string, code to do that should be a
 ```bash
 pnpm --ignore-workspace install
 ```
+
+## Benchmarks
+
+### 1. Standard Benchmark (`index.js`)
+Tests raw HTTP client performance with continuous requests.
+
+### 2. Context Switching Benchmark (`context-switching.js`)
+Tests realistic scenarios where applications perform CPU-intensive work between requests. 
 
 ## Start
 
@@ -27,9 +35,28 @@ simple-http-server -p 8080 .
 
 The results below were obtained using the [`server.js`](./server.js) Node.js server, which can be started with `pnpm start-server`.
 
-The benchmark can be started with `pnpm start`.
+## Running Benchmarks
 
-### Results
+**Standard benchmark:**
+```bash
+pnpm start
+# or
+node benchmark/index.js
+```
+
+**Context switching benchmark:**
+```bash
+pnpm context-switching
+# or
+node benchmark/context-switching.js
+```
+
+You can customize the work simulation by setting these environment variables:
+- `HOST`: Server hostname (default: 127.0.0.1)
+- `PORT`: Server port (default: 8080)
+- `URL`: Full URL to benchmark (overrides HOST/PORT)
+
+## Results
 
 > Format is:
 > ```
@@ -37,6 +64,8 @@ The benchmark can be started with `pnpm start`.
 > ##### <http server implementation>
 > (results)
 > ```
+
+### *Scenario* `Continuous Requests` (index.js)
 
 #### Ubuntu WSL 22.04 - AMD Ryzen 7 5700X3D 16 vCPUs
 ##### node server.js
@@ -164,4 +193,29 @@ node-libcurl Curl - GET                       | ██████████�
 node-libcurl Curl - reusing instance - GET    | █████████████████████──── | 12,758 ops/sec | 20 samples 
 node-libcurl Easy - GET                       | ████████▌──────────────── | 5,269 ops/sec | 19 samples 
 node-libcurl Easy - reusing instance - GET    | ████████████████████───── | 12,171 ops/sec | 20 samples  
+```
+
+### *Scenario* `Context Switching` (context-switching.js)
+
+#### Ubuntu WSL 22.04 - AMD Ryzen 7 5700X3D 16 vCPUs
+##### node server.js
+```bash
+libcurl/8.17.0 OpenSSL/3.5.2 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.1.1 libssh2/1.10.0 nghttp2/1.66.0 ngtcp2/1.17.0 nghttp3/1.12.0 OpenLDAP/2.6.9
+Node.js version: v24.8.0
+Platform: linux x64
+CPU Cores: 16 vCPUs | 47.0GB Mem
+
+node.js http.request - GET                    | ███████████████████████── | 932 ops/sec | 20 samples 
+axios - GET                                   | ████████████████████▌──── | 830 ops/sec | 20 samples 
+superagent - GET                              | ███████████████████────── | 786 ops/sec | 19 samples 
+request - GET                                 | █████████████████████▌─── | 872 ops/sec | 21 samples 
+fetch - GET                                   | █████████████████████▌─── | 883 ops/sec | 21 samples 
+got - GET                                     | █████████████████████──── | 850 ops/sec | 21 samples 
+ky - GET                                      | ██████████████████▌────── | 750 ops/sec | 19 samples 
+node-libcurl curly - GET                      | ███████████████████████▌─ | 950 ops/sec | 19 samples 
+node-libcurl curly with object pool - GET     | ███████████████████████▌─ | 964 ops/sec | 17 samples 
+node-libcurl Curl - GET                       | ████████████████████████▌ | 992 ops/sec | 19 samples 
+node-libcurl Curl - reusing instance - GET    | █████████████████████████ | 1,008 ops/sec | 18 samples 
+node-libcurl Easy - GET                       | ████████████████▌──────── | 676 ops/sec | 21 samples 
+node-libcurl Easy - reusing instance - GET    | █████████████████──────── | 688 ops/sec | 19 samples 
 ```

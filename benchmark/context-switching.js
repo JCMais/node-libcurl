@@ -1,15 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import crypto from 'crypto'
 import http from 'http'
-// import { curly, Curl, Easy } from 'node-libcurl'
 import axios from 'axios'
+import { Suite, chartReport } from 'bench-node'
+import { createRequire } from 'module'
+// import { curly, Curl, Easy } from 'node-libcurl'
 import superagent from 'superagent'
 import request from 'request'
-import { Suite, chartReport } from 'bench-node'
 import got from 'got'
 import ky from 'ky'
 
-import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
 const { curly, Curl, Easy } = require('../dist')
 
@@ -19,36 +20,57 @@ const HOST = process.env.HOST || '127.0.0.1'
 const PORT = process.env.PORT || '8080'
 const FULL_URL = process.env.URL || `http://${HOST}:${PORT}/index.html`
 
+const HASH_ITERATIONS = 1000
+const HASH_ALGORITHM = 'sha256'
+const DATA_TO_HASH =
+  'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(10)
+
+/**
+ * Simulates CPU-intensive work between requests
+ * This represents real-world processing like:
+ * - Data transformation
+ * - Validation
+ * - Business logic computation
+ * - Serialization/deserialization
+ */
+function simulateWork() {
+  let hash = DATA_TO_HASH
+  for (let i = 0; i < HASH_ITERATIONS; i++) {
+    hash = crypto.createHash(HASH_ALGORITHM).update(hash).digest('hex')
+  }
+  return hash
+}
+
 const suite = new Suite({
+  name: 'Context Switching',
   minSamples: 20,
   benchmarkMode: 'ops',
   reporter: chartReport,
 })
 
-suite.add(
-  'node.js http.request - GET',
-  async () =>
-    new Promise((resolve, reject) => {
-      http
-        .request(FULL_URL, (res) => {
-          res.setEncoding('utf8')
-          let rawData = ''
-          res.on('data', (chunk) => {
-            rawData += chunk
-          })
-          res.on('end', () => {
-            resolve()
-          })
-          res.on('error', (error) => {
-            reject(error)
-          })
+suite.add('node.js http.request - GET', async () =>
+  new Promise((resolve, reject) => {
+    http
+      .request(FULL_URL, (res) => {
+        res.setEncoding('utf8')
+        let rawData = ''
+        res.on('data', (chunk) => {
+          rawData += chunk
         })
-        .end()
-    }),
+        res.on('end', () => {
+          resolve()
+        })
+        res.on('error', (error) => {
+          reject(error)
+        })
+      })
+      .end()
+  }).finally(simulateWork),
 )
 
 suite.add('axios - GET', async () => {
   await axios.get(FULL_URL)
+  simulateWork()
 })
 
 suite.add(
@@ -56,6 +78,7 @@ suite.add(
   async () =>
     new Promise((resolve, reject) => {
       superagent.get(FULL_URL).end((err) => {
+        simulateWork()
         if (err) {
           reject(err)
         } else {
@@ -65,30 +88,31 @@ suite.add(
     }),
 )
 
-suite.add(
-  'request - GET',
-  async () =>
-    new Promise((resolve, reject) => {
-      request(FULL_URL, (err) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve()
-        }
-      })
-    }),
+suite.add('request - GET', async () =>
+  new Promise((resolve, reject) => {
+    request(FULL_URL, (err) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve()
+      }
+    })
+  }).finally(simulateWork),
 )
 
 suite.add('fetch - GET', async () => {
   await fetch(FULL_URL).then((res) => res.text())
+  simulateWork()
 })
 
 suite.add('got - GET', async () => {
   await got(FULL_URL).text()
+  simulateWork()
 })
 
 suite.add('ky - GET', async () => {
   await ky.get(FULL_URL).text()
+  simulateWork()
 })
 
 suite.add('node-libcurl curly - GET', async () => {
@@ -97,6 +121,7 @@ suite.add('node-libcurl curly - GET', async () => {
       return buffer.toString('utf8')
     },
   })
+  simulateWork()
 })
 
 if ('setObjectPoolLimit' in curly) {
@@ -114,25 +139,24 @@ if ('setObjectPoolLimit' in curly) {
         return buffer.toString('utf8')
       },
     })
+    simulateWork()
   })
 }
 
-suite.add(
-  'node-libcurl Curl - GET',
-  async () =>
-    new Promise((resolve, reject) => {
-      const curl = new Curl()
-      curl.setOpt('URL', FULL_URL)
-      curl.on('end', () => {
-        curl.close()
-        resolve()
-      })
-      curl.on('error', (error) => {
-        curl.close()
-        reject(error)
-      })
-      curl.perform()
-    }),
+suite.add('node-libcurl Curl - GET', async () =>
+  new Promise((resolve, reject) => {
+    const curl = new Curl()
+    curl.setOpt('URL', FULL_URL)
+    curl.on('end', () => {
+      curl.close()
+      resolve()
+    })
+    curl.on('error', (error) => {
+      curl.close()
+      reject(error)
+    })
+    curl.perform()
+  }).finally(simulateWork),
 )
 
 let curlReuse = null
@@ -159,6 +183,8 @@ suite.add('node-libcurl Curl - reusing instance - GET', async (timer) => {
       curlReuse.on('error', onError)
       curlReuse.perform()
     })
+
+    simulateWork()
   }
 
   timer.end(timer.count)
@@ -181,6 +207,7 @@ suite.add('node-libcurl Easy - GET', () => {
 
   easy.perform()
   easy.close()
+  simulateWork()
 })
 
 let easyReuse = null
@@ -202,6 +229,7 @@ suite.add('node-libcurl Easy - reusing instance - GET', (timer) => {
       return size * nmemb
     })
     easyReuse.perform()
+    simulateWork()
   }
   timer.end(timer.count)
 })

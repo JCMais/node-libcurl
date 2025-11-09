@@ -8,16 +8,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Breaking Change  
 - Minimum supported Electron version is now Electron v37.0.0.
-- Mininum supported libcurl version is now libcurl 7.77.0.
+- Mininum supported libcurl version is now libcurl 7.81.0.
 - Windows 32-bit support is now dropped.
 - Minimum supported versions:
   - Node.js >= v22.20.0 (which bundles OpenSSL 3.5.2).
   - Electron >= v37.0.0.
-  - libcurl >= v7.77.0.
+  - libcurl >= v7.81.0.
   - Ubuntu >= v22.04.
   - Alpine >= 3.21
   - C++ compilers supporting c++20
-- The prebuilt binary is now built with libcurl 8.5.0. Every breaking change introduced by libcurl 8 is also a breaking change for this version.
+- The prebuilt binary is now built with libcurl 8.17.0. Every breaking change introduced by libcurl 8 is also a breaking change for this version.
 - Errors thrown by the addon are now instances of one of the following classes:
   - `CurlEasyError`
   - `CurlMultiError`
