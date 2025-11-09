@@ -55,14 +55,15 @@ jobs:
         os:
           - macos-15
           - ubuntu-22.04
-          # - ubuntu-24.04-arm
+          - ubuntu-24.04-arm
           - alpine
           - windows-2025
         libcurl-release:
           - ${{ needs.config.outputs.latest-libcurl-release }}
         node:
+          - 25
           - 24
-          # - 22
+          - 22
         include:
           # electron builds
           - os: ubuntu-22.04
@@ -77,6 +78,10 @@ jobs:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
+      # this is false because we publish as a separate step
+      PUBLISH_BINARY: false
+      GIT_COMMIT: ${{ github.sha }}
+      GIT_REF_NAME: ${{ github.ref_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -118,7 +123,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: ./.github/actions/setup-vcpkg-windows
 
-      - name: Setup Libcurl Cache (Restore)
+      - name: Setup Libcurl Cache (Restore, Non-Windows)
         if: runner.os != 'Windows'
         id: libcurl-deps-cache
         uses: ./.github/actions/setup-libcurl-cache
@@ -133,16 +138,11 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: matrix.enable-debugging
 
-      - name: 'Build and Package Binary'
+      - name: 'Build and Package Binary (Non-Windows)'
         if: runner.os != 'Windows'
-        env:
-          # this is false because we publish as a separate step
-          PUBLISH_BINARY: false
-          GIT_COMMIT: ${{ github.sha }}
-          GIT_REF_NAME: ${{ github.ref_name }}
         run: ./scripts/ci/build.sh
 
-      - name: 'Check if fully installed and built'
+      - name: 'Check if fully installed and built (Non-Windows)'
         id: built-and-installed
         if: runner.os != 'Windows'
         run: |
@@ -154,7 +154,7 @@ jobs:
             echo "status=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Setup Libcurl Cache (Save)
+      - name: Setup Libcurl Cache (Save, Non-Windows)
         if: runner.os != 'Windows' && steps.libcurl-deps-cache.outputs.cache-hit != 'true' && steps.built-and-installed.outputs.status == 'true'
         uses: ./.github/actions/setup-libcurl-cache
         with:
@@ -164,14 +164,9 @@ jobs:
           electron-config-cache: ${{ needs.config.outputs.electron-config-cache }}
           mode: 'save-only'
 
-      - name: 'Build and Package Binary Windows'
+      - name: 'Build and Package Binary (Windows)'
         if: runner.os == 'Windows'
         shell: pwsh
-        env:
-          # this is false because we publish as a separate step
-          PUBLISH_BINARY: false
-          GIT_COMMIT: ${{ github.sha }}
-          GIT_REF_NAME: ${{ github.ref_name }}
         run: ./scripts/ci/windows/build.ps1
 
       - name: Create attestations
