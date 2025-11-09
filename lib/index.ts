@@ -30,6 +30,12 @@ export {
   type CurlyResponseBodyParser,
 } from './curly'
 
+// errors
+export * from './CurlError'
+export * from './CurlEasyError'
+export * from './CurlMultiError'
+export * from './CurlSharedError'
+
 // enums
 export * from './enum/CurlAuth'
 export * from './enum/CurlChunk'

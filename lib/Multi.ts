@@ -142,6 +142,8 @@ declare class Multi {
    *
    * Official libcurl documentation: [`curl_multi_add_handle()`](http://curl.haxx.se/libcurl/c/curl_multi_add_handle.html)
    *
+   * @deprecated This will be eventually removed in favor of just using {@link Multi.perform | `perform`} to add handles to the multi handle.
+   *
    */
   addHandle(handle: Easy): CurlMultiCode
 
@@ -149,8 +151,42 @@ declare class Multi {
    * Removes an {@link Easy | `Easy`} handle that was inside this instance.
    *
    * Official libcurl documentation: [`curl_multi_remove_handle()`](http://curl.haxx.se/libcurl/c/curl_multi_remove_handle.html)
+   *
+   * Notice, removing a handle that is being performed will result in the original promise returned by {@link Multi.perform | `perform`} being rejected.
    */
   removeHandle(handle: Easy): CurlMultiCode
+
+  /**
+   * Adds an {@link Easy | `Easy`} handle to this Multi instance and returns a promise
+   * that resolves when the request completes successfully, or rejects with a CurlError if it fails.
+   *
+   * This is the modern, promise-based alternative to using {@link Multi.addHandle | `addHandle`}
+   * with {@link Multi.onMessage | `onMessage`}.
+   *
+   * The returned promise will:
+   * - Resolve with the Easy handle when the request completes successfully
+   * - Reject with a CurlError (containing a `code` property with the CurlCode value) on failure
+   *
+   * @param handle - The Easy handle to perform the request with
+   * @returns A promise that resolves with the Easy handle or rejects with a CurlError
+   *
+   * @example
+   * ```ts
+   * const multi = new Multi()
+   * const easy = new Easy()
+   * easy.setOpt('URL', 'https://example.com')
+   *
+   * try {
+   *   await multi.perform(easy)
+   *   console.log('Request completed successfully')
+   * } catch (error) {
+   *   console.error('Request failed with code:', error.code)
+   * }
+   * ```
+   *
+   * This does what [`curl_multi_add_handle()`](http://curl.haxx.se/libcurl/c/curl_multi_add_handle.html) does.
+   */
+  perform(handle: Easy): Promise<Easy>
 
   /**
    * Allow to provide a callback that will be called when there are
@@ -159,6 +195,9 @@ declare class Multi {
    * This is basically an abstraction over [`curl_multi_info_read()`](http://curl.haxx.se/libcurl/c/curl_multi_info_read.html)
    *
    * Pass `null` to remove the current callback set.
+   *
+   * @deprecated This will be eventually removed in favor of just using {@link Multi.perform | `perform`} to add handles to the multi handle, instead
+   * of using {@link Multi.addHandle | `addHandle`}.
    */
   onMessage(
     cb: ((error: Error, easyHandle: Easy, errorCode: CurlCode) => void) | null,

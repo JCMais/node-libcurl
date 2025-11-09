@@ -32,6 +32,7 @@
         'src/Multi.cc',
         'src/CurlHttpPost.cc',
         'src/Curl.cc',
+        'src/CurlError.cc',
         'src/CurlVersionInfo.cc',
         'src/Http2PushFrameHeaders.cc',
       ],

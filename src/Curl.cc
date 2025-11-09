@@ -1,5 +1,6 @@
 #ifndef NOMINMAX
 #define NOMINMAX
+#include <cassert>
 #endif
 
 #include "Multi.h"
@@ -11,6 +12,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 #include "Curl.h"
+#include "CurlError.h"
 #include "CurlHttpPost.h"
 #include "CurlVersionInfo.h"
 #include "Easy.h"
@@ -835,6 +837,11 @@ Curl::Curl(Napi::Env env, Napi::Object exports) : env(env), addonAllocatedMemory
   this->ShareConstructor = Napi::Persistent(Share::Init(env, exports));
   this->Http2PushFrameHeadersConstructor =
       Napi::Persistent(Http2PushFrameHeaders::Init(env, exports));
+
+  // This is setup on moduleSetup.ts
+  this->CurlEasyErrorConstructor = Napi::Persistent(CurlError::InitCurlEasyError(env));
+  this->CurlMultiErrorConstructor = Napi::Persistent(CurlError::InitCurlMultiError(env));
+  this->CurlSharedErrorConstructor = Napi::Persistent(CurlError::InitCurlSharedError(env));
 
   CurlVersionInfo::Init(env, exports);
 }

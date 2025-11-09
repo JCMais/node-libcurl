@@ -34,6 +34,7 @@ class Multi : public Napi::ObjectWrap<Multi> {
   Napi::Value SetOpt(const Napi::CallbackInfo& info);
   Napi::Value AddHandle(const Napi::CallbackInfo& info);
   Napi::Value RemoveHandle(const Napi::CallbackInfo& info);
+  Napi::Value Perform(const Napi::CallbackInfo& info);
   Napi::Value OnMessage(const Napi::CallbackInfo& info);
   Napi::Value GetCount(const Napi::CallbackInfo& info);
   Napi::Value Close(const Napi::CallbackInfo& info);
@@ -74,6 +75,9 @@ class Multi : public Napi::ObjectWrap<Multi> {
   typedef std::map<CURLMoption, Napi::FunctionReference> CallbacksMap;
   CallbacksMap callbacks;
   Napi::FunctionReference cbOnMessage;
+
+  // Promise-based perform tracking
+  std::map<CURL*, std::shared_ptr<Napi::Promise::Deferred>> handlePromiseMap;
 
   // Timer for timeout handling
   uv_timer_t timeout;

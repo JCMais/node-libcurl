@@ -17,19 +17,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Ubuntu >= v22.04.
   - Alpine >= 3.21
   - C++ compilers supporting c++20
-- The prebuilt binary is now built with libcurl 8.5.0. Every breaking change introduced by libcurl 8 is also a breaking change for this version. See 
-- Every Easy handle is now initialized with default CA certificates from Node.js's tls module, by using the result of the "getCACertificates" function. This is done using `CURLOPT_CAINFO_BLOB`. This is a breaking change if you were passing custom CA certificates before using `CAINFO`, as `CURLOPT_CAINFO_BLOB` takes priority over it. If that is the case, you can avoid the default behavior by calling `setOpt("CAINFO_BLOB", null)` on the Easy handle.
+- The prebuilt binary is now built with libcurl 8.5.0. Every breaking change introduced by libcurl 8 is also a breaking change for this version.
+- Errors thrown by the addon are now instances of one of the following classes:
+  - `CurlEasyError`
+  - `CurlMultiError`
+  - `CurlSharedError`
+  These classes extends the `CurlError` class. Previously the addon used to throw only native Javascript errors, such as `Error`, `TypeError`, etc.
+- The curly related errors now inherit from the `CurlError` class, and do not have a `isCurlError` property anymore.
+- Every Easy handle is now initialized with default CA certificates from Node.js's tls module, by using the result of the `getCACertificates` function. This is done using `CURLOPT_CAINFO_BLOB`. This is a breaking change if you were passing custom CA certificates before using `CAINFO`, as `CURLOPT_CAINFO_BLOB` takes priority over it. If that is the case, you can avoid the default behavior by calling `setOpt("CAINFO_BLOB", null)` on the Easy handle. The TLS certificate is loaded into memory once for each JavaScript context.
 - `HSTSREADFUNCTION` callback now receives an object with the `maxHostLengthBytes` property, which is the maximum length of the host name that can be returned by the callback.
 - The minimum macOS version is now Sonoma (13)
-- Curl.globalCleanup is a no-op now. The addon will automatically call `curl_global_cleanup` when the process exits.
-- Curl.globalInit is a no-op now. The addon will automatically call `curl_global_init` when the process starts.
-### Fixed  
+- `Curl.globalCleanup` is a no-op now. The addon will automatically call `curl_global_cleanup` when the process exits. This method will be removed in a future major version.
+- `Curl.globalInit` is a no-op now. The addon will automatically call `curl_global_init` when the process starts. This method will be removed in a future major version.
 
+### Fixed  
 - `CurlHttpVersion.V3` not being set to the proper value (was not set to `30`)
 
 ### Added
 - Prebuilt binaries have HTTP/3 support enabled across all platforms. This is supported by licurl when building with OpenSSL >= 3.5 and nghttp3 [>= 1.66](https://nghttp2.org/blog/2025/06/17/nghttp2-v1-66-0/). To use OpenSSL >= 3.5 a Node.js version >= 22.20.0 is required.
-
 - Added native WebSocket support (requires libcurl >= 7.86.0):
   - `Easy.wsRecv(buffer)` - Receive WebSocket frames with metadata
   - `Easy.wsSend(buffer, flags, fragsize?)` - Send WebSocket frames (text, binary, ping, pong, close)
@@ -39,7 +44,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `CurlWsFrame` interface for frame metadata (age, flags, offset, bytesleft, len)
   - Support for CONNECT_ONLY mode with value 2 for WebSocket connections
   - See `examples/21-websockets-native.js` for usage example
-
+- Added new `
 - Added support for the following multi options:
   - `CURLMOPT_NETWORK_CHANGED` (with `CurlMultiNetworkChanged` enum)
 - Added the following new enums:
@@ -77,8 +82,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added the following multi options:
   - https://curl.se/libcurl/c/CURLMOPT_NETWORK_CHANGED.html
 - Added `Curl.id` and `Easy.id` properties, which return the unique ID of the Easy handle. The value is unique across threads.
+
 ### Changed  
 - `CurlGlobalInit` enum is deprecated and should not be used.
+- Closing a Curl instance is now a no-op if the handle is already closed.
+- `Multi.onMessage` and `Multi.addHandle` are now deprecated and will be removed in a future major version. Use `Multi.perform` instead.
 
 ### Removed  
 

@@ -18,6 +18,8 @@ import { HeaderInfo } from './parseHeaders'
 
 import { Curl } from './Curl'
 import { CurlFeature } from './enum/CurlFeature'
+import { CurlError } from './CurlError'
+import { CurlEasyError } from './CurlEasyError'
 
 /**
  * Object the curly call resolves to.
@@ -154,7 +156,7 @@ export interface CurlyOptions extends CurlOptionValueType {
    * When using this option, if an error is thrown in the internal {@link Curl | `Curl`} instance
    * after the `curly` call has been resolved (it resolves as soon as the stream is available)
    * it will cause the `error` event to be emitted on the stream itself, this way it's possible
-   * to handle these too, if necessary. The error object will have the property `isCurlError` set to `true`.
+   * to handle these too, if necessary. The error object will inherit from the {@link CurlError | `CurlError`} class.
    *
    * Calling `destroy()` on the stream will always cause the `Curl` instance to emit the error event.
    * Even if an error argument was not supplied to `stream.destroy()`.
@@ -528,19 +530,19 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
       curlHandle.on('error', (error, errorCode) => {
         returnToPool(curlHandle)
 
-        // @ts-ignore
-        error.code = errorCode
-        // @ts-ignore
-        error.isCurlError = true
+        const errorToUse =
+          error instanceof CurlError
+            ? error
+            : new CurlEasyError(error.message, errorCode, { cause: error })
 
         // oops, if have a stream it means the promise
         // has been resolved with it
         // so instead of rejecting the original promise
         // we are emitting the error event on the stream
         if (stream) {
-          stream.emit('error', error)
+          stream.emit('error', errorToUse)
         } else {
-          reject(error)
+          reject(errorToUse)
         }
       })
 

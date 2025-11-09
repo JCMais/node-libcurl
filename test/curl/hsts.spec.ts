@@ -9,6 +9,7 @@ import { describe, beforeEach, afterEach, it, expect } from 'vitest'
 import {
   Curl,
   CurlCode,
+  CurlEasyError,
   CurlHsts,
   CurlHstsCallback,
   CurlHstsCacheEntry,
@@ -132,9 +133,13 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 74, 0))('Callbacks', () => {
 
       await new Promise<void>((resolve, reject) => {
         curl.on('end', () => {
-          expect(cache).toHaveLength(0)
-          expect(hstsReadFunctionCallCount).toBe(initialCacheLength + 1)
-          resolve()
+          try {
+            expect(cache).toHaveLength(0)
+            expect(hstsReadFunctionCallCount).toBe(initialCacheLength + 1)
+            resolve()
+          } catch (error) {
+            reject(error)
+          }
         })
 
         curl.on('error', reject)
@@ -159,23 +164,31 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 74, 0))('Callbacks', () => {
 
       await new Promise<void>((resolve, reject) => {
         curl.on('end', () => {
-          const dupHandle = curl.dupHandle(false)
+          try {
+            const dupHandle = curl.dupHandle(false)
 
-          // kill the original just to make sure we are not relying on memory from it
-          curl.close()
+            // kill the original just to make sure we are not relying on memory from it
+            curl.close()
 
-          dupHandle.on('end', () => {
-            // first two calls will be true, as it is realted for the first instance:
-            // 1: perform
-            // 2: duphandle
-            // the third call will be false, as the instance will not be === curl.handle, but === dupHandle.handle
-            expect(callsToHstsReadFunction).toEqual([true, true, false])
+            dupHandle.on('end', () => {
+              try {
+                // first two calls will be true, as it is realted for the first instance:
+                // 1: perform
+                // 2: duphandle
+                // the third call will be false, as the instance will not be === curl.handle, but === dupHandle.handle
+                expect(callsToHstsReadFunction).toEqual([true, true, false])
 
-            resolve()
-          })
-          dupHandle.on('error', reject)
+                resolve()
+              } catch (error) {
+                reject(error)
+              }
+            })
+            dupHandle.on('error', reject)
 
-          dupHandle.perform()
+            dupHandle.perform()
+          } catch (error) {
+            reject(error)
+          }
         })
 
         curl.on('error', reject)
@@ -209,41 +222,45 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 74, 0))('Callbacks', () => {
 
       await new Promise<void>((resolve, reject) => {
         curl.on('end', () => {
-          // kill the handle so the cache is saved - this is a sync operation so everything will happen in a synchronous way
-          curl.close()
+          try {
+            // kill the handle so the cache is saved - this is a sync operation so everything will happen in a synchronous way
+            curl.close()
 
-          expect(savedHstsCache).toHaveLength(originalHstsCache.length)
+            expect(savedHstsCache).toHaveLength(originalHstsCache.length)
 
-          // cache is already updated here
-          savedHstsCache.forEach((value, index) => {
-            const matchingHstsCache = originalHstsCache[index]
+            // cache is already updated here
+            savedHstsCache.forEach((value, index) => {
+              const matchingHstsCache = originalHstsCache[index]
 
-            expect(value.host).toBe(matchingHstsCache.host)
+              expect(value.host).toBe(matchingHstsCache.host)
 
-            // this one should be equal, as it should have been updated
-            if (value.host.indexOf('owasp') !== -1) {
-              expect(value.expire).toBeDefined()
-              expect(value.expire).not.toBe(matchingHstsCache.expire)
-              // should be false as this is what is returned from the domain
-              expect(value.includeSubDomains).toBe(true)
-            } else {
-              expect(value.expire).toBe(matchingHstsCache.expire || null)
-              expect(value.includeSubDomains).toBe(
-                matchingHstsCache.includeSubDomains || false,
-              )
-            }
-          })
+              // this one should be equal, as it should have been updated
+              if (value.host.indexOf('owasp') !== -1) {
+                expect(value.expire).toBeDefined()
+                expect(value.expire).not.toBe(matchingHstsCache.expire)
+                // should be false as this is what is returned from the domain
+                expect(value.includeSubDomains).toBe(true)
+              } else {
+                expect(value.expire).toBe(matchingHstsCache.expire || null)
+                expect(value.includeSubDomains).toBe(
+                  matchingHstsCache.includeSubDomains || false,
+                )
+              }
+            })
 
-          expect(savedCount).toEqual(
-            new Array(originalHstsCache.length)
-              .fill(null)
-              .map((_v, index, arr) => ({
-                index,
-                total: arr.length,
-              })),
-          )
+            expect(savedCount).toEqual(
+              new Array(originalHstsCache.length)
+                .fill(null)
+                .map((_v, index, arr) => ({
+                  index,
+                  total: arr.length,
+                })),
+            )
 
-          resolve()
+            resolve()
+          } catch (error) {
+            reject(error)
+          }
         })
 
         curl.on('error', reject)
@@ -323,7 +340,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 74, 0))('Callbacks', () => {
           }
 
           try {
-            expect(error.message).toMatch(/fix the HSTS callback/)
+            expect((error.cause as Error).message).toMatch(
+              /fix the HSTS callback/,
+            )
             expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
             expect(hstsReadFunctionCallCount).toBe(onErrorCallCount)
 
@@ -341,12 +360,12 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 74, 0))('Callbacks', () => {
       curl.setOpt('HSTS_CTRL', CurlHsts.Enable)
 
       let hstsReadFunctionCallCount = 0
-
-      const errorMessage = 'Something went wrong'
+      let errorObject!: Error
 
       curl.setOpt('HSTSREADFUNCTION', function () {
         if (hstsReadFunctionCallCount++ === 0) {
-          throw new Error(errorMessage)
+          errorObject = new Error('Something went wrong')
+          throw errorObject
         }
 
         // this should never get here as the cb should not be called again if we find an error
@@ -359,12 +378,17 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 74, 0))('Callbacks', () => {
         })
 
         curl.on('error', (error, errorCode) => {
-          expect(error.message).toBe(errorMessage)
-          expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+          try {
+            expect(error).toBeInstanceOf(CurlEasyError)
+            expect(error.cause).toBe(errorObject)
+            expect(errorCode).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
 
-          expect(hstsReadFunctionCallCount).toBe(1)
+            expect(hstsReadFunctionCallCount).toBe(1)
 
-          resolve()
+            resolve()
+          } catch (error) {
+            reject(error)
+          }
         })
 
         curl.perform()

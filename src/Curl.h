@@ -86,6 +86,9 @@ class Curl {
   Napi::FunctionReference MultiConstructor;
   Napi::FunctionReference ShareConstructor;
   Napi::FunctionReference Http2PushFrameHeadersConstructor;
+  Napi::FunctionReference CurlEasyErrorConstructor;
+  Napi::FunctionReference CurlMultiErrorConstructor;
+  Napi::FunctionReference CurlSharedErrorConstructor;
   Napi::Env env;
 
   std::string caCertificatesData;
