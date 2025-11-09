@@ -1,5 +1,9 @@
 name: 'Code scanning - action'
 
+defaults:
+  run:
+    shell: bash
+
 on:
   # push:
   #   branches: [develop, ]
@@ -10,61 +14,80 @@ on:
     - cron: '0 6 * * 5'
 
 jobs:
+  config:
+    uses: ./.github/workflows/reusable-config.yaml
+
   CodeQL-Build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    needs: config
+    env:
+      LIBCURL_RELEASE: ${{ needs.config.outputs.latest-libcurl-release }}
+      LATEST_LIBCURL_RELEASE: ${{ needs.config.outputs.latest-libcurl-release }}
+      ELECTRON_VERSION: ''
+      PUBLISH_BINARY: false
+      RUN_TESTS: false
+      RUN_PREGYP_CLEAN: false
+      GIT_COMMIT: ${{ github.sha }}
+      GIT_REF_NAME: ${{ github.ref_name }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v5
         with:
-          # We must fetch at least the immediate parents so that if this is
-          # a pull request then we can checkout the head.
-          fetch-depth: 2
+          submodules: true
 
-      # If this run was triggered by a pull request event, then checkout
-      # the head of the pull request instead of the merge commit.
-      - run: git checkout HEAD^2
-        if: ${{ github.event_name == 'pull_request' }}
+      - name: Install System Packages
+        uses: ./.github/actions/install-system-packages
+
+      # see https://github.com/nodejs/node/issues/40537
+      - name: Enforce IPv4 Connectivity
+        uses: ./.github/actions/force-ipv4
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
-        # Override language selection by uncommenting this and choosing your languages
+        uses: github/codeql-action/init@v4
         with:
           languages: javascript, cpp
 
-      # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
-      # If this step fails, then you should remove it and run the build manually (see below)
-      # - name: Autobuild
-      #   uses: github/codeql-action/autobuild@v1
-
-      # ℹ️ Command-line programs to run using the OS shell.
-      # 📚 https://git.io/JvXDl
-
-      # ✏️ If the Autobuild fails above, remove it and uncomment the following three lines
-      #    and modify them (or add more) to build your code if your project
-      #    uses a compiled language
-      # - uses: actions/setup-node@v1
-      #   with:
-      #     node-version: '12'
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-      - uses: actions/cache@v4
-        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+      # PNPM / Node.js
+      - name: Setup Node and PNPM
+        uses: ./.github/actions/setup-node-pnpm
         with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      - uses: actions/cache@v4
-        id: deps-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+          node-version: '24'
+
+      - name: Setup Libcurl Cache (Restore)
+        id: libcurl-deps-cache
+        uses: ./.github/actions/setup-libcurl-cache
         with:
-          path: ~/deps
-          key: ${{ runner.os }}-build-deps
-          restore-keys: |
-            ${{ runner.os }}-build-deps
-      - run: |
-          RUN_PREGYP_CLEAN=false PUBLISH_BINARY=false ./scripts/ci/build.sh
+          libcurl-release: ${{ needs.config.outputs.latest-libcurl-release }}
+          node-version: '24'
+          electron-version: ''
+          electron-config-cache: ${{ needs.config.outputs.electron-config-cache }}
+          mode: 'restore-only'
+
+      - name: 'Build and Package Binary'
+        run: ./scripts/ci/build.sh
+
+      - name: 'Check if fully installed and built'
+        id: built-and-installed
+        run: |
+          if [[ -f built-and-installed.hidden.txt ]]; then
+            echo "built-and-installed.hidden.txt exists"
+            echo "status=true" >> $GITHUB_OUTPUT
+          else
+            echo "built-and-installed.hidden.txt does not exist"
+            echo "status=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Libcurl Cache (Save)
+        if: steps.libcurl-deps-cache.outputs.cache-hit != 'true' && steps.built-and-installed.outputs.status == 'true'
+        uses: ./.github/actions/setup-libcurl-cache
+        with:
+          libcurl-release: ${{ needs.config.outputs.latest-libcurl-release }}
+          node-version: '24'
+          electron-version: ''
+          electron-config-cache: ${{ needs.config.outputs.electron-config-cache }}
+          mode: 'save-only'
+
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
+        uses: github/codeql-action/analyze@v4
