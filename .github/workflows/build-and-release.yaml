@@ -83,14 +83,20 @@ jobs:
       GIT_COMMIT: ${{ github.sha }}
       GIT_REF_NAME: ${{ github.ref_name }}
     steps:
-      - name: Install System Packages
-        uses: ./.github/actions/install-system-packages
+      - name: Install initial deps (Alpine)
+        if: matrix.os == 'alpine'
+        shell: sh
+        run: |
+          apk add --no-cache git bash
 
       - name: Checkout
         uses: actions/checkout@v5
         with:
           submodules: true
 
+      - name: Install System Packages
+        uses: ./.github/actions/install-system-packages
+  
       - name: Should publish binary?
         id: should-publish
         run: |

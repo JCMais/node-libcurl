@@ -29,13 +29,13 @@ jobs:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
     steps:
-      - name: Install System Packages
-        uses: ./.github/actions/install-system-packages
-
       - name: Checkout
         uses: actions/checkout@v5
         with:
           submodules: true
+
+      - name: Install System Packages
+        uses: ./.github/actions/install-system-packages
 
       # See https://github.com/nodejs/node/issues/40537
       - name: Enforce IPv4 Connectivity
