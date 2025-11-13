@@ -1,10 +1,20 @@
 # Changelog
-All notable changes to this project will be documented in this file.  
-  
+All notable changes to this project will be documented in this file.
+
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Breaking Change
+
+### Fixed
+
+### Added
+
+### Changed
+
+## [5.0.0] - 2025-01-13
 
 ### Breaking Change  
 - The prebuilt binary is now built with libcurl 8.17.0. Every breaking change introduced by libcurl 8 is also a breaking change for this version.
@@ -29,7 +39,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `CurlSharedError`
   These classes extends the `CurlError` class. Previously the addon used to throw only native Javascript errors, such as `Error`, `TypeError`, etc.
   The curly related errors also inherit from the `CurlError` class, and do not have a `isCurlError` property anymore.
-- Every Easy handle is now initialized with default CA certificates from Node.js's tls module, by using the result of the `getCACertificates` function. This is done using `CURLOPT_CAINFO_BLOB`. This is a breaking change if you were passing custom CA certificates before using `CAINFO`, as `CURLOPT_CAINFO_BLOB` takes priority over it. If that is the case, you can avoid the default behavior by calling `setOpt("CAINFO_BLOB", null)` on the Easy handle. The TLS certificate is loaded into memory once for each JavaScript context.
+  Any caught error thrown from user callbacks will be added as the `cause` property of the error.
+- Every Easy handle is now initialized with default CA certificates from Node.js's tls module, by using the result of the `getCACertificates` function. This is done using `CURLOPT_CAINFO_BLOB`. This is a breaking change if you were passing custom CA certificates before using `CAINFO`, as `CURLOPT_CAINFO_BLOB` takes priority over it. If that is the case, you can avoid the default behavior by calling `setOpt("CAINFO_BLOB", null)` on the Easy handle. The TLS certificate is loaded into memory only once for each JavaScript context.
 - `HSTSREADFUNCTION` callback now receives an object with the `maxHostLengthBytes` property, which is the maximum length of the host name that can be returned by the callback.
 - The minimum macOS version is now Sonoma (13)
 - `Curl.globalCleanup` is a no-op now. The addon will automatically call `curl_global_cleanup` when the process exits. This method will be removed in a future major version.
@@ -40,6 +51,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 - Prebuilt binaries have HTTP/3 support enabled across all platforms. This is supported by licurl when building with OpenSSL >= 3.5 and nghttp3 [>= 1.66](https://nghttp2.org/blog/2025/06/17/nghttp2-v1-66-0/). To use OpenSSL >= 3.5 a Node.js version >= 22.20.0 is required.
+- The addon has been rewritten to use N-API, which will streamline the process of supporting newer Node.js versions in the future.
+- The addon is now worker threads safe. See `examples/22-worker-threads.js` for usage example.
 - Added native WebSocket support (requires libcurl >= 7.86.0):
   - `Easy.wsRecv(buffer)` - Receive WebSocket frames with metadata
   - `Easy.wsSend(buffer, flags, fragsize?)` - Send WebSocket frames (text, binary, ping, pong, close)
@@ -47,15 +60,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `CurlWs` enum for WebSocket frame flags (Text, Binary, Close, Ping, Pong, Cont, Offset)
   - `CurlWsOptions` enum for WebSocket options (RawMode, NoAutoPong)
   - `CurlWsFrame` interface for frame metadata (age, flags, offset, bytesleft, len)
-  - Support for CONNECT_ONLY mode with value 2 for WebSocket connections
+  - Support for `CONNECT_ONLY` mode with value 2 for WebSocket connections
   - See `examples/21-websockets-native.js` for usage example
-- Added MIME API support for modern multipart form data (replaces deprecated HTTPPOST):
+- Added MIME API support for multipart form data (replaces deprecated HTTPPOST):
   - `CurlMime` class for creating multipart MIME structures
   - `CurlMimePart` class for individual MIME parts
-  - `Easy.setMimePost(mime)` and `Curl.setMimePost(mime)` methods for setting MIME data
-  - `curlyMimePost` option for simplified multipart uploads in curly
   - `CurlMimeOpt` enum for MIME options (FormEscape)
   - Added `CURLOPT_MIME_OPTIONS` and `CURLOPT_MIMEPOST` options
+  - `Easy.setMimePost(mime)`, `Curl.setMimePost(mime)`, and `curlyMimePost` alternatives for setting MIME data in a structured way.
   - See `examples/23-mime-post-easy.js` for usage example
 - Added SSH host key verification support (requires libcurl >= 7.84.0):
   - `CURLOPT_SSH_HOSTKEYFUNCTION` callback for custom host key verification
@@ -82,7 +94,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `CurlCode.CURLE_TOO_LARGE`
   - `CurlCode.CURLE_ECH_REQUIRED`
   - `CurlSslOpt.Earlydata`
-- Added support for the following easy options:
+- Added support for the following extra easy options:
   - https://curl.se/libcurl/c/CURLOPT_CA_CACHE_TIMEOUT.html
   - https://curl.se/libcurl/c/CURLOPT_MAIL_RCPT_ALLOWFAILS.html
   - https://curl.se/libcurl/c/CURLOPT_HAPROXY_CLIENT_IP.html
@@ -91,7 +103,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - https://curl.se/libcurl/c/CURLOPT_TCP_KEEPCNT.html
   - https://curl.se/libcurl/c/CURLOPT_UPLOAD_FLAGS.html
   - https://curl.se/libcurl/c/CURLOPT_SSL_SIGNATURE_ALGORITHMS.html
-  - https://curl.se/libcurl/c/CURLOPT_WS_OPTIONS.html
 - Added following info options:
   - https://curl.se/libcurl/c/CURLINFO_CONN_ID.html
   - https://curl.se/libcurl/c/CURLINFO_XFER_ID.html
@@ -490,7 +501,10 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v5.0.0...HEAD
+[5.0.0]: https://github.com/JCMais/node-libcurl/compare/v4.1.0...v5.0.0
+[4.1.0]: https://github.com/JCMais/node-libcurl/compare/v4.0.0...v4.1.0
+[4.0.0]: https://github.com/JCMais/node-libcurl/compare/v3.0.0...v4.0.0
 [3.0.0]: https://github.com/JCMais/node-libcurl/compare/v2.3.4...v3.0.0
 [2.3.4]: https://github.com/JCMais/node-libcurl/compare/v2.3.3...v2.3.4
 [2.3.3]: https://github.com/JCMais/node-libcurl/compare/v2.3.2...v2.3.3
