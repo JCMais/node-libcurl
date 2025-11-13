@@ -132,6 +132,33 @@
   "engines": {
     "node": ">=22.14"
   },
+  "publishConfig": {
+    "executableFiles": [
+      "scripts/arm/publish-binary.sh",
+      "scripts/ci/build-brotli.sh",
+      "scripts/ci/build-cares.sh",
+      "scripts/ci/build-heimdal.sh",
+      "scripts/ci/build-kerberos.sh",
+      "scripts/ci/build-libcurl.sh",
+      "scripts/ci/build-libiconv.sh",
+      "scripts/ci/build-libidn2.sh",
+      "scripts/ci/build-libssh2.sh",
+      "scripts/ci/build-libunistring.sh",
+      "scripts/ci/build-ncurses.sh",
+      "scripts/ci/build-nghttp2.sh",
+      "scripts/ci/build-nghttp3.sh",
+      "scripts/ci/build-ngtcp2.sh",
+      "scripts/ci/build-openldap.sh",
+      "scripts/ci/build-openssl.sh",
+      "scripts/ci/build-zlib.sh",
+      "scripts/ci/build-zstd.sh",
+      "scripts/ci/build.sh",
+      "scripts/ci/download-and-unpack.sh",
+      "scripts/ci/get-latest-libcurl-version.sh",
+      "scripts/ci/utils/gsort.sh",
+      "scripts/gyp-macos-postbuild.sh"
+    ]
+  },
   "np": {
     "cleanup": false
   }

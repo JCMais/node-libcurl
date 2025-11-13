@@ -1,2 +1,13 @@
 onlyBuiltDependencies:
+  - '-'
+  - b
+  - c
+  - d
+  - e
+  - i
+  - l
+  - n
   - node-libcurl
+  - o
+  - r
+  - u

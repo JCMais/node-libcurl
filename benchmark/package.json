@@ -26,7 +26,7 @@
     "benny": "3.7.1",
     "got": "14.6.1",
     "ky": "1.13.0",
-    "node-libcurl": "4.1.0",
+    "node-libcurl": "5.0.0",
     "request": "2.88.2",
     "superagent": "10.2.3"
   }
