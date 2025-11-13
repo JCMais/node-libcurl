@@ -16,6 +16,7 @@
 #include "Curl.h"
 #include "CurlError.h"
 #include "CurlHttpPost.h"
+#include "CurlMime.h"
 #include "Easy.h"
 #include "LocaleGuard.h"
 #include "Share.h"
@@ -591,6 +592,45 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
       if (setOptRetCode == CURLE_OK) {
         this->toFree->post.push_back(std::move(httpPost));
       }
+
+#if NODE_LIBCURL_VER_GE(7, 56, 0)
+      // MIMEPOST is a special case, similar to HTTPPOST but takes a CurlMime object
+    } else if (optionId == CURLOPT_MIMEPOST) {
+      if (!value.IsObject()) {
+        throw Napi::TypeError::New(env, "MIMEPOST option value should be a CurlMime instance.");
+      }
+
+      Napi::Object mimeObj = value.As<Napi::Object>();
+
+      // Try to unwrap as CurlMime
+      CurlMime* curlMime = nullptr;
+      napi_status status = napi_unwrap(env, mimeObj, reinterpret_cast<void**>(&curlMime));
+
+      if (status != napi_ok || curlMime == nullptr || curlMime->mime == nullptr) {
+        throw Napi::TypeError::New(env, "MIMEPOST option value must be a valid CurlMime instance.");
+      }
+
+#if !NODE_LIBCURL_VER_GE(7, 86, 0)
+      // Before libcurl 7.86.0 (curl PR #9927), MIME structures are tied to the handle
+      // they were created with and cannot be shared between different handles
+      if (curlMime->easyHandle != this->ch) {
+        throw Napi::Error::New(
+            env,
+            "Cannot use MIME structure with a different handle. "
+            "This libcurl version (< 7.86.0) does not support MIME sharing between handles. "
+            "Create the MIME with the same handle you're using it with.");
+      }
+#endif
+
+      // Set the MIME structure on the easy handle
+      setOptRetCode = curl_easy_setopt(this->ch, CURLOPT_MIMEPOST, curlMime->mime);
+
+      if (setOptRetCode == CURLE_OK) {
+        // Store the mime handle for cleanup
+        // Note: We store the handle, not nullptr, because the mime needs to persist
+        this->toFree->mime.push_back(curlMime->mime);
+      }
+#endif
 
     } else {
       if (!value.IsArray()) {

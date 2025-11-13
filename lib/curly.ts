@@ -20,6 +20,7 @@ import { Curl } from './Curl'
 import { CurlFeature } from './enum/CurlFeature'
 import { CurlError } from './CurlError'
 import { CurlEasyError } from './CurlEasyError'
+import { CurlyMimePart } from './CurlyMimeTypes'
 
 /**
  * Object the curly call resolves to.
@@ -208,6 +209,48 @@ export interface CurlyOptions extends CurlOptionValueType {
    * method in the internal {@link Curl | `Curl`} instance.
    */
   curlyStreamUpload?: Readable | null
+
+  /**
+   * Array of MIME parts to upload as multipart/form-data.
+   *
+   * This will automatically build a {@link CurlMime} structure internally and set
+   * it using the `MIMEPOST` option. For stream-based parts, the unpause callback
+   * is automatically generated, so you don't need to provide it.
+   *
+   * @remarks
+   *
+   * Requires libcurl 7.56.0 or later.
+   *
+   * @example
+   * Basic multipart upload:
+   * ```typescript
+   * await curly.post('https://httpbin.org/post', {
+   *   curlyMimePost: [
+   *     { type: 'data', name: 'username', data: 'john_doe' },
+   *     { type: 'file', name: 'avatar', file: '/path/to/image.png', mimeType: 'image/png' }
+   *   ]
+   * })
+   * ```
+   *
+   * @example
+   * With streams:
+   * ```typescript
+   * import { createReadStream } from 'fs'
+   *
+   * await curly.post('https://httpbin.org/post', {
+   *   curlyMimePost: [
+   *     { type: 'data', name: 'field', data: 'value' },
+   *     {
+   *       type: 'stream',
+   *       name: 'document',
+   *       stream: createReadStream('/path/to/file.txt'),
+   *       size: 12345
+   *     }
+   *   ]
+   * })
+   * ```
+   */
+  curlyMimePost?: CurlyMimePart[]
 }
 
 export interface CurlyHttpMethodCall {
@@ -370,6 +413,7 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
       curlyStreamResponse,
       curlyStreamResponseHighWaterMark,
       curlyStreamUpload,
+      curlyMimePost,
     } = finalOptions
     const isUsingStream = !!(curlyStreamResponse || curlyStreamUpload)
 
@@ -399,6 +443,11 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
 
     if (curlyStreamUpload) {
       curlHandle.setUploadStream(curlyStreamUpload)
+    }
+
+    // Handle MIME multipart upload
+    if (curlyMimePost && curlyMimePost.length > 0) {
+      curlHandle.setMimePost(curlyMimePost)
     }
 
     const lowerCaseHeadersIfNecessary = (headers: HeaderInfo[]) => {

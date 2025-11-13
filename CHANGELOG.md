@@ -85,6 +85,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added the following multi options:
   - https://curl.se/libcurl/c/CURLMOPT_NETWORK_CHANGED.html
 - Added `Curl.id`, `Easy.id`, `Multi.id`, and `Share.id` properties, which return the unique ID of each instance. The value is unique across threads.
+- There are build attestations for the prebuilt binaries now, which can be used to verify the authenticity of the binaries.
 
 ### Changed  
 - `CurlGlobalInit` enum is deprecated and should not be used.

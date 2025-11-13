@@ -61,6 +61,7 @@ import { CurlUseSsl } from './enum/CurlUseSsl'
 import { CurlWriteFunc } from './enum/CurlWriteFunc'
 import { CurlReadFunc } from './enum/CurlReadFunc'
 import { CurlInfoNameSpecific, GetInfoReturn } from './Easy'
+import { CurlyMimePart } from './CurlyMimeTypes'
 
 const bindings: typeof NodeLibcurlNativeBinding = require('../lib/binding/node_libcurl.node')
 
@@ -845,6 +846,26 @@ class Curl extends EventEmitter {
     }
 
     return duplicatedHandle
+  }
+
+  /**
+   * Build and set a MIME structure from a declarative configuration.
+   *
+   * This method delegates to {@link Easy.setMimePost | `Easy.setMimePost`} on the
+   * internal {@link Easy | `Easy`} handle, which builds a {@link CurlMime} structure
+   * from the provided part specifications and sets it using the `MIMEPOST` option.
+   *
+   * For stream-based parts, the unpause callback is automatically generated,
+   * so you don't need to provide it.
+   *
+   * Available since libcurl 7.56.0.
+   *
+   * @param parts Array of MIME part specifications
+   * @returns This Curl instance for method chaining
+   */
+  setMimePost(parts: CurlyMimePart[]): this {
+    this.handle.setMimePost(parts)
+    return this
   }
 
   /**

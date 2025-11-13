@@ -28,7 +28,13 @@
       "Bash(ls:*)",
       "Bash(find:*)",
       "Bash(git log:*)",
-      "mcp__zen__codereview"
+      "mcp__zen__codereview",
+      "mcp__firecrawl__firecrawl_scrape",
+      "Bash(export LIBCURL_RELEASE=8.17.0)",
+      "Bash(npm_config_curl_config_bin=/home/jcm/deps/libcurl/build/$LIBCURL_RELEASE/bin/curl-config npm_config_curl_static_build=true pnpm pregyp rebuild)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run:*)",
+      "Bash(npm test:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

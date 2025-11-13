@@ -10,6 +10,9 @@ import {
   createWebSocketServer,
 } from './helper/server'
 import type { TestProject } from 'vitest/node'
+// @ts-ignore
+import formidable from 'formidable'
+
 let teardown = false
 
 export default async function setup({ provide }: TestProject) {
@@ -20,6 +23,61 @@ export default async function setup({ provide }: TestProject) {
   })
   httpServer.app.put('/put', (req, res) => {
     res.json({ success: true })
+  })
+
+  // Add multipart form data handler
+  httpServer.app.post('/multipart', (req, res, next) => {
+    // @ts-ignore
+    const form = formidable({ multiples: true })
+
+    // @ts-ignore
+    form.parse(req, (error, fields, files) => {
+      if (error) {
+        next(error)
+        return
+      }
+
+      const parts: Array<{
+        name: string
+        type: 'field' | 'file'
+        byteSize: number
+        value?: string
+        filename?: string
+        mimetype?: string
+      }> = []
+
+      // Process fields
+      for (const [name, valueArray] of Object.entries(fields)) {
+        if (Array.isArray(valueArray)) {
+          for (const value of valueArray) {
+            const stringValue = String(value)
+            parts.push({
+              name,
+              type: 'field',
+              byteSize: Buffer.byteLength(stringValue),
+              value: stringValue,
+            })
+          }
+        }
+      }
+
+      // Process files
+      for (const [name, fileArray] of Object.entries(files)) {
+        if (Array.isArray(fileArray)) {
+          for (const file of fileArray as any[]) {
+            parts.push({
+              name,
+              type: 'file',
+              byteSize: file.size,
+              filename: file.originalFilename,
+              mimetype: file.mimetype,
+            })
+          }
+        }
+      }
+
+      res.json(parts)
+    })
   })
 
   // Create HTTPS server

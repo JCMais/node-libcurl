@@ -7,6 +7,7 @@
 import './moduleSetup'
 
 import { Share } from './Share'
+import { CurlMime } from './CurlMime'
 import {
   CurlOptionName,
   DataCallbackOptions,
@@ -16,6 +17,7 @@ import {
   SpecificOptions,
 } from './generated/CurlOption'
 import { CurlInfoName } from './generated/CurlInfo'
+import { CurlyMimePart } from './CurlyMimeTypes'
 
 import { CurlChunk } from './enum/CurlChunk'
 import { CurlCode } from './enum/CurlCode'
@@ -320,6 +322,32 @@ declare class Easy {
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'HTTPPOST', value: HttpPostField[] | null): CurlCode
+  /**
+   * Sets the MIME structure for multipart form data uploads.
+   *
+   * @remarks
+   * This is the modern replacement for HTTPPOST. Use {@link CurlMime} to create
+   * multipart form data with more features and flexibility.
+   *
+   * Available since libcurl 7.56.0.
+   *
+   * @example
+   * ```typescript
+   * import { Curl, CurlMime } from 'node-libcurl'
+   *
+   * const curl = new Curl()
+   * const mime = new CurlMime(curl)
+   *
+   * const part = mime.addPart()
+   * part.setName('file')
+   * part.setFiledata('/path/to/file.txt')
+   *
+   * curl.setOpt('MIMEPOST', mime)
+   * ```
+   *
+   * Official libcurl documentation: [`CURLOPT_MIMEPOST`](https://curl.se/libcurl/c/CURLOPT_MIMEPOST.html)
+   */
+  setOpt(option: 'MIMEPOST', value: CurlMime | null): CurlCode
   /**
    * Use {@link Curl.option|`Curl.option`} for predefined constants.
    *
@@ -631,6 +659,23 @@ declare class Easy {
   unmonitorSocketEvents(): this
 
   /**
+   * Build and set a MIME structure from a declarative configuration.
+   *
+   * This is a high-level method that accepts an array of MIME part specifications
+   * and internally builds a {@link CurlMime} structure, then sets it using the
+   * `MIMEPOST` option. This is the recommended way to create multipart form data.
+   *
+   * For stream-based parts, the unpause callback is automatically generated,
+   * so you don't need to provide it.
+   *
+   * Available since libcurl 7.56.0.
+   *
+   * @param parts Array of MIME part specifications
+   * @returns This Easy instance for method chaining
+   */
+  setMimePost(parts: CurlyMimePart[]): this
+
+  /**
    * Close this handle and dispose any resources bound to it.
    * After closed, the handle **MUST** not be used again, doing so will throw an Error.
    *
@@ -653,5 +698,113 @@ const bindings: any = require('../lib/binding/node_libcurl.node')
 
 // @ts-expect-error - we are abusing TS merging here to have sane types for the addon classes
 const Easy = bindings.Easy as Easy
+
+/**
+ * Build and set a MIME structure from a declarative configuration.
+ *
+ * This is a high-level method that accepts an array of MIME part specifications
+ * and internally builds a {@link CurlMime} structure, then sets it using the
+ * `MIMEPOST` option. This is the recommended way to create multipart form data.
+ *
+ * @remarks
+ * For stream-based parts, you must provide the unpause callback that will be
+ * called when more data is available. The callback should unpause the transfer
+ * using `handle.pause(handle.pauseFlags & ~CurlPause.Recv)`.
+ *
+ * Available since libcurl 7.56.0.
+ *
+ * @example
+ * ```typescript
+ * import { Easy, CurlPause } from 'node-libcurl'
+ * import { createReadStream } from 'fs'
+ *
+ * const easy = new Easy()
+ * easy.setOpt('URL', 'https://httpbin.org/post')
+ *
+ * easy.setMimePost([
+ *   {
+ *     type: 'data',
+ *     name: 'username',
+ *     data: 'john_doe'
+ *   },
+ *   {
+ *     type: 'file',
+ *     name: 'document',
+ *     file: '/path/to/document.pdf',
+ *     mimeType: 'application/pdf'
+ *   },
+ *   {
+ *     type: 'stream',
+ *     name: 'logfile',
+ *     stream: createReadStream('/path/to/log.txt'),
+ *     unpause: () => {
+ *       easy.pause(easy.pauseFlags & ~CurlPause.Recv)
+ *     },
+ *     size: 12345
+ *   }
+ * ])
+ * ```
+ *
+ * @param parts Array of MIME part specifications
+ * @returns This Easy instance for method chaining
+ */
+Easy.prototype.setMimePost = function (
+  this: Easy,
+  parts: CurlyMimePart[],
+): Easy {
+  const mime = new CurlMime(this)
+
+  // Helper function to recursively build MIME parts
+  const buildMimePart = (
+    parentMime: CurlMime,
+    partSpec: CurlyMimePart,
+  ): void => {
+    const part = parentMime.addPart()
+    part.setName(partSpec.name)
+
+    // Set common properties
+    if (partSpec.type) part.setType(partSpec.type)
+    if (partSpec.filename) part.setFilename(partSpec.filename)
+    if (partSpec.encoder) part.setEncoder(partSpec.encoder)
+    if (partSpec.headers) part.setHeaders(partSpec.headers)
+
+    // Handle type-specific properties
+    switch (partSpec.type) {
+      case 'data':
+        part.setData(partSpec.data)
+        break
+      case 'file':
+        part.setFiledata(partSpec.file)
+        break
+      case 'stream':
+        part.setDataStream(
+          partSpec.stream,
+          () => {
+            this.pause(this.pauseFlags & ~CurlPause.Recv)
+          },
+          partSpec.size,
+        )
+        break
+      case 'subparts':
+        // Recursive case: create nested MIME structure
+        const subMime = new CurlMime(this)
+        for (const subPartSpec of partSpec.parts) {
+          buildMimePart(subMime, subPartSpec)
+        }
+        part.setSubparts(subMime)
+        break
+    }
+  }
+
+  // Build all MIME parts
+  for (const partSpec of parts) {
+    buildMimePart(mime, partSpec)
+  }
+
+  // Set the MIME structure on the handle
+  this.setOpt('MIMEPOST', mime)
+
+  return this
+}
 
 export { Easy }

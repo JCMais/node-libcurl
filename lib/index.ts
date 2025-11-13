@@ -20,6 +20,8 @@ export { Easy, GetInfoReturn } from './Easy'
 
 export { Multi } from './Multi'
 export { Share } from './Share'
+export { CurlMime } from './CurlMime'
+export { CurlMimePart, MimeDataCallbacks } from './CurlMimePart'
 export {
   curly,
   CurlyFunction,
