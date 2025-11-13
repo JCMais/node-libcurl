@@ -575,7 +575,7 @@ size_t CurlMimePart::StaticReadCallback(char* buffer, size_t size, size_t nitems
 
     // Invalid return type
     return CURL_READFUNC_ABORT;
-  } catch (const Napi::Error& e) {
+  } catch (const Napi::Error&) {
     // Error in JS callback
     return CURL_READFUNC_ABORT;
   }
@@ -602,7 +602,7 @@ int CurlMimePart::StaticSeekCallback(void* userdata, curl_off_t offset, int orig
     }
 
     return CURL_SEEKFUNC_FAIL;
-  } catch (const Napi::Error& e) {
+  } catch (const Napi::Error&) {
     return CURL_SEEKFUNC_FAIL;
   }
 }
@@ -623,7 +623,7 @@ void CurlMimePart::StaticFreeCallback(void* userdata) {
   if (!part->freeCallback.IsEmpty()) {
     try {
       part->freeCallback.Call({});
-    } catch (const Napi::Error& e) {
+    } catch (const Napi::Error&) {
       // Ignore errors in free callback
     }
   }
