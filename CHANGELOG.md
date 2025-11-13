@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
+## [5.0.1] - 2025-11-13
+
+### Fixed
+- Building from source on macOS would not work properly.
+
 ## [5.0.0] - 2025-01-13
 
 ### Breaking Change  
@@ -501,7 +506,8 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v5.0.0...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v5.0.1...HEAD
+[5.0.1]: https://github.com/JCMais/node-libcurl/compare/v5.0.0...v5.0.1
 [5.0.0]: https://github.com/JCMais/node-libcurl/compare/v4.1.0...v5.0.0
 [4.1.0]: https://github.com/JCMais/node-libcurl/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/JCMais/node-libcurl/compare/v3.0.0...v4.0.0
