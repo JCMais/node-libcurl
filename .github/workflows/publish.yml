@@ -151,7 +151,6 @@ jobs:
           IS_PRE_RELEASE=${{ fromJson(steps.version-check.outputs.result).isPreRelease }}
           IS_LATEST=${{ fromJson(steps.version-check.outputs.result).isPreRelease == false }}
           gh release create v$VERSION \
-            --fail-on-no-commits \
             --verify-tag \
             --target=${{ steps.get-latest-sha.outputs.latest-sha }} \
             --prerelease=$IS_PRE_RELEASE \
