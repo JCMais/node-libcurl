@@ -148,6 +148,7 @@ jobs:
           gh release create v$VERSION \
             --fail-on-no-commits \
             --verify-tag \
+            --target=${{ github.ref_name }} \
             --prerelease=$IS_PRE_RELEASE \
             --latest=$IS_LATEST \
             --title=v$VERSION
