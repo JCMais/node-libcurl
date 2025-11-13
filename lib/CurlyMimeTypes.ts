@@ -71,7 +71,7 @@ export interface CurlyMimePartData extends CurlyMimePartCommon {
  * {
  *   type: 'file',
  *   name: 'document',
- *   filePath: '/path/to/document.pdf',
+ *   file: '/path/to/document.pdf',
  *   mimeType: 'application/pdf'
  * }
  * ```
@@ -81,10 +81,10 @@ export interface CurlyMimePartData extends CurlyMimePartCommon {
 export interface CurlyMimePartFile extends CurlyMimePartCommon {
   type: 'file'
   /**
-   * Path to the file to upload.
+   * This is a path to the file to upload.
    * The file is streamed during transfer for memory efficiency.
    */
-  filePath: string
+  file: string
 }
 
 /**
@@ -117,6 +117,7 @@ export interface CurlyMimePartStream extends CurlyMimePartCommon {
   /**
    * Optional expected total size in bytes for the Content-Length header.
    * If not provided, a large default value is used.
+   * -1 works for unknown sizes.
    */
   size?: number
 }

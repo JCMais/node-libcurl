@@ -37,7 +37,7 @@ import { Curl } from './Curl'
  * mime
  *   .addPart()
  *   .setName('file')
- *   .setFilePath('/path/to/file.txt')
+ *   .setFileData('/path/to/file.txt')
  *
  * curl.setOpt('URL', 'https://httpbin.org/post')
  * curl.setOpt('MIMEPOST', mime)

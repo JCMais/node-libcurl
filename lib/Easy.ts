@@ -766,7 +766,7 @@ const Easy = bindings.Easy as Easy
  *   {
  *     type: 'file',
  *     name: 'document',
- *     filePath: '/path/to/document.pdf',
+ *     file: '/path/to/document.pdf',
  *     mimeType: 'application/pdf'
  *   },
  *   {
@@ -826,7 +826,7 @@ Easy.prototype.setMimePost = function (
         part.setData(partSpec.data)
         break
       case 'file':
-        part.setFilePath(partSpec.filePath)
+        part.setFileData(partSpec.file)
         break
       case 'stream':
         part.setDataStream(

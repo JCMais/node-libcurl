@@ -32,7 +32,7 @@ class CurlMimePart : public Napi::ObjectWrap<CurlMimePart> {
   // Basic MIME part methods (Phase 1)
   Napi::Value SetName(const Napi::CallbackInfo& info);
   Napi::Value SetData(const Napi::CallbackInfo& info);
-  Napi::Value SetFilePath(const Napi::CallbackInfo& info);
+  Napi::Value SetFileData(const Napi::CallbackInfo& info);
   Napi::Value SetType(const Napi::CallbackInfo& info);
   Napi::Value SetFileName(const Napi::CallbackInfo& info);
 
@@ -45,7 +45,9 @@ class CurlMimePart : public Napi::ObjectWrap<CurlMimePart> {
   Napi::Value SetDataCallback(const Napi::CallbackInfo& info);
 
   // Public members
-  curl_mimepart* part;  // Owned by parent CurlMime, do not free directly
+  // Owned by parent CurlMime, do not free directly
+  curl_mimepart* part;
+  Easy* easy;
 
   // Callback storage for Phase 3
   Napi::FunctionReference readCallback;

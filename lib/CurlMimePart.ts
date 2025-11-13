@@ -82,7 +82,7 @@ export interface MimeDataCallbacks {
  * @remarks
  * Each part can have:
  * - A field name (via {@link setName})
- * - Data content (via {@link setData}, {@link setFilePath}, or {@link setDataCallback})
+ * - Data content (via {@link setData}, {@link setFileData}, or {@link setDataCallback})
  * - A content mime type (via {@link setType})
  * - A file name (via {@link setFileName})
  * - Content encoding (via {@link setEncoder})
@@ -104,7 +104,7 @@ export interface MimeDataCallbacks {
  * ```typescript
  * mime.addPart()
  *   .setName('avatar')
- *   .setFilePath('/path/to/image.png')
+ *   .setFileData('/path/to/image.png')
  *   .setType('image/png')
  *   .setFileName('avatar.png')
  * ```
@@ -172,13 +172,13 @@ declare class CurlMimePart {
    * ```typescript
    * part
    *   .setName('document')
-   *   .setFilePath('/path/to/document.pdf')
+   *   .setFileData('/path/to/document.pdf')
    *   .setType('application/pdf')
    * ```
    *
    * @see {@link https://curl.se/libcurl/c/curl_mime_filedata.html | curl_mime_filedata}
    */
-  setFilePath(filePath: string | null): this
+  setFileData(filePath: string | null): this
 
   /**
    * Sets the content type (MIME type) for this part.
@@ -191,7 +191,7 @@ declare class CurlMimePart {
    * ```typescript
    * part
    *   .setName('avatar')
-   *   .setFilePath('image.png')
+   *   .setFileData('image.png')
    *   .setType('image/png')
    * ```
    *
@@ -208,13 +208,13 @@ declare class CurlMimePart {
    *
    * @remarks
    * This appears in the Content-Disposition header and can be different
-   * from the actual local filename when using {@link setFilePath}.
+   * from the actual local filename when using {@link setFileData}.
    *
    * @example
    * ```typescript
    * part
    *   .setName('avatar')
-   *   .setFilePath('/tmp/temp123.jpg')
+   *   .setFileData('/tmp/temp123.jpg')
    *   .setFileName('profile-photo.jpg')
    * ```
    *
@@ -306,7 +306,7 @@ declare class CurlMimePart {
   /**
    * Sets a callback-based mechanism for supplying part content dynamically.
    *
-   * @param size - Expected total size in bytes
+   * @param size - Expected total size in bytes, -1 works for unknown sizes
    * @param callbacks - Object containing read, seek (optional), and free (optional) callbacks
    * @returns `this` for method chaining
    * @throws {CurlEasyError} Throws on error
@@ -318,21 +318,21 @@ declare class CurlMimePart {
    *
    * @example
    * ```typescript
-   * let offset = 0
+   * let currentOffset = 0
    * const data = Buffer.from('Large data to stream...')
    *
    * part
    *   .setName('stream')
    *   .setDataCallback(data.length, {
    *     read: (size) => {
-   *       if (offset >= data.length) return null  // EOF
-   *       const chunk = data.slice(offset, offset + size)
-   *       offset += chunk.length
+   *       if (currentOffset >= data.length) return null  // EOF
+   *       const chunk = data.slice(currentOffset, currentOffset + size)
+   *       currentOffset += chunk.length
    *       return chunk
    *     },
    *     seek: (offset, origin) => {
    *       if (origin === 0) {  // SEEK_SET
-   *         offset = offset
+   *         currentOffset = offset
    *         return true
    *       }
    *       return false
@@ -363,7 +363,7 @@ declare class CurlMimePart {
    * The `unpause` function should unpause the curl handle's receive operation, typically
    * by calling `handle.pause(handle.pauseFlags & ~CurlPause.Recv)`.
    *
-   * For very large files, consider using {@link setFilePath} instead, as it streams
+   * For very large files, consider using {@link setFileData} instead, as it streams
    * directly from disk without going through Node.js streams.
    *
    * @example
@@ -424,10 +424,8 @@ CurlMimePart.prototype.setDataStream = function (
 ): typeof CurlMimePart.prototype {
   let streamEnded = false
   let streamError: Error | null = null
-  let readable = false
 
   const onReadable = () => {
-    readable = true
     unpause()
   }
 
@@ -440,6 +438,7 @@ CurlMimePart.prototype.setDataStream = function (
   const onError = (err: Error) => {
     streamError = err
     streamEnded = true
+    unpause()
     cleanup()
   }
 
@@ -449,15 +448,13 @@ CurlMimePart.prototype.setDataStream = function (
     stream.off('error', onError)
   }
 
-  // Set stream to paused (non-flowing) mode
   stream.pause()
 
-  // Set up listeners
   stream.on('readable', onReadable)
   stream.on('end', onEnd)
   stream.on('error', onError)
 
-  // -1 seems to work for unknown sizes
+  // -1 works for unknown sizes
   const callbackSize = size !== undefined ? size : -1
 
   return this.setDataCallback(callbackSize, {
@@ -466,8 +463,8 @@ CurlMimePart.prototype.setDataStream = function (
         throw streamError
       }
 
-      if (!readable) {
-        return CurlReadFunc.Pause
+      if (streamEnded) {
+        return null
       }
 
       const data = stream.read(requestedSize)

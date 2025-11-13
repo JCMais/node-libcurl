@@ -228,7 +228,7 @@ export interface CurlyOptions extends CurlOptionValueType {
    * await curly.post('https://httpbin.org/post', {
    *   curlyMimePost: [
    *     { type: 'data', name: 'username', data: 'john_doe' },
-   *     { type: 'file', name: 'avatar', filePath: '/path/to/image.png', mimeType: 'image/png' }
+   *     { type: 'file', name: 'avatar', file: '/path/to/image.png', mimeType: 'image/png' }
    *   ]
    * })
    * ```

@@ -21,7 +21,7 @@ import path from 'path'
 import crypto from 'crypto'
 import { Readable } from 'stream'
 
-import { Curl, CurlMime, CurlCode, CurlPause } from '../../lib'
+import { Curl, CurlMime, CurlCode, CurlPause, CurlEasyError } from '../../lib'
 import { withCommonTestOptions } from '../helper/commonOptions'
 
 // Extend global for gc() function (requires --expose-gc flag)
@@ -111,7 +111,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
           resolve({ status, data: data as string })
         })
 
-        curl.on('error', reject)
+        curl.on('error', (error: Error) =>
+          reject('cause' in error ? error.cause : error),
+        )
 
         curl.perform()
       },
@@ -149,7 +151,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
           resolve({ status, data: data as string })
         })
 
-        curl.on('error', reject)
+        curl.on('error', (error: Error) =>
+          reject('cause' in error ? error.cause : error),
+        )
 
         curl.perform()
       },
@@ -186,7 +190,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
           resolve({ status, data: data as string })
         })
 
-        curl.on('error', reject)
+        curl.on('error', (error: Error) =>
+          reject('cause' in error ? error.cause : error),
+        )
 
         curl.perform()
       },
@@ -203,7 +209,7 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
     const mime = new CurlMime(curl)
     const part = mime.addPart()
 
-    part.setName('file').setFilePath(imageFilePath).setType('image/png')
+    part.setName('file').setFileData(imageFilePath).setType('image/png')
 
     curl.setOpt('MIMEPOST', mime)
 
@@ -218,7 +224,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
           resolve({ status, data: data as string })
         })
 
-        curl.on('error', reject)
+        curl.on('error', (error: Error) =>
+          reject('cause' in error ? error.cause : error),
+        )
 
         curl.perform()
       },
@@ -238,7 +246,7 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
     const part = mime.addPart()
 
     part.setName('avatar')
-    part.setFilePath(imageFilePath)
+    part.setFileData(imageFilePath)
     part.setType('image/png')
     part.setFileName(customFilename)
 
@@ -255,7 +263,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
           resolve({ status, data: data as string })
         })
 
-        curl.on('error', reject)
+        curl.on('error', (error: Error) =>
+          reject('cause' in error ? error.cause : error),
+        )
 
         curl.perform()
       },
@@ -278,7 +288,7 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
     textPart.setData('User profile picture')
 
     const filePart = mime.addPart()
-    filePart.setName('file').setFilePath(imageFilePath).setType('image/png')
+    filePart.setName('file').setFileData(imageFilePath).setType('image/png')
 
     curl.setOpt('MIMEPOST', mime)
 
@@ -293,7 +303,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
           resolve({ status, data: data as string })
         })
 
-        curl.on('error', reject)
+        curl.on('error', (error: Error) =>
+          reject('cause' in error ? error.cause : error),
+        )
 
         curl.perform()
       },
@@ -354,10 +366,10 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
     const mime = new CurlMime(curl)
     const part = mime.addPart()
 
-    part.setFilePath(imageFilePath)
+    part.setFileData(imageFilePath)
 
     // Should not throw when resetting
-    part.setFilePath(null)
+    part.setFileData(null)
   })
 
   describe('Advanced Features', () => {
@@ -473,7 +485,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
             resolve({ status, data: data as string })
           })
 
-          curl.on('error', reject)
+          curl.on('error', (error: Error) =>
+            reject('cause' in error ? error.cause : error),
+          )
 
           curl.perform()
         },
@@ -485,6 +499,42 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
       expect(field).toBeDefined()
       expect(field!.value).toBe(testData)
       expect(field!.byteSize).toBe(Buffer.byteLength(testData))
+    })
+
+    it('should handle errors being thrown from read callback', async () => {
+      const mime = new CurlMime(curl)
+
+      let originalError: Error | null = null
+
+      const part = mime.addPart()
+      part.setName('callback_field')
+      part.setDataCallback(100, {
+        read: () => {
+          originalError = new Error('Test error')
+          throw originalError
+        },
+      })
+
+      curl.setOpt('MIMEPOST', mime)
+
+      await new Promise<void>((resolve, reject) => {
+        curl.on('end', () => {
+          reject(new Error('end called - request was not aborted by request'))
+        })
+
+        curl.on('error', (error: CurlEasyError) => {
+          try {
+            expect(error).toBeInstanceOf(CurlEasyError)
+            expect(error.cause).toBe(originalError)
+            expect(error.code).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+            resolve()
+          } catch (error) {
+            reject(error)
+          }
+        })
+
+        curl.perform()
+      })
     })
 
     it('should handle read callback with Buffer', async () => {
@@ -520,7 +570,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
             resolve({ status, data: data as string })
           })
 
-          curl.on('error', reject)
+          curl.on('error', (error: Error) =>
+            reject('cause' in error ? error.cause : error),
+          )
 
           curl.perform()
         },
@@ -574,7 +626,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
             resolve({ status, data: data as string })
           })
 
-          curl.on('error', reject)
+          curl.on('error', (error: Error) =>
+            reject('cause' in error ? error.cause : error),
+          )
 
           curl.perform()
         },
@@ -622,7 +676,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
             resolve({ status, data: data as string })
           })
 
-          curl.on('error', reject)
+          curl.on('error', (error: Error) =>
+            reject('cause' in error ? error.cause : error),
+          )
 
           curl.perform()
         },
@@ -711,7 +767,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
             }
             resolve({ status, data: data as string })
           })
-          curl.on('error', reject)
+          curl.on('error', (error: Error) =>
+            reject('cause' in error ? error.cause : error),
+          )
           curl.perform()
         },
       )
@@ -774,7 +832,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
           }
           resolve({ status, data: data as string })
         })
-        curl.on('error', reject)
+        curl.on('error', (error: Error) =>
+          reject('cause' in error ? error.cause : error),
+        )
         curl.perform()
       })
 
@@ -824,7 +884,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
           }
           resolve({ status, data: data as string })
         })
-        curl.on('error', reject)
+        curl.on('error', (error: Error) =>
+          reject('cause' in error ? error.cause : error),
+        )
         curl.perform()
       })
 
@@ -870,7 +932,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
           }
           resolve({ status, data: data as string })
         })
-        curl.on('error', reject)
+        curl.on('error', (error: Error) =>
+          reject('cause' in error ? error.cause : error),
+        )
         curl.perform()
       })
 
@@ -918,7 +982,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
           }
           resolve({ status, data: data as string })
         })
-        curl.on('error', reject)
+        curl.on('error', (error: Error) =>
+          reject('cause' in error ? error.cause : error),
+        )
         curl.perform()
       })
 
@@ -965,7 +1031,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
           }
           resolve({ status, data: data as string })
         })
-        curl.on('error', reject)
+        curl.on('error', (error: Error) =>
+          reject('cause' in error ? error.cause : error),
+        )
         curl.perform()
       })
 
@@ -1012,7 +1080,9 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
         // todo actually assert for error:
         // Request failed: Operation was aborted by an application callback
         // Serialized Error: { code: 42 }
-        curl.on('error', reject)
+        curl.on('error', (error: Error) =>
+          reject('cause' in error ? error.cause : error),
+        )
         curl.perform()
       })
 

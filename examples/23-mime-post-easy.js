@@ -37,7 +37,7 @@ fs.writeFileSync(documentFilename, documentContent)
 
 // Configure the Easy handle
 easy.setOpt('URL', url)
-easy.setOpt('VERBOSE', false)
+easy.setOpt('VERBOSE', true)
 
 // Use the high-level setMimePost method to build a multipart form
 // This method accepts an array of part specifications
@@ -59,7 +59,7 @@ easy.setMimePost([
   {
     type: 'file',
     name: 'avatar',
-    filePath: imageFilename,
+    file: imageFilename,
     mimeType: 'image/png',
     fileName: 'profile-picture.png',
   },
@@ -67,9 +67,9 @@ easy.setMimePost([
   {
     type: 'file',
     name: 'resume',
-    filePath: documentFilename,
+    file: documentFilename,
     mimeType: 'text/plain',
-    filename: 'resume.txt',
+    fileName: 'resume.txt',
   },
   // Stream upload (for large files or dynamic content)
   {
@@ -77,7 +77,7 @@ easy.setMimePost([
     name: 'logfile',
     stream: createReadStream(documentFilename),
     mimeType: 'text/plain',
-    filename: 'application.log',
+    fileName: 'application.log',
     size: documentContent.length, // Optional: size for Content-Length header
   },
   // Buffer data

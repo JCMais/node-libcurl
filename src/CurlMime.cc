@@ -113,6 +113,15 @@ Napi::Value CurlMime::AddPart(const Napi::CallbackInfo& info) {
   CurlMimePart* mimePart = CurlMimePart::Unwrap(mimePartObj);
   mimePart->part = part;
 
+  char* ptr = nullptr;
+  CURLcode code = curl_easy_getinfo(this->easyHandle, CURLINFO_PRIVATE, &ptr);
+  assert(code == CURLE_OK && "Error retrieving current handle instance.");
+
+  assert(ptr != nullptr && "Invalid handle returned from CURLINFO_PRIVATE.");
+  Easy* easyObj = reinterpret_cast<Easy*>(ptr);
+
+  mimePart->easy = easyObj;
+
   return mimePartObj;
 }
 
@@ -143,7 +152,7 @@ Napi::Function CurlMimePart::Init(Napi::Env env, Napi::Object exports) {
                       // Phase 1: Basic methods
                       InstanceMethod("setName", &CurlMimePart::SetName),
                       InstanceMethod("setData", &CurlMimePart::SetData),
-                      InstanceMethod("setFilePath", &CurlMimePart::SetFilePath),
+                      InstanceMethod("setFileData", &CurlMimePart::SetFileData),
                       InstanceMethod("setType", &CurlMimePart::SetType),
                       InstanceMethod("setFileName", &CurlMimePart::SetFileName),
 
@@ -164,7 +173,9 @@ Napi::Value CurlMimePart::SetName(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (this->part == nullptr) {
-    throw Napi::Error::New(env, "MIME part is not initialized");
+    throw Napi::Error::New(env,
+                           "MIME part is not initialized or its ownership was transferred to "
+                           "another part through setSubparts");
   }
 
   if (info.Length() < 1) {
@@ -198,7 +209,9 @@ Napi::Value CurlMimePart::SetData(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (this->part == nullptr) {
-    throw Napi::Error::New(env, "MIME part is not initialized");
+    throw Napi::Error::New(env,
+                           "MIME part is not initialized or its ownership was transferred to "
+                           "another part through setSubparts");
   }
 
   if (info.Length() < 1) {
@@ -235,15 +248,17 @@ Napi::Value CurlMimePart::SetData(const Napi::CallbackInfo& info) {
   return info.This();
 }
 
-Napi::Value CurlMimePart::SetFilePath(const Napi::CallbackInfo& info) {
+Napi::Value CurlMimePart::SetFileData(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (this->part == nullptr) {
-    throw Napi::Error::New(env, "MIME part is not initialized");
+    throw Napi::Error::New(env,
+                           "MIME part is not initialized or its ownership was transferred to "
+                           "another part through setSubparts");
   }
 
   if (info.Length() < 1) {
-    throw Napi::TypeError::New(env, "setFilePath expects 1 argument: filePath (string)");
+    throw Napi::TypeError::New(env, "setFileData expects 1 argument: filePath (string)");
   }
 
   if (info[0].IsNull() || info[0].IsUndefined()) {
@@ -273,7 +288,9 @@ Napi::Value CurlMimePart::SetType(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (this->part == nullptr) {
-    throw Napi::Error::New(env, "MIME part is not initialized");
+    throw Napi::Error::New(env,
+                           "MIME part is not initialized or its ownership was transferred to "
+                           "another part through setSubparts");
   }
 
   if (info.Length() < 1) {
@@ -307,7 +324,9 @@ Napi::Value CurlMimePart::SetFileName(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (this->part == nullptr) {
-    throw Napi::Error::New(env, "MIME part is not initialized");
+    throw Napi::Error::New(env,
+                           "MIME part is not initialized or its ownership was transferred to "
+                           "another part through setSubparts");
   }
 
   if (info.Length() < 1) {
@@ -341,7 +360,9 @@ Napi::Value CurlMimePart::SetEncoder(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (this->part == nullptr) {
-    throw Napi::Error::New(env, "MIME part is not initialized");
+    throw Napi::Error::New(env,
+                           "MIME part is not initialized or its ownership was transferred to "
+                           "another part through setSubparts");
   }
 
   if (info.Length() < 1) {
@@ -375,7 +396,9 @@ Napi::Value CurlMimePart::SetHeaders(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (this->part == nullptr) {
-    throw Napi::Error::New(env, "MIME part is not initialized");
+    throw Napi::Error::New(env,
+                           "MIME part is not initialized or its ownership was transferred to "
+                           "another part through setSubparts");
   }
 
   if (info.Length() < 1) {
@@ -424,7 +447,9 @@ Napi::Value CurlMimePart::SetSubparts(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (this->part == nullptr) {
-    throw Napi::Error::New(env, "MIME part is not initialized");
+    throw Napi::Error::New(env,
+                           "MIME part is not initialized or its ownership was transferred to "
+                           "another part through setSubparts");
   }
 
   if (info.Length() < 1) {
@@ -546,16 +571,13 @@ size_t CurlMimePart::StaticReadCallback(char* buffer, size_t size, size_t nitems
   Napi::HandleScope scope(env);
 
   try {
-    // Call the JavaScript read callback with size parameter
     size_t maxSize = size * nitems;
     Napi::Value result = part->readCallback.Call({Napi::Number::New(env, maxSize)});
 
-    // Handle null return (EOF)
     if (result.IsNull()) {
       return 0;
     }
 
-    // Handle Buffer return
     if (result.IsBuffer()) {
       Napi::Buffer<char> buf = result.As<Napi::Buffer<char>>();
       size_t len = buf.Length();
@@ -564,7 +586,6 @@ size_t CurlMimePart::StaticReadCallback(char* buffer, size_t size, size_t nitems
       return len;
     }
 
-    // Handle string return
     if (result.IsString()) {
       std::string str = result.As<Napi::String>().Utf8Value();
       size_t len = str.length();
@@ -573,10 +594,14 @@ size_t CurlMimePart::StaticReadCallback(char* buffer, size_t size, size_t nitems
       return len;
     }
 
+    if (result.IsNumber()) {
+      return result.As<Napi::Number>().Int32Value();
+    }
+
     // Invalid return type
     return CURL_READFUNC_ABORT;
-  } catch (const Napi::Error&) {
-    // Error in JS callback
+  } catch (const Napi::Error& error) {
+    part->easy->callbackError.Reset(error.Value());
     return CURL_READFUNC_ABORT;
   }
 }
@@ -602,7 +627,8 @@ int CurlMimePart::StaticSeekCallback(void* userdata, curl_off_t offset, int orig
     }
 
     return CURL_SEEKFUNC_FAIL;
-  } catch (const Napi::Error&) {
+  } catch (const Napi::Error& error) {
+    part->easy->callbackError.Reset(error.Value());
     return CURL_SEEKFUNC_FAIL;
   }
 }
