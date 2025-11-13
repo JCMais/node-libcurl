@@ -120,6 +120,12 @@ jobs:
 
             return { version, isPreRelease };
 
+      - name: Show result and wait for 30s
+        run: |
+          echo "Version: ${{ fromJson(steps.version-check.outputs.result).version }}"
+          echo "Is pre-release: ${{ fromJson(steps.version-check.outputs.result).isPreRelease }}"
+          sleep 30
+
       - name: Run lint
         run: pnpm lint
       - name: Run tsc
