@@ -31,6 +31,7 @@
         'src/Share.cc',
         'src/Multi.cc',
         'src/CurlHttpPost.cc',
+        'src/CurlMime.cc',
         'src/Curl.cc',
         'src/CurlError.cc',
         'src/CurlVersionInfo.cc',

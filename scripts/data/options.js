@@ -30,11 +30,15 @@ const optionKindMap = {
     'FNMATCH_FUNCTION',
     'HSTSREADFUNCTION',
     'HSTSWRITEFUNCTION',
+    'INTERLEAVEFUNCTION',
     'PREREQFUNCTION',
     'SEEKFUNCTION',
+    'SSH_HOSTKEYFUNCTION',
     'TRAILERFUNCTION',
     'SHARE',
     'HTTPPOST',
+    'STREAM_DEPENDS',
+    'STREAM_DEPENDS_E',
     // enums
     'FTP_SSL_CCC',
     'FTP_FILEMETHOD',
@@ -42,6 +46,8 @@ const optionKindMap = {
     'HEADEROPT',
     'HTTP_VERSION',
     'IPRESOLVE',
+    'MIMEPOST',
+    'MIME_OPTIONS',
     'NETRC',
     'PROTOCOLS',
     'PROXY_SSL_OPTIONS',
@@ -53,6 +59,7 @@ const optionKindMap = {
     'SSLVERSION',
     'TIMECONDITION',
     'USE_SSL',
+    'WS_OPTIONS',
     'HSTS_CTRL',
     // @TODO ADD REMAINING OPTIONS WE HAVE ENUM FOR
   ],
@@ -79,13 +86,20 @@ const optionKindValueMap = {
     '((this: Easy, options: { maxHostLengthBytes: number }) => null | CurlHstsCacheEntry | CurlHstsCacheEntry[])',
   HSTSWRITEFUNCTION:
     '((this: Easy, cacheEntry: CurlHstsCacheEntry, cacheCount: CurlHstsCacheCount) => any)',
+  INTERLEAVEFUNCTION:
+    '((this: Easy, data: Buffer, size: number, nmemb: number) => number)',
   PREREQFUNCTION:
     '((this: Easy, connPrimaryIp: string, connLocalIp: string, connPrimaryPort: number, conLocalPort: number) => CurlPreReqFunc)',
+  SSH_HOSTKEYFUNCTION:
+    '((this: Easy, keytype: CurlSshKeyType, key: Buffer) => CurlSshKeyMatch)',
   HTTPPOST: 'HttpPostField[]',
   TRAILERFUNCTION: '((this: Easy) => string[] | false)',
   /* @TODO Add CURL_SEEKFUNC_* type definitions */
   SEEKFUNCTION: '((this: Easy, offset: number, origin: number) => number)',
   SHARE: 'Share',
+  MIMEPOST: 'CurlMime',
+  STREAM_DEPENDS: 'Easy',
+  STREAM_DEPENDS_E: 'Easy',
 
   // enums
   FTP_SSL_CCC: 'CurlFtpSsl',
@@ -94,6 +108,7 @@ const optionKindValueMap = {
   HEADEROPT: 'CurlHeader',
   HTTP_VERSION: 'CurlHttpVersion',
   IPRESOLVE: 'CurlIpResolve',
+  MIME_OPTIONS: 'CurlMimeOpt',
   NETRC: 'CurlNetrc',
   PROTOCOLS: 'CurlProtocol',
   PROXY_SSL_OPTIONS: 'CurlSslOpt',
@@ -105,6 +120,7 @@ const optionKindValueMap = {
   SSLVERSION: 'CurlSslVersion',
   TIMECONDITION: 'CurlTimeCond',
   USE_SSL: 'CurlUseSsl',
+  WS_OPTIONS: 'CurlWsOptions',
   HSTS_CTRL: 'CurlHsts',
   _: 'string | number | boolean',
 }

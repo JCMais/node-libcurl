@@ -16,6 +16,7 @@
 #include "Curl.h"
 #include "CurlError.h"
 #include "CurlHttpPost.h"
+#include "CurlMime.h"
 #include "Easy.h"
 #include "LocaleGuard.h"
 #include "Share.h"
@@ -195,6 +196,7 @@ void Easy::ResetRequiredHandleOptions(bool isFromDuplicate) {
     curl_easy_setopt(this->ch, CURLOPT_CHUNK_DATA, this);
     curl_easy_setopt(this->ch, CURLOPT_DEBUGDATA, this);
     curl_easy_setopt(this->ch, CURLOPT_FNMATCH_DATA, this);
+    curl_easy_setopt(this->ch, CURLOPT_INTERLEAVEDATA, this);
     curl_easy_setopt(this->ch, CURLOPT_PROGRESSDATA, this);
 #if NODE_LIBCURL_VER_GE(7, 32, 0)
     curl_easy_setopt(this->ch, CURLOPT_XFERINFODATA, this);
@@ -205,6 +207,12 @@ void Easy::ResetRequiredHandleOptions(bool isFromDuplicate) {
 #if NODE_LIBCURL_VER_GE(7, 74, 0)
     curl_easy_setopt(this->ch, CURLOPT_HSTSREADDATA, this);
     curl_easy_setopt(this->ch, CURLOPT_HSTSWRITEDATA, this);
+#endif
+#if NODE_LIBCURL_VER_GE(7, 80, 0)
+    curl_easy_setopt(this->ch, CURLOPT_PREREQDATA, this);
+#endif
+#if NODE_LIBCURL_VER_GE(7, 84, 0)
+    curl_easy_setopt(this->ch, CURLOPT_SSH_HOSTKEYDATA, this);
 #endif
   }
 
@@ -592,6 +600,44 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
         this->toFree->post.push_back(std::move(httpPost));
       }
 
+#if NODE_LIBCURL_VER_GE(7, 56, 0)
+      // MIMEPOST is a special case, similar to HTTPPOST but takes a CurlMime object
+    } else if (optionId == CURLOPT_MIMEPOST) {
+      if (!value.IsObject()) {
+        throw Napi::TypeError::New(env, "MIMEPOST option value should be a CurlMime instance.");
+      }
+
+      auto mimeObj = value.As<Napi::Object>();
+
+      if (!mimeObj.InstanceOf(curl->CurlMimeConstructor.Value())) {
+        throw Napi::TypeError::New(env, "MIMEPOST option value must be a valid CurlMime instance.");
+      }
+
+      auto curlMime = CurlMime::Unwrap(mimeObj);
+
+      if (curlMime->mime == nullptr) {
+        throw Napi::TypeError::New(env, "MIMEPOST option value must be a valid CurlMime instance.");
+      }
+
+#if !NODE_LIBCURL_VER_GE(7, 86, 0)
+      // Before libcurl 7.86.0 (curl PR #9927), MIME structures are tied to the handle
+      // they were created with and cannot be shared between different handles
+      if (curlMime->easyHandle != this->ch) {
+        throw Napi::Error::New(
+            env,
+            "Cannot use MIME structure with a different handle. "
+            "This libcurl version (< 7.86.0) does not support MIME sharing between handles. "
+            "Create the MIME with the same handle you're using it with.");
+      }
+#endif
+
+      setOptRetCode = curl_easy_setopt(this->ch, CURLOPT_MIMEPOST, curlMime->mime);
+
+      if (setOptRetCode == CURLE_OK) {
+        this->toFree->mime.push_back(curlMime->mime);
+      }
+#endif
+
     } else {
       if (!value.IsArray()) {
         throw Napi::TypeError::New(env, "Option value must be an Array.");
@@ -785,6 +831,19 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
         }
         break;
 #endif
+      case CURLOPT_INTERLEAVEFUNCTION:
+        if (isNull) {
+          this->callbacks.erase(CURLOPT_INTERLEAVEFUNCTION);
+          curl_easy_setopt(this->ch, CURLOPT_INTERLEAVEDATA, NULL);
+          setOptRetCode = curl_easy_setopt(this->ch, CURLOPT_INTERLEAVEFUNCTION, NULL);
+        } else {
+          this->callbacks[CURLOPT_INTERLEAVEFUNCTION] =
+              Napi::Persistent(value.As<Napi::Function>());
+          curl_easy_setopt(this->ch, CURLOPT_INTERLEAVEDATA, this);
+          setOptRetCode =
+              curl_easy_setopt(this->ch, CURLOPT_INTERLEAVEFUNCTION, Easy::CbInterleave);
+        }
+        break;
 #if NODE_LIBCURL_VER_GE(7, 80, 0)
       case CURLOPT_PREREQFUNCTION:
         if (isNull) {
@@ -817,6 +876,21 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
           this->callbacks[CURLOPT_READFUNCTION] = Napi::Persistent(value.As<Napi::Function>());
         }
         break;
+#if NODE_LIBCURL_VER_GE(7, 84, 0)
+      case CURLOPT_SSH_HOSTKEYFUNCTION:
+        if (isNull) {
+          this->callbacks.erase(CURLOPT_SSH_HOSTKEYFUNCTION);
+          curl_easy_setopt(this->ch, CURLOPT_SSH_HOSTKEYDATA, NULL);
+          setOptRetCode = curl_easy_setopt(this->ch, CURLOPT_SSH_HOSTKEYFUNCTION, NULL);
+        } else {
+          this->callbacks[CURLOPT_SSH_HOSTKEYFUNCTION] =
+              Napi::Persistent(value.As<Napi::Function>());
+          curl_easy_setopt(this->ch, CURLOPT_SSH_HOSTKEYDATA, this);
+          setOptRetCode =
+              curl_easy_setopt(this->ch, CURLOPT_SSH_HOSTKEYFUNCTION, Easy::CbSshHostKey);
+        }
+        break;
+#endif
       case CURLOPT_SEEKFUNCTION:
         setOptRetCode = CURLE_OK;
         if (isNull) {
@@ -2382,6 +2456,109 @@ int Easy::CbTrailer(struct curl_slist** headerList, void* userdata) {
   }
 #else
   return 0;
+#endif
+}
+
+size_t Easy::CbInterleave(void* ptr, size_t size, size_t nmemb, void* userdata) {
+  Easy* obj = static_cast<Easy*>(userdata);
+
+  assert(obj);
+
+  // Check if we have an INTERLEAVE callback
+  auto it = obj->callbacks.find(CURLOPT_INTERLEAVEFUNCTION);
+  assert(it != obj->callbacks.end() && "INTERLEAVE callback not set.");
+
+  size_t realSize = size * nmemb;
+  size_t returnValue = realSize;
+
+  try {
+    Napi::Env env = obj->Env();
+    Napi::HandleScope scope(env);
+
+    Napi::Function cb = it->second.Value();
+
+    Napi::Buffer<char> bufferArg = Napi::Buffer<char>::Copy(env, static_cast<char*>(ptr), realSize);
+    Napi::Number sizeArg = Napi::Number::New(env, static_cast<double>(size));
+    Napi::Number nmembArg = Napi::Number::New(env, static_cast<double>(nmemb));
+
+    Napi::AsyncContext asyncContext(env, "Easy::CbInterleave");
+
+    Napi::Value result =
+        cb.MakeCallback(obj->Value(), {bufferArg, sizeArg, nmembArg}, asyncContext);
+
+    if (env.IsExceptionPending()) {
+      Napi::Error error = env.GetAndClearPendingException();
+      obj->throwErrorMultiInterfaceAware(error);
+      return 0;
+    }
+
+    if (result.IsEmpty() || !result.IsNumber()) {
+      Napi::TypeError typeError = Napi::TypeError::New(
+          env, "Return value from the INTERLEAVE callback must be an integer.");
+      obj->throwErrorMultiInterfaceAware(typeError);
+      return 0;
+    } else {
+      returnValue = result.As<Napi::Number>().Int64Value();
+    }
+
+  } catch (const Napi::Error& e) {
+    obj->throwErrorMultiInterfaceAware(e);
+    return 0;
+  }
+
+  return returnValue;
+}
+
+int Easy::CbSshHostKey(void* clientp, int keytype, const char* key, size_t keylen) {
+#if NODE_LIBCURL_VER_GE(7, 84, 0)
+  Easy* obj = static_cast<Easy*>(clientp);
+
+  assert(obj);
+
+  // Check if we have an SSH_HOSTKEYFUNCTION callback
+  auto it = obj->callbacks.find(CURLOPT_SSH_HOSTKEYFUNCTION);
+  assert(it != obj->callbacks.end() && "SSH_HOSTKEYFUNCTION callback not set.");
+
+  int returnValue = 1;  // Default to CURLKHMATCH_MISMATCH
+
+  try {
+    Napi::Env env = obj->Env();
+    Napi::HandleScope scope(env);
+
+    Napi::Function cb = it->second.Value();
+
+    Napi::Number keytypeArg = Napi::Number::New(env, static_cast<int32_t>(keytype));
+    Napi::Buffer<char> keyArg = Napi::Buffer<char>::Copy(env, key, keylen);
+
+    Napi::AsyncContext asyncContext(env, "Easy::CbSshHostKey");
+
+    Napi::Value result = cb.MakeCallback(obj->Value(), {keytypeArg, keyArg}, asyncContext);
+
+    if (env.IsExceptionPending()) {
+      Napi::Error error = env.GetAndClearPendingException();
+      obj->throwErrorMultiInterfaceAware(error);
+      return 1;  // CURLKHMATCH_MISMATCH
+    }
+
+    if (result.IsEmpty() || !result.IsNumber()) {
+      Napi::TypeError typeError =
+          Napi::TypeError::New(env,
+                               "Return value from the SSH_HOSTKEYFUNCTION callback must be an "
+                               "integer (CurlSshKeyMatch).");
+      obj->throwErrorMultiInterfaceAware(typeError);
+      return 1;  // CURLKHMATCH_MISMATCH
+    } else {
+      returnValue = result.As<Napi::Number>().Int32Value();
+    }
+
+  } catch (const Napi::Error& e) {
+    obj->throwErrorMultiInterfaceAware(e);
+    return 1;  // CURLKHMATCH_MISMATCH
+  }
+
+  return returnValue;
+#else
+  return 1;  // CURLKHMATCH_MISMATCH
 #endif
 }
 

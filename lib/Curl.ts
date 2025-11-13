@@ -17,6 +17,7 @@ import { NodeLibcurlNativeBinding, FileInfo, HttpPostField } from './types'
 import { Easy } from './Easy'
 import { Multi } from './Multi'
 import { Share } from './Share'
+import { CurlMime } from './CurlMime'
 import { mergeChunks } from './mergeChunks'
 import { parseHeaders, HeaderInfo } from './parseHeaders'
 import {
@@ -46,6 +47,7 @@ import {
 import { CurlHttpVersion } from './enum/CurlHttpVersion'
 import { CurlInfoDebug } from './enum/CurlInfoDebug'
 import { CurlIpResolve } from './enum/CurlIpResolve'
+import { CurlMimeOpt } from './enum/CurlMimeOpt'
 import { CurlNetrc } from './enum/CurlNetrc'
 import { CurlPause } from './enum/CurlPause'
 import { CurlPreReqFunc } from './enum/CurlPreReqFunc'
@@ -54,13 +56,16 @@ import { CurlProtocol } from './enum/CurlProtocol'
 import { CurlProxy } from './enum/CurlProxy'
 import { CurlRtspRequest } from './enum/CurlRtspRequest'
 import { CurlSshAuth } from './enum/CurlSshAuth'
+import { CurlSshKeyType, CurlSshKeyMatch } from './enum/CurlSshKey'
 import { CurlSslOpt } from './enum/CurlSslOpt'
 import { CurlSslVersion } from './enum/CurlSslVersion'
 import { CurlTimeCond } from './enum/CurlTimeCond'
 import { CurlUseSsl } from './enum/CurlUseSsl'
 import { CurlWriteFunc } from './enum/CurlWriteFunc'
 import { CurlReadFunc } from './enum/CurlReadFunc'
+import { CurlWsOptions } from './enum/CurlWs'
 import { CurlInfoNameSpecific, GetInfoReturn } from './Easy'
+import { CurlyMimePart } from './CurlyMimeTypes'
 
 const bindings: typeof NodeLibcurlNativeBinding = require('../lib/binding/node_libcurl.node')
 
@@ -162,9 +167,9 @@ class Curl extends EventEmitter {
   }
 
   /**
-   * Internal Easy handle being used
+   * The internal Easy handle being used
    */
-  protected handle: Easy
+  readonly handle: Easy
 
   /**
    * Optional Multi instance to use for performing requests.
@@ -848,6 +853,23 @@ class Curl extends EventEmitter {
   }
 
   /**
+   * Build and set a MIME structure from a declarative configuration.
+   *
+   * This method delegates to {@link Easy.setMimePost | `Easy.setMimePost`} on the
+   * internal {@link Easy | `Easy`} handle, which builds a {@link CurlMime} structure
+   * from the provided part specifications and sets it using the `MIMEPOST` option.
+   *
+   * Available since libcurl 7.56.0.
+   *
+   * @param parts Array of MIME part specifications
+   * @returns This Curl instance for method chaining
+   */
+  setMimePost(parts: CurlyMimePart[]): this {
+    this.handle.setMimePost(parts)
+    return this
+  }
+
+  /**
    * Close this handle.
    *
    * **NOTE:** After closing the handle, it must not be used anymore. Doing so will throw an error.
@@ -1364,6 +1386,18 @@ interface Curl {
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(
+    option: 'INTERLEAVEFUNCTION',
+    value:
+      | ((this: Easy, data: Buffer, size: number, nmemb: number) => number)
+      | null,
+  ): this
+  /**
+   * Use {@link Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(
     option: 'PREREQFUNCTION',
     value:
       | ((
@@ -1392,6 +1426,18 @@ interface Curl {
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(
+    option: 'SSH_HOSTKEYFUNCTION',
+    value:
+      | ((this: Easy, keytype: CurlSshKeyType, key: Buffer) => CurlSshKeyMatch)
+      | null,
+  ): this
+  /**
+   * Use {@link Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(
     option: 'TRAILERFUNCTION',
     value: ((this: Easy) => string[] | false) | null,
   ): this
@@ -1409,6 +1455,20 @@ interface Curl {
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'HTTPPOST', value: HttpPostField[] | null): this
+  /**
+   * Use {@link Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'STREAM_DEPENDS', value: Easy | null): this
+  /**
+   * Use {@link Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'STREAM_DEPENDS_E', value: Easy | null): this
   /**
    * Use {@link Curl.option|`Curl.option`} for predefined constants.
    *
@@ -1451,6 +1511,20 @@ interface Curl {
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'IPRESOLVE', value: CurlIpResolve | null): this
+  /**
+   * Use {@link Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'MIMEPOST', value: CurlMime | null): this
+  /**
+   * Use {@link Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'MIME_OPTIONS', value: CurlMimeOpt | null): this
   /**
    * Use {@link Curl.option|`Curl.option`} for predefined constants.
    *
@@ -1528,6 +1602,13 @@ interface Curl {
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'USE_SSL', value: CurlUseSsl | null): this
+  /**
+   * Use {@link Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'WS_OPTIONS', value: CurlWsOptions | null): this
   /**
    * Use {@link Curl.option|`Curl.option`} for predefined constants.
    *

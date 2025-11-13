@@ -49,6 +49,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `CurlWsFrame` interface for frame metadata (age, flags, offset, bytesleft, len)
   - Support for CONNECT_ONLY mode with value 2 for WebSocket connections
   - See `examples/21-websockets-native.js` for usage example
+- Added MIME API support for modern multipart form data (replaces deprecated HTTPPOST):
+  - `CurlMime` class for creating multipart MIME structures
+  - `CurlMimePart` class for individual MIME parts
+  - `Easy.setMimePost(mime)` and `Curl.setMimePost(mime)` methods for setting MIME data
+  - `curlyMimePost` option for simplified multipart uploads in curly
+  - `CurlMimeOpt` enum for MIME options (FormEscape)
+  - Added `CURLOPT_MIME_OPTIONS` and `CURLOPT_MIMEPOST` options
+  - See `examples/23-mime-post-easy.js` for usage example
+- Added SSH host key verification support (requires libcurl >= 7.84.0):
+  - `CURLOPT_SSH_HOSTKEYFUNCTION` callback for custom host key verification
+  - `CURLOPT_SSH_HOST_PUBLIC_KEY_SHA256` option for SHA256 fingerprint verification
+  - `CurlSshKeyType` enum for SSH host key types (Unknown, Rsa, Dss, Ecdsa, Ed25519)
+  - `CurlSshKeyMatch` enum for SSH host key verification results (Ok, Mismatch)
+- Added HTTP/2 stream priority support:
+  - `CURLOPT_STREAM_DEPENDS` - Set stream dependency
+  - `CURLOPT_STREAM_DEPENDS_E` - Set stream dependency (exclusive)
+  - `CURLOPT_STREAM_WEIGHT` - Set stream weight for resource allocation
+- Added `CURLOPT_INTERLEAVEFUNCTION` callback for handling RTSP interleaved data
 - Added new `Multi.perform` method for adding `Easy` instances to a `Multi` instance. This will eventually replace the `Multi.addHandle` and `Multi.onMessage` methods, which are now deprecated.
 - Added the following new enums:
   - `CurlFollow`
@@ -73,6 +91,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - https://curl.se/libcurl/c/CURLOPT_TCP_KEEPCNT.html
   - https://curl.se/libcurl/c/CURLOPT_UPLOAD_FLAGS.html
   - https://curl.se/libcurl/c/CURLOPT_SSL_SIGNATURE_ALGORITHMS.html
+  - https://curl.se/libcurl/c/CURLOPT_WS_OPTIONS.html
 - Added following info options:
   - https://curl.se/libcurl/c/CURLINFO_CONN_ID.html
   - https://curl.se/libcurl/c/CURLINFO_XFER_ID.html
@@ -85,6 +104,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added the following multi options:
   - https://curl.se/libcurl/c/CURLMOPT_NETWORK_CHANGED.html
 - Added `Curl.id`, `Easy.id`, `Multi.id`, and `Share.id` properties, which return the unique ID of each instance. The value is unique across threads.
+- There are build attestations for the prebuilt binaries now, which can be used to verify the authenticity of the binaries.
 
 ### Changed  
 - `CurlGlobalInit` enum is deprecated and should not be used.

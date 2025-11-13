@@ -14,6 +14,7 @@
 #include "Curl.h"
 #include "CurlError.h"
 #include "CurlHttpPost.h"
+#include "CurlMime.h"
 #include "CurlVersionInfo.h"
 #include "Easy.h"
 #include "Http2PushFrameHeaders.h"
@@ -344,6 +345,9 @@ const std::vector<CurlConstant> curlOptionLinkedList = {
     {"HTTP200ALIASES", CURLOPT_HTTP200ALIASES},
     {"HTTPHEADER", CURLOPT_HTTPHEADER},
     {"HTTPPOST", CURLOPT_HTTPPOST},
+#if NODE_LIBCURL_VER_GE(7, 56, 0)
+    {"MIMEPOST", CURLOPT_MIMEPOST},
+#endif
     {"MAIL_RCPT", CURLOPT_MAIL_RCPT},
 
 #if NODE_LIBCURL_VER_GE(7, 37, 0)
@@ -837,6 +841,10 @@ Curl::Curl(Napi::Env env, Napi::Object exports) : env(env), addonAllocatedMemory
   this->ShareConstructor = Napi::Persistent(Share::Init(env, exports));
   this->Http2PushFrameHeadersConstructor =
       Napi::Persistent(Http2PushFrameHeaders::Init(env, exports));
+#if NODE_LIBCURL_VER_GE(7, 56, 0)
+  this->CurlMimeConstructor = Napi::Persistent(CurlMime::Init(env, exports));
+  this->CurlMimePartConstructor = Napi::Persistent(CurlMimePart::Init(env, exports));
+#endif
 
   // This is setup on moduleSetup.ts
   this->CurlEasyErrorConstructor = Napi::Persistent(CurlError::InitCurlEasyError(env));

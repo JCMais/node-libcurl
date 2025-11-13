@@ -7,6 +7,7 @@
 import './moduleSetup'
 
 import { Share } from './Share'
+import { CurlMime } from './CurlMime'
 import {
   CurlOptionName,
   DataCallbackOptions,
@@ -16,6 +17,7 @@ import {
   SpecificOptions,
 } from './generated/CurlOption'
 import { CurlInfoName } from './generated/CurlInfo'
+import { CurlyMimePart } from './CurlyMimeTypes'
 
 import { CurlChunk } from './enum/CurlChunk'
 import { CurlCode } from './enum/CurlCode'
@@ -32,6 +34,7 @@ import {
 import { CurlHttpVersion } from './enum/CurlHttpVersion'
 import { CurlInfoDebug } from './enum/CurlInfoDebug'
 import { CurlIpResolve } from './enum/CurlIpResolve'
+import { CurlMimeOpt } from './enum/CurlMimeOpt'
 import { CurlNetrc } from './enum/CurlNetrc'
 import { CurlPause } from './enum/CurlPause'
 import { CurlPreReqFunc } from './enum/CurlPreReqFunc'
@@ -40,10 +43,12 @@ import { CurlProtocol } from './enum/CurlProtocol'
 import { CurlProxy } from './enum/CurlProxy'
 import { CurlRtspRequest } from './enum/CurlRtspRequest'
 import { CurlSshAuth } from './enum/CurlSshAuth'
+import { CurlSshKeyType, CurlSshKeyMatch } from './enum/CurlSshKey'
 import { CurlSslOpt } from './enum/CurlSslOpt'
 import { CurlSslVersion } from './enum/CurlSslVersion'
 import { CurlTimeCond } from './enum/CurlTimeCond'
 import { CurlUseSsl } from './enum/CurlUseSsl'
+import { CurlWsOptions } from './enum/CurlWs'
 import { SocketState } from './enum/SocketState'
 
 import { Curl } from './Curl'
@@ -275,6 +280,18 @@ declare class Easy {
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(
+    option: 'INTERLEAVEFUNCTION',
+    value:
+      | ((this: Easy, data: Buffer, size: number, nmemb: number) => number)
+      | null,
+  ): CurlCode
+  /**
+   * Use {@link Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(
     option: 'PREREQFUNCTION',
     value:
       | ((
@@ -303,6 +320,18 @@ declare class Easy {
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(
+    option: 'SSH_HOSTKEYFUNCTION',
+    value:
+      | ((this: Easy, keytype: CurlSshKeyType, key: Buffer) => CurlSshKeyMatch)
+      | null,
+  ): CurlCode
+  /**
+   * Use {@link Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(
     option: 'TRAILERFUNCTION',
     value: ((this: Easy) => string[] | false) | null,
   ): CurlCode
@@ -320,6 +349,20 @@ declare class Easy {
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'HTTPPOST', value: HttpPostField[] | null): CurlCode
+  /**
+   * Use {@link Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'STREAM_DEPENDS', value: Easy | null): CurlCode
+  /**
+   * Use {@link Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'STREAM_DEPENDS_E', value: Easy | null): CurlCode
   /**
    * Use {@link Curl.option|`Curl.option`} for predefined constants.
    *
@@ -362,6 +405,20 @@ declare class Easy {
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'IPRESOLVE', value: CurlIpResolve | null): CurlCode
+  /**
+   * Use {@link Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'MIMEPOST', value: CurlMime | null): CurlCode
+  /**
+   * Use {@link Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'MIME_OPTIONS', value: CurlMimeOpt | null): CurlCode
   /**
    * Use {@link Curl.option|`Curl.option`} for predefined constants.
    *
@@ -439,6 +496,13 @@ declare class Easy {
    * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
    */
   setOpt(option: 'USE_SSL', value: CurlUseSsl | null): CurlCode
+  /**
+   * Use {@link Curl.option|`Curl.option`} for predefined constants.
+   *
+   *
+   * Official libcurl documentation: [`curl_easy_setopt()`](http://curl.haxx.se/libcurl/c/curl_easy_setopt.html)
+   */
+  setOpt(option: 'WS_OPTIONS', value: CurlWsOptions | null): CurlCode
   /**
    * Use {@link Curl.option|`Curl.option`} for predefined constants.
    *
@@ -631,6 +695,23 @@ declare class Easy {
   unmonitorSocketEvents(): this
 
   /**
+   * Build and set a MIME structure from a declarative configuration.
+   *
+   * This is a high-level method that accepts an array of MIME part specifications
+   * and internally builds a {@link CurlMime} structure, then sets it using the
+   * `MIMEPOST` option. This is the recommended way to create multipart form data.
+   *
+   * For stream-based parts, the unpause callback is automatically generated,
+   * so you don't need to provide it.
+   *
+   * Available since libcurl 7.56.0.
+   *
+   * @param parts Array of MIME part specifications
+   * @returns This Easy instance for method chaining
+   */
+  setMimePost(parts: CurlyMimePart[]): this
+
+  /**
    * Close this handle and dispose any resources bound to it.
    * After closed, the handle **MUST** not be used again, doing so will throw an Error.
    *
@@ -653,5 +734,129 @@ const bindings: any = require('../lib/binding/node_libcurl.node')
 
 // @ts-expect-error - we are abusing TS merging here to have sane types for the addon classes
 const Easy = bindings.Easy as Easy
+
+/**
+ * Build and set a MIME structure from a declarative configuration.
+ *
+ * This is a high-level method that accepts an array of MIME part specifications
+ * and internally builds a {@link CurlMime} structure, then sets it using the
+ * `MIMEPOST` option. This is the recommended way to create multipart form data.
+ *
+ * @remarks
+ * For stream-based parts, you must provide the unpause callback that will be
+ * called when more data is available. The callback should unpause the transfer
+ * using `handle.pause(handle.pauseFlags & ~CurlPause.Recv)`.
+ *
+ * Available since libcurl 7.56.0.
+ *
+ * @example
+ * ```typescript
+ * import { Easy, CurlPause } from 'node-libcurl'
+ * import { createReadStream } from 'fs'
+ *
+ * const easy = new Easy()
+ * easy.setOpt('URL', 'https://httpbin.org/post')
+ *
+ * easy.setMimePost([
+ *   {
+ *     type: 'data',
+ *     name: 'username',
+ *     data: 'john_doe'
+ *   },
+ *   {
+ *     type: 'file',
+ *     name: 'document',
+ *     filePath: '/path/to/document.pdf',
+ *     mimeType: 'application/pdf'
+ *   },
+ *   {
+ *     type: 'stream',
+ *     name: 'logfile',
+ *     stream: createReadStream('/path/to/log.txt'),
+ *     unpause: () => {
+ *       easy.pause(easy.pauseFlags & ~CurlPause.Recv)
+ *     },
+ *     size: 12345
+ *   },
+ *   {
+ *     type: 'subparts',
+ *     name: 'metadata',
+ *     parts: [
+ *       {
+ *         type: 'data',
+ *         name: 'description',
+ *         data: 'A nested part containing metadata fields.'
+ *       },
+ *       {
+ *         type: 'data',
+ *         name: 'notes',
+ *         data: 'Additional details about the upload'
+ *       }
+ *     ]
+ *   }
+ * ])
+ * ```
+ *
+ * @param parts Array of MIME part specifications
+ * @returns This Easy instance for method chaining
+ */
+Easy.prototype.setMimePost = function (
+  this: Easy,
+  parts: CurlyMimePart[],
+): Easy {
+  const mime = new CurlMime(this)
+
+  // Helper function to recursively build MIME parts
+  const buildMimePart = (
+    parentMime: CurlMime,
+    partSpec: CurlyMimePart,
+  ): void => {
+    const part = parentMime.addPart()
+    part.setName(partSpec.name)
+
+    // Set common properties
+    if (partSpec.mimeType) part.setType(partSpec.mimeType)
+    if (partSpec.fileName) part.setFileName(partSpec.fileName)
+    if (partSpec.encoder) part.setEncoder(partSpec.encoder)
+    if (partSpec.headers) part.setHeaders(partSpec.headers)
+
+    // Handle type-specific properties
+    switch (partSpec.type) {
+      case 'data':
+        part.setData(partSpec.data)
+        break
+      case 'file':
+        part.setFilePath(partSpec.filePath)
+        break
+      case 'stream':
+        part.setDataStream(
+          partSpec.stream,
+          () => {
+            this.pause(this.pauseFlags & ~CurlPause.Recv)
+          },
+          partSpec.size,
+        )
+        break
+      case 'subparts':
+        // Recursive case: create nested MIME structure
+        const subMime = new CurlMime(this)
+        for (const subPartSpec of partSpec.parts) {
+          buildMimePart(subMime, subPartSpec)
+        }
+        part.setSubparts(subMime)
+        break
+    }
+  }
+
+  // Build all MIME parts
+  for (const partSpec of parts) {
+    buildMimePart(mime, partSpec)
+  }
+
+  // Set the MIME structure on the handle
+  this.setOpt('MIMEPOST', mime)
+
+  return this
+}
 
 export { Easy }

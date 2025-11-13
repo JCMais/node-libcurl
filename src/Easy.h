@@ -140,6 +140,8 @@ class Easy : public Napi::ObjectWrap<Easy> {
   static int CbPreReq(void* clientp, char* conn_primary_ip, char* conn_local_ip,
                       int conn_primary_port, int conn_local_port);
   static int CbTrailer(struct curl_slist** headerList, void* userdata);
+  static size_t CbInterleave(void* ptr, size_t size, size_t nmemb, void* userdata);
+  static int CbSshHostKey(void* clientp, int keytype, const char* key, size_t keylen);
 
   // libuv callbacks
   static void OnSocket(uv_poll_t* handle, int status, int events);
