@@ -137,6 +137,11 @@ jobs:
       - name: Push Commit and Tags
         run: git push origin --follow-tags
 
+      - name: Get latest SHA
+        id: get-latest-sha
+        run: |
+          echo "latest-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       # Use https://github.com/changesets/changesets eventually
       - name: Create release
         env:
@@ -148,7 +153,7 @@ jobs:
           gh release create v$VERSION \
             --fail-on-no-commits \
             --verify-tag \
-            --target=${{ github.ref_name }} \
+            --target=${{ steps.get-latest-sha.outputs.latest-sha }} \
             --prerelease=$IS_PRE_RELEASE \
             --latest=$IS_LATEST \
             --title=v$VERSION
