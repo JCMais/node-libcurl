@@ -120,11 +120,11 @@ jobs:
 
             return { version, isPreRelease };
 
-      - name: Show result and wait for 30s
+      - name: Show result and wait
         run: |
           echo "Version: ${{ fromJson(steps.version-check.outputs.result).version }}"
           echo "Is pre-release: ${{ fromJson(steps.version-check.outputs.result).isPreRelease }}"
-          sleep 30
+          sleep 15
 
       - name: Run lint
         run: pnpm lint
@@ -155,8 +155,8 @@ jobs:
       - name: Ensure clean git state
         run: git diff --exit-code
 
-      - name: Sleep for 1 minute
-        run: sleep 60
+      - name: Wait
+        run: sleep 15
 
       - name: Publish to NPM
         env:
