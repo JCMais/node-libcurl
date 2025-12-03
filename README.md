@@ -418,6 +418,60 @@ The `/usr/include` is now available on `$(xcrun --show-sdk-path)/usr/include`. T
 npm_config_curl_include_dirs="$(xcrun --show-sdk-path)/usr/include" yarn add node-libcurl
 ```
 
+#### Homebrew
+
+In the case you got
+```
+error: use of undeclared identifier 'curl_ws_start_frame'; did you mean 'curl_ws_frame'?
+```
+
+It means your system is using the macOS SDK's libcurl headers, which are outdated (version below 8.16, which requireds for WebSocket support).
+
+You must use `curl` install via Homebrew, you can use the following steps to make sure the system picks up the Homebrew `curl` headers/libs when building from source.
+
+1. Install `curl` with Homebrew (if you don't already have it):
+
+```bash
+brew install curl
+```
+
+2. Add Homebrew's `curl` to your environment so build tools can find headers, libraries and `curl-config`:
+
+```zsh
+export PATH="$(brew --prefix curl)/bin:$PATH" # optional
+
+export CPPFLAGS="-I$(brew --prefix curl)/include"
+export LDFLAGS="-L$(brew --prefix curl)/lib"
+export PKG_CONFIG_PATH="$(brew --prefix curl)/lib/pkgconfig"
+```
+
+Note: On Intel macs Homebrew is typically installed under `/usr/local` and on Apple Silicon under `/opt/homebrew`. Using `$(brew --prefix curl)` is the most portable option across both architectures.
+
+3. Build & install `node-libcurl` from source.
+
+Optional: remove a previously installed local copy of `node-libcurl` first to ensure a clean build:
+
+```zsh
+# remove previously installed copy (local environment only)
+rm -rf node_modules/node-libcurl
+```
+
+Then build from source. Depending on your macOS Xcode/CLT version you may need to also point to the SDK's `/usr/include` directory:
+
+If you prefer to explicitly use the Homebrew-installed `curl` headers instead of the SDK include path, you can use:
+
+```zsh
+npm_config_curl_include_dirs="$(brew --prefix curl)/include" npm_config_curl_libraries="-L$(brew --prefix curl)/lib -lcurl" npm install node-libcurl --build-from-source
+```
+
+Or if you want to use the SDK's include path:
+```zsh
+# build & install
+npm_config_curl_include_dirs="$(xcrun --show-sdk-path)/usr/include" npm install node-libcurl --build-from-source
+```
+
+This should allow your machine to build the addon using the Homebrew `curl` installation.
+
 ### Building on Windows
 
 If installing using a prebuilt binary you only need to have the [visual c++ 2017 runtime library](https://visualstudio.microsoft.com/downloads/#microsoft-visual-c-redistributable-for-visual-studio-2017).
