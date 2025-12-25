@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Breaking Change
 
 ### Fixed
+- Fixed the types on the `FileInfo` object. With 5.0.0, the properties were changed to be all in lowercase, to follow the libcurl struct more closely.
 
 ### Added
 
@@ -38,6 +39,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Ubuntu >= v22.04.
   - Alpine >= 3.21
   - C++ compilers supporting c++20
+- The `FileInfo` object properties are now all in lowercase, to follow the libcurl struct more closely.
 - Errors thrown by the addon are now instances of one of the following classes:
   - `CurlEasyError`
   - `CurlMultiError`
