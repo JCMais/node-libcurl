@@ -9,11 +9,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Breaking Change
 
 ### Fixed
-- Fixed the types on the `FileInfo` object. With 5.0.0, the properties were changed to be all in lowercase, to follow the libcurl struct more closely.
 
 ### Added
 
 ### Changed
+
+## [5.0.2] - 2026-01-15
+
+### Fixed
+- Fixed the types on the `FileInfo` object. With 5.0.0, the properties were changed to be all in lowercase, to follow the libcurl struct more closely.
 
 ## [5.0.1] - 2025-11-13
 
@@ -508,7 +512,8 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v5.0.1...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v5.0.2...HEAD
+[5.0.2]: https://github.com/JCMais/node-libcurl/compare/v5.0.1...v5.0.2
 [5.0.1]: https://github.com/JCMais/node-libcurl/compare/v5.0.0...v5.0.1
 [5.0.0]: https://github.com/JCMais/node-libcurl/compare/v4.1.0...v5.0.0
 [4.1.0]: https://github.com/JCMais/node-libcurl/compare/v4.0.0...v4.1.0
