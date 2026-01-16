@@ -14,5 +14,6 @@ $ARGUMENTS <version>
 4. Merge develop into master
 5. Open CHANGELOG.md and update the unreleased section with the new version (if not specified, use your tool to ask the user for the version).
 6. Create a new Unreleased section with all sub-sections for a changelog entry: Breaking Change, Fixed, Added, Changed.
-7. Commit the changes with the message "chore: prepare release <version>".
-8. Push the changes to the remote repository.
+7. Make sure you update the version link all the way at the bottom of the CHANGELOG.md file.
+8. Commit the changes with the message "chore: prepare release <version>".
+9. Push the changes to the remote repository.
