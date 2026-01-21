@@ -38,8 +38,8 @@ jobs:
         uses: ./.github/actions/install-system-packages
 
       # See https://github.com/nodejs/node/issues/40537
-      - name: Enforce IPv4 Connectivity
-        uses: ./.github/actions/force-ipv4
+      # - name: Enforce IPv4 Connectivity
+      #   uses: ./.github/actions/force-ipv4
 
       # PNPM / Node.js
       - name: Setup Node and PNPM
