@@ -104,3 +104,12 @@ export {
   HttpPostField,
   CurlVersionInfoNativeBindingObject,
 } from './types'
+
+// curl-impersonate support
+export {
+  BrowserType,
+  normalizeBrowserType,
+  applyImpersonateOptions,
+  impersonate,
+  getSupportedTargets,
+} from './impersonate'

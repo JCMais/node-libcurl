@@ -712,6 +712,28 @@ declare class Easy {
   setMimePost(parts: CurlyMimePart[]): this
 
   /**
+   * Impersonate a specific browser's TLS fingerprint and HTTP/2 settings.
+   *
+   * Requires building node-libcurl against libcurl-impersonate with the
+   * `CURL_IMPERSONATE` preprocessor define set.
+   *
+   * @param target - Browser target (e.g. `'chrome131'`, `'firefox135'`, `'safari2601'`)
+   * @param defaultHeaders - Whether to automatically set browser-appropriate default headers (default: `true`)
+   * @returns `0` on success, non-zero {@link CurlCode} on failure.
+   *   Returns `CURLE_NOT_BUILT_IN` (4) if not built against libcurl-impersonate.
+   *
+   * @example
+   * ```typescript
+   * import { Easy } from 'node-libcurl'
+   * const easy = new Easy()
+   * easy.impersonate('chrome131')
+   * easy.setOpt('URL', 'https://tls.peet.ws/api/all')
+   * easy.perform()
+   * ```
+   */
+  impersonate(target: string, defaultHeaders?: boolean): CurlCode
+
+  /**
    * Close this handle and dispose any resources bound to it.
    * After closed, the handle **MUST** not be used again, doing so will throw an Error.
    *

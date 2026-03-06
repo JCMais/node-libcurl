@@ -335,6 +335,24 @@ const std::vector<CurlConstant> curlOptionInteger = {
 #if NODE_LIBCURL_VER_GE(7, 59, 0)
     {"TIMEVALUE_LARGE", CURLOPT_TIMEVALUE_LARGE},
 #endif
+
+    // Standard libcurl options previously marked not-implemented, re-enabled for impersonate support
+    {"STREAM_WEIGHT", CURLOPT_STREAM_WEIGHT},
+
+    // curl-impersonate specific options (libcurl-impersonate extensions)
+    // See: https://github.com/lwthiker/curl-impersonate
+    {"HTTP2_NO_PRIORITY", static_cast<CURLoption>(1021)},
+    {"HTTP2_WINDOW_UPDATE", static_cast<CURLoption>(1008)},
+    {"SSL_ENABLE_ALPS", static_cast<CURLoption>(1002)},
+    {"SSL_ENABLE_TICKET", static_cast<CURLoption>(1004)},
+    {"SSL_PERMUTE_EXTENSIONS", static_cast<CURLoption>(1007)},
+    {"STREAM_EXCLUSIVE", static_cast<CURLoption>(1013)},
+    {"TLS_GREASE", static_cast<CURLoption>(1011)},
+    {"TLS_KEY_SHARES_LIMIT", static_cast<CURLoption>(1019)},
+    {"TLS_RECORD_SIZE_LIMIT", static_cast<CURLoption>(1018)},
+    {"TLS_SIGNED_CERT_TIMESTAMPS", static_cast<CURLoption>(1015)},
+    {"TLS_STATUS_REQUEST", static_cast<CURLoption>(1016)},
+    {"TLS_USE_NEW_ALPS_CODEPOINT", static_cast<CURLoption>(1020)},
 };
 
 const std::vector<CurlConstant> curlOptionLinkedList = {
@@ -425,7 +443,6 @@ const std::vector<CurlConstant> curlOptionNotImplemented = {
 #if NODE_LIBCURL_VER_GE(7, 46, 0)
     {"STREAM_DEPENDS", CURLOPT_STREAM_DEPENDS},
     {"STREAM_DEPENDS_E", CURLOPT_STREAM_DEPENDS_E},
-    {"STREAM_WEIGHT", CURLOPT_STREAM_WEIGHT},
 #endif
 };
 
@@ -616,6 +633,16 @@ const std::vector<CurlConstant> curlOptionString = {
 #if NODE_LIBCURL_VER_GE(7, 33, 0)
     {"XOAUTH2_BEARER", CURLOPT_XOAUTH2_BEARER},
 #endif
+
+    // curl-impersonate specific options (libcurl-impersonate extensions)
+    // See: https://github.com/lwthiker/curl-impersonate
+    {"HTTP2_PSEUDO_HEADERS_ORDER", static_cast<CURLoption>(10000 + 1005)},
+    {"HTTP2_SETTINGS", static_cast<CURLoption>(10000 + 1006)},
+    {"HTTP2_STREAMS", static_cast<CURLoption>(10000 + 1010)},
+    {"SSL_CERT_COMPRESSION", static_cast<CURLoption>(10000 + 1003)},
+    {"SSL_SIG_HASH_ALGS", static_cast<CURLoption>(10000 + 1001)},
+    {"TLS_DELEGATED_CREDENTIALS", static_cast<CURLoption>(10000 + 1017)},
+    {"TLS_EXTENSION_ORDER", static_cast<CURLoption>(10000 + 1012)},
 };
 
 const std::vector<CurlConstant> curlMultiOptionFunction = {

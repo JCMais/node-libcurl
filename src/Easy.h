@@ -50,6 +50,7 @@ class Easy : public Napi::ObjectWrap<Easy> {
   Napi::Value MonitorSocketEvents(const Napi::CallbackInfo& info);
   Napi::Value UnmonitorSocketEvents(const Napi::CallbackInfo& info);
   Napi::Value Close(const Napi::CallbackInfo& info);
+  Napi::Value Impersonate(const Napi::CallbackInfo& info);
 
   static Napi::Value StrError(const Napi::CallbackInfo& info);
 

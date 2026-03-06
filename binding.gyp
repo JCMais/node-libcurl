@@ -13,6 +13,10 @@
     'node_libcurl_no_setlocale%': 'false',
     'node_libcurl_debug%': 'false',
     'node_libcurl_asan_debug%': 'false',
+    # Set to 'true' when building against libcurl-impersonate to enable
+    # the curl_easy_impersonate() API and curl-impersonate specific options.
+    # e.g. npm_config_curl_impersonate=true pnpm install
+    'curl_impersonate%': 'false',
     'node_libcurl_cpp_std%': 'c++20',
     'macos_universal_build%': 'false'
   },
@@ -45,6 +49,11 @@
         'NAPI_EXPERIMENTAL=1',
       ],
       'conditions': [
+        ['curl_impersonate=="true"', {
+          'defines': [
+            'CURL_IMPERSONATE'
+          ]
+        }],
         ['node_libcurl_no_setlocale=="true"', {
           'defines': [
             'NODE_LIBCURL_NO_SETLOCALE'

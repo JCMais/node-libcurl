@@ -362,6 +362,7 @@ Napi::Function Easy::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("monitorSocketEvents", &Easy::MonitorSocketEvents),
        InstanceMethod("unmonitorSocketEvents", &Easy::UnmonitorSocketEvents),
        InstanceMethod("close", &Easy::Close),
+       InstanceMethod("impersonate", &Easy::Impersonate),
 
        // Static methods
        StaticMethod("strError", &Easy::StrError),
@@ -2627,6 +2628,45 @@ Napi::Object Easy::CreateV8ObjectFromCurlFileInfo(Napi::Env env, curl_fileinfo* 
   obj.Set("strings", strings);
 
   return scope.Escape(obj).ToObject();
+}
+
+// curl_easy_impersonate is provided by libcurl-impersonate.
+// This declaration is only valid when building against libcurl-impersonate.
+// See: https://github.com/lwthiker/curl-impersonate
+#ifdef CURL_IMPERSONATE
+extern "C" int curl_easy_impersonate(CURL* curl, const char* target, int default_headers);
+#endif
+
+Napi::Value Easy::Impersonate(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (!this->isOpen) {
+    throw CurlError::New(env, "Curl handle is closed.", CURLE_BAD_FUNCTION_ARGUMENT);
+  }
+
+  if (info.Length() < 1 || !info[0].IsString()) {
+    throw Napi::TypeError::New(env, "First argument must be a string (browser target).");
+  }
+
+  std::string target = info[0].As<Napi::String>().Utf8Value();
+
+  int defaultHeaders = 1;
+  if (info.Length() >= 2 && !info[1].IsUndefined() && !info[1].IsNull()) {
+    if (!info[1].IsBoolean()) {
+      throw Napi::TypeError::New(env, "Second argument must be a boolean (defaultHeaders).");
+    }
+    defaultHeaders = info[1].As<Napi::Boolean>().Value() ? 1 : 0;
+  }
+
+#ifdef CURL_IMPERSONATE
+  int ret = curl_easy_impersonate(this->ch, target.c_str(), defaultHeaders);
+  return Napi::Number::New(env, ret);
+#else
+  (void)target;
+  (void)defaultHeaders;
+  // CURLE_NOT_BUILT_IN: The requested feature is not available in this libcurl build
+  return Napi::Number::New(env, CURLE_NOT_BUILT_IN);
+#endif
 }
 
 }  // namespace NodeLibcurl
