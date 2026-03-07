@@ -1,6 +1,6 @@
 {
   "name": "@kohnoselami/node-libcurl-impersonate",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "description": "Node.js bindings for libcurl-impersonate - browser TLS fingerprint impersonation",
   "keywords": [
     "curl-impersonate",
@@ -27,6 +27,7 @@
   "files": [
     "binding.gyp",
     "dist",
+    "lib/binding",
     "scripts",
     "src"
   ],
@@ -43,8 +44,6 @@
     "clean:build": "rimraf build",
     "clean:dist": "rimraf dist tsconfig.tsbuildinfo",
     "gen:constants": "node scripts/build-constants.js",
-    "preinstall": "node scripts/impersonate-setup.js --force",
-    "install": "node scripts/install-impersonate.js",
     "postinstall": "node scripts/postinstall",
     "lint": "eslint lib/ scripts/ test/ examples/",
     "pregyp": "node-pre-gyp",
