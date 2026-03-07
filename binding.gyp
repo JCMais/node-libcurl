@@ -128,11 +128,21 @@
           'dependencies': [
             '<!@(node "<(module_root_dir)/scripts/openssl-disable.js")'
           ],
-          'defines': [
-            'CURL_STATICLIB'
-          ],
           'conditions': [
-            ['curl_include_dirs==""', {
+            ['curl_impersonate!="true"', {
+              'defines': [
+                'CURL_STATICLIB'
+              ]
+            }],
+            ['curl_impersonate=="true" and curl_include_dirs==""', {
+              'include_dirs': [
+                '<!@(node "<(module_root_dir)/scripts/impersonate-win-get-info.js" --include-dir)'
+              ],
+              'libraries': [
+                '<!@(node "<(module_root_dir)/scripts/impersonate-win-get-info.js" --libs)'
+              ]
+            }],
+            ['curl_impersonate!="true" and curl_include_dirs==""', {
               'include_dirs': [
                 '<!@(node "<(module_root_dir)/scripts/vcpkg-get-info.js" --include-dir)'
               ],

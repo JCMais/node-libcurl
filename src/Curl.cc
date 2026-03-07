@@ -336,7 +336,8 @@ const std::vector<CurlConstant> curlOptionInteger = {
     {"TIMEVALUE_LARGE", CURLOPT_TIMEVALUE_LARGE},
 #endif
 
-    // Standard libcurl options previously marked not-implemented, re-enabled for impersonate support
+    // Standard libcurl options previously marked not-implemented, re-enabled for impersonate
+    // support
     {"STREAM_WEIGHT", CURLOPT_STREAM_WEIGHT},
 
     // curl-impersonate specific options (libcurl-impersonate extensions)
@@ -895,17 +896,37 @@ void Curl::InitTLS() {
 
   Napi::Object tls = maybeTls.ToObject();
 
-  // get CA certificates from Node.js's tls module and set them on the easy handle
-  // See: https://nodejs.org/api/tls.html#tlsgetcacertificatestype
-  Napi::Function getCACertificates = tls.Get("getCACertificates").As<Napi::Function>();
-  Napi::Array caCertificates =
-      getCACertificates.Call({Napi::String::New(env, "default")}).As<Napi::Array>();
-
+  // get CA certificates from Node.js's tls module and set them on the easy handle.
+  // Prefer getCACertificates() (Node >= v22.1.0) but fall back to rootCertificates
+  // (available since Node v12.3.0) if getCACertificates is not callable.
   std::vector<std::string> certs;
-  for (uint32_t i = 0; i < caCertificates.Length(); i++) {
-    Napi::Value cert = caCertificates[i];
-    if (cert.IsString()) {
-      certs.push_back(cert.As<Napi::String>().Utf8Value());
+
+  Napi::Value getCACertificatesVal = tls.Get("getCACertificates");
+  if (getCACertificatesVal.IsFunction()) {
+    Napi::Function getCACertificates = getCACertificatesVal.As<Napi::Function>();
+    Napi::Value result = getCACertificates.Call({Napi::String::New(env, "default")});
+    if (result.IsArray()) {
+      Napi::Array caCertificates = result.As<Napi::Array>();
+      for (uint32_t i = 0; i < caCertificates.Length(); i++) {
+        Napi::Value cert = caCertificates[i];
+        if (cert.IsString()) {
+          certs.push_back(cert.As<Napi::String>().Utf8Value());
+        }
+      }
+    }
+  }
+
+  // Fallback: use tls.rootCertificates array (available since Node.js 12.3.0)
+  if (certs.empty()) {
+    Napi::Value rootCertsVal = tls.Get("rootCertificates");
+    if (rootCertsVal.IsArray()) {
+      Napi::Array rootCerts = rootCertsVal.As<Napi::Array>();
+      for (uint32_t i = 0; i < rootCerts.Length(); i++) {
+        Napi::Value cert = rootCerts[i];
+        if (cert.IsString()) {
+          certs.push_back(cert.As<Napi::String>().Utf8Value());
+        }
+      }
     }
   }
 

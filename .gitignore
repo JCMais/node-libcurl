@@ -50,6 +50,9 @@ docs/
 /deps/vcpkg/
 /vcpkg_installed/
 
+# libcurl-impersonate prebuilt (downloaded at build time)
+/deps/libcurl-impersonate/
+
 # ignore main vcpkg config, as we use a template file
 vcpkg.json
 # Keep other vcpkg config

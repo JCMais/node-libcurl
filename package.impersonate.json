@@ -1,0 +1,60 @@
+{
+  "name": "node-libcurl-impersonate",
+  "version": "5.0.2",
+  "description": "node-libcurl with curl-impersonate support - browser TLS fingerprint impersonation",
+  "keywords": [
+    "curl-impersonate",
+    "tls-fingerprint",
+    "browser-impersonate",
+    "curl",
+    "libcurl",
+    "node-libcurl",
+    "http"
+  ],
+  "homepage": "https://github.com/Lqm1/node-libcurl",
+  "bugs": {
+    "url": "https://github.com/Lqm1/node-libcurl/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Lqm1/node-libcurl.git"
+  },
+  "license": "MIT",
+  "author": "Jonathan Cardoso <me@jonathancardoso.com>",
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "binding.gyp",
+    "dist",
+    "scripts",
+    "src",
+    "vcpkg.template.json",
+    "vcpkg-configuration.json",
+    "overlays"
+  ],
+  "binary": {
+    "module_name": "node_libcurl",
+    "module_path": "./lib/binding/",
+    "remote_path": "./impersonate/v{version}/",
+    "package_name": "node_libcurl-impersonate-v{version}-{node_abi}-{platform}-{arch}-{libc}.tar.gz",
+    "host": "https://github.com/Lqm1/node-libcurl/releases/download"
+  },
+  "scripts": {
+    "preinstall": "node scripts/impersonate-setup.js --force",
+    "install": "node scripts/install-impersonate.js",
+    "postinstall": "node scripts/postinstall"
+  },
+  "dependencies": {
+    "@mapbox/node-pre-gyp": "2.0.0",
+    "env-paths": "2.2.0",
+    "node-addon-api": "8.5.0",
+    "node-gyp": "11.4.2",
+    "npmlog": "7.0.1",
+    "rimraf": "5.0.5",
+    "tslib": "2.6.2"
+  },
+  "engines": {
+    "node": ">=22.14"
+  }
+}

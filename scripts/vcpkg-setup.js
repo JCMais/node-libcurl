@@ -8,6 +8,11 @@ const { triplet, moduleRoot, vcpkgRoot } = require('./vcpkg-common')
 const modulePackageJson = require('../package.json')
 
 async function setupVcpkg() {
+  if (process.env.npm_config_curl_impersonate === 'true') {
+    console.log('vcpkg-setup: skipping (using libcurl-impersonate instead)')
+    return
+  }
+
   try {
     let vcpkgExe
 

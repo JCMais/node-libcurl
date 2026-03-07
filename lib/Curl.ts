@@ -895,6 +895,22 @@ class Curl extends EventEmitter {
   }
 
   /**
+   * Impersonate a specific browser's TLS fingerprint and HTTP/2 settings.
+   *
+   * Requires building node-libcurl against libcurl-impersonate with the
+   * `curl_impersonate=true` build flag.
+   *
+   * Returns `CURLE_OK` (0) on success, or `CURLE_NOT_BUILT_IN` (4) if not
+   * built against libcurl-impersonate.
+   *
+   * @param target Browser target string, e.g. `'chrome136'`, `'firefox135'`
+   * @param defaultHeaders Whether to set default browser headers (default: true)
+   */
+  impersonate(target: string, defaultHeaders = true): CurlCode {
+    return this.handle.impersonate(target, defaultHeaders)
+  }
+
+  /**
    * This is used to reset a few properties to their pre-request state.
    */
   protected resetInternalState() {
