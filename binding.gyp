@@ -130,57 +130,30 @@
             }]
           ]
         }, { # OS != "win"
-            # Use level 2 optimizations
-          'cflags': [
-            '-O2',
-          ],
+          'cflags': ['-O2'],
           'cflags_cc': [
             '-O2',
             '-std=<(node_libcurl_cpp_std)',
             '-Wno-narrowing',
           ],
-            # Allow C++ exceptions
-            # Disable level 3 optimizations
-          'cflags!': [
-            '-fno-exceptions',
-            '-O3'
-          ],
-          'cflags_cc!': [
-            '-fno-exceptions',
-            '-O3'
-          ],
+          'cflags!': ['-fno-exceptions', '-O3'],
+          'cflags_cc!': ['-fno-exceptions', '-O3'],
           'conditions': [
             ['curl_include_dirs==""', {
               'include_dirs': [
-                # '<!@(node "<(module_root_dir)/scripts/curl-config.js" --cflags | sed "s/-D.* //g" | sed s/-I//g)'
-                '<!(<(curl_config_bin) --prefix)/include'
+                '<!@(node "<(module_root_dir)/scripts/impersonate-unix-get-info.js" --include-dir)'
+              ],
+              'libraries': [
+                '<!@(node "<(module_root_dir)/scripts/impersonate-unix-get-info.js" --libs)'
               ],
             }],
           ],
         }],
         ['OS=="linux"', {
           'conditions': [
-            ['curl_static_build=="true"', {
-              # pretty sure cflags adds that
-              'defines': [
-                'CURL_STATICLIB',
-              ],
-              'conditions': [
-                ['curl_libraries==""', {
-                  'libraries': [
-                    '<!@(<(curl_config_bin) --static-libs)',
-                  ],
-                }]
-              ],
-            }, { # do not use static linking - default
-              'conditions': [
-                ['curl_libraries==""', {
-                  'libraries': [
-                    '-Wl,-rpath <!(<(curl_config_bin) --prefix)/lib',
-                    '<!@(<(curl_config_bin) --libs)',
-                  ],
-                }]
-              ],
+            ['curl_libraries==""', {
+              # $ORIGIN means "same directory as the .node file" - finds bundled .so at runtime
+              'ldflags': ['-Wl,-rpath,$$ORIGIN'],
             }]
           ],
         }],
@@ -207,76 +180,17 @@
             }
           },
           'conditions': [
-            ['curl_static_build=="true"', {
-              # pretty sure cflags adds that
-              'defines': [
-                  'CURL_STATICLIB',
-              ],
+            ['curl_libraries==""', {
+              # @loader_path means "same directory as the .node file" - finds bundled .dylib at runtime
               'xcode_settings': {
-                'OTHER_LDFLAGS': [
-                  # HACK: -framework CoreFoundation appears twice, but CoreFoundation is a singleton
-                  # because it doesn't start with a -. We need to remove one of the instances of
-                  # -framework CoreFoundation or GYP will break our args.
-                  # This seems to be required starting with xcode 12
-                  # original workaround from https://github.com/JCMais/node-libcurl/pull/312
-                  '-static',
-                  '<!@(<(curl_config_bin) --static-libs | sed "s/-framework CoreFoundation -framework CoreServices -framework/-framework/g" | sed "s/-framework CoreFoundation//")',
-                ],
-
-                'LD_RUNPATH_SEARCH_PATHS': [
-                  '<!@(<(curl_config_bin) --static-libs | node -e "console.log(require(\'fs\').readFileSync(0, \'utf-8\').split(\' \').filter(i => i.startsWith(\'-L\')).join(\' \').replace(/-L/g, \'\'))")'
-                ],
-              }
-            }, { # do not use static linking - default
-              'libraries': [
-                '-L <!@(<(curl_config_bin) --prefix)/lib -lcurl'
-              ],
-              'xcode_settings': {
-                'LD_RUNPATH_SEARCH_PATHS': [
-                  '<!(<(curl_config_bin) --prefix)/lib',
-                  '/opt/local/lib',
-                  '/usr/local/opt/curl/lib',
-                  '/usr/local/lib',
-                  '/usr/lib'
-                ],
+                'LD_RUNPATH_SEARCH_PATHS': ['@loader_path'],
               }
             }],
-            ['macos_universal_build=="true"', {
-              'xcode_settings': {
-                'OTHER_CPLUSPLUSFLAGS': [
-                  '-arch x86_64',
-                  '-arch arm64'
-                ],
-                'OTHER_CFLAGS': [
-                  '-arch x86_64',
-                  '-arch arm64'
-                ],
-                'OTHER_LDFLAGS': [
-                  '-arch x86_64',
-                  '-arch arm64'
-                ]
-              }
-            }]
           ],
           'xcode_settings': {
-            'conditions': [
-              ['curl_include_dirs==""', {
-                'OTHER_CPLUSPLUSFLAGS': [
-                  '<!(<(curl_config_bin) --prefix)/include',
-                ],
-                'OTHER_CFLAGS': [
-                  '<!(<(curl_config_bin) --prefix)/include',
-                ],
-              }],
-            ],
-            'OTHER_CPLUSPLUSFLAGS': [
-              '-std=<(node_libcurl_cpp_std)', '-stdlib=libc++',
-            ],
-            'OTHER_LDFLAGS': [
-              '-Wl,-bind_at_load',
-              '-stdlib=libc++'
-            ],
-            'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES', # -fvisibility=hidden
+            'OTHER_CPLUSPLUSFLAGS': ['-std=<(node_libcurl_cpp_std)', '-stdlib=libc++'],
+            'OTHER_LDFLAGS': ['-Wl,-bind_at_load', '-stdlib=libc++'],
+            'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
             'GCC_ENABLE_CPP_RTTI': 'YES',
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
             'MACOSX_DEPLOYMENT_TARGET': '13',
@@ -306,7 +220,7 @@
           'destination': '<(module_path)'
         }
       ],
-      'conditions': [['OS=="mac" and curl_static_build!="true"', {
+      'conditions': [['OS=="mac"', {
         'postbuilds': [
           {
             'postbuild_name': '@rpath for libcurl',

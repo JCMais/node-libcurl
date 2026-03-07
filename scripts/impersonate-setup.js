@@ -1,5 +1,5 @@
-// Downloads prebuilt libcurl-impersonate binaries for Windows.
-// Only runs when building with curl_impersonate=true on Windows.
+// Downloads prebuilt libcurl-impersonate binaries.
+// Supports Windows, Linux (glibc/musl), and macOS.
 // No third-party dependencies - only native Node.js modules.
 const { execSync } = require('child_process')
 const fs = require('fs')
@@ -8,10 +8,75 @@ const https = require('https')
 
 const REPO = 'lexiforest/curl-impersonate'
 const VERSION = '1.5.1'
-const ARCH_MAP = { x64: 'x86_64', ia32: 'i686', arm64: 'arm64' }
 
 const moduleRoot = path.resolve(__dirname, '..')
 const depsDir = path.join(moduleRoot, 'deps', 'libcurl-impersonate')
+
+function isMusl() {
+  try {
+    const report = process.report.getReport()
+    if (report.header && report.header.glibcVersionRuntime) return false
+  } catch {
+    /* ignore */
+  }
+  try {
+    const out = execSync('ldd --version 2>&1 || true', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+    })
+    if (out.includes('musl')) return true
+  } catch {
+    /* ignore */
+  }
+  try {
+    const err = execSync('ldd --version 2>/dev/null; true', {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      shell: true,
+    })
+    if (err.includes('musl')) return true
+  } catch {
+    /* ignore */
+  }
+  return fs.existsSync('/etc/alpine-release')
+}
+
+function getTarballName() {
+  const { platform, arch } = process
+
+  if (platform === 'win32') {
+    const archMap = { x64: 'x86_64', ia32: 'i686', arm64: 'arm64' }
+    const a = archMap[arch]
+    if (!a) throw new Error(`Unsupported Windows arch: ${arch}`)
+    return `libcurl-impersonate-v${VERSION}.${a}-win32.tar.gz`
+  }
+
+  if (platform === 'darwin') {
+    const archMap = { x64: 'x86_64', arm64: 'arm64' }
+    const a = archMap[arch]
+    if (!a) throw new Error(`Unsupported macOS arch: ${arch}`)
+    return `libcurl-impersonate-v${VERSION}.${a}-macos.tar.gz`
+  }
+
+  if (platform === 'linux') {
+    if (arch === 'arm') {
+      // Only gnueabihf available for 32-bit ARM
+      return `libcurl-impersonate-v${VERSION}.arm-linux-gnueabihf.tar.gz`
+    }
+    const archMap = { x64: 'x86_64', arm64: 'aarch64', ia32: 'i386' }
+    const a = archMap[arch]
+    if (!a) throw new Error(`Unsupported Linux arch: ${arch}`)
+    const libc = isMusl() ? 'musl' : 'gnu'
+    return `libcurl-impersonate-v${VERSION}.${a}-linux-${libc}.tar.gz`
+  }
+
+  throw new Error(`Unsupported platform: ${platform}`)
+}
+
+function isCached() {
+  // Platform-agnostic cache check: headers always present after extraction
+  return fs.existsSync(path.join(depsDir, 'include', 'curl', 'curl.h'))
+}
 
 async function downloadFile(url, dest) {
   return new Promise((resolve, reject) => {
@@ -44,29 +109,27 @@ async function setupImpersonate() {
     return
   }
 
-  if (process.platform !== 'win32') {
-    console.log('impersonate-setup: skipping (not Windows)')
+  if (isCached()) {
+    console.log(`Using cached libcurl-impersonate v${VERSION} at ${depsDir}`)
     return
   }
 
-  const arch = ARCH_MAP[process.arch]
-  if (!arch) {
-    console.error(`impersonate-setup: unsupported arch ${process.arch}`)
-    process.exit(1)
-  }
-
-  if (fs.existsSync(path.join(depsDir, 'lib', 'libcurl-impersonate_imp.lib'))) {
-    console.log(`Using cached libcurl-impersonate v${VERSION} at ${depsDir}`)
+  let tarballName
+  try {
+    tarballName = getTarballName()
+  } catch (err) {
+    console.warn(`impersonate-setup: ${err.message}, skipping`)
     return
   }
 
   fs.mkdirSync(depsDir, { recursive: true })
 
-  const tarballName = `libcurl-impersonate-v${VERSION}.${arch}-win32.tar.gz`
   const tarballPath = path.join(depsDir, tarballName)
   const url = `https://github.com/${REPO}/releases/download/v${VERSION}/${tarballName}`
 
-  console.log(`Downloading libcurl-impersonate v${VERSION} (${arch})...`)
+  console.log(
+    `Downloading libcurl-impersonate v${VERSION} (${process.platform}/${process.arch})...`,
+  )
   console.log(`  from: ${url}`)
 
   await downloadFile(url, tarballPath)
@@ -75,7 +138,7 @@ async function setupImpersonate() {
   execSync(`tar -xzf "${tarballPath}"`, { cwd: depsDir })
   fs.unlinkSync(tarballPath)
 
-  console.log(`✓ libcurl-impersonate v${VERSION} ready at ${depsDir}`)
+  console.log(`libcurl-impersonate v${VERSION} ready at ${depsDir}`)
 }
 
 setupImpersonate().catch((err) => {

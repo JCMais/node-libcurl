@@ -1,6 +1,6 @@
 {
   "name": "@kohnoselami/node-libcurl-impersonate",
-  "version": "5.0.3",
+  "version": "5.0.2",
   "description": "Node.js bindings for libcurl-impersonate - browser TLS fingerprint impersonation",
   "keywords": [
     "curl-impersonate",

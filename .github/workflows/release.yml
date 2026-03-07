@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag (e.g. v5.0.3)'
+        description: 'Release tag (e.g. v5.0.2)'
         required: true
 
 concurrency:
@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Step 1: Create the GitHub Release (once, before binary uploads)
+  # ── Step 1: Create draft release ─────────────────────────────────────────────
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
@@ -28,7 +28,7 @@ jobs:
         id: tag
         run: echo "value=${{ github.event.inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
 
-      - name: Create release
+      - name: Create draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -37,13 +37,10 @@ jobs:
           if gh release view "$TAG" &>/dev/null; then
             echo "Release $TAG already exists, skipping creation."
           else
-            gh release create "$TAG" \
-              --title "$TAG" \
-              --notes "Prebuilt binaries for $TAG" \
-              --draft
+            gh release create "$TAG" --title "$TAG" --notes "Prebuilt binaries for $TAG" --draft
           fi
 
-  # Step 2: Build prebuilt binaries (Windows × Node.js versions)
+  # ── Step 2: Build prebuilt binaries ─────────────────────────────────────────
   build-windows:
     name: Build / Windows / Node.js ${{ matrix.node-version }}
     runs-on: windows-latest
@@ -57,13 +54,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node and pnpm
-        uses: ./.github/actions/setup-node-pnpm
+      - uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Install dependencies (skip lifecycle scripts)
+      - name: Install dependencies
         run: pnpm install --ignore-scripts
 
       - name: Download libcurl-impersonate
@@ -77,27 +72,125 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path lib/binding | Out-Null
           Get-ChildItem deps/libcurl-impersonate/bin/*.dll | Copy-Item -Destination lib/binding/
-          Write-Host "Files in lib/binding:"
-          Get-ChildItem lib/binding | Select-Object Name
+          Get-ChildItem lib/binding | Select-Object -ExpandProperty Name
 
-      - name: Package binary
-        run: pnpm pregyp package
-
-      - name: Upload binary to release
+      - name: Package and upload
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
-          $tarball = Get-ChildItem -Recurse build/stage/*.tar.gz | Select-Object -First 1 -ExpandProperty FullName
+          pnpm pregyp package
+          $tarball = Get-ChildItem -Recurse build/stage -Filter *.tar.gz | Select-Object -First 1 -ExpandProperty FullName
           Write-Host "Uploading: $tarball"
           gh release upload ${{ needs.create-release.outputs.tag }} "$tarball" --clobber
 
-  # Step 3: Mark release as non-draft after all builds complete
+  build-linux:
+    name: Build / Linux ${{ matrix.libc }} / Node.js ${{ matrix.node-version }}
+    runs-on: ${{ matrix.libc == 'musl' && 'ubuntu-latest' || 'ubuntu-22.04' }}
+    needs: create-release
+    permissions:
+      contents: write
+    container: ${{ matrix.libc == 'musl' && format('node:{0}-alpine', matrix.node-version) || '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22, 24]
+        libc: [glibc, musl]
+
+    steps:
+      - name: Install build tools (Alpine/musl)
+        if: matrix.libc == 'musl'
+        run: apk add --no-cache git bash python3 make g++ tar
+
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm (glibc only - Alpine container has its own Node)
+        if: matrix.libc == 'glibc'
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install pnpm (Alpine/musl)
+        if: matrix.libc == 'musl'
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts
+
+      - name: Download libcurl-impersonate
+        run: node scripts/impersonate-setup.js --force
+
+      - name: Build native addon
+        run: pnpm pregyp rebuild
+
+      - name: Copy shared library to lib/binding
+        run: |
+          mkdir -p lib/binding
+          # Copy the versioned .so and the unversioned symlink target
+          find deps/libcurl-impersonate/lib -name 'libcurl-impersonate.so*' | while read f; do
+            cp -L "$f" lib/binding/ 2>/dev/null || true
+          done
+          ls -la lib/binding/
+
+      - name: Package and upload
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          pnpm pregyp package
+          tarball=$(find build/stage -name '*.tar.gz' | head -1)
+          echo "Uploading: $tarball"
+          gh release upload ${{ needs.create-release.outputs.tag }} "$tarball" --clobber
+
+  build-macos:
+    name: Build / macOS ${{ matrix.arch }} / Node.js ${{ matrix.node-version }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'macos-15' || 'macos-13' }}
+    needs: create-release
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22, 24]
+        arch: [x64, arm64]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts
+
+      - name: Download libcurl-impersonate
+        run: node scripts/impersonate-setup.js --force
+
+      - name: Build native addon
+        run: pnpm pregyp rebuild
+
+      - name: Copy dylib to lib/binding
+        run: |
+          mkdir -p lib/binding
+          find deps/libcurl-impersonate/lib -name 'libcurl-impersonate*.dylib' -exec cp -L {} lib/binding/ \;
+          ls -la lib/binding/
+
+      - name: Package and upload
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          pnpm pregyp package
+          tarball=$(find build/stage -name '*.tar.gz' | head -1)
+          echo "Uploading: $tarball"
+          gh release upload ${{ needs.create-release.outputs.tag }} "$tarball" --clobber
+
+  # ── Step 3: Publish draft → public ──────────────────────────────────────────
   finalize-release:
     name: Finalize Release
     runs-on: ubuntu-latest
-    needs: [create-release, build-windows]
+    needs: [create-release, build-windows, build-linux, build-macos]
     permissions:
       contents: write
     steps:
@@ -105,6 +198,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-        run: |
-          gh release edit ${{ needs.create-release.outputs.tag }} \
-            --draft=false
+        run: gh release edit ${{ needs.create-release.outputs.tag }} --draft=false
