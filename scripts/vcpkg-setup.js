@@ -74,10 +74,10 @@ async function createVcpkgJson() {
     path.join(moduleRoot, 'vcpkg.template.json'),
     'utf8',
   )
-  const nodeOpenSSLVersion = process.versions.openssl.replace('+quic', '')
-  const vcpkgJson = vcpkgJsonTemplate
-    .replace('$$OPENSSL_VERSION$$', nodeOpenSSLVersion)
-    .replace('$$NODE_LIBCURL_VERSION$$', modulePackageJson.version)
+  const vcpkgJson = vcpkgJsonTemplate.replace(
+    '$$NODE_LIBCURL_VERSION$$',
+    modulePackageJson.version,
+  )
 
   fs.writeFileSync(path.join(moduleRoot, 'vcpkg.json'), vcpkgJson)
 }

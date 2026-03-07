@@ -10,10 +10,7 @@
         "c-ares",
         "http2",
         "http3",
-        "ldap",
-        "gsasl",
         "idn",
-        "idn2",
         "openssl",
         "ssh",
         "sspi",
@@ -21,12 +18,6 @@
         "zstd",
         "tool"
       ]
-    }
-  ],
-  "overrides": [
-    {
-      "name": "openssl",
-      "version": "$$OPENSSL_VERSION$$"
     }
   ]
 }

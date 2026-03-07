@@ -361,8 +361,7 @@ Napi::Function Easy::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("onSocketEvent", &Easy::OnSocketEvent),
        InstanceMethod("monitorSocketEvents", &Easy::MonitorSocketEvents),
        InstanceMethod("unmonitorSocketEvents", &Easy::UnmonitorSocketEvents),
-       InstanceMethod("close", &Easy::Close),
-       InstanceMethod("impersonate", &Easy::Impersonate),
+       InstanceMethod("close", &Easy::Close), InstanceMethod("impersonate", &Easy::Impersonate),
 
        // Static methods
        StaticMethod("strError", &Easy::StrError),
@@ -2030,7 +2029,7 @@ int Easy::CbXferinfo(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_o
 #if NODE_LIBCURL_VER_GE(7, 32, 0)
   auto it = obj->callbacks.find(CURLOPT_XFERINFOFUNCTION);
 #else
-  // just to make it compile ¯\_(ツ)_/¯
+  // just to make it compile
   auto it = obj->callbacks.end();
 #endif
 
