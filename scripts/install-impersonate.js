@@ -17,7 +17,6 @@ const nodePreGyp = path.join(
 execSync(`node "${nodePreGyp}" install --fallback-to-build`, {
   stdio: 'inherit',
   cwd: root,
-  env: { ...process.env, npm_config_curl_impersonate: 'true' },
 })
 
 // Copy libcurl-impersonate.dll to lib/binding/ so it's found at runtime.

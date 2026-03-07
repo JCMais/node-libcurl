@@ -46,15 +46,10 @@ compile_commands.json
 *.hidden.*
 docs/
 
-# vcpkg
-/deps/vcpkg/
-/vcpkg_installed/
-
 # libcurl-impersonate prebuilt (downloaded at build time)
 /deps/libcurl-impersonate/
 
-# ignore main vcpkg config, as we use a template file
+# vcpkg (not used in this package)
+/deps/vcpkg/
+/vcpkg_installed/
 vcpkg.json
-# Keep other vcpkg config
-!/vcpkg-configuration.json
-!/overlays/

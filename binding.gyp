@@ -1,22 +1,13 @@
 {
-  # Those variables can be overwritten when installing the package, like:
-  #  npm install --curl-extra_link_args=true
-  # or if using pnpm:
-  #  npm_config_curl_extra_link_args=true pnpm install
-  # 
   'variables': {
-    # Comma separated list
+    # Override libcurl-impersonate include/lib paths (optional, auto-detected on Windows)
     'curl_include_dirs%': '',
     'curl_libraries%': '',
-    'curl_static_build%': 'false',
     'curl_config_bin%': 'node <(module_root_dir)/scripts/curl-config.js',
     'node_libcurl_no_setlocale%': 'false',
     'node_libcurl_debug%': 'false',
-    'node_libcurl_asan_debug%': 'false',
-    # Set to 'true' when building against libcurl-impersonate to enable
-    # the curl_easy_impersonate() API and curl-impersonate specific options.
-    # e.g. npm_config_curl_impersonate=true pnpm install
-    'curl_impersonate%': 'false',
+    # Always building against libcurl-impersonate
+    'curl_impersonate%': 'true',
     'node_libcurl_cpp_std%': 'c++20',
     'macos_universal_build%': 'false'
   },
@@ -47,13 +38,9 @@
       'defines': [
         'NAPI_VERSION=10',
         'NAPI_EXPERIMENTAL=1',
+        'CURL_IMPERSONATE',
       ],
       'conditions': [
-        ['curl_impersonate=="true"', {
-          'defines': [
-            'CURL_IMPERSONATE'
-          ]
-        }],
         ['node_libcurl_no_setlocale=="true"', {
           'defines': [
             'NODE_LIBCURL_NO_SETLOCALE'
@@ -129,25 +116,12 @@
             '<!@(node "<(module_root_dir)/scripts/openssl-disable.js")'
           ],
           'conditions': [
-            ['curl_impersonate!="true"', {
-              'defines': [
-                'CURL_STATICLIB'
-              ]
-            }],
-            ['curl_impersonate=="true" and curl_include_dirs==""', {
+            ['curl_include_dirs==""', {
               'include_dirs': [
                 '<!@(node "<(module_root_dir)/scripts/impersonate-win-get-info.js" --include-dir)'
               ],
               'libraries': [
                 '<!@(node "<(module_root_dir)/scripts/impersonate-win-get-info.js" --libs)'
-              ]
-            }],
-            ['curl_impersonate!="true" and curl_include_dirs==""', {
-              'include_dirs': [
-                '<!@(node "<(module_root_dir)/scripts/vcpkg-get-info.js" --include-dir)'
-              ],
-              'libraries': [
-                '<!@(node "<(module_root_dir)/scripts/vcpkg-get-info.js" --libs)'
               ]
             }],
             ['curl_include_dirs!=""', {

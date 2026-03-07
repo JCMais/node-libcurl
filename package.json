@@ -1,22 +1,23 @@
 {
-  "name": "node-libcurl",
+  "name": "@kohnoselami/node-libcurl-impersonate",
   "version": "5.0.2",
-  "description": "The fastest http(s) client (and much more) for Node.js - Node.js bindings for libcurl",
+  "description": "Node.js bindings for libcurl-impersonate - browser TLS fingerprint impersonation",
   "keywords": [
-    "node-curl",
+    "curl-impersonate",
+    "tls-fingerprint",
+    "browser-impersonate",
     "curl",
     "libcurl",
-    "node-libcurl",
-    "axios",
-    "request"
+    "http",
+    "https"
   ],
-  "homepage": "https://github.com/JCMais/node-libcurl",
+  "homepage": "https://github.com/kohnoselami/node-libcurl-impersonate",
   "bugs": {
-    "url": "https://github.com/JCMais/node-libcurl/issues"
+    "url": "https://github.com/kohnoselami/node-libcurl-impersonate/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/JCMais/node-libcurl.git"
+    "url": "git://github.com/kohnoselami/node-libcurl-impersonate.git"
   },
   "license": "MIT",
   "author": "Jonathan Cardoso <me@jonathancardoso.com>",
@@ -27,39 +28,29 @@
     "binding.gyp",
     "dist",
     "scripts",
-    "src",
-    "vcpkg.template.json",
-    "vcpkg-configuration.json",
-    "overlays"
+    "src"
   ],
   "binary": {
     "module_name": "node_libcurl",
     "module_path": "./lib/binding/",
     "remote_path": "./v{version}/",
-    "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}-{libc}.tar.gz",
-    "host": "https://github.com/JCMais/node-libcurl/releases/download"
+    "package_name": "node_libcurl-impersonate-v{version}-{node_abi}-{platform}-{arch}-{libc}.tar.gz",
+    "host": "https://github.com/kohnoselami/node-libcurl-impersonate/releases/download"
   },
   "scripts": {
-    "ae": "api-extractor run --local --verbose",
-    "brute-force-leak-test:run": "node --inspect --expose_gc -r ts-node/register ./tools/brute-force-leak-test.ts",
-    "brute-force-leak-test:run:debug:gdb": "gdb --args node --inspect --expose_gc -r ts-node/register ./tools/brute-force-leak-test.ts",
-    "brute-force-leak-test:server": "http-server ./tools/brute-force-server-static-folder -p 8080 -s",
     "build:dist": "tsc",
     "clean": "pnpm clean:build && pnpm clean:dist",
     "clean:build": "rimraf build",
     "clean:dist": "rimraf dist tsconfig.tsbuildinfo",
-    "gen:compile_commands": "node-pre-gyp configure -- -f compile_commands_json && cp ./build/Debug/compile_commands.json ./compile_commands.json",
     "gen:constants": "node scripts/build-constants.js",
-    "gen:docs": "typedoc",
-    "preinstall": "node scripts/vcpkg-setup.js && node scripts/impersonate-setup.js",
-    "install": "node-pre-gyp install --fallback-to-build",
+    "preinstall": "node scripts/impersonate-setup.js --force",
+    "install": "node scripts/install-impersonate.js",
     "postinstall": "node scripts/postinstall",
     "lint": "eslint lib/ scripts/ test/ examples/",
     "pregyp": "node-pre-gyp",
     "prepare": "husky",
     "prettier": "prettier --write",
     "prettier:all": "pnpm prettier lib/**/*.ts tools/**/*.js scripts/**/*.js test/**/*.ts examples/**/*.js",
-    "publish:impersonate": "node scripts/publish-impersonate.js",
     "test": "vitest run --testTimeout=60000",
     "test:coverage": "pnpm test -- --coverage.enabled=true",
     "test:watch": "vitest --testTimeout=60000",
@@ -92,8 +83,6 @@
     "@electron/rebuild": "4.0.1",
     "@eslint/eslintrc": "3.3.1",
     "@eslint/js": "9.36.0",
-    "@microsoft/api-documenter": "7.23.12",
-    "@microsoft/api-extractor": "7.38.3",
     "@octokit/rest": "^20.0.2",
     "@types/body-parser": "1.19.5",
     "@types/cookie-parser": "1.4.8",
@@ -104,7 +93,6 @@
     "cheerio": "1.0.0-rc.3",
     "clang-format": "1.8.0",
     "cookie-parser": "1.4.7",
-    "electron": "38.2.0",
     "eslint": "9.36.0",
     "eslint-plugin-prettier": "5.5.4",
     "express": "4.21.2",
@@ -115,15 +103,11 @@
     "husky": "9.1.7",
     "lint-staged": "15.2.0",
     "node-abi": "^3.71.0",
-    "np": "10.2.0",
     "prettier": "3.6.2",
     "progress": "2.0.3",
     "semver": "7.7.2",
     "sort-package-json": "3.4.0",
     "tsx": "4.20.6",
-    "typedoc": "0.28.13",
-    "typedoc-plugin-ga": "^1.0.5",
-    "typedoc-plugin-nojekyll": "1.0.1",
     "typescript": "5.9.2",
     "typescript-eslint": "8.44.1",
     "vitest": "3.2.4",
@@ -134,31 +118,7 @@
     "node": ">=22.14"
   },
   "publishConfig": {
-    "executableFiles": [
-      "scripts/arm/publish-binary.sh",
-      "scripts/ci/build-brotli.sh",
-      "scripts/ci/build-cares.sh",
-      "scripts/ci/build-heimdal.sh",
-      "scripts/ci/build-kerberos.sh",
-      "scripts/ci/build-libcurl.sh",
-      "scripts/ci/build-libiconv.sh",
-      "scripts/ci/build-libidn2.sh",
-      "scripts/ci/build-libssh2.sh",
-      "scripts/ci/build-libunistring.sh",
-      "scripts/ci/build-ncurses.sh",
-      "scripts/ci/build-nghttp2.sh",
-      "scripts/ci/build-nghttp3.sh",
-      "scripts/ci/build-ngtcp2.sh",
-      "scripts/ci/build-openldap.sh",
-      "scripts/ci/build-openssl.sh",
-      "scripts/ci/build-zlib.sh",
-      "scripts/ci/build-zstd.sh",
-      "scripts/ci/build.sh",
-      "scripts/ci/download-and-unpack.sh",
-      "scripts/ci/get-latest-libcurl-version.sh",
-      "scripts/ci/utils/gsort.sh",
-      "scripts/gyp-macos-postbuild.sh"
-    ]
+    "access": "public"
   },
   "np": {
     "cleanup": false
