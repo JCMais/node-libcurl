@@ -1,3 +1,10 @@
+#ifndef NOMINMAX
+#define NOMINMAX
+#include <cassert>
+#endif
+
+#include "Multi.h"
+#include "napi.h"
 /**
  * Copyright (c) Jonathan Cardoso Machado. All Rights Reserved.
  *
@@ -5,79 +12,87 @@
  * LICENSE file in the root directory of this source tree.
  */
 #include "Curl.h"
-
+#include "CurlError.h"
 #include "CurlHttpPost.h"
+#include "CurlMime.h"
+#include "CurlVersionInfo.h"
 #include "Easy.h"
+#include "Http2PushFrameHeaders.h"
+#include "Share.h"
+#include "curl/curl.h"
+#include "macros.h"
 
+#include <algorithm>
 #include <iostream>
-
+#include <mutex>
+#include <sstream>
+#include <thread>
 namespace NodeLibcurl {
 
-ssize_t addonAllocatedMemory = 0;
-bool isLibcurlBuiltWithThreadedResolver = true;
+// Values from a Win64 build
+std::unordered_map<CurlHandleType, int> handleMemoryMap = {{CURL_HANDLE_TYPE_EASY, 30000},
+                                                           {CURL_HANDLE_TYPE_MULTI, 60000},
+                                                           {CURL_HANDLE_TYPE_SHARE, 60000}};
 
-// This should be kept in sync with the options on scripts/utils/curlOptionsBlacklist.js
-const std::vector<CurlConstant> curlOptionNotImplemented = {
-    // Options that are complex to add support for.
-    {"SSL_CTX_FUNCTION", CURLOPT_SSL_CTX_FUNCTION},
-    {"OPENSOCKETFUNCTION", CURLOPT_OPENSOCKETFUNCTION},
-    {"CLOSESOCKETFUNCTION", CURLOPT_CLOSESOCKETFUNCTION},
-    {"SOCKOPTFUNCTION", CURLOPT_SOCKOPTFUNCTION},
+// Optimized hash map lookups for curl constants with category information
+// Note: Stores vectors to handle duplicate names (e.g., CERTINFO as both option and info)
+std::unordered_map<std::string, std::vector<CurlConstantLookup>> curlConstantsByName;
+std::unordered_map<int64_t, std::vector<CurlConstantLookup>> curlConstantsByValue;
 
-#if NODE_LIBCURL_VER_GE(7, 59, 0)
-    {"RESOLVER_START_DATA", CURLOPT_RESOLVER_START_DATA},
-    {"RESOLVER_START_FUNCTION", CURLOPT_RESOLVER_START_FUNCTION},
+const std::vector<CurlConstant> curlOptionBlob = {
+#if NODE_LIBCURL_VER_GE(7, 77, 0)
+    {"CAINFO_BLOB", CURLOPT_CAINFO_BLOB},
 #endif
 
-    {"CONV_FROM_UTF8_FUNCTION", CURLOPT_CONV_FROM_UTF8_FUNCTION},
-    {"CONV_TO_NETWORK_FUNCTION", CURLOPT_CONV_TO_NETWORK_FUNCTION},
-    {"CONV_FROM_NETWORK_FUNCTION", CURLOPT_CONV_FROM_NETWORK_FUNCTION},
+#if NODE_LIBCURL_VER_GE(7, 71, 0)
+    {"ISSUERCERT_BLOB", CURLOPT_ISSUERCERT_BLOB},
 
-    // Options that are used internally.
-    {"WRITEDATA", CURLOPT_WRITEDATA},
-    {"HEADERDATA", CURLOPT_HEADERDATA},
-
-// Options that are not necessary because javascript nature.
-#if NODE_LIBCURL_VER_GE(7, 63, 0)
-    // URL's can be easily parsed on JS
-    {"CURLU", CURLOPT_CURLU},
+#if NODE_LIBCURL_VER_GE(7, 77, 0)
+    {"PROXY_CAINFO_BLOB", CURLOPT_PROXY_CAINFO_BLOB},
 #endif
 
-    {"PRIVATE", CURLOPT_PRIVATE},
-    {"PROGRESSDATA", CURLOPT_PROGRESSDATA},
+    {"PROXY_SSLCERT_BLOB", CURLOPT_PROXY_SSLCERT_BLOB},
+    {"PROXY_SSLKEY_BLOB", CURLOPT_PROXY_SSLKEY_BLOB},
+    {"SSLCERT_BLOB", CURLOPT_SSLCERT_BLOB},
+    {"SSLKEY_BLOB", CURLOPT_SSLKEY_BLOB},
+#endif
+};
 
-#if NODE_LIBCURL_VER_GE(7, 32, 0)
-    {"XFERINFODATA", CURLOPT_XFERINFODATA},
+const std::vector<CurlConstant> curlOptionFunction = {
+    {"CHUNK_BGN_FUNCTION", CURLOPT_CHUNK_BGN_FUNCTION},
+    {"CHUNK_END_FUNCTION", CURLOPT_CHUNK_END_FUNCTION},
+    {"FNMATCH_FUNCTION", CURLOPT_FNMATCH_FUNCTION},
+    {"DEBUGFUNCTION", CURLOPT_DEBUGFUNCTION},
+    {"HEADERFUNCTION", CURLOPT_HEADERFUNCTION},
+
+#if NODE_LIBCURL_VER_GE(7, 74, 0)
+    {"HSTSREADFUNCTION", CURLOPT_HSTSREADFUNCTION},
+    {"HSTSWRITEFUNCTION", CURLOPT_HSTSWRITEFUNCTION},
 #endif
 
-    {"DEBUGDATA", CURLOPT_DEBUGDATA},
-    {"SEEKDATA", CURLOPT_SEEKDATA},
-    {"IOCTLDATA", CURLOPT_IOCTLDATA},
-    {"SOCKOPTDATA", CURLOPT_SOCKOPTDATA},
-    {"OPENSOCKETDATA", CURLOPT_OPENSOCKETDATA},
-    {"CLOSESOCKETDATA", CURLOPT_CLOSESOCKETDATA},
-    {"SSL_CTX_DATA", CURLOPT_SSL_CTX_DATA},
-    {"INTERLEAVEDATA", CURLOPT_INTERLEAVEDATA},
-    {"CHUNK_DATA", CURLOPT_CHUNK_DATA},
-    {"FNMATCH_DATA", CURLOPT_FNMATCH_DATA},
-    {"ERRORBUFFER", CURLOPT_ERRORBUFFER},
-    {"COPYPOSTFIELDS", CURLOPT_COPYPOSTFIELDS},
-    {"SSH_KEYDATA", CURLOPT_SSH_KEYDATA},
+#if NODE_LIBCURL_VER_GE(7, 80, 0)
+    {"PREREQFUNCTION", CURLOPT_PREREQFUNCTION},
+#endif
+
+    {"PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION},
+    {"READFUNCTION", CURLOPT_READFUNCTION},
+    {"SEEKFUNCTION", CURLOPT_SEEKFUNCTION},
 
 #if NODE_LIBCURL_VER_GE(7, 64, 0)
-    {"TRAILERDATA", CURLOPT_TRAILERDATA},
+    {"TRAILERFUNCTION", CURLOPT_TRAILERFUNCTION},
 #endif
 
-    // Maybe?
-    {"INTERLEAVEFUNCTION", CURLOPT_INTERLEAVEFUNCTION},
-    {"SSH_KEYFUNCTION", CURLOPT_SSH_KEYFUNCTION},
-    {"STDERR", CURLOPT_STDERR},
-
-#if NODE_LIBCURL_VER_GE(7, 46, 0)
-    {"STREAM_DEPENDS", CURLOPT_STREAM_DEPENDS},
-    {"STREAM_DEPENDS_E", CURLOPT_STREAM_DEPENDS_E},
-    {"STREAM_WEIGHT", CURLOPT_STREAM_WEIGHT},
+#if NODE_LIBCURL_VER_GE(7, 32, 0)
+    {"XFERINFOFUNCTION", CURLOPT_XFERINFOFUNCTION},
 #endif
+
+    {"WRITEFUNCTION", CURLOPT_WRITEFUNCTION},
+};
+
+const std::vector<CurlConstant> curlOptionHttpPost = {
+    {"NAME", CurlHttpPost::NAME},         {"FILE", CurlHttpPost::FILE},
+    {"CONTENTS", CurlHttpPost::CONTENTS}, {"TYPE", CurlHttpPost::TYPE},
+    {"FILENAME", CurlHttpPost::FILENAME},
 };
 
 const std::vector<CurlConstant> curlOptionInteger = {
@@ -86,6 +101,11 @@ const std::vector<CurlConstant> curlOptionInteger = {
     {"APPEND", CURLOPT_APPEND},
     {"AUTOREFERER", CURLOPT_AUTOREFERER},
     {"BUFFERSIZE", CURLOPT_BUFFERSIZE},
+
+#if NODE_LIBCURL_VER_GE(7, 87, 0)
+    {"CA_CACHE_TIMEOUT", CURLOPT_CA_CACHE_TIMEOUT},
+#endif
+
     {"CERTINFO", CURLOPT_CERTINFO},
     {"CONNECTTIMEOUT", CURLOPT_CONNECTTIMEOUT},
     {"CONNECTTIMEOUT_MS", CURLOPT_CONNECTTIMEOUT_MS},
@@ -174,6 +194,9 @@ const std::vector<CurlConstant> curlOptionInteger = {
 #if NODE_LIBCURL_VER_GE(7, 69, 0)
     {"MAIL_RCPT_ALLLOWFAILS", CURLOPT_MAIL_RCPT_ALLLOWFAILS},
 #endif
+#if NODE_LIBCURL_VER_GE(8, 2, 0)
+    {"MAIL_RCPT_ALLOWFAILS", CURLOPT_MAIL_RCPT_ALLOWFAILS},
+#endif
 
 #if NODE_LIBCURL_VER_GE(7, 65, 0)
     {"MAXAGE_CONN", CURLOPT_MAXAGE_CONN},
@@ -230,6 +253,10 @@ const std::vector<CurlConstant> curlOptionInteger = {
 
     {"SERVER_RESPONSE_TIMEOUT", CURLOPT_SERVER_RESPONSE_TIMEOUT},
 
+#if NODE_LIBCURL_VER_GE(8, 6, 0)
+    {"SERVER_RESPONSE_TIMEOUT_MS", CURLOPT_SERVER_RESPONSE_TIMEOUT_MS},
+#endif
+
 #if NODE_LIBCURL_VER_GE(7, 55, 0)
     {"SOCKS5_AUTH", CURLOPT_SOCKS5_AUTH},
 #endif
@@ -268,6 +295,11 @@ const std::vector<CurlConstant> curlOptionInteger = {
 #endif
 
     {"TCP_KEEPALIVE", CURLOPT_TCP_KEEPALIVE},
+
+#if NODE_LIBCURL_VER_GE(8, 9, 0)
+    {"TCP_KEEPCNT", CURLOPT_TCP_KEEPCNT},
+#endif
+
     {"TCP_KEEPIDLE", CURLOPT_TCP_KEEPIDLE},
     {"TCP_KEEPINTVL", CURLOPT_TCP_KEEPINTVL},
     {"TCP_NODELAY", CURLOPT_TCP_NODELAY},
@@ -283,6 +315,9 @@ const std::vector<CurlConstant> curlOptionInteger = {
 
 #if NODE_LIBCURL_VER_GE(7, 62, 0)
     {"UPLOAD_BUFFERSIZE", CURLOPT_UPLOAD_BUFFERSIZE},
+#if NODE_LIBCURL_VER_GE(8, 13, 0)
+    {"UPLOAD_FLAGS", CURLOPT_UPLOAD_FLAGS},
+#endif
     {"UPKEEP_INTERVAL_MS", CURLOPT_UPKEEP_INTERVAL_MS},
 #endif
 
@@ -300,6 +335,102 @@ const std::vector<CurlConstant> curlOptionInteger = {
 #if NODE_LIBCURL_VER_GE(7, 59, 0)
     {"TIMEVALUE_LARGE", CURLOPT_TIMEVALUE_LARGE},
 #endif
+};
+
+const std::vector<CurlConstant> curlOptionLinkedList = {
+#if NODE_LIBCURL_VER_GE(7, 49, 0)
+    {"CONNECT_TO", CURLOPT_CONNECT_TO},
+#endif
+
+    {"HTTP200ALIASES", CURLOPT_HTTP200ALIASES},
+    {"HTTPHEADER", CURLOPT_HTTPHEADER},
+    {"HTTPPOST", CURLOPT_HTTPPOST},
+#if NODE_LIBCURL_VER_GE(7, 56, 0)
+    {"MIMEPOST", CURLOPT_MIMEPOST},
+#endif
+    {"MAIL_RCPT", CURLOPT_MAIL_RCPT},
+
+#if NODE_LIBCURL_VER_GE(7, 37, 0)
+    {"PROXYHEADER", CURLOPT_PROXYHEADER},
+#endif
+
+    {"POSTQUOTE", CURLOPT_POSTQUOTE},
+    {"PREQUOTE", CURLOPT_PREQUOTE},
+    {"QUOTE", CURLOPT_QUOTE},
+    {"RESOLVE", CURLOPT_RESOLVE},
+    {"RTSPHEADER", CURLOPT_RTSPHEADER},
+    {"TELNETOPTIONS", CURLOPT_TELNETOPTIONS},
+};
+
+// This should be kept in sync with the options on scripts/utils/curlOptionsBlacklist.js
+const std::vector<CurlConstant> curlOptionNotImplemented = {
+    // Options that are complex to add support for.
+    {"SSL_CTX_FUNCTION", CURLOPT_TELNETOPTIONS},
+    {"OPENSOCKETFUNCTION", CURLOPT_OPENSOCKETFUNCTION},
+    {"CLOSESOCKETFUNCTION", CURLOPT_CLOSESOCKETFUNCTION},
+    {"SOCKOPTFUNCTION", CURLOPT_SOCKOPTFUNCTION},
+
+#if NODE_LIBCURL_VER_GE(7, 59, 0)
+    {"RESOLVER_START_DATA", CURLOPT_RESOLVER_START_DATA},
+    {"RESOLVER_START_FUNCTION", CURLOPT_RESOLVER_START_FUNCTION},
+#endif
+
+    {"CONV_FROM_UTF8_FUNCTION", CURLOPT_CONV_FROM_UTF8_FUNCTION},
+    {"CONV_TO_NETWORK_FUNCTION", CURLOPT_CONV_TO_NETWORK_FUNCTION},
+    {"CONV_FROM_NETWORK_FUNCTION", CURLOPT_CONV_FROM_NETWORK_FUNCTION},
+
+    // Options that are used internally.
+    {"WRITEDATA", CURLOPT_WRITEDATA},
+    {"HEADERDATA", CURLOPT_HEADERDATA},
+
+// Options that are not necessary because javascript nature.
+#if NODE_LIBCURL_VER_GE(7, 63, 0)
+    // URL's can be easily parsed on JS
+    {"CURLU", CURLOPT_CURLU},
+#endif
+
+    {"PRIVATE", CURLOPT_PRIVATE},
+    {"PROGRESSDATA", CURLOPT_PROGRESSDATA},
+
+#if NODE_LIBCURL_VER_GE(7, 32, 0)
+    {"XFERINFODATA", CURLOPT_XFERINFODATA},
+#endif
+
+    {"CHUNK_DATA", CURLOPT_CHUNK_DATA},
+    {"CLOSESOCKETDATA", CURLOPT_CLOSESOCKETDATA},
+    {"COPYPOSTFIELDS", CURLOPT_COPYPOSTFIELDS},
+    {"DEBUGDATA", CURLOPT_DEBUGDATA},
+    {"ERRORBUFFER", CURLOPT_ERRORBUFFER},
+    {"FNMATCH_DATA", CURLOPT_FNMATCH_DATA},
+    {"INTERLEAVEDATA", CURLOPT_INTERLEAVEDATA},
+    {"IOCTLDATA", CURLOPT_IOCTLDATA},
+#if NODE_LIBCURL_VER_GE(7, 87, 0)
+    {"QUICK_EXIT", CURLOPT_QUICK_EXIT},
+#endif
+    {"OPENSOCKETDATA", CURLOPT_OPENSOCKETDATA},
+    {"SEEKDATA", CURLOPT_SEEKDATA},
+    {"SOCKOPTDATA", CURLOPT_SOCKOPTDATA},
+    {"SSH_KEYDATA", CURLOPT_SSH_KEYDATA},
+    {"SSL_CTX_DATA", CURLOPT_SSL_CTX_DATA},
+
+#if NODE_LIBCURL_VER_GE(7, 64, 0)
+    {"TRAILERDATA", CURLOPT_TRAILERDATA},
+#endif
+
+    // Maybe?
+    {"INTERLEAVEFUNCTION", CURLOPT_INTERLEAVEFUNCTION},
+    {"SSH_KEYFUNCTION", CURLOPT_SSH_KEYFUNCTION},
+    {"STDERR", CURLOPT_STDERR},
+
+#if NODE_LIBCURL_VER_GE(7, 46, 0)
+    {"STREAM_DEPENDS", CURLOPT_STREAM_DEPENDS},
+    {"STREAM_DEPENDS_E", CURLOPT_STREAM_DEPENDS_E},
+    {"STREAM_WEIGHT", CURLOPT_STREAM_WEIGHT},
+#endif
+};
+
+const std::vector<CurlConstant> curlOptionSpecific = {
+    {"SHARE", CURLOPT_SHARE},
 };
 
 const std::vector<CurlConstant> curlOptionString = {
@@ -334,11 +465,20 @@ const std::vector<CurlConstant> curlOptionString = {
     {"DOH_URL", CURLOPT_DOH_URL},
 #endif
 
+#if NODE_LIBCURL_VER_GE(8, 8, 0)
+    {"ECH", CURLOPT_ECH},
+#endif
+
     {"EGDSOCKET", CURLOPT_EGDSOCKET},
     {"ENCODING", CURLOPT_ENCODING},  // should use ACCEPT_ENCODING
     {"FTPPORT", CURLOPT_FTPPORT},
     {"FTP_ACCOUNT", CURLOPT_FTP_ACCOUNT},
     {"FTP_ALTERNATIVE_TO_USER", CURLOPT_FTP_ALTERNATIVE_TO_USER},
+
+#if NODE_LIBCURL_VER_GE(8, 2, 0)
+    {"HAPROXY_CLIENT_IP", CURLOPT_HAPROXY_CLIENT_IP},
+#endif
+
     {"HTTP200ALIASES", CURLOPT_HTTP200ALIASES},
 
 #if NODE_LIBCURL_VER_GE(7, 74, 0)
@@ -450,6 +590,9 @@ const std::vector<CurlConstant> curlOptionString = {
 #if NODE_LIBCURL_VER_GE(7, 73, 0)
     {"SSL_EC_CURVES", CURLOPT_SSL_EC_CURVES},
 #endif
+#if NODE_LIBCURL_VER_GE(8, 14, 0)
+    {"SSL_SIGNATURE_ALGORITHMS", CURLOPT_SSL_SIGNATURE_ALGORITHMS},
+#endif
 
     {"TELNETOPTIONS", CURLOPT_TELNETOPTIONS},
 
@@ -475,67 +618,28 @@ const std::vector<CurlConstant> curlOptionString = {
 #endif
 };
 
-const std::vector<CurlConstant> curlOptionFunction = {
-    {"CHUNK_BGN_FUNCTION", CURLOPT_CHUNK_BGN_FUNCTION},
-    {"CHUNK_END_FUNCTION", CURLOPT_CHUNK_END_FUNCTION},
-    {"FNMATCH_FUNCTION", CURLOPT_FNMATCH_FUNCTION},
-    {"DEBUGFUNCTION", CURLOPT_DEBUGFUNCTION},
-    {"HEADERFUNCTION", CURLOPT_HEADERFUNCTION},
-
-#if NODE_LIBCURL_VER_GE(7, 74, 0)
-    {"HSTSREADFUNCTION", CURLOPT_HSTSREADFUNCTION},
-    {"HSTSWRITEFUNCTION", CURLOPT_HSTSWRITEFUNCTION},
+const std::vector<CurlConstant> curlMultiOptionFunction = {
+#if NODE_LIBCURL_VER_GE(7, 44, 0)
+    {"PUSHFUNCTION", CURLMOPT_PUSHFUNCTION},
 #endif
-
-#if NODE_LIBCURL_VER_GE(7, 80, 0)
-    {"PREREQFUNCTION", CURLOPT_PREREQFUNCTION},
-#endif
-
-    {"PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION},
-    {"READFUNCTION", CURLOPT_READFUNCTION},
-    {"SEEKFUNCTION", CURLOPT_SEEKFUNCTION},
-
-#if NODE_LIBCURL_VER_GE(7, 64, 0)
-    {"TRAILERFUNCTION", CURLOPT_TRAILERFUNCTION},
-#endif
-
-#if NODE_LIBCURL_VER_GE(7, 32, 0)
-    {"XFERINFOFUNCTION", CURLOPT_XFERINFOFUNCTION},
-#endif
-
-    {"WRITEFUNCTION", CURLOPT_WRITEFUNCTION},
 };
 
-const std::vector<CurlConstant> curlOptionLinkedList = {
-#if NODE_LIBCURL_VER_GE(7, 49, 0)
-    {"CONNECT_TO", CURLOPT_CONNECT_TO},
+const std::vector<CurlConstant> curlMultiOptionInteger = {
+    {"CHUNK_LENGTH_PENALTY_SIZE", CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE},
+    {"CONTENT_LENGTH_PENALTY_SIZE", CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE},
+#if NODE_LIBCURL_VER_GE(7, 67, 0)
+    {"MAX_CONCURRENT_STREAMS", CURLMOPT_MAX_CONCURRENT_STREAMS},
 #endif
-
-    {"HTTP200ALIASES", CURLOPT_HTTP200ALIASES},
-    {"HTTPHEADER", CURLOPT_HTTPHEADER},
-    {"HTTPPOST", CURLOPT_HTTPPOST},
-    {"MAIL_RCPT", CURLOPT_MAIL_RCPT},
-
-#if NODE_LIBCURL_VER_GE(7, 37, 0)
-    {"PROXYHEADER", CURLOPT_PROXYHEADER},
+#if NODE_LIBCURL_VER_GE(8, 17, 0)
+    {"NETWORK_CHANGED", CURLMOPT_NETWORK_CHANGED},
 #endif
-
-    {"POSTQUOTE", CURLOPT_POSTQUOTE},
-    {"PREQUOTE", CURLOPT_PREQUOTE},
-    {"QUOTE", CURLOPT_QUOTE},
-    {"RESOLVE", CURLOPT_RESOLVE},
-    {"RTSPHEADER", CURLOPT_RTSPHEADER},
-    {"TELNETOPTIONS", CURLOPT_TELNETOPTIONS},
-};
-
-const std::vector<CurlConstant> curlOptionHttpPost = {
-    {"NAME", CurlHttpPost::NAME},         {"FILE", CurlHttpPost::FILE},
-    {"CONTENTS", CurlHttpPost::CONTENTS}, {"TYPE", CurlHttpPost::TYPE},
-    {"FILENAME", CurlHttpPost::FILENAME},
-};
-
-const std::vector<CurlConstant> curlOptionSpecific = {
-    {"SHARE", CURLOPT_SHARE},
+    {"MAX_HOST_CONNECTIONS", CURLMOPT_MAX_HOST_CONNECTIONS},
+    {"MAX_TOTAL_CONNECTIONS", CURLMOPT_MAX_TOTAL_CONNECTIONS},
+    {"MAXCONNECTS", CURLMOPT_MAXCONNECTS},
+    // Pipelining was removed on libcurl 7.62, since then those options do nothing
+    // Also see: https://github.com/curl/curl/pull/3651
+    {"MAX_PIPELINE_LENGTH", CURLMOPT_MAX_PIPELINE_LENGTH},
+    {"PIPELINING", CURLMOPT_PIPELINING},
 };
 
 // This should be kept in sync with the options on scripts/utils/multiOptionsBlacklist.js
@@ -549,21 +653,10 @@ const std::vector<CurlConstant> curlMultiOptionNotImplemented = {
 #if NODE_LIBCURL_VER_GE(7, 44, 0)
     {"PUSHDATA", CURLMOPT_PUSHDATA},
 #endif
-};
-
-const std::vector<CurlConstant> curlMultiOptionInteger = {
-    {"CHUNK_LENGTH_PENALTY_SIZE", CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE},
-    {"CONTENT_LENGTH_PENALTY_SIZE", CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE},
-#if NODE_LIBCURL_VER_GE(7, 67, 0)
-    {"MAX_CONCURRENT_STREAMS", CURLMOPT_MAX_CONCURRENT_STREAMS},
+#if NODE_LIBCURL_VER_GE(8, 17, 0)
+    {"NOTIFYFUNCTION", CURLMOPT_NOTIFYFUNCTION},
+    {"NOTIFYDATA", CURLMOPT_NOTIFYDATA},
 #endif
-    {"MAX_HOST_CONNECTIONS", CURLMOPT_MAX_HOST_CONNECTIONS},
-    {"MAX_TOTAL_CONNECTIONS", CURLMOPT_MAX_TOTAL_CONNECTIONS},
-    {"MAXCONNECTS", CURLMOPT_MAXCONNECTS},
-    // Pipelining was removed on libcurl 7.62, since then those options do nothing
-    // Also see: https://github.com/curl/curl/pull/3651
-    {"MAX_PIPELINE_LENGTH", CURLMOPT_MAX_PIPELINE_LENGTH},
-    {"PIPELINING", CURLMOPT_PIPELINING},
 };
 
 const std::vector<CurlConstant> curlMultiOptionStringArray = {
@@ -571,80 +664,6 @@ const std::vector<CurlConstant> curlMultiOptionStringArray = {
     // Also see: https://github.com/curl/curl/pull/3651
     {"PIPELINING_SERVER_BL", CURLMOPT_PIPELINING_SERVER_BL},
     {"PIPELINING_SITE_BL", CURLMOPT_PIPELINING_SITE_BL},
-};
-
-const std::vector<CurlConstant> curlMultiOptionFunction = {
-#if NODE_LIBCURL_VER_GE(7, 44, 0)
-    {"PUSHFUNCTION", CURLMOPT_PUSHFUNCTION},
-#endif
-};
-
-const std::vector<CurlConstant> curlInfoNotImplemented = {
-// Complex.
-#if NODE_LIBCURL_VER_GE(7, 34, 0)
-    {"TLS_SESSION", CURLINFO_TLS_SESSION},
-#endif
-#if NODE_LIBCURL_VER_GE(7, 48, 0)
-    {"TLS_SSL_PTR", CURLINFO_TLS_SSL_PTR},
-#endif
-    // Unnecessary.
-    {"PRIVATE", CURLINFO_PRIVATE},
-    // Maybe
-};
-
-const std::vector<CurlConstant> curlInfoString = {
-#if NODE_LIBCURL_VER_GE(7, 84, 0)
-    {"CAINFO", CURLINFO_CAINFO},
-    {"CAPATH", CURLINFO_CAPATH},
-#endif
-
-    {"CONTENT_TYPE", CURLINFO_CONTENT_TYPE},
-    {"EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL},
-
-#if NODE_LIBCURL_VER_GE(7, 72, 0)
-    {"EFFECTIVE_METHOD", CURLINFO_EFFECTIVE_METHOD},
-#endif
-
-    {"FTP_ENTRY_PATH", CURLINFO_FTP_ENTRY_PATH},
-    {"LOCAL_IP", CURLINFO_LOCAL_IP},
-    {"PRIMARY_IP", CURLINFO_PRIMARY_IP},
-    {"REDIRECT_URL", CURLINFO_REDIRECT_URL},
-
-#if NODE_LIBCURL_VER_GE(7, 76, 0)
-    {"REFERER", CURLINFO_REFERER},
-#endif
-
-    {"RTSP_SESSION_ID", CURLINFO_RTSP_SESSION_ID},
-
-#if NODE_LIBCURL_VER_GE(7, 52, 0)
-    {"SCHEME", CURLINFO_SCHEME},
-#endif
-};
-
-const std::vector<CurlConstant> curlInfoOffT = {
-#if NODE_LIBCURL_VER_GE(7, 55, 0)
-    {"CONTENT_LENGTH_DOWNLOAD_T", CURLINFO_CONTENT_LENGTH_DOWNLOAD_T},
-    {"CONTENT_LENGTH_UPLOAD_T", CURLINFO_CONTENT_LENGTH_UPLOAD_T},
-    {"SIZE_DOWNLOAD_T", CURLINFO_SIZE_DOWNLOAD_T},
-    {"SIZE_UPLOAD_T", CURLINFO_SIZE_UPLOAD_T},
-    {"SPEED_DOWNLOAD_T", CURLINFO_SPEED_DOWNLOAD_T},
-    {"SPEED_UPLOAD_T", CURLINFO_SPEED_UPLOAD_T},
-#endif
-#if NODE_LIBCURL_VER_GE(7, 59, 0)
-    {"FILETIME_T", CURLINFO_FILETIME_T},
-#endif
-#if NODE_LIBCURL_VER_GE(7, 61, 0)
-    {"APPCONNECT_TIME_T", CURLINFO_APPCONNECT_TIME_T},
-    {"CONNECT_TIME_T", CURLINFO_CONNECT_TIME_T},
-    {"NAMELOOKUP_TIME_T", CURLINFO_NAMELOOKUP_TIME_T},
-    {"PRETRANSFER_TIME_T", CURLINFO_PRETRANSFER_TIME_T},
-    {"REDIRECT_TIME_T", CURLINFO_REDIRECT_TIME_T},
-    {"STARTTRANSFER_TIME_T", CURLINFO_STARTTRANSFER_TIME_T},
-    {"TOTAL_TIME_T", CURLINFO_TOTAL_TIME_T},
-#endif
-#if NODE_LIBCURL_VER_GE(7, 66, 0)
-    {"RETRY_AFTER", CURLINFO_RETRY_AFTER},
-#endif
 };
 
 const std::vector<CurlConstant> curlInfoDouble = {
@@ -701,11 +720,12 @@ const std::vector<CurlConstant> curlInfoInteger = {
     {"RTSP_CSEQ_RECV", CURLINFO_RTSP_CSEQ_RECV},
     {"RTSP_SERVER_CSEQ", CURLINFO_RTSP_SERVER_CSEQ},
     {"SSL_VERIFYRESULT", CURLINFO_SSL_VERIFYRESULT},
-};
-
-const std::vector<CurlConstant> curlInfoSocket = {
-#if NODE_LIBCURL_VER_GE(7, 45, 0)
-    {"ACTIVESOCKET", CURLINFO_ACTIVESOCKET},
+#if NODE_LIBCURL_VER_GE(8, 7, 0)
+    {"USED_PROXY", CURLINFO_USED_PROXY},
+#endif
+#if NODE_LIBCURL_VER_GE(8, 12, 0)
+    {"PROXYAUTH_USED", CURLINFO_PROXYAUTH_USED},
+    {"HTTPAUTH_USED", CURLINFO_HTTPAUTH_USED},
 #endif
 };
 
@@ -715,263 +735,378 @@ const std::vector<CurlConstant> curlInfoLinkedList = {
     {"CERTINFO", CURLINFO_CERTINFO},
 };
 
-const std::vector<CurlConstant> curlOptionBlob = {
-#if NODE_LIBCURL_VER_GE(7, 77, 0)
-    {"CAINFO_BLOB", CURLOPT_CAINFO_BLOB},
+const std::vector<CurlConstant> curlInfoNotImplemented = {
+// Complex.
+#if NODE_LIBCURL_VER_GE(7, 34, 0)
+    {"TLS_SESSION", CURLINFO_TLS_SESSION},
 #endif
-
-#if NODE_LIBCURL_VER_GE(7, 71, 0)
-    {"ISSUERCERT_BLOB", CURLOPT_ISSUERCERT_BLOB},
-
-#if NODE_LIBCURL_VER_GE(7, 77, 0)
-    {"PROXY_CAINFO_BLOB", CURLOPT_PROXY_CAINFO_BLOB},
+#if NODE_LIBCURL_VER_GE(7, 48, 0)
+    {"TLS_SSL_PTR", CURLINFO_TLS_SSL_PTR},
 #endif
+    // Unnecessary.
+    {"PRIVATE", CURLINFO_PRIVATE},
+    // Maybe
+};
 
-    {"PROXY_SSLCERT_BLOB", CURLOPT_PROXY_SSLCERT_BLOB},
-    {"PROXY_SSLKEY_BLOB", CURLOPT_PROXY_SSLKEY_BLOB},
-    {"SSLCERT_BLOB", CURLOPT_SSLCERT_BLOB},
-    {"SSLKEY_BLOB", CURLOPT_SSLKEY_BLOB},
+const std::vector<CurlConstant> curlInfoOffT = {
+#if NODE_LIBCURL_VER_GE(7, 55, 0)
+    {"CONTENT_LENGTH_DOWNLOAD_T", CURLINFO_CONTENT_LENGTH_DOWNLOAD_T},
+    {"CONTENT_LENGTH_UPLOAD_T", CURLINFO_CONTENT_LENGTH_UPLOAD_T},
+    {"SIZE_DOWNLOAD_T", CURLINFO_SIZE_DOWNLOAD_T},
+    {"SIZE_UPLOAD_T", CURLINFO_SIZE_UPLOAD_T},
+    {"SPEED_DOWNLOAD_T", CURLINFO_SPEED_DOWNLOAD_T},
+    {"SPEED_UPLOAD_T", CURLINFO_SPEED_UPLOAD_T},
+#endif
+#if NODE_LIBCURL_VER_GE(7, 59, 0)
+    {"FILETIME_T", CURLINFO_FILETIME_T},
+#endif
+#if NODE_LIBCURL_VER_GE(7, 61, 0)
+    {"APPCONNECT_TIME_T", CURLINFO_APPCONNECT_TIME_T},
+    {"CONNECT_TIME_T", CURLINFO_CONNECT_TIME_T},
+    {"NAMELOOKUP_TIME_T", CURLINFO_NAMELOOKUP_TIME_T},
+    {"PRETRANSFER_TIME_T", CURLINFO_PRETRANSFER_TIME_T},
+    {"REDIRECT_TIME_T", CURLINFO_REDIRECT_TIME_T},
+    {"STARTTRANSFER_TIME_T", CURLINFO_STARTTRANSFER_TIME_T},
+    {"TOTAL_TIME_T", CURLINFO_TOTAL_TIME_T},
+#endif
+#if NODE_LIBCURL_VER_GE(7, 66, 0)
+    {"RETRY_AFTER", CURLINFO_RETRY_AFTER},
+#endif
+#if NODE_LIBCURL_VER_GE(8, 2, 0)
+    {"CONN_ID", CURLINFO_CONN_ID},
+    {"XFER_ID", CURLINFO_XFER_ID},
+#endif
+#if NODE_LIBCURL_VER_GE(8, 6, 0)
+    {"QUEUE_TIME_T", CURLINFO_QUEUE_TIME_T},
+#endif
+#if NODE_LIBCURL_VER_GE(8, 10, 0)
+    {"POSTTRANSFER_TIME_T", CURLINFO_POSTTRANSFER_TIME_T},
+#endif
+#if NODE_LIBCURL_VER_GE(8, 11, 0)
+    {"EARLYDATA_SENT_T", CURLINFO_EARLYDATA_SENT_T},
 #endif
 };
 
-static void ExportConstants(v8::Local<v8::Object> obj,
-                            const std::vector<NodeLibcurl::CurlConstant>& optionGroup,
-                            v8::PropertyAttribute attributes) {
-  Nan::HandleScope scope;
+const std::vector<CurlConstant> curlInfoSocket = {
+#if NODE_LIBCURL_VER_GE(7, 45, 0)
+    {"ACTIVESOCKET", CURLINFO_ACTIVESOCKET},
+#endif
+};
 
-  for (std::vector<NodeLibcurl::CurlConstant>::const_iterator it = optionGroup.begin(),
-                                                              end = optionGroup.end();
-       it != end; ++it) {
-    Nan::DefineOwnProperty(obj, Nan::New<v8::String>(it->name).ToLocalChecked(),
-                           Nan::New<v8::Integer>(static_cast<int32_t>(it->value)), attributes);
+const std::vector<CurlConstant> curlInfoString = {
+#if NODE_LIBCURL_VER_GE(7, 84, 0)
+    {"CAINFO", CURLINFO_CAINFO},
+    {"CAPATH", CURLINFO_CAPATH},
+#endif
+
+    {"CONTENT_TYPE", CURLINFO_CONTENT_TYPE},
+    {"EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL},
+
+#if NODE_LIBCURL_VER_GE(7, 72, 0)
+    {"EFFECTIVE_METHOD", CURLINFO_EFFECTIVE_METHOD},
+#endif
+
+    {"FTP_ENTRY_PATH", CURLINFO_FTP_ENTRY_PATH},
+    {"LOCAL_IP", CURLINFO_LOCAL_IP},
+    {"PRIMARY_IP", CURLINFO_PRIMARY_IP},
+    {"REDIRECT_URL", CURLINFO_REDIRECT_URL},
+
+#if NODE_LIBCURL_VER_GE(7, 76, 0)
+    {"REFERER", CURLINFO_REFERER},
+#endif
+
+    {"RTSP_SESSION_ID", CURLINFO_RTSP_SESSION_ID},
+
+#if NODE_LIBCURL_VER_GE(7, 52, 0)
+    {"SCHEME", CURLINFO_SCHEME},
+#endif
+};
+
+// Helper function to add constants to an Node.js object. Private to this file.
+static void AddConstants(Napi::Object obj, const std::vector<CurlConstant>& constants) {
+  Napi::Env env = obj.Env();
+
+  for (const auto& constant : constants) {
+    obj.DefineProperty(Napi::PropertyDescriptor::Value(
+        constant.name, Napi::Number::New(env, static_cast<double>(constant.value)),
+        static_cast<napi_property_attributes>(napi_enumerable | napi_configurable)));
   }
 }
 
-// Add Curl constructor to the module exports
-NAN_MODULE_INIT(Initialize) {
-  Nan::HandleScope scope;
+Curl::Curl(Napi::Env env, Napi::Object exports) : env(env), addonAllocatedMemory(0) {
+  this->InitTLS();
 
-  v8::Local<v8::Object> obj = Nan::New<v8::Object>();
+  this->EasyConstructor = Napi::Persistent(Easy::Init(env, exports));
+  this->MultiConstructor = Napi::Persistent(Multi::Init(env, exports));
+  this->ShareConstructor = Napi::Persistent(Share::Init(env, exports));
+  this->Http2PushFrameHeadersConstructor =
+      Napi::Persistent(Http2PushFrameHeaders::Init(env, exports));
+#if NODE_LIBCURL_VER_GE(7, 56, 0)
+  this->CurlMimeConstructor = Napi::Persistent(CurlMime::Init(env, exports));
+  this->CurlMimePartConstructor = Napi::Persistent(CurlMimePart::Init(env, exports));
+#endif
 
-  v8::PropertyAttribute attributes =
-      static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete);
-  v8::PropertyAttribute attributesDontEnum =
-      static_cast<v8::PropertyAttribute>(v8::ReadOnly | v8::DontDelete | v8::DontEnum);
+  // This is setup on moduleSetup.ts
+  this->CurlEasyErrorConstructor = Napi::Persistent(CurlError::InitCurlEasyError(env));
+  this->CurlMultiErrorConstructor = Napi::Persistent(CurlError::InitCurlMultiError(env));
+  this->CurlSharedErrorConstructor = Napi::Persistent(CurlError::InitCurlSharedError(env));
 
-  // export options
-  v8::Local<v8::Object> optionsObj = Nan::New<v8::Object>();
-  ExportConstants(optionsObj, curlOptionNotImplemented, attributesDontEnum);
-  ExportConstants(optionsObj, curlOptionString, attributes);
-  ExportConstants(optionsObj, curlOptionInteger, attributes);
-  ExportConstants(optionsObj, curlOptionFunction, attributes);
-  ExportConstants(optionsObj, curlOptionLinkedList, attributes);
-  ExportConstants(optionsObj, curlOptionSpecific, attributes);
-  ExportConstants(optionsObj, curlOptionBlob, attributes);
-
-  // export infos
-  v8::Local<v8::Object> infosObj = Nan::New<v8::Object>();
-  ExportConstants(infosObj, curlInfoNotImplemented, attributesDontEnum);
-  ExportConstants(infosObj, curlInfoString, attributes);
-  ExportConstants(infosObj, curlInfoOffT, attributes);
-  ExportConstants(infosObj, curlInfoDouble, attributes);
-  ExportConstants(infosObj, curlInfoInteger, attributes);
-  ExportConstants(infosObj, curlInfoSocket, attributes);
-  ExportConstants(infosObj, curlInfoLinkedList, attributes);
-
-  // export Curl codes
-  v8::Local<v8::Object> multiObj = Nan::New<v8::Object>();
-  ExportConstants(multiObj, curlMultiOptionNotImplemented, attributesDontEnum);
-  ExportConstants(multiObj, curlMultiOptionInteger, attributes);
-  ExportConstants(multiObj, curlMultiOptionStringArray, attributes);
-  ExportConstants(multiObj, curlMultiOptionFunction, attributes);
-
-  // static members
-  Nan::DefineOwnProperty(obj, Nan::New<v8::String>("option").ToLocalChecked(), optionsObj,
-                         attributes);
-  Nan::DefineOwnProperty(obj, Nan::New<v8::String>("info").ToLocalChecked(), infosObj, attributes);
-  Nan::DefineOwnProperty(obj, Nan::New<v8::String>("multi").ToLocalChecked(), multiObj, attributes);
-
-  Nan::SetMethod(obj, "globalInit", GlobalInit);
-  Nan::SetMethod(obj, "globalCleanup", GlobalCleanup);
-  Nan::SetMethod(obj, "getVersion", GetVersion);
-  Nan::SetMethod(obj, "getCount", GetCount);
-  Nan::SetAccessor(obj, Nan::New("VERSION_NUM").ToLocalChecked(), GetterVersionNum, 0,
-                   v8::Local<v8::Value>(), v8::DEFAULT, attributes);
-
-  Nan::Set(target, Nan::New("Curl").ToLocalChecked(), obj);
+  CurlVersionInfo::Init(env, exports);
 }
 
-int32_t IsInsideCurlConstantStruct(const std::vector<CurlConstant>& curlConstants,
-                                   const v8::Local<v8::Value>& searchFor) {
-  Nan::HandleScope scope;
-
-  bool isString = searchFor->IsString();
-  bool isInt = searchFor->IsInt32();
-
-  std::string optionName = "";
-  int32_t optionId = -1;
-
-  if (!isString && !isInt) {
-    return 0;
-  }
-
-  if (isString) {
-    Nan::Utf8String optionNameV8(searchFor);
-
-    optionName = std::string(*optionNameV8);
-
-    std::transform(optionName.begin(), optionName.end(), optionName.begin(), ::toupper);
-
-  } else {  // int
-    optionId = Nan::To<int32_t>(searchFor).FromJust();
-  }
-
-  for (std::vector<CurlConstant>::const_iterator it = curlConstants.begin(),
-                                                 end = curlConstants.end();
-       it != end; ++it) {
-    if ((isString && it->name == optionName) || (isInt && it->value == optionId)) {
-      return static_cast<int32_t>(it->value);
-    }
-  }
-
-  return 0;
+Curl::~Curl() {
+  // Destructor implementation - cleanup handled by N-API automatically
 }
 
-// based on https://github.com/libxmljs/libxmljs/blob/master/src/libxmljs.cc#L45
-void AdjustMemory(ssize_t diff) {
-  Nan::HandleScope scope;
+void Curl::InitTLS() {
+  // This is setup on moduleSetup.ts
+  Napi::Value maybeTls = env.Global().Get("__libcurlTls");
 
-  addonAllocatedMemory += diff;
-
-  // if v8 is no longer running, don't try to adjust memory
-
-  // Return if no available Isolate
-  if (v8::Isolate::GetCurrent() == 0 || v8::Isolate::GetCurrent()->IsDead()) {
+  if (!(maybeTls.IsObject())) {
     return;
   }
 
-  Nan::AdjustExternalMemory(static_cast<int>(diff));
-}
+  Napi::Object tls = maybeTls.ToObject();
 
-// Return human readable string with the version number of libcurl and some of its important
-// components (like OpenSSL version).
-NAN_METHOD(GetVersion) {
-  Nan::HandleScope scope;
+  // get CA certificates from Node.js's tls module and set them on the easy handle
+  // See: https://nodejs.org/api/tls.html#tlsgetcacertificatestype
+  Napi::Function getCACertificates = tls.Get("getCACertificates").As<Napi::Function>();
+  Napi::Array caCertificates =
+      getCACertificates.Call({Napi::String::New(env, "default")}).As<Napi::Array>();
 
-  const char* version = curl_version();
-
-  v8::Local<v8::Value> versionObj = Nan::New<v8::String>(version).ToLocalChecked();
-
-  info.GetReturnValue().Set(versionObj);
-}
-
-NAN_METHOD(GetCount) {
-  Nan::HandleScope scope;
-
-  info.GetReturnValue().Set(Easy::currentOpenedHandles);
-}
-
-// The following memory allocation wrappers are mostly the ones at
-//  https://github.com/gagern/libxmljs/blob/master/src/libxmljs.cc#L77
-//  made by Martin von Gagern (https://github.com/gagern)
-//  Related code review at http://codereview.stackexchange.com/q/128547/10394
-struct MemWrapper {
-  size_t size;
-  curl_off_t data;
-};
-
-#define MEMWRAPPER_SIZE offsetof(MemWrapper, data)
-
-inline void* MemWrapperToClient(MemWrapper* memWrapper) {
-  return static_cast<void*>(reinterpret_cast<char*>(memWrapper) + MEMWRAPPER_SIZE);
-}
-
-inline MemWrapper* ClientToMemWrapper(void* client) {
-  return reinterpret_cast<MemWrapper*>(static_cast<char*>(client) - MEMWRAPPER_SIZE);
-}
-
-void* MallocCallback(size_t size) {
-  size_t totalSize = size + MEMWRAPPER_SIZE;
-  MemWrapper* mem = static_cast<MemWrapper*>(malloc(totalSize));
-  if (!mem) return NULL;
-  mem->size = size;
-  AdjustMemory(totalSize);
-  return MemWrapperToClient(mem);
-}
-
-void FreeCallback(void* p) {
-  if (!p) return;
-  MemWrapper* mem = ClientToMemWrapper(p);
-  ssize_t totalSize = mem->size + MEMWRAPPER_SIZE;
-  AdjustMemory(-totalSize);
-  free(mem);
-}
-
-void* ReallocCallback(void* ptr, size_t size) {
-  if (!ptr) return MallocCallback(size);
-  MemWrapper* mem1 = ClientToMemWrapper(ptr);
-  ssize_t oldSize = mem1->size;
-  MemWrapper* mem2 = static_cast<MemWrapper*>(realloc(mem1, size + MEMWRAPPER_SIZE));
-  if (!mem2) return NULL;
-  mem2->size = size;
-  AdjustMemory(ssize_t(size) - oldSize);
-  return MemWrapperToClient(mem2);
-}
-
-char* StrdupCallback(const char* str) {
-  size_t size = strlen(str) + 1;
-  char* res = static_cast<char*>(MallocCallback(size));
-  if (res) memcpy(res, str, size);
-  return res;
-}
-
-void* CallocCallback(size_t nmemb, size_t size) {
-  void* ptr = MallocCallback(nmemb * size);
-  if (!ptr) return NULL;
-  memset(ptr, 0, nmemb * size);  // zero-fill
-  return ptr;
-}
-
-NAN_METHOD(GlobalInit) {
-  Nan::HandleScope scope;
-
-  long flags = info[0]->IsUndefined()                                         // NOLINT(runtime/int)
-                   ? static_cast<long>(Nan::To<int32_t>(info[0]).FromJust())  // NOLINT(runtime/int)
-                   : CURL_GLOBAL_ALL;
-
-  curl_version_info_data* version = curl_version_info(CURLVERSION_NOW);
-  isLibcurlBuiltWithThreadedResolver =
-      (version->features & CURL_VERSION_ASYNCHDNS) == CURL_VERSION_ASYNCHDNS;
-
-  CURLcode globalInitRetCode;
-
-  // We only add the allloc wrappers if we are running libcurl without the threaded resolver
-  //  that is because v8 AdjustAmountOfExternalAllocatedMemory must be called from the Node thread
-  if (!isLibcurlBuiltWithThreadedResolver) {
-    globalInitRetCode = curl_global_init_mem(flags, MallocCallback, FreeCallback, ReallocCallback,
-                                             StrdupCallback, CallocCallback);
-  } else {
-    globalInitRetCode = curl_global_init(flags);
+  std::vector<std::string> certs;
+  for (uint32_t i = 0; i < caCertificates.Length(); i++) {
+    Napi::Value cert = caCertificates[i];
+    if (cert.IsString()) {
+      certs.push_back(cert.As<Napi::String>().Utf8Value());
+    }
   }
 
-  info.GetReturnValue().Set(globalInitRetCode);
+  // Join all certificates with newline
+  if (!certs.empty()) {
+    for (size_t i = 0; i < certs.size(); ++i) {
+      if (i > 0) {
+        this->caCertificatesData += "\n";
+      }
+      this->caCertificatesData += certs[i];
+    }
+
+    // Set up the curl_blob structure with CURL_BLOB_NOCOPY flag
+    // We use NOCOPY because the data is stored in this->caCertificatesData which persists
+    // for the lifetime of the Curl instance
+    this->caCertificatesBlob.data = const_cast<char*>(this->caCertificatesData.c_str());
+    this->caCertificatesBlob.len = this->caCertificatesData.length();
+    this->caCertificatesBlob.flags = CURL_BLOB_NOCOPY;
+  }
 }
 
-NAN_METHOD(GlobalCleanup) {
-  Nan::HandleScope scope;
+void Curl::AdjustHandleMemory(CurlHandleType handleType, int delta) {
+  auto size = handleMemoryMap[handleType];
+  auto usage = size * delta;
+  this->addonAllocatedMemory += usage;
+  Napi::MemoryManagement::AdjustExternalMemory(this->env, usage);
 
+  this->activeHandleCount[handleType] += delta;
+
+  // we used to have checks against v8 not running, as this was based on libxml:
+  // https://github.com/libxmljs/libxmljs/blob/master/src/libxmljs.cc
+  // We do not have that anymore.
+}
+
+void Curl::CleanupData(Napi::Env env, Curl* data) {
+  delete data;
   curl_global_cleanup();
-
-  info.GetReturnValue().Set(Nan::Undefined());
 }
 
-// Return hexdecimal representation of the libcurl version.
-NAN_GETTER(GetterVersionNum) {
-  Nan::HandleScope scope;
+// Initialize function
+Napi::Object Curl::Init(Napi::Env env, Napi::Object exports) {
+  // We used to use curl_global_init_mem, as we would use it to adjust memory usage of the addon
+  // however when running with multiple environments, this would not make a lot of sense, as we
+  // would be unable to track which environment is responsible for the memory usage.
+  CURLcode code = curl_global_init(static_cast<long>(CURL_GLOBAL_ALL));
 
-  v8::Local<v8::Int32> version = Nan::New(LIBCURL_VERSION_NUM);
+  if (code != CURLE_OK) {
+    throw Napi::Error::New(
+        env, "Failed to initialize libcurl: " + std::string(curl_easy_strerror(code)));
+  }
 
-  info.GetReturnValue().Set(version);
+  Curl* curl = new Curl(env, exports);
+
+  // env.SetInstanceData(data, CleanupData);  can be used to save data for future usage
+  // which can be retrieved using Napi::Env::GetInstanceData
+  // We may need to use that instead of this static reference, as otherwise this may not be thread
+  // safe see https://github.com/nodejs/node-addon-api/issues/550#issuecomment-3243637102
+  env.SetInstanceData<Curl, Curl::CleanupData>(curl);
+
+  // Create Curl object to hold constants and methods
+  Napi::Object curlJs = Napi::Object::New(env);
+
+  auto getVersion = Napi::PropertyDescriptor::Function(
+      "getVersion", Curl::GetVersion, static_cast<napi_property_attributes>(napi_enumerable));
+
+  auto getCount = Napi::PropertyDescriptor::Function(
+      "getCount", Curl::GetCount, static_cast<napi_property_attributes>(napi_enumerable));
+
+  auto versionNum = Napi::PropertyDescriptor::Accessor(
+      "VERSION_NUM", Curl::GetVersionNum,
+      static_cast<napi_property_attributes>(napi_enumerable | napi_configurable));
+
+  auto threadId = Napi::PropertyDescriptor::Accessor(
+      "THREAD_ID", Curl::GetThreadId,
+      static_cast<napi_property_attributes>(napi_enumerable | napi_configurable));
+
+  curlJs.DefineProperties({getVersion, getCount, versionNum, threadId});
+
+  // Create option object
+  Napi::Object curlOption = Napi::Object::New(env);
+  AddConstants(curlOption, curlOptionNotImplemented);
+  AddConstants(curlOption, curlOptionHttpPost);
+  AddConstants(curlOption, curlOptionBlob);
+  AddConstants(curlOption, curlOptionFunction);
+  AddConstants(curlOption, curlOptionInteger);
+  AddConstants(curlOption, curlOptionLinkedList);
+  AddConstants(curlOption, curlOptionSpecific);
+  AddConstants(curlOption, curlOptionString);
+  curlJs.Set("option", curlOption);
+
+  // Create info object
+  Napi::Object curlInfo = Napi::Object::New(env);
+  AddConstants(curlInfo, curlInfoNotImplemented);
+  AddConstants(curlInfo, curlInfoDouble);
+  AddConstants(curlInfo, curlInfoInteger);
+  AddConstants(curlInfo, curlInfoLinkedList);
+  AddConstants(curlInfo, curlInfoOffT);
+  AddConstants(curlInfo, curlInfoSocket);
+  AddConstants(curlInfo, curlInfoString);
+  curlJs.Set("info", curlInfo);
+
+  // Create multi option object
+  Napi::Object curlMultiOption = Napi::Object::New(env);
+  AddConstants(curlMultiOption, curlMultiOptionFunction);
+  AddConstants(curlMultiOption, curlMultiOptionInteger);
+  AddConstants(curlMultiOption, curlMultiOptionStringArray);
+  curlJs.Set("multi", curlMultiOption);
+
+  // Add other curl constants (codes, etc.)
+  Napi::Object curlCode = Napi::Object::New(env);
+  curlCode.Set("CURLE_OK", Napi::Number::New(env, CURLE_OK));
+  curlJs.Set("code", curlCode);
+
+  // Export Curl object
+  exports.Set("Curl", curlJs);
+
+  return exports;
+}
+
+Napi::Value Curl::GetVersion(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  // Thread-safe lazy initialization of curl version string
+  // curl_version() uses a static buffer and is not thread-safe
+  static std::once_flag versionInitFlag;
+  static std::string cachedVersion;
+
+  std::call_once(versionInitFlag, []() { cachedVersion = curl_version(); });
+
+  return Napi::String::New(env, cachedVersion);
+}
+
+Napi::Value Curl::GetCount(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  auto curl = info.Env().GetInstanceData<Curl>();
+  return Napi::Number::New(env, curl->activeHandleCount[CURL_HANDLE_TYPE_EASY]);
+}
+
+Napi::Value Curl::GetVersionNum(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  return Napi::Number::New(env, LIBCURL_VERSION_NUM);
+}
+
+Napi::Value Curl::GetThreadId(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  std::ostringstream oss;
+  oss << std::this_thread::get_id();
+  return Napi::String::New(env, oss.str());
+}
+
+// Helper methods implementation
+
+static std::once_flag curlConstantMapsInitFlag;
+
+void InitializeCurlConstantMaps() {
+  std::call_once(curlConstantMapsInitFlag, []() {
+    const std::vector<CurlConstant>* allConstantVectors[] = {
+        &curlOptionBlob,
+        &curlOptionFunction,
+        &curlOptionHttpPost,
+        &curlOptionInteger,
+        &curlOptionLinkedList,
+        &curlOptionNotImplemented,
+        &curlOptionSpecific,
+        &curlOptionString,
+        &curlInfoDouble,
+        &curlInfoInteger,
+        &curlInfoLinkedList,
+        &curlInfoNotImplemented,
+        &curlInfoOffT,
+        &curlInfoSocket,
+        &curlInfoString,
+        &curlMultiOptionFunction,
+        &curlMultiOptionInteger,
+        &curlMultiOptionNotImplemented,
+        &curlMultiOptionStringArray,
+    };
+
+    curlConstantsByName.reserve(500);
+    curlConstantsByValue.reserve(500);
+
+    for (const auto* vec : allConstantVectors) {
+      for (const auto& constant : *vec) {
+        int32_t value = static_cast<int32_t>(constant.value);
+
+        // Push entries to support duplicate names across different contexts
+        curlConstantsByName[constant.name].push_back({value, vec});
+        curlConstantsByValue[constant.value].push_back({value, vec});
+      }
+    }
+  });
+}
+
+int32_t IsInsideCurlConstantStruct(const std::vector<CurlConstant>& curlConstants,
+                                   const Napi::Value& searchFor) {
+  int32_t ret = 0;  // Return 0 (falsy) when no match found
+
+  if (searchFor.IsString()) {
+    std::string optionName = searchFor.As<Napi::String>().Utf8Value();
+    std::transform(optionName.begin(), optionName.end(), optionName.begin(), ::toupper);
+
+    auto it = curlConstantsByName.find(optionName);
+    if (it != curlConstantsByName.end()) {
+      // Iterate through all entries with this name to find one matching the target vector
+      // This handles duplicate names across different contexts (e.g., CERTINFO as option and info)
+      for (const auto& lookup : it->second) {
+        if (lookup.sourceVector == &curlConstants) {
+          ret = lookup.value;
+          break;
+        }
+      }
+    }
+  } else if (searchFor.IsNumber()) {
+    int64_t searchForNumber = searchFor.As<Napi::Number>().Int64Value();
+
+    auto it = curlConstantsByValue.find(searchForNumber);
+    if (it != curlConstantsByValue.end()) {
+      // Iterate through all entries with this value to find one matching the target vector
+      for (const auto& lookup : it->second) {
+        if (lookup.sourceVector == &curlConstants) {
+          ret = lookup.value;
+          break;
+        }
+      }
+    }
+  }
+
+  return ret;
 }
 
 }  // namespace NodeLibcurl

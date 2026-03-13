@@ -1,10 +1,10 @@
 {
   "dependencies": {
-    "koa": "^2.12.1",
-    "@koa/router": "^9.0.1",
-    "stoppable": "1.1.0",
-    "es6-promisify": "6.1.1",
-    "protobufjs": "6.9.0",
-    "raw-body": "2.4.1"
+    "@koa/router": "^14.0.0",
+    "es6-promisify": "7.0.0",
+    "koa": "^3.0.1",
+    "protobufjs": "7.5.4",
+    "raw-body": "3.0.1",
+    "stoppable": "1.1.0"
   }
 }

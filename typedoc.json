@@ -1,0 +1,40 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["lib/index.ts"],
+  "entryPointStrategy": "resolve",
+  "out": "docs",
+  "exclude": ["node_modules", "dist"],
+  "readme": "none",
+  "sort": [
+    "kind",
+    "instance-first",
+    "alphabetical-ignoring-documents"
+  ],
+  "kindSortOrder": [
+    "Reference",
+    "Project",
+    "Module",
+    "Namespace",
+    "Class",
+    "Interface",
+    "TypeAlias",
+    "Constructor",
+    "Enum",
+    "EnumMember",
+    "Property",
+    "Variable",
+    "Function",
+    "Accessor",
+    "Method",
+    "Parameter",
+    "TypeParameter",
+    "TypeLiteral",
+    "CallSignature",
+    "ConstructorSignature",
+    "IndexSignature",
+    "GetSignature",
+    "SetSignature"
+  ]
+  // "gaID": "UA-11343647-11",
+  // "plugin": ["typedoc-plugin-ga"]
+}

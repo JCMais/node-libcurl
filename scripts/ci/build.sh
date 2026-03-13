@@ -1,21 +1,22 @@
 #!/bin/bash
 # This must be run from the root of the repo, and the following variables must be available:
 #  GIT_COMMIT
-#  GIT_TAG
+#  GIT_REF_NAME
 # In case it's needed to use the vars declared here, this should be sourced on the current shell
 #  . ./scripts/ci/build.sh
+
+# Eventually this will be replaced by vcpkg, only thing remaining is for vcpkg to support
+# musl: https://github.com/microsoft/vcpkg/issues/21218
+
 set -euvo pipefail
 
 curr_dirname=$(dirname "$0")
 
 . $curr_dirname/utils/gsort.sh
 
-FORCE_REBUILD=false
-# if [[ ! -z "$GIT_TAG" ]]; then
-#   FORCE_REBUILD=true
-# fi
+FORCE_REBUILD_DEFAULT=false
 
-export FORCE_REBUILD=$FORCE_REBUILD
+export FORCE_REBUILD=${FORCE_REBUILD:-$FORCE_REBUILD_DEFAULT}
 
 MACOS_UNIVERSAL_BUILD=${MACOS_UNIVERSAL_BUILD:-}
 
@@ -23,6 +24,8 @@ echo "Checking python version"
 python -V || true
 echo "Checking python3 version"
 python3 -V || true
+echo "Checking nodejs version"
+node -e "console.log(process.versions)"
 
 if [ "$(uname)" == "Darwin" ]; then
   # Default to universal build, if possible.
@@ -37,7 +40,7 @@ if [ "$(uname)" == "Darwin" ]; then
     export MACOS_ARCH_FLAGS=""
   fi
 
-  export MACOSX_DEPLOYMENT_TARGET=11.6
+  export MACOSX_DEPLOYMENT_TARGET=13
   export MACOS_TARGET_FLAGS="-mmacosx-version-min=$MACOSX_DEPLOYMENT_TARGET"
 
   export CFLAGS="$MACOS_TARGET_FLAGS $MACOS_ARCH_FLAGS"
@@ -49,16 +52,17 @@ fi
 function cat_slower() {
   echo "cat_slower called"
   # Disabled, only really interesting if we need to debug something
-  # # hacky way to slow down the output of cat
-  # CI=${CI:-}
-  # # the grep is to ignore lines starting with |
-  # # which for config.log files are the source used to test something
-  # [ "$CI" == "true" ] && (cat $1 | grep "^[^|]" | perl -pe 'select undef,undef,undef,0.0033333333') || true
+  # hacky way to slow down the output of cat
+  CI=${CI:-}
+  # the grep is to ignore lines starting with |
+  # which for config.log files are the source used to test something
+  [ "$CI" == "true" ] && (cat $1 | grep "^[^|]" | perl -pe 'select undef,undef,undef,0.0033333333') || true
 }
 
 CI=${CI:-}
 PREFIX_DIR=${PREFIX_DIR:-$HOME}
 STOP_ON_INSTALL=${STOP_ON_INSTALL:-false}
+ONLY_BUILD_DEPS=${ONLY_BUILD_DEPS:-false}
 RUN_PREGYP_CLEAN=${RUN_PREGYP_CLEAN:-true}
 
 # Disabled by default
@@ -74,9 +78,16 @@ LOGS_FOLDER=${BUILD_LOGS_FOLDER:-./logs}
 
 mkdir -p $LOGS_FOLDER
 
+# the alias to use for python (python or python3, based on which one is available)
+PYTHON=${PYTHON:-$(command -v python || command -v python3)}
+PIP=${PIP:-$(command -v pip || command -v pip3)}
+
+# install setuptools if distutils cannot be imported on python
+$PYTHON -c "import distutils" || $PIP install setuptools
+
 # on gh actions it is including this file for some reason: /usr/local/include/nghttp2/nghttp2.h:55:
 # so we are making sure we remove those so they do not mess with our build
-if [[ -n "$CI" && "$(uname)" == "Darwin" ]]; then
+if [[ -n "$CI" && "$(uname)" == "Darwin" && -d "/usr/local/include" ]]; then
   echo "include folder:"
   ls -al /usr/local/include
   echo "lib folder:"
@@ -91,19 +102,37 @@ if [ "$(uname)" == "Darwin" ]; then
   if ! command -v cmake &>/dev/null; then
     (>&2 echo "Could not find cmake, we need it to build some dependencies (such as brotli)")
     (>&2 echo "You can get it by installing the cmake package:")
-    (>&2 echo "brew install cmake")
+    (>&2 echo "> brew install cmake")
     exit 1
   fi
   if ! command -v autoreconf &>/dev/null; then
     (>&2 echo "Could not find autoreconf, we need it to build some dependencies (such as libssh2)")
     (>&2 echo "You can get it by installing the autoconf package:")
-    (>&2 echo "brew install autoconf")
+    (>&2 echo "> brew install autoconf")
     exit 1
   fi
   if ! command -v aclocal &>/dev/null; then
     (>&2 echo "Could not find aclocal, we need it to build some dependencies (such as libssh2)")
     (>&2 echo "You can get it by installing the automake package:")
-    (>&2 echo "brew install automake")
+    (>&2 echo "> brew install automake")
+    exit 1
+  fi
+  if ! command -v glibtoolize &>/dev/null; then
+    (>&2 echo "Could not find glibtoolize, we need it to build some dependencies (such as libssh2)")
+    (>&2 echo "You can get it by installing the glibtool package:")
+    (>&2 echo "> brew install libtool")
+    exit 1
+  fi
+fi
+
+if ! command -v soelim &>/dev/null; then
+  (>&2 echo "Could not find soelim, we need it to build some dependencies (such as openldap)")
+  (>&2 echo "You can get it by installing the groff package")
+  if [ "$(uname)" == "Darwin" ]; then
+    (>&2 echo "> brew install groff")
+    exit 1
+  elif [ "$(uname)" == "Linux" ]; then
+    (>&2 echo "> apt-get install groff")
     exit 1
   fi
 fi
@@ -176,6 +205,39 @@ echo "Building nghttp2 v$NGHTTP2_RELEASE"
 ./scripts/ci/build-nghttp2.sh $NGHTTP2_RELEASE $NGHTTP2_DEST_FOLDER >$LOGS_FOLDER/build-nghttp2.log 2>&1
 export NGHTTP2_BUILD_FOLDER=$NGHTTP2_DEST_FOLDER/build/$NGHTTP2_RELEASE
 ls -al $NGHTTP2_BUILD_FOLDER/lib
+
+###################
+# Build HTTP/3 deps (nghttp3 and ngtcp2) if OpenSSL >= 3.5
+###################
+# Check if OpenSSL version is >= 3.5.0
+is_openssl_ge_3_5_0=0
+(printf '%s\n%s' "3.5.0" "$OPENSSL_RELEASE" | $gsort -CV) && is_openssl_ge_3_5_0=1 || true
+
+if [ "$is_openssl_ge_3_5_0" == "1" ]; then
+  echo "OpenSSL version $OPENSSL_RELEASE is >= 3.5.0, building HTTP/3 support (nghttp3 and ngtcp2)"
+
+  ###################
+  # Build nghttp3
+  ###################
+  NGHTTP3_RELEASE=${NGHTTP3_RELEASE:-1.12.0}
+  NGHTTP3_DEST_FOLDER=$PREFIX_DIR/deps/nghttp3
+  echo "Building nghttp3 v$NGHTTP3_RELEASE"
+  ./scripts/ci/build-nghttp3.sh $NGHTTP3_RELEASE $NGHTTP3_DEST_FOLDER >$LOGS_FOLDER/build-nghttp3.log 2>&1
+  export NGHTTP3_BUILD_FOLDER=$NGHTTP3_DEST_FOLDER/build/$NGHTTP3_RELEASE
+  ls -al $NGHTTP3_BUILD_FOLDER/lib
+
+  ###################
+  # Build ngtcp2
+  ###################
+  NGTCP2_RELEASE=${NGTCP2_RELEASE:-1.17.0}
+  NGTCP2_DEST_FOLDER=$PREFIX_DIR/deps/ngtcp2
+  echo "Building ngtcp2 v$NGTCP2_RELEASE"
+  ./scripts/ci/build-ngtcp2.sh $NGTCP2_RELEASE $NGTCP2_DEST_FOLDER >$LOGS_FOLDER/build-ngtcp2.log 2>&1
+  export NGTCP2_BUILD_FOLDER=$NGTCP2_DEST_FOLDER/build/$NGTCP2_RELEASE
+  ls -al $NGTCP2_BUILD_FOLDER/lib
+else
+  echo "OpenSSL version $OPENSSL_RELEASE is < 3.5.0, skipping HTTP/3 support (nghttp3 and ngtcp2)"
+fi
 
 ###################
 # Build GSS API Lib
@@ -268,7 +330,7 @@ ls -al $LIBSSH2_BUILD_FOLDER/lib
 ###################
 # Build openldap
 ###################
-OPENLDAP_RELEASE=${OPENLDAP_RELEASE:-2.4.47}
+OPENLDAP_RELEASE=${OPENLDAP_RELEASE:-2.6.9}
 OPENLDAP_DEST_FOLDER=$PREFIX_DIR/deps/openldap
 echo "Building openldap v$OPENLDAP_RELEASE"
 ./scripts/ci/build-openldap.sh $OPENLDAP_RELEASE $OPENLDAP_DEST_FOLDER >$LOGS_FOLDER/build-openldap.log 2>&1
@@ -302,6 +364,13 @@ curl-config --static-libs
 curl-config --prefix
 curl-config --cflags
 
+if [ "$ONLY_BUILD_DEPS" == "true" ]; then
+  echo "Only building dependencies, exiting"
+  exit 0
+fi
+
+echo "Building node-libcurl"
+
 # Some vars we will need below
 DISPLAY=${DISPLAY:-}
 PUBLISH_BINARY=${PUBLISH_BINARY:-}
@@ -312,16 +381,12 @@ RUN_TESTS=${RUN_TESTS:-"true"}
 if [ -z "$PUBLISH_BINARY" ]; then
   PUBLISH_BINARY=false
   COMMIT_MESSAGE=$(git show -s --format=%B $GIT_COMMIT | tr -d '\n')
-  if [[ $GIT_TAG == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
+  if [[ $GIT_REF_NAME == `git describe --tags --always HEAD` || ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then
     PUBLISH_BINARY=true;
   fi
 fi
 
 echo "Publish binary is: $PUBLISH_BINARY"
-
-# Configure Yarn cache
-mkdir -p ~/.cache/yarn
-yarn config set cache-folder ~/.cache/yarn
 
 run_tests_electron=false
 has_display=$(xdpyinfo -display $DISPLAY >/dev/null 2>&1 && echo "true" || echo "false")
@@ -330,44 +395,17 @@ if [ -n "$ELECTRON_VERSION" ]; then
   runtime='electron'
   dist_url='https://electronjs.org/headers'
   target="$ELECTRON_VERSION"
-  
-  # enabled always temporarily
-  is_electron_lt_5=1
-  # is_electron_lt_5=0
-  # (printf '%s\n%s' "5.0.0" "$ELECTRON_VERSION" | $gsort -CV) || is_electron_lt_5=$?
-
-  # if it's lower, we can run tests against it
-  # we cannot run tests against version 5 because it has issues:
-  # https://github.com/electron/electron/issues/17972
-  if [[ "$(uname)" == "Darwin" || $is_electron_lt_5 -eq 1 && $has_display == "true" ]]; then
-    run_tests_electron=true
-    yarn global add electron@${ELECTRON_VERSION} --network-timeout 300000
-  fi
-
-  # A possible solution to the above issue is the following,
-  #  but it kinda does not work because it requires running docker with --privileged flag
-  # yarn_global_dir=$(yarn global dir)
-
-  # # Below is to fix the following error:
-  # # [19233:0507/005247.965078:FATAL:setuid_sandbox_host.cc(157)] The SUID sandbox helper binary was found, but is not 
-  # #  configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that 
-  # # /home/circleci/node-libcurl/node_modules/electron/dist/chrome-sandbox is owned by root and has mode 4755.
-  # if [[ -x "$(command -v sudo)" && "$EUID" -ne 0 && -f $yarn_global_dir/node_modules/electron/dist/chrome-sandbox ]]; then
-  #   echo "Changing owner of chrome-sandbox"
-  #   sudo chown root $yarn_global_dir/node_modules/electron/dist/chrome-sandbox
-  #   sudo chmod 4755 $yarn_global_dir/node_modules/electron/dist/chrome-sandbox
-  # fi
 elif [ -n "$NWJS_VERSION" ]; then
   runtime='node-webkit'
   dist_url=''
   target="$NWJS_VERSION"
 
-  yarn global add nw-gyp nw@$target
+  pnpm i -g nw-gyp nw@$target
 
   # On macOS node-pre-gyp uses node-webkit instead of nw, see:
   # https://github.com/mapbox/node-pre-gyp/blob/d60bc992d20500e8ceb6fe3242df585a28c56413/lib/testbinary.js#L43
   if [ "$(uname)" == "Darwin" ]; then
-    ln -s $(yarn global bin)/nw $(yarn global bin)/node-webkit
+    ln -s $(pnpm bin --global)/nw $(pnpm bin --global)/node-webkit
   fi
 
 else
@@ -378,9 +416,18 @@ fi
 
 target=`echo $target | sed 's/^v//'`
 # ia32, x64, armv7, etc
-target_arch=${TARGET_ARCH:-"x64"}
+if [[ -z "${TARGET_ARCH:-}" ]]; then
+  case "$(uname -m)" in
+    x86_64) target_arch="x64" ;;
+    aarch64|arm64) target_arch="arm64" ;;
+    armv7l) target_arch="arm" ;;
+    *) target_arch="$(uname -m)" ;;
+  esac
+else
+  target_arch="$TARGET_ARCH"
+fi
 
-NODE_LIBCURL_CPP_STD=${NODE_LIBCURL_CPP_STD:-$(node $curr_dirname/../cpp-std.js)}
+NODE_LIBCURL_CPP_STD=${NODE_LIBCURL_CPP_STD:-"c++20"}
 
 # Build Addon
 export npm_config_curl_config_bin="$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin/curl-config"
@@ -403,7 +450,9 @@ echo "npm_config_dist_url=$npm_config_dist_url"
 echo "npm_config_target=$npm_config_target"
 echo "npm_config_target_arch=$npm_config_target_arch"
 
-yarn install --frozen-lockfile --network-timeout 300000
+pnpm install --frozen-lockfile --force --fetch-timeout 300000
+
+touch built-and-installed.hidden.txt
 
 if [ "$STOP_ON_INSTALL" == "true" ]; then
   set +uv
@@ -421,42 +470,52 @@ else
   ldd ./lib/binding/node_libcurl.node || true
 fi
 
+sleep 1
+echo "Showing /etc/hosts"
+cat /etc/hosts || true
+sleep 1
+
 if [ "$RUN_TESTS" == "true" ]; then
   if [ -n "$ELECTRON_VERSION" ]; then
-    [ $run_tests_electron == "true" ] && yarn test:electron || echo "Tests for this version of electron were disabled"
+    [ $run_tests_electron == "true" ] && pnpm test:electron || echo "Tests for this version of electron were disabled"
   elif [ -n "$NWJS_VERSION" ]; then
     echo "No tests available for node-webkit (nw.js)"
   else
-    yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
-    yarn test
+    pnpm exec ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
+    pnpm test
   fi
+fi
+
+# Create the tarballs
+if [[ "$MACOS_UNIVERSAL_BUILD" == "true" ]]; then
+  # Need to publish two binaries when doing a universal build.
+  #
+  # Could also publish the universal build twice instead, but it might not
+  # play well with electron-builder which will try to lipo native add-ons
+  # for different architectures.
+  # --
+  lipo build/Release/node_libcurl.node -thin x86_64 -output lib/binding/node_libcurl.node
+  lipo build/Release/node_libcurl.node -thin arm64 -output lib/binding/node_libcurl.node
+
+  npm_config_target_arch=arm64 pnpm pregyp package testpackage --verbose
+  npm_config_target_arch=x64 pnpm pregyp package testpackage --verbose
+else
+  pnpm pregyp package testpackage --verbose
 fi
 
 # If we are here, it means the addon worked
 # Check if we need to publish the binaries
+# Notice, this is only useful if publishing locally, as the CI has a separate
+# step defined on the workflow itself, which uses attestations.
 if [[ $PUBLISH_BINARY == true && $LIBCURL_RELEASE == $LATEST_LIBCURL_RELEASE ]]; then
-  echo "Publish binary is true - Testing and publishing package with pregyp"
+  echo "Publish binary is true - Publishing package with pregyp"
   if [[ "$MACOS_UNIVERSAL_BUILD" == "true" ]]; then
-    # Need to publish two binaries when doing a universal build.
-    #
-    # Could also publish the universal build twice instead, but it might not
-    # play well with electron-builder which will try to lipo native add-ons
-    # for different architectures.
-    # --
-    # Build and publish x64 package
-    lipo build/Release/node_libcurl.node -thin x86_64 -output lib/binding/node_libcurl.node
-    npm_config_target_arch=x64 yarn pregyp package testpackage --verbose
-    npm_config_target_arch=x64 node scripts/module-packaging.js --publish \
-      "$(npm_config_target_arch=x64 yarn --silent pregyp reveal staged_tarball --silent)"
-  
-    # Build and publish arm64 package.
-    lipo build/Release/node_libcurl.node -thin arm64 -output lib/binding/node_libcurl.node
-    npm_config_target_arch=arm64 yarn pregyp package --verbose  # Can't testpackage for arm64 yet.
-    npm_config_target_arch=arm64 node scripts/module-packaging.js --publish \
-      "$(npm_config_target_arch=arm64 yarn --silent pregyp reveal staged_tarball --silent)"
+    node scripts/module-packaging.js --publish \
+      "$(npm_config_target_arch=x64 pnpm --silent pregyp reveal staged_tarball --silent)"
+    node scripts/module-packaging.js --publish \
+      "$(npm_config_target_arch=arm64 pnpm --silent pregyp reveal staged_tarball --silent)"
   else
-    yarn pregyp package testpackage --verbose
-    node scripts/module-packaging.js --publish "$(yarn --silent pregyp reveal staged_tarball --silent)"
+    node scripts/module-packaging.js --publish "$(pnpm --silent pregyp reveal staged_tarball --silent)"
   fi
 fi
 
@@ -465,17 +524,17 @@ fi
 INSTALL_RESULT=0
 if [[ $PUBLISH_BINARY == true ]]; then
   echo "Publish binary is true - Testing if it was published correctly"
-  INSTALL_RESULT=$(npm_config_fallback_to_build=false yarn install --frozen-lockfile --network-timeout 300000 > /dev/null)$? || true
+  INSTALL_RESULT=$(npm_config_fallback_to_build=false pnpm install --frozen-lockfile --fetch-timeout 300000 > /dev/null)$? || true
 fi
 if [[ $INSTALL_RESULT != 0 ]]; then
   echo "Failed to install package from npm after being published"
-  node scripts/module-packaging.js --unpublish "$(yarn --silent pregyp reveal hosted_tarball --silent)"
+  node scripts/module-packaging.js --unpublish "$(pnpm --silent pregyp reveal hosted_tarball --silent)"
   false
 fi
 
 # Clean everything
 if [[ $RUN_PREGYP_CLEAN == true ]]; then
-  yarn pregyp clean
+  pnpm pregyp clean
 fi
 
 set +uv

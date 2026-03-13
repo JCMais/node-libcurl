@@ -5,6 +5,8 @@ set -euo pipefail
 build_folder=$2/build/$1
 curr_dirname=$(dirname "$0")
 
+. $curr_dirname/utils/gsort.sh
+
 mkdir -p $build_folder
 mkdir -p $2/source
 
@@ -41,22 +43,36 @@ if [ "$(uname)" == "Darwin" ]; then
   export LDFLAGS=""
 fi
 
-../configure-cmake \
-  --prefix=$build_folder \
-  --disable-debug \
-  --pass-thru \
-  -DCMAKE_INSTALL_PREFIX:PATH=$build_folder \
-  -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=$build_folder/lib \
-  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=$build_folder/lib
+is_less_than_1_1_0=0
+(printf '%s\n%s' "1.1.0" "$1" | $gsort -CV) || is_less_than_1_1_0=$?
 
-make
+if [ "$is_less_than_1_1_0" == "1" ]; then
+  ../configure-cmake \
+    --prefix=$build_folder \
+    --disable-debug \
+    --pass-thru \
+    -DCMAKE_INSTALL_PREFIX:PATH=$build_folder \
+    -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=$build_folder/lib \
+    -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=$build_folder/lib
+
+  make
+
+  # static libraries are built with -static suffix, remove it
+  for filename in $build_folder/lib/*.a; do
+    mv $filename $(echo "$filename" | sed "s/-static//g")
+  done
+else
+  cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=$build_folder \
+    -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=$build_folder/lib \
+    -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=$build_folder/lib \
+    -DBUILD_SHARED_LIBS=OFF \
+    ..
+  cmake --build . --config Release --target install
+fi
 
 cp -r $2/source/$1/c/include $build_folder/include
 
-# static libraries are built with -static suffix, remove it
-# also remove the dynamic ones, so they are not used
-for filename in $build_folder/lib/*.a; do
-  mv $filename $(echo "$filename" | sed "s/-static//g")
-done
-
+#  remove the dynamic ones, so they are not used
 find $build_folder/lib/ -not -type d -not -name '*.a' -delete

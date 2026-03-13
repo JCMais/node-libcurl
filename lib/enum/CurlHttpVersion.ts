@@ -31,5 +31,6 @@ export enum CurlHttpVersion {
    * Use HTTP 2 without HTTP/1.1 Upgrade
    */
   V2PriorKnowledge,
-  v3,
+  v3 = 30,
+  V3Only = 31,
 }

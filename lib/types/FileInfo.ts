@@ -12,14 +12,14 @@ import { CurlFileType } from '../enum/CurlFileType'
  * @public
  */
 export type FileInfo = {
-  fileType: CurlFileType
-  fileName: string
+  filetype: CurlFileType
+  filename: string
   time: Date
   perm: number
   uid: number
   gid: number
   size: number
-  hardLinks: number
+  hardlinks: number
   strings: {
     time: string
     perm: string

@@ -26,7 +26,7 @@ if (process.env.npm_config_runtime === 'node-webkit') {
 // node-gyp path from here: https://github.com/nodejs/node-gyp/blob/v5.0.3/bin/node-gyp.js#L31
 const gypDir = path.resolve(gypFolder, version.replace('v', ''))
 
-// reverting what we did in scripts/retrieve-win-deps.js
+// reverting what we did in our install script
 const opensslFolder = path.resolve(gypDir, 'include', 'node', 'openssl')
 const opensslFolderDisabled = `${opensslFolder}.disabled`
 if (fs.existsSync(opensslFolderDisabled)) {
@@ -77,7 +77,7 @@ module.exports = function install() {
   // this is ternary will almost always fall into the first condition.
   // If we are using TS it probably means we have the git repo setup too.
   // But who knows, someone may be trying the code from a zip archive or something lol
-  const executable = distIndexExists ? 'node' : 'yarn ts-node'
+  const executable = distIndexExists ? 'node' : 'pnpm ts-node'
 
   const file = distIndexExists
     ? distIndexPath

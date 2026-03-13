@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 /**
- * Whe data parsing is enabled on the {@link "Curl".Curl} instance, the headers parameter passed
+ * Whe data parsing is enabled on the {@link Curl} instance, the headers parameter passed
  *  to the `end` event's callback will be one array of this type.
  * @public
  */

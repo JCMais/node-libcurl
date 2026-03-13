@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 # https://stackoverflow.com/a/13350100/710693
-set -eu
+set -euo pipefail
 
 # download tar gz file from source_url and unpack it to destination
 # download_and_upack <source_url> <destination>

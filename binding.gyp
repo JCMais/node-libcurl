@@ -1,8 +1,8 @@
 {
   # Those variables can be overwritten when installing the package, like:
   #  npm install --curl-extra_link_args=true
-  # or if using yarn:
-  #  npm_config_curl_extra_link_args=true yarn install
+  # or if using pnpm:
+  #  npm_config_curl_extra_link_args=true pnpm install
   # 
   'variables': {
     # Comma separated list
@@ -11,30 +11,48 @@
     'curl_static_build%': 'false',
     'curl_config_bin%': 'node <(module_root_dir)/scripts/curl-config.js',
     'node_libcurl_no_setlocale%': 'false',
-    'node_libcurl_cpp_std%': '<!(node <(module_root_dir)/scripts/cpp-std.js)',
-    'macos_universal_build%': 'false',
+    'node_libcurl_debug%': 'false',
+    'node_libcurl_asan_debug%': 'false',
+    'node_libcurl_cpp_std%': 'c++20',
+    'macos_universal_build%': 'false'
   },
   'targets': [
     {
       'target_name': '<(module_name)',
       'type': 'loadable_module',
+      'dependencies': [
+        # https://github.com/nodejs/node-addon-api/blob/main/doc/setup.md
+        # using exceptions (instead of maybe, like we used to have on nan)
+        "<!(node -p \"require('node-addon-api').targets\"):node_addon_api_except",
+      ],
       'sources': [
         'src/node_libcurl.cc',
         'src/Easy.cc',
         'src/Share.cc',
         'src/Multi.cc',
-        'src/Curl.cc',
         'src/CurlHttpPost.cc',
+        'src/CurlMime.cc',
+        'src/Curl.cc',
+        'src/CurlError.cc',
         'src/CurlVersionInfo.cc',
         'src/Http2PushFrameHeaders.cc',
       ],
-      'include_dirs' : [
-        "<!(node -e \"require('nan')\")",
+      'include_dirs': [
+        '<!@(node -p "require(\'node-addon-api\').include")',
+      ],
+      'defines': [
+        'NAPI_VERSION=10',
+        'NAPI_EXPERIMENTAL=1',
       ],
       'conditions': [
         ['node_libcurl_no_setlocale=="true"', {
-          'defines' : [
+          'defines': [
             'NODE_LIBCURL_NO_SETLOCALE'
+          ]
+        }],
+        ['node_libcurl_debug=="true"', {
+          'defines': [
+            'NODE_LIBCURL_DEBUG'
           ]
         }],
         ['curl_include_dirs!=""', {
@@ -53,17 +71,23 @@
               # 4068 -> Unknown pragma (mostly GCC pragmas being used)
               # 4996 -> Declared wrongly Nan::Callback::Call
               # 4309 -> 'static_cast': truncation of constant value on v8 header
-              'DisableSpecificWarnings': ['4244', '4506', '4068', '4838', '4996', '4309'],
+              # 28251 -> Inconsistent annotation for 'NTSTATUS': this instance has no annotations. This is coming from libuv headers.
+              'DisableSpecificWarnings': ['4244', '4506', '4068', '4838', '4996', '4309', '28251'],
               'AdditionalOptions': [
                 '/std:<(node_libcurl_cpp_std)',
                 '/MP', #compile across multiple CPUs
               ],
+              "ExceptionHandling": 1, 
             },
             'VCLinkerTool': {
-              'GenerateDebugInformation': 'true',
+              'AdditionalOptions': [
+                '/FORCE:MULTIPLE',
+                # Symbol already defined. Impossible to avoid given Node.js exposes OpenSSL symbols from their own build.
+                '/IGNORE:4006'
+              ],
             },
           },
-          'configurations' : {
+          'configurations': {
             'Release': {
               'msvs_settings': {
                 'VCCLCompilerTool': {
@@ -76,29 +100,48 @@
                   'EnableFunctionLevelLinking': 'true',
                   'EnableIntrinsicFunctions': 'true',
                   'WarnAsError': 'true',
+                  'RuntimeLibrary': 2,
                 }
               }
             },
             'Debug': {
               'msvs_settings': {
                 'VCCLCompilerTool': {
-                  'WarnAsError': 'false'
+                  'WarnAsError': 'false',
+                  'RuntimeLibrary': 3,
+                },
+                'VCLinkerTool': {
+                  'GenerateDebugInformation': 'true',
                 }
               }
             }
           },
           'dependencies': [
-            '<!@(node "<(module_root_dir)/scripts/retrieve-win-deps.js")'
+            '<!@(node "<(module_root_dir)/scripts/openssl-disable.js")'
           ],
-          'defines' : [
+          'defines': [
             'CURL_STATICLIB'
+          ],
+          'conditions': [
+            ['curl_include_dirs==""', {
+              'include_dirs': [
+                '<!@(node "<(module_root_dir)/scripts/vcpkg-get-info.js" --include-dir)'
+              ],
+              'libraries': [
+                '<!@(node "<(module_root_dir)/scripts/vcpkg-get-info.js" --libs)'
+              ]
+            }],
+            ['curl_include_dirs!=""', {
+              'include_dirs': ['<@(curl_include_dirs)'],
+              'libraries': ['<@(curl_libraries)']
+            }]
           ]
         }, { # OS != "win"
             # Use level 2 optimizations
-          'cflags' : [
+          'cflags': [
             '-O2',
           ],
-          'cflags_cc' : [
+          'cflags_cc': [
             '-O2',
             '-std=<(node_libcurl_cpp_std)',
             '-Wno-narrowing',
@@ -115,7 +158,7 @@
           ],
           'conditions': [
             ['curl_include_dirs==""', {
-              'include_dirs' : [
+              'include_dirs': [
                 # '<!@(node "<(module_root_dir)/scripts/curl-config.js" --cflags | sed "s/-D.* //g" | sed s/-I//g)'
                 '<!(<(curl_config_bin) --prefix)/include'
               ],
@@ -149,6 +192,27 @@
           ],
         }],
         ['OS=="mac"', {
+          'cflags+': ['-fvisibility=hidden'],
+          'configurations': {
+            'Debug': {
+              'xcode_settings': {
+                'GCC_GENERATE_DEBUGGING_SYMBOLS': 'YES',
+                'GCC_OPTIMIZATION_LEVEL': '0',
+                'DEAD_CODE_STRIPPING': 'NO',
+                'GCC_INLINES_ARE_PRIVATE_EXTERN': 'NO',
+                'GCC_SYMBOLS_PRIVATE_EXTERN': 'NO'
+              },
+              'cflags_cc': ['-g', '-O0', '-fno-omit-frame-pointer'],
+              'cflags': ['-g', '-O0', '-fno-omit-frame-pointer'],
+              'defines': ['NODE_LIBCURL_DEBUG_BUILD']
+            },
+            'Release': {
+              'xcode_settings': {
+                'GCC_OPTIMIZATION_LEVEL': 's',
+                'DEAD_CODE_STRIPPING': 'YES'
+              }
+            }
+          },
           'conditions': [
             ['curl_static_build=="true"', {
               # pretty sure cflags adds that
@@ -163,7 +227,7 @@
                   # This seems to be required starting with xcode 12
                   # original workaround from https://github.com/JCMais/node-libcurl/pull/312
                   '-static',
-                  '<!@(<(curl_config_bin) --static-libs | sed "s/-framework CoreFoundation//")',
+                  '<!@(<(curl_config_bin) --static-libs | sed "s/-framework CoreFoundation -framework CoreServices -framework/-framework/g" | sed "s/-framework CoreFoundation//")',
                 ],
 
                 'LD_RUNPATH_SEARCH_PATHS': [
@@ -186,7 +250,7 @@
             }],
             ['macos_universal_build=="true"', {
               'xcode_settings': {
-                'OTHER_CPLUSPLUSFLAGS' : [
+                'OTHER_CPLUSPLUSFLAGS': [
                   '-arch x86_64',
                   '-arch arm64'
                 ],
@@ -204,42 +268,48 @@
           'xcode_settings': {
             'conditions': [
               ['curl_include_dirs==""', {
-                'OTHER_CPLUSPLUSFLAGS' : [
+                'OTHER_CPLUSPLUSFLAGS': [
                   '<!(<(curl_config_bin) --prefix)/include',
                 ],
-                'OTHER_CFLAGS':[
+                'OTHER_CFLAGS': [
                   '<!(<(curl_config_bin) --prefix)/include',
                 ],
               }],
             ],
-            'OTHER_CPLUSPLUSFLAGS':[
-              '-std=<(node_libcurl_cpp_std)','-stdlib=libc++',
+            'OTHER_CPLUSPLUSFLAGS': [
+              '-std=<(node_libcurl_cpp_std)', '-stdlib=libc++',
             ],
-            'OTHER_LDFLAGS':[
+            'OTHER_LDFLAGS': [
               '-Wl,-bind_at_load',
               '-stdlib=libc++'
             ],
+            'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES', # -fvisibility=hidden
             'GCC_ENABLE_CPP_RTTI': 'YES',
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
-            'MACOSX_DEPLOYMENT_TARGET':'11.6',
+            'MACOSX_DEPLOYMENT_TARGET': '13',
             'CLANG_CXX_LIBRARY': 'libc++',
-            'CLANG_CXX_LANGUAGE_STANDARD':'<(node_libcurl_cpp_std)',
-            'OTHER_LDFLAGS': ['-stdlib=libc++'],
-            'WARNING_CFLAGS':[
+            'CLANG_CXX_LANGUAGE_STANDARD': '<(node_libcurl_cpp_std)',
+            'WARNING_CFLAGS': [
               '-Wno-c++11-narrowing',
               '-Wno-constant-conversion'
             ],
           },
+        }],
+        ['node_libcurl_asan_debug=="true" and (OS=="mac" or OS=="linux")', {
+          'cflags_cc': ['-fsanitize=address', '-fsanitize=undefined', '-fno-sanitize-recover=all'],
+          'cflags': ['-fsanitize=address', '-fsanitize=undefined', '-fno-sanitize-recover=all'],
+          'ldflags': ['-fsanitize=address', '-fsanitize=undefined'],
+          'defines': ['NODE_LIBCURL_DEBUG_BUILD', 'NODE_LIBCURL_ASAN_BUILD']
         }],
       ]
     },
     {
       'target_name': 'action_after_build',
       'type': 'none',
-      'dependencies': [ '<(module_name)' ],
+      'dependencies': ['<(module_name)'],
       'copies': [
         {
-          'files': [ '<(PRODUCT_DIR)/<(module_name).node' ],
+          'files': ['<(PRODUCT_DIR)/<(module_name).node'],
           'destination': '<(module_path)'
         }
       ],
@@ -248,10 +318,7 @@
           {
             'postbuild_name': '@rpath for libcurl',
             'action': [
-              'install_name_tool',
-              '-change',
-              '<!@(otool -D `curl-config --prefix`/lib/libcurl.dylib | sed -n 2p)',
-              '@rpath/libcurl.dylib',
+              '<(module_root_dir)/scripts/gyp-macos-postbuild.sh',
               '<(module_path)/<(module_name).node'
             ],
           },

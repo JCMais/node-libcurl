@@ -1,0 +1,31 @@
+name: Upload Build Logs
+description: Uploads build logs and test results as artifacts
+
+inputs:
+  artifact-name:
+    description: 'Name for the artifact'
+    required: true
+  retention-days:
+    description: 'Number of days to retain the artifact'
+    required: false
+    default: '3'
+  include-test-results:
+    description: 'Whether to include test-results directory'
+    required: false
+    default: 'false'
+  logs-path:
+    description: 'Path to logs directory'
+    required: false
+    default: './logs/'
+
+runs:
+  using: composite
+  steps:
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: |
+          ${{ inputs.logs-path }}
+          ${{ inputs.include-test-results == 'true' && './test-results/' || '' }}
+        retention-days: ${{ inputs.retention-days }}

@@ -1,4 +1,5 @@
-import * as express from 'express-serve-static-core'
+import * as express from 'express'
+import 'express-serve-static-core'
 import { HttpAuthFunction } from 'http-auth'
 
 declare module 'express-serve-static-core' {
@@ -10,10 +11,4 @@ declare module 'express-serve-static-core' {
   }
 }
 
-export default function connect(
-  func: HttpAuthFunction,
-): (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction,
-) => void
+export default function connect(func: HttpAuthFunction): express.RequestHandler

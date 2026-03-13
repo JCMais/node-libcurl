@@ -13,7 +13,8 @@
   - [Changing libcurl Version Used on Prebuilt Binaries for Windows](#changing-libcurl-version-used-on-prebuilt-binaries-for-windows)
   - [Building Electron](#building-electron)
   - [Debugging with lldb](#debugging-with-lldb)
-  - [Publishing New Releases](#publishing-new-releases)
+- [Publishing New Releases](#publishing-new-releases)
+  - [Manual Publishing](#manual-publishing)
     - [Semver Major / Minor / Patch](#semver-major--minor--patch)
     - [Prereleases](#prereleases)
     - [Build Matrix](#build-matrix)
@@ -25,14 +26,14 @@ Before opening an issue try to search the existing ones for the same problem.
 Make sure to include on your issue the following information:
 
 * Node.js Version
-* yarn / npm version
+* package manager version
 * Operational System (name and version)
 * Package version
 * Logs of the installation
 
 ## Contributing with Code
 
-The package manager used on this project is [`yarn`](https://yarnpkg.com/)
+The package manager used on this project is [`pnpm`](https://pnpm.io/)
 
 The addon lib code is written in Typescript, while the addon itself is written in C++.
 
@@ -61,17 +62,17 @@ $ node scripts/update-deps.js
 
 Install the dependencies, this will also build the addon:
 ```sh
-$ yarn install
+$ pnpm install
 ```
 
 If you made some change to the C++ code, you can just build the addon again:
 ```sh
-$ yarn pregyp build
+$ pnpm pregyp build
 ```
 
 In case you need to rebuild:
 ```sh
-$ yarn pregyp rebuild
+$ pnpm pregyp rebuild
 ```
 
 If on unix and using the build.sh scripts, you also need to provide the path to the curl config file:
@@ -79,7 +80,7 @@ If on unix and using the build.sh scripts, you also need to provide the path to 
 ```bash
 npm_config_macos_universal_build=true \
 npm_config_curl_config_bin=~/deps/libcurl/build/x.y.z/bin/curl-config \
-yarn pregyp build --debug
+pnpm pregyp build --debug
 ```
 
 If you have any issues with the build process, please refer to a [readme build troubleshooting section](https://github.com/JCMais/node-libcurl#important-notes-on-prebuilt-binaries--direct-installation).
@@ -96,28 +97,34 @@ If you want to include a new libcurl option on the addon, those are the basic st
    - Added the `CURLOPT_AWS_SIGV4` constant as the `AwsSigV4` member in the `CurlAuth` enum. To get the value we looked at the libcurl source code.
    - Added the `CURLOPT_AWS_SIGV4` as a string option.
   [Full commit with the above changes is available here](https://github.com/JCMais/node-libcurl/commit/a38dd73db6f47a11197b7e1550111cc8ffd9ec2b).
-4. Run `node ./scripts/build-constants.js`, this will generate an updated list of options on [`./lib/generated/`](./lib/generated), and also update the files [`./lib/Curl.ts`] and [`./lib/EasyNativeBinding.ts`] with overloads for the `setOpt` method. Make sure the options added are correct.
+4. Run `node ./scripts/build-constants.js`, this will generate an updated list of options on [`./lib/generated/`](./lib/generated), and also update the files [`./lib/Curl.ts`] and [`./lib/Easy.ts`] with overloads for the `setOpt` method. Make sure the options added are correct.
 5. If running the above adds extra options that you do not want to add / are not related to the options you are adding, please feel free to remove them manually from the generated output. We will try to improve this experience later, but for now you have to manually remove them.
 
 ### Changing libcurl Version Used on Prebuilt Binaries for Windows
 
-You will need to open a PR against the repository [`JCMais/curl-for-windows`](https://github.com/JCMais/curl-for-windows/) upgrading libcurl there.
-
-After that a new tag will be created on this repo, which we can them use on the file [`LIBCURL_VERSION_WIN_DEPS`](./LIBCURL_VERSION_WIN_DEPS).
+We use vcpkg for this. Simply change the version on the file [`vcpkg.template.json`](./vcpkg.template.json)
 
 ### Building Electron
 
 Sample command you could use from the root of this repository:
 
 ```sh
-LIBCURL_RELEASE=7.78.0 PUBLISH_BINARY="false" ./scripts/ci/build.sh
+LIBCURL_RELEASE=8.17.0 PUBLISH_BINARY="false" ./scripts/ci/build.sh
 
-npm_config_curl_config_bin=~/deps/libcurl/build/7.78.0/bin/curl-config \
+npm_config_curl_config_bin=~/deps/libcurl/build/8.17.0/bin/curl-config \
  npm_config_curl_static_build=true \
  npm_config_runtime=electron \
  npm_config_target=21.2.0 \
  npm_config_disturl=https://www.electronjs.org/headers \
- yarn pregyp rebuild --debug
+ pnpm pregyp rebuild --debug
+```
+
+You can also use `electron-rebuild`, e.g for macOS:
+```sh
+npm_config_curl_static_build=true \
+npm_config_macos_universal_build=true \
+npm_config_curl_config_bin=~/deps/libcurl/build/8.17.0/bin/curl-config \
+pnpm exec electron-rebuild
 ```
 
 ### Debugging with lldb
@@ -129,7 +136,13 @@ sudo apt-get install lldb
 
 2. Install Node.js lldb plugin:
 ```
-npm i -g llnode
+pnpm i -g llnode
+```
+
+or:
+```
+brew install llnode
+# then follow instructions
 ```
 
 3. Run script that causes core dump
@@ -142,7 +155,12 @@ llnode -- /path/to/bin/node --abort_on_uncaught_exception script.js
 
 More information go to https://github.com/nodejs/llnode
 
-### Publishing New Releases
+## Publishing New Releases
+
+For publishing there is a GitHub action workflow to publish new releases at: https://github.com/JCMais/node-libcurl/actions/workflows/publish.yml
+
+
+### Manual Publishing
 
 We are using [`np`](https://github.com/sindresorhus/np) for releases.
 
@@ -150,9 +168,8 @@ We are using [`np`](https://github.com/sindresorhus/np) for releases.
 
 1. Checkout `master`
 2. Merge changes from `develop`
-3. Update docs by running `yarn docs` and commit the changes.
-4. Create version
-5. Publish
+3. Create version
+4. Publish
 
 So basically:
 ```bash
@@ -166,10 +183,10 @@ npx np [major|minor|patch]
 
 or if you are having trouble with `np`:
 ```bash
-yarn publish
+pnpm publish
 ```
 
-or even if you are having trouble with `yarn`:
+or even if you are having trouble with `pnpm`:
 ```bash
 npm version [major|minor|patch]
 npm publish
@@ -187,12 +204,12 @@ git push
 
 For prereleases, use something like this from the `develop` branch:
 ```shell
-$ yarn np prerelease --any-branch --tag next
+$ pnpm exec np prerelease --any-branch --tag next
 ```
 
-If for some reason np fails to run with Yarn, you can use this command to skip cleaning up and use npm to publish:
+If for some reason np fails to run, you can use this command to skip cleaning up and use npm to publish:
 ```shell
-$ yarn np prerelease --no-yarn --no-cleanup --any-branch --tag next
+$ pnpm exec np prerelease --no-cleanup --any-branch --tag next
 ```
 
 #### Build Matrix

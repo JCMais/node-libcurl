@@ -4,36 +4,23 @@
     "paths": { "*": ["types/external/*"] },
     "incremental": true,
     "module": "commonjs",
-    // Node.js >= 19 supports almost 100% of ES2018 (https://node.green/#ES2018)
-    "target": "es2018",
-    "lib": [
-      "es2018",
-      // error Cannot find name 'AsyncIterable'.
-      "esnext.asynciterable"
-    ],
+    // Node.js >= 22 supports almost 100% of ES2024 (https://node.green/#ES2024)
+    "target": "esnext",
+    "lib": ["esnext"],
     "esModuleInterop": true,
     "declaration": true,
     "declarationMap": true,
+    "resolveJsonModule": true,
     "rootDir": "lib",
-    "outDir": "dist",
+    "outDir": "./dist",
     "sourceMap": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,
     "typeRoots": ["node_modules/@types", "types/external"],
     "noUnusedLocals": true,
-    "importHelpers": true
+    "importHelpers": true,
+    "skipLibCheck": true
   },
   "include": ["lib/**/*"],
-  "exclude": ["node_modules"],
-  // @TODO Remove those when done
-  // "files": ["types/custom/index.d.ts"]
-  "typedocOptions": {
-    // "mode": "modules",
-    "mode": "library",
-    "out": "docs",
-    "excludeNotExported": true,
-    "excludePrivate": true,
-    "readme": "none",
-    "gaID": "UA-11343647-11"
-  }
+  "exclude": ["node_modules"]
 }

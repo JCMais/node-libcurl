@@ -1,0 +1,112 @@
+name: thread-sanitizer
+
+defaults:
+  run:
+    shell: bash
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'lib/**'
+      - 'test/**'
+      - 'examples/**'
+      - 'tsan-suppressions.txt'
+      - '.github/workflows/thread-sanitizer.yaml'
+  workflow_dispatch:
+
+jobs:
+  thread-sanitizer-test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: true
+      matrix:
+        node:
+          - 24
+        libcurl-release:
+          - '8.17.0'
+    env:
+      LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
+      LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Install System Packages
+        uses: ./.github/actions/install-system-packages
+
+      # See https://github.com/nodejs/node/issues/40537
+      # - name: Enforce IPv4 Connectivity
+      #   uses: ./.github/actions/force-ipv4
+
+      # PNPM / Node.js
+      - name: Setup Node and PNPM
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: '${{ matrix.node }}'
+
+      - name: Setup Libcurl Cache
+        uses: ./.github/actions/setup-libcurl-cache
+        with:
+          libcurl-release: ${{ matrix.libcurl-release }}
+          node-version: ${{ matrix.node }}
+          cache-key-prefix: 'v4-tsan-'
+
+      - name: 'Build node-libcurl deps'
+        run: |
+          RUN_TESTS=false \
+          RUN_PREGYP_CLEAN=true \
+          ONLY_BUILD_DEPS=true \
+          PUBLISH_BINARY=false \
+            ./scripts/ci/build.sh
+
+      - name: 'Rebuild node-libcurl with ThreadSanitizer'
+        env:
+          CFLAGS: '-fsanitize=thread -g -O1'
+          CXXFLAGS: '-fsanitize=thread -g -O1'
+          LDFLAGS: '-fsanitize=thread'
+          npm_config_curl_static_build: 'true'
+          npm_config_build_from_source: 'true'
+        run: |
+          export npm_config_curl_config_bin=~/deps/libcurl/build/$LIBCURL_RELEASE/bin/curl-config
+          pnpm install --frozen-lockfile --force --fetch-timeout 300000
+
+      - name: 'Find TSan library path'
+        id: tsan-lib
+        run: |
+          TSAN_LIB=$(find /usr/lib -name "libtsan.so.0" 2>/dev/null | head -1)
+          if [ -z "$TSAN_LIB" ]; then
+            echo "Error: libtsan.so.0 not found"
+            exit 1
+          fi
+          echo "tsan_lib=$TSAN_LIB" >> $GITHUB_OUTPUT
+          echo "Found TSan library at: $TSAN_LIB"
+          # echo "tsan_lib=/usr/lib/x86_64-linux-gnu/libtsan.so.0" >> $GITHUB_OUTPUT
+
+      # - name: Debugging Tmate
+      #   uses: mxschmitt/action-tmate@v3
+
+      - name: 'Build dist'
+        run: |
+          pnpm build:dist
+
+      - name: 'Run worker thread test'
+        # skipped - somehow this is returning error 139 (SIGSEGV) on the CI
+        if: false
+        env:
+          LD_PRELOAD: ${{ steps.tsan-lib.outputs.tsan_lib }}
+          TSAN_OPTIONS: 'verbosity=1 second_deadlock_stack=1 history_size=7 halt_on_error=1 suppressions=${{ github.workspace }}/tsan-suppressions.txt'
+        run: |
+          echo "Running worker thread test with ThreadSanitizer"
+          echo "This test exercises multi-threaded scenarios to detect race conditions"
+          node examples/22-worker-threads.js
+
+      - name: Upload TSan Logs
+        if: always()
+        uses: ./.github/actions/upload-build-logs
+        with:
+          artifact-name: tsan-logs-${{ matrix.node }}-${{ matrix.libcurl-release }}
+          retention-days: '3'
+          include-test-results: 'true'

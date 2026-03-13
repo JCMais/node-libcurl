@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Curl Request Demo</title>
+    <style>
+        body {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .output-container {
+            margin-top: 20px;
+        }
+        .output-section {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        h2 {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Curl Request Demo</h1>
+    <input type="text" id="urlInput" value="https://example.com" style="width: 300px;">
+    <button id="makeRequest">Make Request</button>
+    
+    <div class="output-container">
+        <h2>Response:</h2>
+        <div id="responseOutput" class="output-section"></div>
+        
+        <h2>Debug Output:</h2>
+        <div id="debugOutput" class="output-section"></div>
+    </div>
+
+    <script>
+        document.getElementById('makeRequest').addEventListener('click', async () => {
+            const url = document.getElementById('urlInput').value;
+            const responseDiv = document.getElementById('responseOutput');
+            const debugDiv = document.getElementById('debugOutput');
+            
+            try {
+                responseDiv.textContent = 'Making request...';
+                debugDiv.textContent = '';
+                
+                const result = await window.electronAPI.makeCurlRequest(url);
+                
+                responseDiv.textContent = result.data;
+                debugDiv.textContent = result.debug;
+            } catch (error) {
+                responseDiv.textContent = `Error: ${error.message}`;
+                debugDiv.textContent = '';
+            }
+        });
+    </script>
+</body>
+</html> 

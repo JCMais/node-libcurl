@@ -23,6 +23,11 @@ fi
 
 echo "Preparing release for libcurl-impersonate"
 
+# This is way faster than using distclean
+if [ -d $2/source/$1 ] && [ -f $2/source/$1/configure ]; then
+  rm -rf $2/source/$1
+fi
+
 if [ ! -d $2/source/$1 ]; then
   echo "Using release tarball"
 

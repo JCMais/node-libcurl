@@ -35,9 +35,7 @@ LIBS=${LIBS:-}
 # export CPPFLAGS="$CPPFLAGS -I$OPENSSL_BUILD_FOLDER/include"
 # # rpath is probably not needed here, since we are building only static, but leaving it here for reference
 # export LDFLAGS="$LDFLAGS -L$OPENSSL_BUILD_FOLDER/lib -Wl,-rpath,$OPENSSL_BUILD_FOLDER/lib"
-# # pthread below is only necessary for openssl 1.1.x from what I can tell
-# #  however I see no harm on keeping in there for other versions
-# export LIBS="$LIBS -ldl -lpthread"
+export LIBS="$LIBS -ldl -lpthread"
 
 # Release - Static
 ./configure \

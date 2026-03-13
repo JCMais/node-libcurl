@@ -1,0 +1,15 @@
+{
+  "name": "node-libcurl-electron-v33",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "rebuild": "electron-rebuild -f -m ./node_modules/node-libcurl",
+    "start": "electron ./main.js"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "3.7.1",
+    "electron": "33.2.1",
+    "node-libcurl": "link:../../"
+  }
+}

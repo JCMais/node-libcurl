@@ -51,6 +51,7 @@ const run = async () => {
       import { CurlHttpVersion } from '../enum/CurlHttpVersion'
       import { CurlInfoDebug } from '../enum/CurlInfoDebug'
       import { CurlIpResolve } from '../enum/CurlIpResolve'
+      import { CurlMimeOpt } from '../enum/CurlMimeOpt'
       import { CurlNetrc } from '../enum/CurlNetrc'
       import { CurlPreReqFunc } from '../enum/CurlPreReqFunc'
       import { CurlProgressFunc } from '../enum/CurlProgressFunc'
@@ -58,12 +59,15 @@ const run = async () => {
       import { CurlProxy } from '../enum/CurlProxy'
       import { CurlRtspRequest } from '../enum/CurlRtspRequest'
       import { CurlSshAuth } from '../enum/CurlSshAuth'
+      import { CurlSshKeyType, CurlSshKeyMatch } from '../enum/CurlSshKey'
       import { CurlSslOpt } from '../enum/CurlSslOpt'
       import { CurlSslVersion } from '../enum/CurlSslVersion'
       import { CurlTimeCond } from '../enum/CurlTimeCond'
       import { CurlUseSsl } from '../enum/CurlUseSsl'
-      import { EasyNativeBinding } from "../types/EasyNativeBinding"
+      import { CurlWsOptions } from '../enum/CurlWs'
+      import { Easy } from "../Easy"
       import { Share } from "../Share"
+      import { CurlMime } from "../CurlMime"
     `,
   })
 
@@ -150,17 +154,14 @@ const run = async () => {
     flag: 'a+',
   })
 
-  const easyBindingFilePath = path.resolve(
-    __dirname,
-    '../lib/types/EasyNativeBinding.ts',
-  )
+  const easyBindingFilePath = path.resolve(__dirname, '../lib/Easy.ts')
   const curlClassFilePath = path.resolve(__dirname, '../lib/Curl.ts')
 
   createSetOptOverloads(easyBindingFilePath)
   createSetOptOverloads(curlClassFilePath, 'this')
 
   execSync(
-    `yarn prettier ${curlOptionsFilePath} ${curlInfoFilePath} ${multiOptionFilePath} ${easyBindingFilePath} ${curlClassFilePath}`,
+    `pnpm prettier ${curlOptionsFilePath} ${curlInfoFilePath} ${multiOptionFilePath} ${easyBindingFilePath} ${curlClassFilePath}`,
   )
 }
 

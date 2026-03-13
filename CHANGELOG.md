@@ -1,16 +1,162 @@
 # Changelog
-All notable changes to this project will be documented in this file.  
-  
+All notable changes to this project will be documented in this file.
+
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Breaking Change
+
+### Fixed
+
+### Added
+
+### Changed
+
+## [5.0.2] - 2026-01-15
+
+### Fixed
+- Fixed the types on the `FileInfo` object. With 5.0.0, the properties were changed to be all in lowercase, to follow the libcurl struct more closely.
+
+## [5.0.1] - 2025-11-13
+
+### Fixed
+- Building from source on macOS would not work properly.
+
+## [5.0.0] - 2025-01-13
+
 ### Breaking Change  
+- The prebuilt binary is now built with libcurl 8.17.0. Every breaking change introduced by libcurl 8 is also a breaking change for this version.
+  ```
+  Version: libcurl/8.17.0 OpenSSL/3.5.2 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.1.1 libssh2/1.10.0 nghttp2/1.66.0 ngtcp2/1.17.0 nghttp3/1.12.0 OpenLDAP/2.6.9
+  Protocols: dict, file, ftp, ftps, gopher, gophers, http, https, imap, imaps, ldap, ldaps, mqtt, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp, ws, wss
+  Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, SSL, libz, brotli, TLS-SRP, HTTP2, UnixSockets, HTTPS-proxy, alt-svc
+  ```
+- Minimum supported Electron version is now Electron v38.0.0 (moving forward prebuilt binaries will only be available for the latest 2 versions of Electron).
+- Mininum supported libcurl version is now libcurl 7.81.0.
+- Windows 32-bit support is now dropped.
+- Minimum supported versions:
+  - Node.js >= v22.20.0 (which bundles OpenSSL 3.5.2).
+  - Electron >= v38.0.0.
+  - libcurl >= v7.81.0.
+  - Ubuntu >= v22.04.
+  - Alpine >= 3.21
+  - C++ compilers supporting c++20
+- The `FileInfo` object properties are now all in lowercase, to follow the libcurl struct more closely.
+- Errors thrown by the addon are now instances of one of the following classes:
+  - `CurlEasyError`
+  - `CurlMultiError`
+  - `CurlSharedError`
+  These classes extends the `CurlError` class. Previously the addon used to throw only native Javascript errors, such as `Error`, `TypeError`, etc.
+  The curly related errors also inherit from the `CurlError` class, and do not have a `isCurlError` property anymore.
+  Any caught error thrown from user callbacks will be added as the `cause` property of the error.
+- Every Easy handle is now initialized with default CA certificates from Node.js's tls module, by using the result of the `getCACertificates` function. This is done using `CURLOPT_CAINFO_BLOB`. This is a breaking change if you were passing custom CA certificates before using `CAINFO`, as `CURLOPT_CAINFO_BLOB` takes priority over it. If that is the case, you can avoid the default behavior by calling `setOpt("CAINFO_BLOB", null)` on the Easy handle. The TLS certificate is loaded into memory only once for each JavaScript context.
+- `HSTSREADFUNCTION` callback now receives an object with the `maxHostLengthBytes` property, which is the maximum length of the host name that can be returned by the callback.
+- The minimum macOS version is now Sonoma (13)
+- `Curl.globalCleanup` is a no-op now. The addon will automatically call `curl_global_cleanup` when the process exits. This method will be removed in a future major version.
+- `Curl.globalInit` is a no-op now. The addon will automatically call `curl_global_init` when the process starts. This method will be removed in a future major version.
+
 ### Fixed  
-### Added  
+- `CurlHttpVersion.V3` not being set to the proper value (was not set to `30`)
+
+### Added
+- Prebuilt binaries have HTTP/3 support enabled across all platforms. This is supported by licurl when building with OpenSSL >= 3.5 and nghttp3 [>= 1.66](https://nghttp2.org/blog/2025/06/17/nghttp2-v1-66-0/). To use OpenSSL >= 3.5 a Node.js version >= 22.20.0 is required.
+- The addon has been rewritten to use N-API, which will streamline the process of supporting newer Node.js versions in the future.
+- The addon is now worker threads safe. See `examples/22-worker-threads.js` for usage example.
+- Added native WebSocket support (requires libcurl >= 7.86.0):
+  - `Easy.wsRecv(buffer)` - Receive WebSocket frames with metadata
+  - `Easy.wsSend(buffer, flags, fragsize?)` - Send WebSocket frames (text, binary, ping, pong, close)
+  - `Easy.wsMeta()` - Get WebSocket frame metadata
+  - `CurlWs` enum for WebSocket frame flags (Text, Binary, Close, Ping, Pong, Cont, Offset)
+  - `CurlWsOptions` enum for WebSocket options (RawMode, NoAutoPong)
+  - `CurlWsFrame` interface for frame metadata (age, flags, offset, bytesleft, len)
+  - Support for `CONNECT_ONLY` mode with value 2 for WebSocket connections
+  - See `examples/21-websockets-native.js` for usage example
+- Added MIME API support for multipart form data (replaces deprecated HTTPPOST):
+  - `CurlMime` class for creating multipart MIME structures
+  - `CurlMimePart` class for individual MIME parts
+  - `CurlMimeOpt` enum for MIME options (FormEscape)
+  - Added `CURLOPT_MIME_OPTIONS` and `CURLOPT_MIMEPOST` options
+  - `Easy.setMimePost(mime)`, `Curl.setMimePost(mime)`, and `curlyMimePost` alternatives for setting MIME data in a structured way.
+  - See `examples/23-mime-post-easy.js` for usage example
+- Added SSH host key verification support (requires libcurl >= 7.84.0):
+  - `CURLOPT_SSH_HOSTKEYFUNCTION` callback for custom host key verification
+  - `CURLOPT_SSH_HOST_PUBLIC_KEY_SHA256` option for SHA256 fingerprint verification
+  - `CurlSshKeyType` enum for SSH host key types (Unknown, Rsa, Dss, Ecdsa, Ed25519)
+  - `CurlSshKeyMatch` enum for SSH host key verification results (Ok, Mismatch)
+- Added HTTP/2 stream priority support:
+  - `CURLOPT_STREAM_DEPENDS` - Set stream dependency
+  - `CURLOPT_STREAM_DEPENDS_E` - Set stream dependency (exclusive)
+  - `CURLOPT_STREAM_WEIGHT` - Set stream weight for resource allocation
+- Added `CURLOPT_INTERLEAVEFUNCTION` callback for handling RTSP interleaved data
+- Added new `Multi.perform` method for adding `Easy` instances to a `Multi` instance. This will eventually replace the `Multi.addHandle` and `Multi.onMessage` methods, which are now deprecated.
+- Added the following new enums:
+  - `CurlFollow`
+  - `CurlMultiNetworkChanged`
+  - `CurlWs`
+  - `CurlWsOptions`
+- Added following enum members:
+  - `CurlWriteFunc.Abort`
+  - `CurlShareLock.DataShare`
+  - `CurlHttpVersion.V3Only`
+  - `CurlProxy.Https2`
+  - `CurlCode.CURLE_UNRECOVERABLE_POLL`
+  - `CurlCode.CURLE_TOO_LARGE`
+  - `CurlCode.CURLE_ECH_REQUIRED`
+  - `CurlSslOpt.Earlydata`
+- Added support for the following extra easy options:
+  - https://curl.se/libcurl/c/CURLOPT_CA_CACHE_TIMEOUT.html
+  - https://curl.se/libcurl/c/CURLOPT_MAIL_RCPT_ALLOWFAILS.html
+  - https://curl.se/libcurl/c/CURLOPT_HAPROXY_CLIENT_IP.html
+  - https://curl.se/libcurl/c/CURLOPT_SERVER_RESPONSE_TIMEOUT_MS.html
+  - https://curl.se/libcurl/c/CURLOPT_ECH.html
+  - https://curl.se/libcurl/c/CURLOPT_TCP_KEEPCNT.html
+  - https://curl.se/libcurl/c/CURLOPT_UPLOAD_FLAGS.html
+  - https://curl.se/libcurl/c/CURLOPT_SSL_SIGNATURE_ALGORITHMS.html
+- Added following info options:
+  - https://curl.se/libcurl/c/CURLINFO_CONN_ID.html
+  - https://curl.se/libcurl/c/CURLINFO_XFER_ID.html
+  - https://curl.se/libcurl/c/CURLINFO_QUEUE_TIME_T.html
+  - https://curl.se/libcurl/c/CURLINFO_USED_PROXY.html
+  - https://curl.se/libcurl/c/CURLINFO_POSTTRANSFER_TIME_T.html
+  - https://curl.se/libcurl/c/CURLINFO_EARLYDATA_SENT_T.html
+  - https://curl.se/libcurl/c/CURLINFO_PROXYAUTH_USED.html
+  - https://curl.se/libcurl/c/CURLINFO_HTTPAUTH_USED.html
+- Added the following multi options:
+  - https://curl.se/libcurl/c/CURLMOPT_NETWORK_CHANGED.html
+- Added `Curl.id`, `Easy.id`, `Multi.id`, and `Share.id` properties, which return the unique ID of each instance. The value is unique across threads.
+- There are build attestations for the prebuilt binaries now, which can be used to verify the authenticity of the binaries.
+
 ### Changed  
-### Removed  
+- `CurlGlobalInit` enum is deprecated and should not be used.
+- Closing a Curl instance is now a no-op if the handle is already closed.
+- `Multi.onMessage` and `Multi.addHandle` are now deprecated and will be removed in a future major version. Use `Multi.perform` instead.
+
+## [4.1.0] - 2024-12-26
+
+### Fixed  
+- curly - use default content-type when there are no headers [#410](https://github.com/JCMais/node-libcurl/pull/410) by @liamdiprose 
+### Added
+- Added prebuilt binaries for Node.js 22, Electron 33, Electron 32, and Electron 31
+
+### Notes
+
+Besides possible security patches, this will be the last minor release in the v4 series. For v5, I am currently planning to work on this:
+- Migrate to N-API, which will allow us to support newer Node.js versions more easily.
+- Drop support for Node.js < 22.
+- Drop support for building with libcurl < 8.0.
+- Drop x86 support.
+- Support ES modules.
+
+## [4.0.0] - 2024-02-11
+
+### Breaking Change  
+- Mininum supported Node.js version is now Node.js 16.14.
+- The prebuilt binaries are only available on:
+  - Node.js 18, 20, and 21
+  - Electron 27, 27, and 28
+- NW.js binaries were removed, and may be re-introduced in the future.
 
 ## [3.0.0] - 2022-11-17
 
@@ -366,7 +512,12 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v5.0.2...HEAD
+[5.0.2]: https://github.com/JCMais/node-libcurl/compare/v5.0.1...v5.0.2
+[5.0.1]: https://github.com/JCMais/node-libcurl/compare/v5.0.0...v5.0.1
+[5.0.0]: https://github.com/JCMais/node-libcurl/compare/v4.1.0...v5.0.0
+[4.1.0]: https://github.com/JCMais/node-libcurl/compare/v4.0.0...v4.1.0
+[4.0.0]: https://github.com/JCMais/node-libcurl/compare/v3.0.0...v4.0.0
 [3.0.0]: https://github.com/JCMais/node-libcurl/compare/v2.3.4...v3.0.0
 [2.3.4]: https://github.com/JCMais/node-libcurl/compare/v2.3.3...v2.3.4
 [2.3.3]: https://github.com/JCMais/node-libcurl/compare/v2.3.2...v2.3.3

@@ -1,19 +1,5 @@
 // This should be kept in sync with the options on src/Curl.cc curlOptionNotImplemented
 const curlOptionsBlacklist = [
-  // to add next
-  'CURLOPT_SSH_HOST_PUBLIC_KEY_SHA256',
-  'CURLOPT_SSH_HOSTKEYFUNCTION',
-  // ws related options - to be added later(?)
-  'CURLOPT_WS_OPTIONS',
-  // mime related options - to be added later(?)
-  'CURLOPT_MIME_OPTIONS',
-  'CURLOPT_MIMEPOST',
-  // probably will be implemented at some time in the future?
-  'CURLOPT_STREAM_DEPENDS',
-  'CURLOPT_STREAM_DEPENDS_E',
-  'CURLOPT_STREAM_WEIGHT',
-  'CURLOPT_INTERLEAVEDATA',
-  'CURLOPT_INTERLEAVEFUNCTION',
   // maybe
   'CURLOPT_STDERR',
   // https://curl.haxx.se/libcurl/c/CURLOPT_CURLU.html
@@ -37,6 +23,8 @@ const curlOptionsBlacklist = [
   'CURLOPT_SOCKOPTFUNCTION',
   'CURLOPT_SSH_KEYFUNCTION',
   'CURLOPT_SSH_KEYDATA',
+  'CURLOPT_INTERLEAVEDATA',
+  'CURLOPT_SSH_HOSTKEYDATA',
   // Not really necessary
   'CURLOPT_ERRORBUFFER',
   'CURLOPT_COPYPOSTFIELDS',

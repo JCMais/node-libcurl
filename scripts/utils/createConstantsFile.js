@@ -6,12 +6,12 @@ const getDescriptionCommentForOption = (option) =>
 /**
  * ${option.description.trim()}
  * 
- * Official libcurl documentation: : [${option.url}](${option.url})
+ * Official libcurl documentation: [${option.url}](${option.url})
  */
 `
     : `
 /**
- * Official libcurl documentation: : [${option.url}](${option.url})
+ * Official libcurl documentation: [${option.url}](${option.url})
  */
 `
 
@@ -32,8 +32,8 @@ const createConstantsFile = async ({
       (option) =>
         `
       ${getDescriptionCommentForOption(option)}readonly ${
-          option.constantName
-        }: "${option.constantName}",
+        option.constantName
+      }: "${option.constantName}",
       `,
     ),
     `}`,

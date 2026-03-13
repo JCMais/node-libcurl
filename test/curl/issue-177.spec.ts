@@ -1,16 +1,15 @@
+import { describe, it, expect } from 'vitest'
 import { Curl } from '../../lib'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
-import should from 'should'
-
-describe('issues', function () {
-  this.timeout(20000)
-
+describe('issues', () => {
   it('issue-177 - node.js microtasks interference', async () => {
     const testStartTime = process.hrtime()
     const timeout = setTimeout(() => void 0, 15000)
     const makeCall = () =>
       new Promise((resolve, reject) => {
         const curl = new Curl()
+        withCommonTestOptions(curl)
 
         curl.setOpt('URL', '10.255.255.1')
         curl.setOpt('CONNECTTIMEOUT', 1)
@@ -36,9 +35,9 @@ describe('issues', function () {
       error = _error
     }
 
-    should(error).not.be.equal(null)
+    expect(error).not.toBeNull()
     const promiseResolvedTime = process.hrtime(testStartTime)
-    promiseResolvedTime[0].should.be.lessThan(2)
+    expect(promiseResolvedTime[0]).toBeLessThan(2)
 
     clearTimeout(timeout)
   })

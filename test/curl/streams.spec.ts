@@ -4,26 +4,26 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import 'should'
+import { describe, beforeAll, afterAll, it, expect } from 'vitest'
 
 import { Readable } from 'stream'
 import crypto from 'crypto'
 
-import { Curl, CurlCode, curly } from '../../lib'
+import { Curl, CurlCode, CurlEasyError, curly } from '../../lib'
 
-import { app, closeServer, host, port, server } from '../helper/server'
+import { createServer } from '../helper/server'
 import { allMethodsWithMultipleReqResTypes } from '../helper/commonRoutes'
+import { withCommonTestOptions } from '../helper/commonOptions'
 
 interface GetReadableStreamForBufferOptions {
   filterDataToPush?(pushIteration: number, data: Buffer): Promise<Buffer>
 }
 
-const url = `http://${host}:${port}`
-
 // @ts-ignore
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-// 1mb
+const UPLOAD_STREAM_HIGH_WATER_MARK = 1 * 1024
+
 const getRandomBuffer = (size: number = 1024 * 1024) => crypto.randomBytes(size)
 
 const getReadableStreamForBuffer = (
@@ -37,7 +37,7 @@ const getReadableStreamForBuffer = (
   let canRead = true
   const stream = new Readable({
     // this defaults to 16kb
-    highWaterMark: 4 * 1024,
+    highWaterMark: UPLOAD_STREAM_HIGH_WATER_MARK,
     async read(size) {
       if (!canRead) return
 
@@ -63,7 +63,7 @@ const getReadableStreamForBuffer = (
             wantsMore = false
           }
         } catch (error) {
-          stream.destroy(error)
+          stream.destroy(error as Error)
         }
       }
 
@@ -91,66 +91,99 @@ const getUploadOptions = (curlyStreamUpload: Readable) => {
   return options
 }
 
-const getDownloadOptions = () => ({
+/**
+ * The highWaterMark defaults to undefined, which means using the Node.js default value of 16kb.
+ * Here we are explicitly setting it to 4kb.
+ */
+const getDownloadOptions = (highWaterMark = 4 * 1024) => ({
   curlyStreamResponse: true,
-  // This defaults to undefined, which means using the Node.js default value of 16kb.
-  // Here we are explicitly setting it to 4kb.
-  curlyStreamResponseHighWaterMark: 4 * 1024,
+  curlyStreamResponseHighWaterMark: highWaterMark,
 })
 
 let randomBuffer: Buffer
+let serverInstance: ReturnType<typeof createServer>
 
 describe('streams', () => {
-  before((done) => {
+  beforeAll(async () => {
     randomBuffer = getRandomBuffer()
-    server.listen(port, host, done)
+    serverInstance = createServer()
 
-    allMethodsWithMultipleReqResTypes(app, {
+    allMethodsWithMultipleReqResTypes(serverInstance.app, {
       putUploadBuffer: randomBuffer,
     })
+
+    await serverInstance.listen()
   })
 
-  after(() => {
-    closeServer()
-    // beatiful is not it?
-    app._router.stack.pop()
+  afterAll(async () => {
+    await serverInstance.close()
+    serverInstance.app._router.stack.pop()
   })
 
   describe('curly', () => {
     // libcurl versions older than this are not really reliable for streams usage.
-    if (Curl.isVersionGreaterOrEqualThan(7, 69, 1)) {
-      it('works for uploading and downloading', async () => {
-        const curlyStreamUpload = getReadableStreamForBuffer(randomBuffer, {
+    it.runIf(Curl.isVersionGreaterOrEqualThan(7, 69, 1)).each([
+      {
+        highWaterMark: 1024 * 4,
+        bufferSize: 1024 * 32,
+      },
+      {
+        highWaterMark: 1024 * 16,
+        bufferSize: 1024 * 16,
+      },
+      {
+        highWaterMark: 1024 * 8,
+        bufferSize: 1024 * 1024,
+      },
+      {
+        highWaterMark: 1024 * 4,
+        bufferSize: 'same',
+      },
+    ])(
+      'works for uploading and downloading with highWaterMark: $highWaterMark, bufferSize: $bufferSize',
+      async ({ highWaterMark, bufferSize }) => {
+        const bufferToUse =
+          bufferSize === 'same'
+            ? randomBuffer
+            : getRandomBuffer(bufferSize as number)
+        const path =
+          bufferSize === 'same'
+            ? '/all?type=put-upload'
+            : `/all?type=put-return-read`
+        const curlyStreamUpload = getReadableStreamForBuffer(bufferToUse, {
           filterDataToPush: async (pushIteration, data) => {
-            // we are waiting 1200 ms at the 5th iteration just to cause
+            // we are waiting a few ms on the 5th iteration just to cause
             // some pauses in the READFUNCTION
             if (pushIteration === 5) {
-              await sleep(1200)
+              await sleep(600)
             }
 
             return data
           },
         })
 
-        const { statusCode, data: downloadStream, headers } = await curly.put<
-          Readable
-        >(`${url}/all?type=put-upload`, {
-          ...getUploadOptions(curlyStreamUpload),
-          ...getDownloadOptions(),
-          curlyProgressCallback() {
-            return 0
-          },
-        })
+        const {
+          statusCode,
+          data: downloadStream,
+          headers,
+        } = await curly.put<Readable>(
+          `${serverInstance.url}${path}`,
+          withCommonTestOptions({
+            ...getUploadOptions(curlyStreamUpload),
+            ...getDownloadOptions(highWaterMark),
+            curlyProgressCallback() {
+              return 0
+            },
+          }),
+        )
 
-        statusCode.should.be.equal(200)
-
-        headers[headers.length - 1]['x-is-same-buffer'].should.be.equal('0')
-
-        // TODO: add snapshot testing for headers
+        expect(statusCode).toBe(200)
+        if (bufferSize === 'same') {
+          expect(headers[headers.length - 1]['x-is-same-buffer']).toBe('true')
+        }
 
         // we cannot use async iterators here because we need to support Node.js v8
-
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           const acc: Buffer[] = []
           let iteration = 0
 
@@ -158,10 +191,13 @@ describe('streams', () => {
           // some pauses in the PUSHFUNCTION
           downloadStream.on('data', (data) => {
             acc.push(data)
+            expect(data.length).toBeLessThanOrEqual(highWaterMark)
 
             if (iteration++ === 2) {
               downloadStream.pause()
-              setTimeout(() => downloadStream.resume(), 1200)
+              setTimeout(() => {
+                downloadStream.resume()
+              }, 1000)
             }
           })
 
@@ -170,121 +206,128 @@ describe('streams', () => {
           })
 
           downloadStream.on('end', () => {
-            const finalBuffer = Buffer.concat(acc)
-
-            const result = finalBuffer.compare(randomBuffer)
-            result.should.be.equal(0)
-
-            resolve()
+            try {
+              const finalBuffer = Buffer.concat(acc)
+              expect(finalBuffer.byteLength).toBe(bufferToUse.byteLength)
+              const result = finalBuffer.compare(bufferToUse)
+              expect(result).toBe(0)
+            } catch (error) {
+              reject(error)
+            }
+            resolve(undefined)
           })
 
           downloadStream.on('error', (error) => {
             reject(error)
           })
         })
-      })
+      },
+    )
 
-      it('works with responses without body', async function () {
-        this.timeout(3000)
-
-        const { statusCode, data: downloadStream } = await curly.get<Readable>(
-          `${url}/all?type=no-body`,
-          {
-            ...getDownloadOptions(),
-            curlyProgressCallback() {
-              return 0
-            },
+    it('works with responses without body', async () => {
+      const { statusCode, data: downloadStream } = await curly.get<Readable>(
+        `${serverInstance.url}/all?type=no-body`,
+        withCommonTestOptions({
+          ...getDownloadOptions(),
+          curlyProgressCallback() {
+            return 0
           },
-        )
+        }),
+      )
 
-        statusCode.should.be.equal(200)
+      expect(statusCode).toBe(200)
 
-        // TODO: add snapshot testing for headers
+      // TODO: add snapshot testing for headers
 
-        // we cannot use async iterators here because we need to support Node.js v8
+      // we cannot use async iterators here because we need to support Node.js v8
 
-        return new Promise((resolve, reject) => {
-          const acc: Buffer[] = []
+      return new Promise<void>((resolve, reject) => {
+        const acc: Buffer[] = []
 
-          downloadStream.on('data', (data) => {
-            acc.push(data)
-          })
+        downloadStream.on('data', (data) => {
+          acc.push(data)
+        })
 
-          downloadStream.on('end', () => {
+        downloadStream.on('end', () => {
+          try {
             const finalBuffer = Buffer.concat(acc)
-
-            finalBuffer.byteLength.should.be.equal(0)
-
-            resolve()
-          })
-
-          downloadStream.on('error', (error) => {
+            expect(finalBuffer.byteLength).toBe(0)
+            resolve(undefined)
+          } catch (error) {
             reject(error)
-          })
+          }
+        })
+
+        downloadStream.on('error', (error) => {
+          reject(error)
         })
       })
+    })
 
-      it('works with HEAD requests', async function () {
-        this.timeout(3000)
-
-        const { statusCode, data: downloadStream } = await curly.head<Readable>(
-          `${url}/all?type=method`,
-          {
-            ...getDownloadOptions(),
-            curlyProgressCallback() {
-              return 0
-            },
+    it('works with HEAD requests', async () => {
+      const { statusCode, data: downloadStream } = await curly.head<Readable>(
+        `${serverInstance.url}/all?type=method`,
+        withCommonTestOptions({
+          ...getDownloadOptions(),
+          curlyProgressCallback() {
+            return 0
           },
-        )
+        }),
+      )
 
-        statusCode.should.be.equal(200)
+      expect(statusCode).toBe(200)
 
-        // TODO: add snapshot testing for headers
+      // TODO: add snapshot testing for headers
 
-        // we cannot use async iterators here because we need to support Node.js v8
+      // we cannot use async iterators here because we need to support Node.js v8
 
-        return new Promise((resolve, reject) => {
-          const acc: Buffer[] = []
+      return new Promise<void>((resolve, reject) => {
+        const acc: Buffer[] = []
 
-          downloadStream.on('data', (data) => {
-            acc.push(data)
-          })
+        downloadStream.on('data', (data) => {
+          acc.push(data)
+        })
 
-          downloadStream.on('end', () => {
+        downloadStream.on('end', () => {
+          try {
             const finalBuffer = Buffer.concat(acc)
-
-            finalBuffer.byteLength.should.be.equal(0)
-
-            resolve()
-          })
-
-          downloadStream.on('error', (error) => {
+            expect(finalBuffer.byteLength).toBe(0)
+            resolve(undefined)
+          } catch (error) {
             reject(error)
-          })
+          }
+        })
+
+        downloadStream.on('error', (error) => {
+          reject(error)
         })
       })
-    }
+    })
 
     it('returns an error when the upload stream throws an error', async () => {
       const errorMessage = 'custom error'
+      let errorObject!: Error
       const curlyStreamUpload = getReadableStreamForBuffer(randomBuffer, {
         async filterDataToPush(iteration, buffer) {
           if (iteration === 5) {
-            throw new Error(errorMessage)
+            errorObject = new Error(errorMessage)
+            throw errorObject
           }
 
           return buffer
         },
       })
 
-      await curly
-        .put(`${url}/all?type=put-upload`, getUploadOptions(curlyStreamUpload))
-        // @ts-ignore
-        .should.be.rejectedWith(Error, {
-          message: errorMessage,
-          isCurlError: true,
-          code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
-        })
+      const error = await curly
+        .put(
+          `${serverInstance.url}/all?type=put-upload`,
+          withCommonTestOptions(getUploadOptions(curlyStreamUpload)),
+        )
+        .catch((error) => error)
+
+      expect(error).toBeInstanceOf(CurlEasyError)
+      expect(error.cause).toBe(errorObject)
+      expect(error.code).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
     })
 
     it('returns an error when the upload stream is destroyed unexpectedly', async () => {
@@ -298,51 +341,59 @@ describe('streams', () => {
         },
       })
 
-      await curly
-        .put(`${url}/all?type=put-upload`, getUploadOptions(curlyStreamUpload))
-        // @ts-ignore
-        .should.be.rejectedWith(Error, {
-          message: 'Curl upload stream was unexpectedly destroyed',
-          isCurlError: true,
-          code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
-        })
+      const error = await curly
+        .put(
+          `${serverInstance.url}/all?type=put-upload`,
+          withCommonTestOptions(getUploadOptions(curlyStreamUpload)),
+        )
+        .catch((error) => error)
+
+      expect(error).toBeInstanceOf(CurlEasyError)
+      expect(error.cause).toMatchInlineSnapshot(
+        `[Error: Curl upload stream was unexpectedly destroyed]`,
+      )
+      expect(error.code).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
     })
 
     it('returns an error when the upload stream is destroyed unexpectedly with a specific error', async () => {
       const errorMessage = 'Custom error message'
+      let errorObject!: Error
       const curlyStreamUpload = getReadableStreamForBuffer(randomBuffer, {
         async filterDataToPush(iteration, buffer) {
           if (iteration === 5) {
-            curlyStreamUpload.destroy(new Error(errorMessage))
+            errorObject = new Error(errorMessage)
+            curlyStreamUpload.destroy(errorObject)
           }
 
           return buffer
         },
       })
 
-      await curly
-        .put(`${url}/all?type=put-upload`, getUploadOptions(curlyStreamUpload))
-        // @ts-ignore
-        .should.be.rejectedWith(Error, {
-          message: errorMessage,
-          isCurlError: true,
-          code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
-        })
+      const error = await curly
+        .put(
+          `${serverInstance.url}/all?type=put-upload`,
+          withCommonTestOptions(getUploadOptions(curlyStreamUpload)),
+        )
+        .catch((error) => error)
+
+      expect(error).toBeInstanceOf(CurlEasyError)
+      expect(error.cause).toBe(errorObject)
+      expect(error.code).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
     })
 
     it('emits an error when the download stream is destroyed unexpectedly', async () => {
       const { statusCode, data: downloadStream } = await curly.get<Readable>(
-        `${url}/all?type=json`,
-        {
+        `${serverInstance.url}/all?type=json`,
+        withCommonTestOptions({
           ...getDownloadOptions(),
-        },
+        }),
       )
 
-      statusCode.should.be.equal(200)
+      expect(statusCode).toBe(200)
 
       // we cannot use async iterators here because we need to support Node.js v8
 
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         downloadStream.on('data', () => {
           downloadStream.destroy()
         })
@@ -353,13 +404,17 @@ describe('streams', () => {
           )
         })
 
-        downloadStream.on('error', (error) => {
-          error.should.match({
-            message: 'Curl response stream was unexpectedly destroyed',
-            isCurlError: true,
-            code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
-          })
-          resolve()
+        downloadStream.on('error', (error: CurlEasyError) => {
+          try {
+            expect(error).toBeInstanceOf(CurlEasyError)
+            expect(error.cause).toMatchInlineSnapshot(
+              `[Error: Curl response stream was unexpectedly destroyed]`,
+            )
+            expect(error.code).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+            resolve(undefined)
+          } catch (error) {
+            reject(error)
+          }
         })
       })
     })
@@ -368,21 +423,23 @@ describe('streams', () => {
       const errorMessage = 'Custom error message'
 
       const { statusCode, data: downloadStream } = await curly.get<Readable>(
-        `${url}/all?type=json`,
-        {
+        `${serverInstance.url}/all?type=json`,
+        withCommonTestOptions({
           ...getDownloadOptions(),
           // this is just to also test the branching for when this is not set
           curlyStreamResponseHighWaterMark: undefined,
-        },
+        }),
       )
 
-      statusCode.should.be.equal(200)
+      expect(statusCode).toBe(200)
 
       // we cannot use async iterators here because we need to support Node.js v8
 
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
+        let errorObject!: Error
         downloadStream.on('data', () => {
-          downloadStream.destroy(new Error(errorMessage))
+          errorObject = new Error(errorMessage)
+          downloadStream.destroy(errorObject)
         })
 
         downloadStream.on('end', () => {
@@ -391,13 +448,16 @@ describe('streams', () => {
           )
         })
 
-        downloadStream.on('error', (error) => {
-          error.should.match({
-            message: errorMessage,
-            isCurlError: true,
-            code: CurlCode.CURLE_ABORTED_BY_CALLBACK,
-          })
-          resolve()
+        downloadStream.on('error', (error: CurlEasyError) => {
+          try {
+            expect(error).toBeInstanceOf(CurlEasyError)
+            expect(error.cause).toBe(errorObject)
+            expect(error.code).toBe(CurlCode.CURLE_ABORTED_BY_CALLBACK)
+
+            resolve(undefined)
+          } catch (error) {
+            reject(error)
+          }
         })
       })
     })
@@ -410,12 +470,10 @@ describe('streams', () => {
       const values = [123, [], { read: true }]
 
       for (const val of values) {
-        ;(() => {
+        expect(() => {
           // @ts-expect-error
           curl.setUploadStream(val)
-        }).should.throw(Error, {
-          message: /^The passed value to setUploadStream does not/,
-        })
+        }).toThrow(/^The passed value to setUploadStream does not/)
       }
     })
 
@@ -429,7 +487,7 @@ describe('streams', () => {
 
       // the way we are testing this is by making sure we are
       // not adding more listeners to the stream end evt
-      streamUpload.listenerCount('end').should.be.equal(1)
+      expect(streamUpload.listenerCount('end')).toBe(1)
     })
 
     it('resets stream back to null after calling setUploadStream(null)', async () => {
@@ -438,10 +496,10 @@ describe('streams', () => {
       const curl = new Curl()
 
       curl.setUploadStream(streamUpload)
-      streamUpload.listenerCount('end').should.be.equal(1)
+      expect(streamUpload.listenerCount('end')).toBe(1)
 
       curl.setUploadStream(null)
-      streamUpload.listenerCount('end').should.be.equal(0)
+      expect(streamUpload.listenerCount('end')).toBe(0)
     })
   })
 })

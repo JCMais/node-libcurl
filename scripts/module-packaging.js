@@ -4,11 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-const octonode = require('octonode')
+const { Octokit } = require('@octokit/rest')
 const log = require('npmlog')
 const fs = require('fs')
 const path = require('path')
-const versionTag =
+const tag =
   process.env['NODE_LIBCURL_VERSION_TAG'] ||
   'v' + require('../package.json').version //current version of the package.
 
@@ -31,83 +31,87 @@ if (args[0] !== validArgs[0] && args[0] !== validArgs[1]) {
   process.exit(-1)
 }
 
-const octo = octonode.client(process.env['NODE_LIBCURL_GITHUB_TOKEN'])
-const repo = octo.repo('JCMais/node-libcurl')
+const octo = new Octokit({
+  auth: process.env['NODE_LIBCURL_GITHUB_TOKEN'],
+})
+
+const [owner, repo] = 'JCMais/node-libcurl'.split('/')
 const commands = {
   publish: publish,
   unpublish: unpublish,
 }
 
-commands[args[0].replace('--', '')](args[1])
+commands[args[0].replace('--', '')](args[1]).catch((error) => {
+  console.error(error)
+  process.exit(1)
+})
 
-function publish(pathToPackage) {
-  getReleaseByTag(versionTag, (error, data, headers) => {
-    if (error) {
-      if (error.statusCode && error.statusCode === 404) {
-        createRelease(
-          versionTag,
-          attachPackageToRelease.bind(null, pathToPackage),
-        )
-      } else {
-        doSomethingWithError(error)
-      }
-    } else {
-      attachPackageToRelease(pathToPackage, null, data, headers)
-    }
-  })
-}
+/**
+ * @param {string} pathToPackage
+ */
+async function publish(pathToPackage) {
+  let release = await getReleaseByTag(tag)
 
-function unpublish(pathToResource) {
-  getReleaseByTag(versionTag, (error, release /*, headers*/) => {
-    if (error) {
-      doSomethingWithError(error)
-      return
-    }
-
-    removePackageFromRelease(pathToResource, release)
-  })
-}
-
-function getReleaseByTag(tagName, cb) {
-  log.info('', 'searching for release "%s"', tagName)
-
-  repo.release('tags/' + tagName).info((error, data, headers) => {
-    if (error && error.statusCode && error.statusCode === 404) {
-      log.info('', 'release for tag "%s" not found.', tagName)
-    } else {
-      log.info('', 'release for tag "%s" found: %s', tagName, data.url)
-    }
-
-    cb(error, data, headers)
-  })
-}
-
-function createRelease(tagName, cb) {
-  log.info('', 'creating release for tag "%s"', tagName)
-
-  repo.release(
-    {
-      tag_name: tagName,
-    },
-    cb,
-  )
-}
-
-function attachPackageToRelease(pckg, err, release /*, headers*/) {
-  if (err) {
-    doSomethingWithError(err)
-    return
+  if (release) {
+    log.info('', 'release for tag "%s" found: %s', tag, release.url)
+  } else {
+    log.info('', 'release "%s" not found', tag)
+    release = await createRelease(tag)
   }
 
+  await attachPackageToRelease(pathToPackage, release)
+}
+
+async function unpublish(pathToResource) {
+  const release = await getReleaseByTag(tag)
+
+  await removePackageFromRelease(pathToResource, release)
+}
+
+async function getReleaseByTag(tag) {
+  log.info('', 'searching for release "%s"', tag)
+
+  const release = await octo.repos
+    .getReleaseByTag({
+      owner,
+      repo,
+      tag,
+    })
+    .catch((error) => {
+      if (error.status === 404) {
+        return null
+      }
+      throw error
+    })
+
+  return release?.data
+}
+
+async function createRelease(tag) {
+  log.info('', 'creating release for tag "%s"', tag)
+
+  const { data } = await octo.repos.createRelease({
+    owner,
+    repo,
+    tag_name: tag,
+  })
+
+  return data
+}
+
+/**
+ *
+ * @param {string} pckg
+ * @param {Awaited<ReturnType<Octokit["repos"]["getRelease"]>>["data"]} release
+ * @returns
+ */
+async function attachPackageToRelease(pckg, release) {
   const packagePath = path.resolve(pckg)
 
   if (!fs.existsSync(packagePath)) {
-    log.error(
-      '',
-      'could not find the package in the specified path: "%s"',
-      packagePath,
+    throw new Error(
+      `Could not find the package in the specified path: "${packagePath}"`,
     )
-    process.exit(-1)
   }
 
   log.info(
@@ -124,39 +128,38 @@ function attachPackageToRelease(pckg, err, release /*, headers*/) {
     if (release.assets[i].name === packageFileName) {
       log.warn(
         '',
-        'package "%s" already attached to release "%s"',
+        'package "%s" already attached to release "%s" (%s)',
         packageFileName,
         release.tag_name,
+        release.id,
       )
-      process.exit(0)
+      return
     }
   }
 
   const fileContent = fs.readFileSync(packagePath)
 
-  repo.release(release.id).uploadAssets(
-    fileContent,
-    {
-      name: packageFileName,
-      contentType: 'application/x-gzip',
+  const { data } = await octo.repos.uploadReleaseAsset({
+    owner,
+    repo,
+    name: packageFileName,
+    data: fileContent,
+    release_id: release.id,
+    headers: {
+      'Content-Type': 'application/x-gzip',
     },
-    (error, data /*, headers*/) => {
-      if (error) {
-        doSomethingWithError(error)
-        return
-      }
+  })
 
-      log.info(
-        '',
-        'package attached with success: %s',
-        data.browser_download_url,
-      )
-      process.exit(0)
-    },
-  )
+  log.info('', 'package attached with success: %s', data.browser_download_url)
 }
 
-function removePackageFromRelease(packageToDelete, release) {
+/**
+ *
+ * @param {string} pckg
+ * @param {Awaited<ReturnType<Octokit["repos"]["getRelease"]>>["data"]} release
+ * @returns
+ */
+async function removePackageFromRelease(packageToDelete, release) {
   const packageToDeleteName = path.basename(packageToDelete)
 
   let found = false
@@ -174,25 +177,17 @@ function removePackageFromRelease(packageToDelete, release) {
     if (releaseAsset.name === packageToDeleteName) {
       found = true
 
-      //@FIXME using internals because there is no way to remove directly
-      // uri to remove assets is: repos/:owner/:repo/releases/assets/:id
-      repo.client.del(
-        '/repos/' + repo.name + '/releases/assets/' + releaseAsset.id,
-        null,
-        (error /*, data, headers*/) => {
-          if (error) {
-            doSomethingWithError(error)
-            return
-          }
+      await octo.repos.deleteReleaseAsset({
+        owner,
+        repo,
+        asset_id: releaseAsset.id,
+      })
 
-          log.info(
-            '',
-            'removed package "%s" from release "%s"',
-            packageToDelete,
-            release.tag_name,
-          )
-          process.exit(0)
-        },
+      log.info(
+        '',
+        'removed package "%s" from release "%s"',
+        packageToDelete,
+        release.tag_name,
       )
     }
   }
@@ -204,11 +199,5 @@ function removePackageFromRelease(packageToDelete, release) {
       packageToDelete,
       release.tag_name,
     )
-    process.exit(-1)
   }
-}
-
-function doSomethingWithError(error) {
-  log.error('', error)
-  process.exit(-1)
 }

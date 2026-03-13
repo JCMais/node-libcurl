@@ -40,19 +40,6 @@
 #define NODE_LIBCURL_VER_LE(MAJ, MIN, PAT) \
   (LIBCURL_VERSION_NUM <= NODE_LIBCURL_MAKE_VERSION(MAJ, MIN, PAT))
 
-#if !defined(NODE_LIBCURL_NO_SETLOCALE) && !defined(_WIN32)
-#define SETLOCALE_WRAPPER(code)                         \
-  std::string localeOriginal = setlocale(LC_ALL, NULL); \
-  bool hasLocaleChanged = false;                        \
-  if (localeOriginal == "C") {                          \
-    hasLocaleChanged = true;                            \
-    setlocale(LC_ALL, "");                              \
-  }                                                     \
-  code if (hasLocaleChanged) { setlocale(LC_ALL, localeOriginal.c_str()); }
-#else
-#define SETLOCALE_WRAPPER(code) code
-#endif
-
 #define THROW_ERROR_OR_SET_MULTI_CALLBACK_ERROR_IF_INSIDE_MULTI(typeError) \
   if (obj->isInsideMultiHandle) {                                          \
     obj->callbackError.Reset(typeError);                                   \
@@ -60,4 +47,36 @@
     Nan::ThrowError(typeError);                                            \
     tryCatch.ReThrow();                                                    \
   }
+
+// Debug logging macros with zero runtime overhead when disabled
+#ifdef NODE_LIBCURL_DEBUG
+#include <iostream>
+#include <string>
+#include <thread>
+#define NODE_LIBCURL_DEBUG_LOG(obj, message, extra)                   \
+  do {                                                                \
+    std::cout << "[thread: " << std::this_thread::get_id()            \
+              << "] [env: " << static_cast<napi_env>((obj)->Env())    \
+              << "] [id: " << (obj)->GetDebugId() << "] " << message; \
+    std::string extra_str(extra);                                     \
+    if (!extra_str.empty()) {                                         \
+      std::cout << " - " << extra_str;                                \
+    }                                                                 \
+    std::cout << std::endl;                                           \
+  } while (0)
+
+#define NODE_LIBCURL_DEBUG_LOG_STATIC(env, message)                                                \
+  do {                                                                                             \
+    std::cout << "[thread: " << std::this_thread::get_id() << "] [env: " << env << "] " << message \
+              << std::endl;                                                                        \
+  } while (0)
+#else
+#define NODE_LIBCURL_DEBUG_LOG(obj, message, extra) \
+  do {                                              \
+  } while (0)
+#define NODE_LIBCURL_DEBUG_LOG_STATIC(env, message) \
+  do {                                              \
+  } while (0)
+#endif
+
 #endif

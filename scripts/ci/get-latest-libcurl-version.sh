@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -eu
 
 git ls-remote --tags https://github.com/curl/curl.git \

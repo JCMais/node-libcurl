@@ -45,6 +45,7 @@ fi
 ./configure \
   --prefix=$build_folder \
   --disable-app \
+  --disable-debug \
   --enable-lib-only \
   --without-libxml2 \
   --disable-shared

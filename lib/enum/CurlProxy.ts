@@ -16,6 +16,7 @@ export enum CurlProxy {
   Http = 0,
   Http_1_0 = 1,
   Https = 2,
+  Https2 = 3,
   Socks4 = 4,
   Socks5 = 5,
   Socks4A = 6,

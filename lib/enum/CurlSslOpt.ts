@@ -53,4 +53,9 @@ export enum CurlSslOpt {
    * Added with libcurl 7.77 - This was the default in previous versions
    */
   AutoClientCert = 1 << 5,
+
+  /**
+   * If possible, send data using TLS 1.3 early data
+   */
+  Earlydata = 1 << 6,
 }

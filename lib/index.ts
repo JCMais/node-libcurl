@@ -8,11 +8,35 @@
  * node-libcurl
  * @packageDocumentation
  */
+import './moduleSetup'
+
 export { Curl } from './Curl'
-export { Easy } from './Easy'
+export { Easy, GetInfoReturn } from './Easy'
+// import { Easy as EasyCls } from './Easy'
+// // @ts-expect-error
+// import type { Easy } from './types'
+// /** @class Easy */
+// export const Easy = EasyCls
+
 export { Multi } from './Multi'
 export { Share } from './Share'
-export { curly, CurlyFunction, CurlyResult } from './curly'
+export { CurlMime } from './CurlMime'
+export { CurlMimePart, MimeDataCallbacks } from './CurlMimePart'
+export {
+  curly,
+  CurlyFunction,
+  CurlyResult,
+  type CurlyHttpMethodCall,
+  type CurlyOptions,
+  type CurlyResponseBodyParsersProperty,
+  type CurlyResponseBodyParser,
+} from './curly'
+
+// errors
+export * from './CurlError'
+export * from './CurlEasyError'
+export * from './CurlMultiError'
+export * from './CurlSharedError'
 
 // enums
 export * from './enum/CurlAuth'
@@ -21,6 +45,7 @@ export * from './enum/CurlCode'
 export * from './enum/CurlFeature'
 export * from './enum/CurlFileType'
 export * from './enum/CurlFnMatchFunc'
+export * from './enum/CurlFollow'
 export * from './enum/CurlFtpMethod'
 export * from './enum/CurlFtpSsl'
 export * from './enum/CurlGlobalInit'
@@ -30,9 +55,12 @@ export * from './enum/CurlHsts'
 export * from './enum/CurlHttpVersion'
 export * from './enum/CurlInfoDebug'
 export * from './enum/CurlIpResolve'
+export * from './enum/CurlMimeOpt'
+export * from './enum/CurlMultiNetworkChanged'
 export * from './enum/CurlNetrc'
 export * from './enum/CurlPause'
 export * from './enum/CurlPipe'
+export * from './enum/CurlPreReqFunc'
 export * from './enum/CurlProgressFunc'
 export * from './enum/CurlProtocol'
 export * from './enum/CurlProxy'
@@ -43,12 +71,15 @@ export * from './enum/CurlRtspRequest'
 export * from './enum/CurlShareLock'
 export * from './enum/CurlShareOption'
 export * from './enum/CurlSshAuth'
+export * from './enum/CurlSshKey'
 export * from './enum/CurlSslOpt'
 export * from './enum/CurlSslVersion'
 export * from './enum/CurlTimeCond'
+export * from './enum/CurlUploadFlag'
 export * from './enum/CurlUseSsl'
 export * from './enum/CurlVersion'
 export * from './enum/CurlWriteFunc'
+export * from './enum/CurlWs'
 export * from './enum/SocketState'
 
 // types that can be helpful for library consumer
@@ -59,7 +90,17 @@ export {
   CurlOption,
   CurlOptionName,
   CurlOptionValueType,
+  DataCallbackOptions,
+  ProgressCallbackOptions,
+  BlobOptions,
+  type StringListOptions,
 } from './generated/CurlOption'
 export { MultiOption, MultiOptionName } from './generated/MultiOption'
 
-export { FileInfo, Http2PushFrameHeaders, HttpPostField } from './types'
+export {
+  CurlWsFrame,
+  FileInfo,
+  Http2PushFrameHeaders,
+  HttpPostField,
+  CurlVersionInfoNativeBindingObject,
+} from './types'

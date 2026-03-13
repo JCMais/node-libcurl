@@ -4,8 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-#ifndef NODELIBCURL_LIBCURL_COMPAT_H
-#define NODELIBCURL_LIBCURL_COMPAT_H
+#pragma once
 
 #include "macros.h"
 
@@ -21,6 +20,4 @@ struct curl_index {
   size_t index; /* the provided entry's "index" or count */
   size_t total; /* total number of entries to save */
 };
-#endif
-
 #endif

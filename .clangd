@@ -1,0 +1,4 @@
+CompileFlags: # Tweak the parse settings
+  Add: [-xc++, -Wall, -std=c++17] # treat all files as C++, enable more warnings, use C++17
+  Remove: [-W*] # strip all other warning-related flags
+  Compiler: clang++ # Change argv[0] of compile flags to `clang++`

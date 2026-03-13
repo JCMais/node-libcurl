@@ -4,6 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import './moduleSetup'
+
 import { Readable } from 'stream'
 
 import {
@@ -15,14 +17,18 @@ import {
 import { HeaderInfo } from './parseHeaders'
 
 import { Curl } from './Curl'
+import { Easy } from './Easy'
 import { CurlFeature } from './enum/CurlFeature'
+import { CurlError } from './CurlError'
+import { CurlEasyError } from './CurlEasyError'
+import { CurlyMimePart } from './CurlyMimeTypes'
 
 /**
  * Object the curly call resolves to.
  *
  * @public
  */
-export interface CurlyResult<ResultData extends any = any> {
+export interface CurlyResult<ResultData = any> {
   /**
    * Data will be the body of the requested URL
    */
@@ -79,7 +85,7 @@ const methods = [
   'unsubscribe',
 ] as const
 
-type HttpMethod = typeof methods[number]
+type HttpMethod = (typeof methods)[number]
 
 export type CurlyResponseBodyParser = (
   data: Buffer,
@@ -109,8 +115,8 @@ export interface CurlyOptions extends CurlOptionValueType {
    * @remarks
    *
    * This basically calls one of the following methods, depending on if any of the streams feature is being used or not:
-   * - If using streams: {@link "Curl".Curl.setStreamProgressCallback | `Curl#setStreamProgressCallback`}
-   * - else:  {@link "Curl".Curl.setProgressCallback | `Curl#setProgressCallback`}
+   * - If using streams: {@link Curl.setStreamProgressCallback | `Curl#setStreamProgressCallback`}
+   * - else:  {@link Curl.setProgressCallback | `Curl#setProgressCallback`}
    */
   curlyProgressCallback?: CurlOptionValueType['xferInfoFunction']
 
@@ -149,10 +155,10 @@ export interface CurlyOptions extends CurlOptionValueType {
    *
    * The `curly` call will resolve as soon as the stream is available.
    *
-   * When using this option, if an error is thrown in the internal {@link "Curl".Curl | `Curl`} instance
+   * When using this option, if an error is thrown in the internal {@link Curl | `Curl`} instance
    * after the `curly` call has been resolved (it resolves as soon as the stream is available)
    * it will cause the `error` event to be emitted on the stream itself, this way it's possible
-   * to handle these too, if necessary. The error object will have the property `isCurlError` set to `true`.
+   * to handle these too, if necessary. The error object will inherit from the {@link CurlError | `CurlError`} class.
    *
    * Calling `destroy()` on the stream will always cause the `Curl` instance to emit the error event.
    * Even if an error argument was not supplied to `stream.destroy()`.
@@ -165,17 +171,17 @@ export interface CurlyOptions extends CurlOptionValueType {
    * Versions older than that one are not reliable for streams usage.
    *
    * This basically enables the {@link CurlFeature.StreamResponse | `CurlFeature.StreamResponse`} feature
-   * flag in the internal {@link "Curl".Curl | `Curl`} instance.
+   * flag in the internal {@link Curl | `Curl`} instance.
    */
   curlyStreamResponse?: boolean
 
   /**
-   * This will set the `hightWaterMark` option in the response stream, if `curlyStreamResponse` is `true`.
+   * This will set the `highWaterMark` option in the response stream, if `curlyStreamResponse` is `true`.
    *
    * @remarks
    *
-   * This basically calls {@link "Curl".Curl.setStreamResponseHighWaterMark | `Curl#setStreamResponseHighWaterMark`}
-   * method in the internal {@link "Curl".Curl | `Curl`} instance.
+   * This basically calls {@link Curl.setStreamResponseHighWaterMark | `Curl#setStreamResponseHighWaterMark`}
+   * method in the internal {@link Curl | `Curl`} instance.
    */
   curlyStreamResponseHighWaterMark?: number
 
@@ -189,7 +195,7 @@ export interface CurlyOptions extends CurlOptionValueType {
    *
    * If the stream set here is destroyed before libcurl finishes uploading it, the error
    * `Curl upload stream was unexpectedly destroyed` (Code `42`) will be emitted in the
-   * internal {@link "Curl".Curl | `Curl`} instance, and so will cause the curly call to be rejected with that error.
+   * internal {@link Curl | `Curl`} instance, and so will cause the curly call to be rejected with that error.
    *
    * If the stream was destroyed with a specific error, this error will be passed instead.
    *
@@ -200,13 +206,57 @@ export interface CurlyOptions extends CurlOptionValueType {
    * Make sure your libcurl version is greater than or equal 7.69.1.
    * Versions older than that one are not reliable for streams usage.
    *
-   * This basically calls {@link "Curl".Curl.setUploadStream | `Curl#setUploadStream`}
-   * method in the internal {@link "Curl".Curl | `Curl`} instance.
+   * This basically calls {@link Curl.setUploadStream | `Curl#setUploadStream`}
+   * method in the internal {@link Curl | `Curl`} instance.
    */
   curlyStreamUpload?: Readable | null
+
+  /**
+   * Array of MIME parts to upload as multipart/form-data.
+   *
+   * This will automatically build a {@link CurlMime} structure internally and set
+   * it using the `MIMEPOST` option. For stream-based parts, the unpause callback
+   * is automatically generated, so you don't need to provide it.
+   *
+   * @remarks
+   *
+   * Requires libcurl 7.56.0 or later.
+   *
+   * @example
+   * Basic multipart upload:
+   * ```typescript
+   * await curly.post('https://httpbin.org/post', {
+   *   curlyMimePost: [
+   *     { type: 'data', name: 'username', data: 'john_doe' },
+   *     { type: 'file', name: 'avatar', file: '/path/to/image.png', mimeType: 'image/png' }
+   *   ]
+   * })
+   * ```
+   *
+   * @example
+   * With streams:
+   * ```typescript
+   * import { createReadStream } from 'fs'
+   *
+   * await curly.post('https://httpbin.org/post', {
+   *   curlyMimePost: [
+   *     { type: 'data', name: 'field', data: 'value' },
+   *     {
+   *       type: 'stream',
+   *       name: 'document',
+   *       stream: createReadStream('/path/to/file.txt'),
+   *       size: 12345
+   *     }
+   *   ]
+   * })
+   * ```
+   *
+   * See {@link Easy.setMimePost | `Easy.setMimePost`} for more details.
+   */
+  curlyMimePost?: CurlyMimePart[]
 }
 
-interface CurlyHttpMethodCall {
+export interface CurlyHttpMethodCall {
   /**
    * **EXPERIMENTAL** This API can change between minor releases
    *
@@ -216,14 +266,16 @@ interface CurlyHttpMethodCall {
    *
    * @typeParam ResultData You can use this to specify the type of the `data` property returned from this call.
    */
-  <ResultData extends any = any>(url: string, options?: CurlyOptions): Promise<
-    CurlyResult<ResultData>
-  >
+  <ResultData = any>(
+    url: string,
+    options?: CurlyOptions,
+  ): Promise<CurlyResult<ResultData>>
 }
 
 // type HttpMethodCalls = { readonly [K in HttpMethod]: CurlyHttpMethodCall }
 type HttpMethodCalls = Record<HttpMethod, CurlyHttpMethodCall>
 
+/** @expand */
 export interface CurlyFunction extends HttpMethodCalls {
   /**
    * **EXPERIMENTAL** This API can change between minor releases
@@ -238,9 +290,10 @@ export interface CurlyFunction extends HttpMethodCalls {
    * ```
    * @typeParam ResultData You can use this to specify the type of the `data` property returned from this call.
    */
-  <ResultData extends any = any>(url: string, options?: CurlyOptions): Promise<
-    CurlyResult<ResultData>
-  >
+  <ResultData = any>(
+    url: string,
+    options?: CurlyOptions,
+  ): Promise<CurlyResult<ResultData>>
 
   /**
    * **EXPERIMENTAL** This API can change between minor releases
@@ -259,14 +312,77 @@ export interface CurlyFunction extends HttpMethodCalls {
    * - *
    */
   defaultResponseBodyParsers: CurlyResponseBodyParsersProperty
+
+  /**
+   * Set the object pool limit for Curl instances.
+   *
+   * When set to 0 (default), pooling is disabled and Curl instances are created/destroyed on each request.
+   * When set to a positive number, that many Curl instances will be pre-created and reused.
+   *
+   * @param limit - Number of Curl instances to keep in the pool. 0 disables pooling.
+   */
+  setObjectPoolLimit: (limit: number) => void
 }
 
 const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
-  function curly<ResultData extends any>(
+  // Object pool for Curl instances
+  let poolLimit = 0
+  const pool: Curl[] = []
+
+  const getFromPool = (): Curl => {
+    if (poolLimit === 0) {
+      // Pooling disabled, create new instance
+      return new Curl()
+    }
+
+    if (pool.length > 0) {
+      // Get from pool
+      return pool.pop()!
+    }
+
+    // Pool empty, create new instance
+    return new Curl()
+  }
+
+  const returnToPool = (curlHandle: Curl): void => {
+    if (poolLimit === 0) {
+      // Pooling disabled, close the handle
+      curlHandle.close()
+      return
+    }
+
+    if (pool.length < poolLimit) {
+      // Reset the handle for reuse
+      curlHandle.reset()
+      pool.push(curlHandle)
+    } else {
+      // Pool full, close the handle
+      curlHandle.close()
+    }
+  }
+
+  const setObjectPoolLimit = (limit: number): void => {
+    poolLimit = limit
+
+    if (limit <= 0) {
+      for (const handle of pool) {
+        handle.close()
+      }
+      pool.length = 0
+    } else {
+      // If reducing limit, close excess instances
+      while (pool.length > limit) {
+        const handle = pool.pop()!
+        handle.close()
+      }
+    }
+  }
+
+  function curly<ResultData>(
     url: string,
     options: CurlyOptions = {},
   ): Promise<CurlyResult<ResultData>> {
-    const curlHandle = new Curl()
+    const curlHandle = getFromPool()
 
     curlHandle.enable(CurlFeature.NoDataParsing)
 
@@ -300,6 +416,7 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
       curlyStreamResponse,
       curlyStreamResponseHighWaterMark,
       curlyStreamUpload,
+      curlyMimePost,
     } = finalOptions
     const isUsingStream = !!(curlyStreamResponse || curlyStreamUpload)
 
@@ -331,6 +448,10 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
       curlHandle.setUploadStream(curlyStreamUpload)
     }
 
+    if (curlyMimePost && curlyMimePost.length > 0) {
+      curlHandle.setMimePost(curlyMimePost)
+    }
+
     const lowerCaseHeadersIfNecessary = (headers: HeaderInfo[]) => {
       // in-place modification
       // yeah, I know mutability is bad and all that
@@ -339,6 +460,7 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
           const entries = Object.entries(headersReq)
           for (const [headerKey, headerValue] of entries) {
             delete headersReq[headerKey]
+            // @ts-expect-error ignoring this for now
             headersReq[headerKey.toLowerCase()] = headerValue
           }
         }
@@ -369,7 +491,7 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
       curlHandle.on(
         'end',
         (statusCode, data: Buffer, headers: HeaderInfo[]) => {
-          curlHandle.close()
+          returnToPool(curlHandle)
 
           // only need to the remaining here if we did not enabled
           // the stream response
@@ -377,11 +499,16 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
             return
           }
 
-          const contentTypeEntry = Object.entries(
-            headers[headers.length - 1],
-          ).find(([k]) => k.toLowerCase() === 'content-type')
+          const contentTypeEntry =
+            headers.length > 0
+              ? Object.entries(headers[headers.length - 1]).find(
+                  ([k]) => k.toLowerCase() === 'content-type',
+                )
+              : null
 
-          let contentType = contentTypeEntry ? contentTypeEntry[1] : ''
+          let contentType = (
+            contentTypeEntry ? contentTypeEntry[1] : ''
+          ) as string
 
           // remove the metadata of the content-type, like charset
           // See https://tools.ietf.org/html/rfc7231#section-3.1.1.5
@@ -452,28 +579,28 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
       )
 
       curlHandle.on('error', (error, errorCode) => {
-        curlHandle.close()
+        returnToPool(curlHandle)
 
-        // @ts-ignore
-        error.code = errorCode
-        // @ts-ignore
-        error.isCurlError = true
+        const errorToUse =
+          error instanceof CurlError
+            ? error
+            : new CurlEasyError(error.message, errorCode, { cause: error })
 
         // oops, if have a stream it means the promise
         // has been resolved with it
         // so instead of rejecting the original promise
         // we are emitting the error event on the stream
         if (stream) {
-          stream.emit('error', error)
+          stream.emit('error', errorToUse)
         } else {
-          reject(error)
+          reject(errorToUse)
         }
       })
 
       try {
         curlHandle.perform()
       } catch (error) /* istanbul ignore next: this should never happen 🤷‍♂️ */ {
-        curlHandle.close()
+        returnToPool(curlHandle)
         reject(error)
       }
     })
@@ -481,12 +608,14 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
 
   curly.create = create
 
+  curly.setObjectPoolLimit = setObjectPoolLimit
+
   curly.defaultResponseBodyParsers = {
     'application/json': (data, _headers) => {
       try {
         const string = data.toString('utf8')
         return JSON.parse(string)
-      } catch (error) {
+      } catch {
         throw new Error(
           `curly failed to parse "application/json" content as JSON. This is generally caused by receiving malformed JSON data from the server.
 You can disable this automatic behavior by setting the option curlyResponseBodyParser to false, then a Buffer will be returned as the data.

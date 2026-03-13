@@ -16,26 +16,17 @@
 
 [![NPM version][npm-image]][npm-url]
 [![license][license-image]][license-url]
-[![Dependencies][deps-image]][deps-url]
 
-[![Travis CI Status][travis-image]][travis-url]
 [![AppVeyor CI Status][appveyor-image]][appveyor-url]
-[![Code Quality][codeclimate-image]][codeclimate-url]
 
 [npm-image]:https://img.shields.io/npm/v/node-libcurl.svg?style=flat-square
 [npm-url]:https://www.npmjs.org/package/node-libcurl
-[travis-image]:https://img.shields.io/travis/JCMais/node-libcurl/master.svg?style=flat-square
-[travis-url]:https://travis-ci.com/JCMais/node-libcurl
 [appveyor-image]:https://ci.appveyor.com/api/projects/status/u7ox641jyb6hxrkt/branch/master?svg=true
 [appveyor-url]:https://ci.appveyor.com/project/JCMais/node-libcurl
-[codeclimate-image]:https://img.shields.io/codeclimate/maintainability/JCMais/node-libcurl?style=flat-square
-[codeclimate-url]:https://codeclimate.com/github/JCMais/node-libcurl
 [license-image]:https://img.shields.io/npm/l/node-libcurl?style=flat-square
 [license-url]:https://raw.githubusercontent.com/JCMais/node-libcurl/develop/LICENSE
-[deps-image]:https://img.shields.io/david/JCMais/node-libcurl.svg?style=flat-square
-[deps-url]:https://david-dm.org/jcmais/node-libcurl
 
-> The [fastest](#benchmarks) URL transfer library for Node.js.
+> The [fastest](#benchmarks) feature-rich URL transfer library for Node.js.
 
 [libcurl](https://github.com/bagder/curl) bindings for Node.js. libcurl official description:
 > libcurl is a free and easy-to-use client-side URL transfer library, supporting DICT, FILE, FTP, FTPS, Gopher, HTTP, HTTPS, IMAP, IMAPS, LDAP, LDAPS, POP3, POP3S, RTMP, RTSP, SCP, SFTP, SMTP, SMTPS, Telnet and TFTP. libcurl supports SSL certificates, HTTP POST, HTTP PUT, FTP uploading, HTTP form based upload, proxies, cookies, user+password authentication (Basic, Digest, NTLM, Negotiate, Kerberos), file transfer resume, http proxy tunneling and more!
@@ -48,6 +39,7 @@
   - [Form Submission (Content-Type: application/x-www-form-urlencoded)](#form-submission-content-type-applicationx-www-form-urlencoded)
   - [MultiPart Upload / HttpPost libcurl Option (Content-Type: multipart/form-data)](#multipart-upload--httppost-libcurl-option-content-type-multipartform-data)
   - [Binary Data](#binary-data)
+- [SSL](#ssl)
 - [API](#api)
 - [Special Notes](#special-notes)
   - [`READFUNCTION` option](#readfunction-option)
@@ -62,11 +54,11 @@
   - [Electron / NW.js](#electron--nwjs)
     - [NW.js (aka node-webkit)](#nwjs-aka-node-webkit)
     - [Electron (aka atom-shell)](#electron-aka-atom-shell)
-    - [Electron >= 11 / NW.js >= 0.50](#electron--11--nwjs--050)
   - [Building on Linux](#building-on-linux)
   - [Building on macOS](#building-on-macos)
-    - [Xcode >= 10 | macOS >= Mojave](#xcode--10--macos--mojave)
+    - [Xcode \>= 10 | macOS \>= Mojave](#xcode--10--macos--mojave)
   - [Building on Windows](#building-on-windows)
+    - [Note on outdated node-gyp version](#note-on-outdated-node-gyp-version)
 - [Getting Help](#getting-help)
 - [Contributing](#contributing)
 - [Donations / Patreon](#donations--patreon)
@@ -75,11 +67,15 @@
 
 > **Note**:
 > - This library cannot be used in a browser, it depends on native code.
-> - There is no worker threads support at the moment. See [#169](https://github.com/JCMais/node-libcurl/issues/169)
 
 ### Install
+
 ```shell
 npm i node-libcurl --save
+```
+or
+```shell
+pnpm i node-libcurl --save
 ```
 or
 ```shell
@@ -91,7 +87,7 @@ yarn add node-libcurl
 ```javascript
 const { curly } = require('node-libcurl');
 
-const { statusCode, data, headers } = await curly.get('http://www.google.com')
+const { statusCode, data, headers } = await curly.get('https://www.google.com')
 ```
 
 Any option can be passed using their `FULLNAME` or a `lowerPascalCase` format:
@@ -99,7 +95,7 @@ Any option can be passed using their `FULLNAME` or a `lowerPascalCase` format:
 const querystring = require('querystring');
 const { curly } = require('node-libcurl');
 
-const { statusCode, data, headers } = await curly.post('http://httpbin.com/post', {
+const { statusCode, data, headers } = await curly.post('https://httpbin.com/post', {
   postFields: querystring.stringify({
     field: 'value',
   }),
@@ -110,7 +106,7 @@ const { statusCode, data, headers } = await curly.post('http://httpbin.com/post'
 JSON POST example:
 ```javascript
 const { curly } = require('node-libcurl')
-const { data } = await curly.post('http://httpbin.com/post', {
+const { data } = await curly.post('https://httpbin.com/post', {
   postFields: JSON.stringify({ field: 'value' }),
   httpHeader: [
     'Content-Type: application/json',
@@ -208,6 +204,8 @@ The reasoning behind this is that by default, the `Curl` instance will try to de
 
 For more examples check the [examples folder](./examples).
 
+## SSL
+
 ## API
 
 API documentation for the latest stable version is available at [https://node-libcurl-docs.netlify.app/modules/_lib_index_.html](https://node-libcurl-docs.netlify.app/modules/_lib_index_.html).
@@ -242,9 +240,11 @@ See [SECURITY.md](./SECURITY.md)
 
 ## Supported Libcurl Versions
 
-The addon is only tested against libcurl version `7.50.0` and the latest one available.
+The addon is only tested against libcurl version `7.81.0` and the latest one available.
 
-The code itself is made to compile with any version greater than `7.32.0`, any libcurl version lower than that is **not** supported.
+The code itself is only made to compile with versions greater than or equal to `7.81.0`, any libcurl version lower than that is **not** supported.
+
+The 7.81.0 version was released on Jan 5 2022, and it is the version shipped with Ubuntu 22.04. There has been more than 5541 bug fixes on libcurl since then.
 
 ## For Enterprise
 
@@ -256,27 +256,26 @@ The maintainers of node-libcurl and thousands of other packages are working with
 
 The latest version of this package has prebuilt binaries (thanks to [node-pre-gyp](https://github.com/mapbox/node-pre-gyp/)) 
  available for:
-* Node.js: Latest two versions on active LTS (see https://github.com/nodejs/Release)
-* Electron: Latest 3 major versions
-* NW.js (node-webkit): Latest 3 major (minor for nw.js case) versions
+* Node.js: Latest two versions on active LTS + Current version (see https://github.com/nodejs/Release)
+* Electron: Latest 2 major versions
 
 And on the following platforms:
-* Linux 64 bits
-* Mac OS X 64 bits
-* Windows 32 and 64 bits
+* Linux 64 bits & ARM64 & Alpine (musl, 64 bits)
+* macOS 64 bits (Intel) & ARM64 (M1+)
+* Windows 64 bits
 
 Installing with `yarn add node-libcurl` or `npm install node-libcurl` should download a prebuilt binary and no compilation will be needed. However if you are trying to install on `nw.js` or `electron` additional steps will be required, check their corresponding section below.
 
 The prebuilt binary is statically built with the following library versions, features and protocols (library versions may change between Node.js versions):
 ```
-Version: libcurl/7.73.0 OpenSSL/1.1.1g zlib/1.2.11 brotli/1.0.7 zstd/1.4.9 c-ares/1.16.1 libidn2/2.1.1 libssh2/1.9.0 nghttp2/1.41.0
-Protocols: dict, file, ftp, ftps, gopher, http, https, imap, imaps, ldap, ldaps, mqtt, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp
-Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, NTLM_WB, SSL, libz, brotli, TLS-SRP, HTTP2, UnixSockets, HTTPS-proxy
+Version: libcurl/8.17.0 OpenSSL/3.5.2 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.1.1 libssh2/1.10.0 nghttp2/1.66.0 ngtcp2/1.17.0 nghttp3/1.12.0 OpenLDAP/2.6.9
+Protocols: dict, file, ftp, ftps, gopher, gophers, http, https, imap, imaps, ldap, ldaps, mqtt, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp, ws, wss
+Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, SSL, libz, brotli, TLS-SRP, HTTP2, UnixSockets, HTTPS-proxy, alt-svc
 ```
 
 If there is no prebuilt binary available that matches your system, or if the installation fails, then you will need an environment capable of compiling Node.js addons, which means:
-- [python 2.7](https://www.python.org/download/releases/2.7) installed
-- updated C++ compiler able to compile C++11, or if building Electron >= 11 / NW.js >= 0.50, C++17 (see the [Electron >= 11 / NW.js >= 0.50](#electron--11--nwjs--050) section below).
+- [python 3.x](https://www.python.org/downloads/) installed
+- updated C++ compiler able to compile C++17 (C++20 for Electron >= v32).
 
 If you don't want to use the prebuilt binary even if it works on your system, you can pass a flag when installing:
 > With `npm`
@@ -304,9 +303,9 @@ If you want to build a statically linked version of the addon yourself, you need
 ```sh
 npm install node-libcurl --build-from-source --curl_static_build=true
 ```
-> If using `yarn`:
+> If using `yarn` or `pnpm`:
 ```sh
-npm_config_build_from_source=true npm_config_curl_static_build=true yarn add node-libcurl
+npm_config_build_from_source=true npm_config_curl_static_build=true yarn/pnpm add node-libcurl
 ```
 
 The build process will use `curl-config` available on path, if you want to overwrite it to your own libcurl installation one, you can set the `curl_config_bin` variable, like mentioned above for `curl_static_build`.
@@ -333,7 +332,7 @@ If you do not want to use the prebuilt binary, pass the `npm_config_build_from_s
 
 #### NW.js (aka node-webkit)
 For building from source on NW.js you first need to make sure you have nw-gyp installed globally:
-`yarn global add nw-gyp` or `npm i -g nw-gyp`
+`yarn global add nw-gyp` or `npm i -g nw-gyp` or `pnpm i -g nw-gyp`
 
 > If on Windows, you also need addition steps, currently the available win_delay_load_hook.cc on `nw-gyp` is not working with this addon, so it's necessary to apply a patch to it. The patch can be found on `./scripts/ci/patches/win_delay_load_hook.cc.patch`, and should be applied to the file on `<nw-gyp-folder>/src/win_delay_load_hook.cc`.
 
@@ -372,25 +371,13 @@ target_arch = x64
 dist_url = https://atom.io/download/atom-shell
 ```
 
-#### Electron >= 11 / NW.js >= 0.50
-
-If you are building for Electron >= 11 or NW.js >= 0.50 you need to set the build process to use the C++17 std, you can do that by passing the variable `node_libcurl_cpp_std=c++17`. The way you do that depends if you are using `npm` or `yarn`:
-
-> If using `npm`:
-```sh
-npm install node-libcurl --node_libcurl_cpp_std=c++17 <...other args...>
-```
-> If using `yarn`:
-```sh
-npm_config_node_libcurl_cpp_std=c++17 <...other args...> yarn add node-libcurl
-```
-
 ### Building on Linux
 
 To build the addon on linux based systems you must have:
-- gcc >= 4.8
+- gcc >= 7
 - libcurl dev files
-- python 2.7
+- python >= 3
+- OS that is not past their EOL.
 
 If you are on a debian based system, you can get those by running:
 ```bash
@@ -404,7 +391,7 @@ In case you want some examples check the CI configuration files ([`.travis.yml`]
 ### Building on macOS
 
 On macOS you must have:
-- macOS >= 11.6 (Big Sur)
+- macOS >= 13 (Sonoma)
 - Xcode Command Line Tools
 
 You can check if you have Xcode Command Line Tools be running:
@@ -431,28 +418,127 @@ The `/usr/include` is now available on `$(xcrun --show-sdk-path)/usr/include`. T
 npm_config_curl_include_dirs="$(xcrun --show-sdk-path)/usr/include" yarn add node-libcurl
 ```
 
+#### Homebrew
+
+In the case you got
+```
+error: use of undeclared identifier 'curl_ws_start_frame'; did you mean 'curl_ws_frame'?
+```
+
+It means your system is using the macOS SDK's libcurl headers, which are outdated (version below 8.16, which requireds for WebSocket support).
+
+You must use `curl` install via Homebrew, you can use the following steps to make sure the system picks up the Homebrew `curl` headers/libs when building from source.
+
+1. Install `curl` with Homebrew (if you don't already have it):
+
+```bash
+brew install curl
+```
+
+2. Add Homebrew's `curl` to your environment so build tools can find headers, libraries and `curl-config`:
+
+```zsh
+export PATH="$(brew --prefix curl)/bin:$PATH" # optional
+
+export CPPFLAGS="-I$(brew --prefix curl)/include"
+export LDFLAGS="-L$(brew --prefix curl)/lib"
+export PKG_CONFIG_PATH="$(brew --prefix curl)/lib/pkgconfig"
+```
+
+Note: On Intel macs Homebrew is typically installed under `/usr/local` and on Apple Silicon under `/opt/homebrew`. Using `$(brew --prefix curl)` is the most portable option across both architectures.
+
+3. Build & install `node-libcurl` from source.
+
+Optional: remove a previously installed local copy of `node-libcurl` first to ensure a clean build:
+
+```zsh
+# remove previously installed copy (local environment only)
+rm -rf node_modules/node-libcurl
+```
+
+Then build from source. Depending on your macOS Xcode/CLT version you may need to also point to the SDK's `/usr/include` directory:
+
+If you prefer to explicitly use the Homebrew-installed `curl` headers instead of the SDK include path, you can use:
+
+```zsh
+npm_config_curl_include_dirs="$(brew --prefix curl)/include" npm_config_curl_libraries="-L$(brew --prefix curl)/lib -lcurl" npm install node-libcurl --build-from-source
+```
+
+Or if you want to use the SDK's include path:
+```zsh
+# build & install
+npm_config_curl_include_dirs="$(xcrun --show-sdk-path)/usr/include" npm install node-libcurl --build-from-source
+```
+
+This should allow your machine to build the addon using the Homebrew `curl` installation.
+
 ### Building on Windows
 
 If installing using a prebuilt binary you only need to have the [visual c++ 2017 runtime library](https://visualstudio.microsoft.com/downloads/#microsoft-visual-c-redistributable-for-visual-studio-2017).
 
 If building from source, you must have:
-- Python 2.7
-- [Visual Studio >= 2017](https://visualstudio.microsoft.com/downloads/)
+- Python 3.x
+- [Visual Studio >= 2019](https://visualstudio.microsoft.com/downloads/) (with Clang/LLVM support enabled, see the next item)
+- [Clang/LLVM support on Visual Studio](https://learn.microsoft.com/en-us/cpp/build/clang-support-msbuild?view=msvc-170)
 - [nasm](https://www.nasm.us/)
 
-Python 2.7 and the Visual Studio compiler can be installed by running:
+Python 3.x and the Visual Studio compiler can be installed by running:
 ```sh
 npm install --global --production windows-build-tools
 ```
 
 `nasm` can be obtained from their website, which is linked above, or using chocolatey:
 ```
-cinst nasm
+choco install nasm
 ```
 
 Currently there is no support to use other libcurl version than the one provided by the [curl-for-windows](https://github.com/JCMais/curl-for-windows) submodule (help is appreciated on adding this feature).
 
 An important note about building the addon on Windows is that we have to do some "hacks" with the header files included by `node-gyp`/`nw-gyp`. The reason for that is because as we are using a standalone version of OpenSSL, we don't want to use the OpenSSL headers provided by Node.js, which are by default added to `<nw-gyp-or-node-gyp-folder>/include/node/openssl`, so what we do is that before compilation that folder is renamed to `openssl.disabled`. After a successful installation the folder is renamed back to their original name, **however** if any error happens during compilation the folder will stay renamed until the addon is compiled successfully. More info on why that was needed and some context can be found on issue [#164](https://github.com/JCMais/node-libcurl/issues/164).
+
+#### Note on outdated node-gyp version
+
+NPM has its own internal version of `node-gyp`, which may not be the most up-to-date version. If you see an output like this:
+```
+[info] it worked if it ends with ok
+[info] using node-pre-gyp@2.0.0
+[info] using node@24.9.0 | win32 | x64 
+gyp info it worked if it ends with ok
+gyp info using node-gyp@10.1.0
+gyp info using node@24.9.0 | win32 | x64
+gyp info ok 
+gyp info it worked if it ends with ok
+gyp info using node-gyp@10.1.0
+gyp info using node@24.9.0 | win32 | x64
+```
+
+Where the node-gyp version is `10.1.0`, you will probably face issues related to ClangCL like this:
+```
+C:\Users\internal\AppData\Local\node\corepack\v1\pnpm\9.9.0\dist\node_modules\node-gyp\src\win_delay_load_hook.cc(37,9): warning : unknown pragma ignored [-Wunknown-pragmas] [F:\jc\node-libcurl\build\deps\
+curl-for-windows\libcurl.vcxproj]
+  /LTCG:INCREMENTAL: no such file or directory
+D:\Software\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppCommon.targets(1522,5): error MSB6006: "llvm-lib.exe" exited with code 1. [F:\jc\node-libcurl\build\deps\curl-fo
+r-windows\libcurl.vcxproj]
+C:\Users\internal\AppData\Local\node\corepack\v1\pnpm\9.9.0\dist\node_modules\node-gyp\src\win_delay_load_hook.cc(12,9): warning : unknown pragma ignored [-Wunknown-pragmas] [F:\jc\node-libcurl\build\deps\
+curl-for-windows\brotli\brotli.vcxproj]
+C:\Users\internal\AppData\Local\node\corepack\v1\pnpm\9.9.0\dist\node_modules\node-gyp\src\win_delay_load_hook.cc(37,9): warning : unknown pragma ignored [-Wunknown-pragmas] [F:\jc\node-libcurl\build\deps\
+curl-for-windows\brotli\brotli.vcxproj]
+  /LTCG:INCREMENTAL: no such file or directory
+D:\Software\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppCommon.targets(1522,5): error MSB6006: "llvm-lib.exe" exited with code 1. [F:\jc\node-libcurl\build\deps\curl-fo
+r-windows\brotli\brotli.vcxproj]
+```
+
+The only solution to this is to install a globally available node-gyp version:
+```powershell
+npm install --global node-gyp@latest
+```
+
+and then use it in the install command by setting the `npm_config_node_gyp` environment variable (this assumes powershell):
+```powershell
+$globalNodeGypPath = Join-Path (npm prefix -g) "node_modules\node-gyp\bin\node-gyp.js"
+$env:npm_config_node_gyp=$globalNodeGypPath
+pnpm install node-libcurl
+```
 
 ## Getting Help
 

@@ -167,6 +167,9 @@ export enum CurlCode {
   CURLE_QUIC_CONNECT_ERROR /* 96 - QUIC connection error */,
   CURLE_PROXY /* 97 - proxy handshake error */,
   CURLE_SSL_CLIENTCERT /* 98 - client-side certificate required */,
+  CURLE_UNRECOVERABLE_POLL /* 99 - poll/select returned fatal error */,
+  CURLE_TOO_LARGE /* 100 - a value/data met its maximum */,
+  CURLE_ECH_REQUIRED /* 101 - ECH tried but failed */,
   CURLE_LAST,
   /*  compatibility with older names */
   CURLE_FTP_WEIRD_SERVER_REPLY = CURLE_WEIRD_SERVER_REPLY,

@@ -1,9 +1,8 @@
-## GitHub Actions is used to build:
-## - Electron (macOs)
-## - Nwjs (macOs)
-## - Node.js (macOs, linux)
-
 name: build-and-release
+
+defaults:
+  run:
+    shell: bash
 
 on:
   push:
@@ -17,323 +16,202 @@ on:
       publish-binary:
         type: boolean
         default: false
-        description: Publish binary?
+        description: Force publish binary?
         required: true
 
 env:
   NODE_LIBCURL_GITHUB_TOKEN: ${{ secrets.NODE_LIBCURL_GITHUB_TOKEN }}
-  PUBLISH_BINARY: ${{ github.event.inputs.publish-binary }}
-  NODE_LIBCURL_CPP_STD: c++17
 
-# all jobs here must have a matrix identical to the ones inside build-lint-test.yaml
+concurrency:
+  group: build-and-release-${{ github.ref_name }}
+  cancel-in-progress: true
+
+# all jobs here must have a matrix identical to the ones inside build-and-release.yaml
 
 jobs:
-  build-and-release-nodejs:
-    runs-on: ${{ matrix.os }}
-    container: ${{ matrix.os == 'ubuntu-18.04' && 'ubuntu:xenial' || '' }}
+  config:
+    uses: ./.github/workflows/reusable-config.yaml
+
+  lint-and-tsc:
+    uses: ./.github/workflows/reusable-lint-tsc.yaml
+
+  build-and-release:
+    permissions:
+      id-token: write
+      attestations: write
+      contents: write
+      packages: write
+    runs-on: ${{ matrix.os == 'alpine' && 'ubuntu-22.04' || matrix.os }}
+    container: ${{ matrix.os == 'alpine' && format('node:{0}-alpine3.21', matrix.node) || '' }}
+    needs:
+      - config
+      - lint-and-tsc
+
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - macos-11
-          - ubuntu-20.04
-        libcurl-release:
-          - 7.86.0
-        node:
-          - 14
-          - 16
-          - 18
-          - 19
-    env:
-      LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-      LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-    steps:
-      - id: timestamp
-        run: echo "::set-output name=timestamp::$(timestamp +%s)"
-      - name: Restore the previous run result
-        uses: actions/cache@v3
-        with:
-          path: |
-            run_result
-          key: v1-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.node }}-${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
-          restore-keys: |
-            v1-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.node }}-${{ github.run_id }}-${{ github.job }}-
-      - id: run_result
-        run: cat run_result 2>/dev/null || echo 'default'
-      - if: runner.os == 'Linux'
-        name: Install Needed packages on Linux
-        run: |
-          if ! command -v sudo; then
-            apt-get update && apt-get install -y sudo
-          else
-            sudo apt-get update
-          fi
-
-          if ! command -v cmake; then
-            sudo apt-get install -y cmake
-          fi
-
-          if ! command -v curl; then
-            # we will assume a lot of other ones are missing
-            sudo apt-get install -y software-properties-common
-            sudo apt-add-repository ppa:git-core/ppa && sudo apt-get update && sudo apt-get install -y git curl wget python autoconf libtool-bin m4 groff groff-base pkg-config automake bzip2 apt-transport-https ca-certificates
-          fi
-
-          if ! command -v yarn; then
-            echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-            curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-            sudo apt-get update && sudo apt-get install -y yarn
-          fi
-      - name: Checkout
-        uses: actions/checkout@main
-      - name: Setup Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node }}
-      - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
-        if: matrix.node-libcurl-cpp-std
-      - if: runner.os == 'macOS'
-        name: Install Needed packages on macOS
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4
-      # not using brew for that one as we need 2.69
-      - if: runner.os == 'macOS'
-        name: Install autoconf on macOS
-        run: |
-          curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
-          tar -xzf autoconf-2.69.tar.gz
-          cd autoconf-*
-          ./configure
-          make
-          make install
-          autoconf --version
-          ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
-      - name: Output yarn cache dir
-        id: yarn-cache-dir
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-      - name: Restore Yarn Cache
-        uses: actions/cache@v3
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir.outputs.dir }}
-          key: v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
-            v1-${{ runner.os }}-yarn-cache-
-      - name: Restore libcurl deps cache
-        uses: actions/cache@v3
-        id: libcurl-deps-cache
-        with:
-          path: |
-            ~/.node-gyp
-            ~/deps
-          key: v4-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
-          restore-keys: |
-            v4-${{ runner.os }}-libcurl-deps-cache-node-${{ matrix.node }}
-      - name: 'Set GIT_TAG'
-        if: startsWith(github.ref, 'refs/tags')
-        run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: 'Publish Binary'
-        if: steps.run_result.outputs.run_result != 'success'
-        run: |
-          GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
-      - name: Upload artifacts
-        if: always() && steps.run_result.outputs.run_result != 'success'
-        uses: actions/upload-artifact@v2
-        with:
-          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.node }}
-          path: ./logs/
-          retention-days: 5
-      - run: echo "::set-output name=run_result::success" > run_result
-
-  build-and-release-electron:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        # we use CircleCI for linux binaries
-        os:
-          - macos-11
-        libcurl-release:
-          - 7.86.0
-        node:
-          - 18
         electron-version:
-          - 21.0.1
-          - 20.0.3
-          - 19.1.1
-          - 18.3.15
-          - 17.4.11
+          - ''
+        os:
+          - macos-15
+          - ubuntu-22.04
+          - ubuntu-24.04-arm
+          - alpine
+          - windows-2025
+        libcurl-release:
+          - ${{ needs.config.outputs.latest-libcurl-release }}
+        node:
+          - 25
+          - 24
+          - 22
+        include:
+          - electron-version: 38.6.0
+            os: macos-15
+            node: 24
+          - electron-version: 38.6.0
+            os: ubuntu-22.04
+            node: 24
+          - electron-version: 38.6.0
+            os: windows-2025
+            node: 24
+          - electron-version: 39.1.1
+            os: macos-15
+            node: 24
+          - electron-version: 39.1.1
+            os: ubuntu-22.04
+            node: 24
+          - electron-version: 39.1.1
+            os: windows-2025
+            node: 24
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       ELECTRON_VERSION: ${{ matrix.electron-version }}
+      # this is false because we publish as a separate step
+      PUBLISH_BINARY: false
+      GIT_COMMIT: ${{ github.sha }}
+      GIT_REF_NAME: ${{ github.ref_name }}
     steps:
-      - id: timestamp
-        run: echo "::set-output name=timestamp::$(timestamp +%s)"
-      - name: Restore the previous run result
-        uses: actions/cache@v3
-        with:
-          path: |
-            run_result
-          key: v1-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}-${{ github.run_id }}-${{ runner.os }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
-          restore-keys: |
-            v1-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}-${{ github.run_id }}-${{ runner.os }}-${{ github.job }}-
-      - id: run_result
-        run: cat run_result 2>/dev/null || echo 'default'
-      - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
-      - name: Checkout
-        uses: actions/checkout@main
-      - name: Setup Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node }}
-      - name: Install Needed packages
-        run: brew install coreutils wget automake libtool cmake gnu-sed m4
-      # not using brew for that one as we need 2.69
-      - name: Install autoconf
+      - name: Install initial deps (Alpine)
+        if: matrix.os == 'alpine'
+        shell: sh
         run: |
-          curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
-          tar -xzf autoconf-2.69.tar.gz
-          cd autoconf-*
-          ./configure
-          make
-          make install
-          autoconf --version
-          ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
-      - name: Output yarn cache dir
-        id: yarn-cache-dir
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-      - name: Restore Yarn Cache
-        uses: actions/cache@v3
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir.outputs.dir }}
-          key: v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
-            v1-${{ runner.os }}-yarn-cache-
-      - name: Restore Electron Cache
-        uses: actions/cache@v3
-        with:
-          path: ~/Library/Caches/electron
-          key: v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
-          restore-keys: |
-            v1-${{ runner.os }}-electron-cache-${{ matrix.electron-version }}
-            v1-${{ runner.os }}-electron-cache-
-      - name: Restore libcurl deps cache
-        uses: actions/cache@v3
-        id: libcurl-deps-cache
-        with:
-          path: |
-            ~/.node-gyp
-            ~/deps
-          key: v4-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}
-          restore-keys: |
-            v4-${{ runner.os }}-libcurl-deps-cache-electron-${{ matrix.electron-version }}
-      - name: 'Set GIT_TAG'
-        if: startsWith(github.ref, 'refs/tags')
-        run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: 'Publish Binary'
-        if: steps.run_result.outputs.run_result != 'success'
-        run: |
-          GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
-      - name: Upload artifacts
-        if: always() && steps.run_result.outputs.run_result != 'success'
-        uses: actions/upload-artifact@v2
-        with:
-          name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version }}
-          path: ./logs/
-          retention-days: 5
-      - run: echo "::set-output name=run_result::success" > run_result
+          apk add --no-cache git bash
 
-  # disabled until nwjs supports newer node-gyp versions + python 3
-  # build-and-release-nwjs:
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       # we use CircleCI for linux binaries
-  #       os:
-  #         - macos-11
-  #       libcurl-release:
-  #         - 7.86.0
-  #       node:
-  #         - 18
-  #       nwjs-version:
-  #         - 0.69.1
-  #         - 0.68.1
-  #         - 0.67.1
-  #   env:
-  #     LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-  #     LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
-  #     NWJS_VERSION: ${{ matrix.nwjs-version }}
-  #   steps:
-  #     - id: timestamp
-  #       run: echo "::set-output name=timestamp::$(timestamp +%s)"
-  #     - name: Restore the previous run result
-  #       uses: actions/cache@v3
-  #       with:
-  #         path: |
-  #           run_result
-  #         key: v1-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.nwjs-version }}-${{ github.run_id }}-${{ github.job }}-${{ steps.timestamp.outputs.timestamp }}
-  #         restore-keys: |
-  #           v1-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.nwjs-version }}-${{ github.run_id }}-${{ github.job }}-
-  #     - id: run_result
-  #       run: cat run_result 2>/dev/null || echo 'default'
-  #     - run: echo "NODE_LIBCURL_CPP_STD=${{ matrix.node-libcurl-cpp-std }}" >> $GITHUB_ENV
-  #     - name: Checkout
-  #       uses: actions/checkout@main
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v1
-  #       with:
-  #         node-version: ${{ matrix.node }}
-  #     - name: Install Needed packages
-  #       run: brew install coreutils wget automake libtool cmake gnu-sed m4
-  #     # not using brew for that one as we need 2.69
-  #     - name: Install autoconf
-  #       run: |
-  #         curl -O -L http://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz
-  #         tar -xzf autoconf-2.69.tar.gz
-  #         cd autoconf-*
-  #         ./configure
-  #         make
-  #         make install
-  #         autoconf --version
-  #         ln -s /usr/local/bin/glibtoolize /usr/local/bin/libtoolize
-  #     - name: Output yarn cache dir
-  #       id: yarn-cache-dir
-  #       run: echo "::set-output name=dir::$(yarn cache dir)"
-  #     - name: Restore Yarn Cache
-  #       uses: actions/cache@v3
-  #       id: yarn-cache
-  #       with:
-  #         path: ${{ steps.yarn-cache-dir.outputs.dir }}
-  #         key: v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-${{ hashFiles('**/yarn.lock') }}
-  #         restore-keys: |
-  #           v1-${{ runner.os }}-yarn-cache-${{ github.ref }}-
-  #           v1-${{ runner.os }}-yarn-cache-
-  #     - name: Restore libcurl deps cache
-  #       uses: actions/cache@v3
-  #       id: libcurl-deps-cache
-  #       with:
-  #         path: |
-  #           ~/.node-gyp
-  #           ~/deps
-  #         key: v4-${{ runner.os }}-libcurl-deps-cache-nwjs-${{ matrix.nwjs-version }}
-  #         restore-keys: |
-  #           v4-${{ runner.os }}-libcurl-deps-cache-nwjs-${{ matrix.nwjs-version }}
-  #     - name: 'Set GIT_TAG'
-  #       if: startsWith(github.ref, 'refs/tags')
-  #       run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-  #     - name: 'Publish Binary'
-  #       if: steps.run_result.outputs.run_result != 'success'
-  #       run: |
-  #         GIT_COMMIT=${{ github.sha }} GIT_TAG=$GIT_TAG ./scripts/ci/build.sh
-  #     - name: Upload artifacts
-  #       if: always() && steps.run_result.outputs.run_result != 'success'
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.nwjs-version }}
-  #         path: ./logs/
-  #         retention-days: 5
-  #     - run: echo "::set-output name=run_result::success" > run_result
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Install System Packages
+        uses: ./.github/actions/install-system-packages
+  
+      - name: Should publish binary?
+        id: should-publish
+        run: |
+          if [ "${{ inputs.publish-binary }}" = "true" ] || [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "result=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Export Electron npm_config envs
+        if: matrix.electron-version
+        run: |
+          echo "npm_config_runtime=electron" >> $GITHUB_ENV
+          echo "npm_config_dist_url=https://electronjs.org/headers" >> $GITHUB_ENV
+          echo "npm_config_target=${{ matrix.electron-version }}" >> $GITHUB_ENV
+
+      # see https://github.com/nodejs/node/issues/40537
+      # - name: Enforce IPv4 Connectivity
+      #   if: matrix.os != 'alpine'
+      #   uses: ./.github/actions/force-ipv4
+
+      # PNPM / Node.js
+      - name: Setup Node and PNPM
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: '${{ matrix.node }}'
+          skip-node-setup: ${{ matrix.os == 'alpine' && 'true' || 'false' }}
+
+      - name: Setup Libcurl Cache (Restore, Non-Windows)
+        if: runner.os != 'Windows'
+        id: libcurl-deps-cache
+        uses: ./.github/actions/setup-libcurl-cache
+        with:
+          libcurl-release: ${{ matrix.libcurl-release }}
+          node-version: ${{ matrix.node }}
+          electron-version: ${{ matrix.electron-version }}
+          electron-config-cache: ${{ needs.config.outputs.electron-config-cache }}
+          mode: 'restore-only'
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: matrix.enable-debugging
+
+      - name: 'Build and Package Binary (Non-Windows)'
+        if: runner.os != 'Windows'
+        run: ./scripts/ci/build.sh
+
+      - name: 'Check if fully installed and built (Non-Windows)'
+        id: built-and-installed
+        if: runner.os != 'Windows'
+        run: |
+          if [[ -f built-and-installed.hidden.txt ]]; then
+            echo "built-and-installed.hidden.txt exists"
+            echo "status=true" >> $GITHUB_OUTPUT
+          else
+            echo "built-and-installed.hidden.txt does not exist"
+            echo "status=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Libcurl Cache (Save, Non-Windows)
+        if: runner.os != 'Windows' && steps.libcurl-deps-cache.outputs.cache-hit != 'true' && steps.built-and-installed.outputs.status == 'true'
+        uses: ./.github/actions/setup-libcurl-cache
+        with:
+          libcurl-release: ${{ matrix.libcurl-release }}
+          node-version: ${{ matrix.node }}
+          electron-version: ${{ matrix.electron-version }}
+          electron-config-cache: ${{ needs.config.outputs.electron-config-cache }}
+          mode: 'save-only'
+
+      - name: Setup vcpkg (Windows)
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/setup-vcpkg-windows
+
+      - name: 'Build and Package Binary (Windows)'
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/ci/windows/build.ps1
+
+      - name: Create attestations
+        uses: actions/attest-build-provenance@v3
+        if: steps.should-publish.outputs.result == 'true'
+        with:
+          subject-path: 'build/**/node_libcurl-*.tar.gz'
+
+      - name: 'Publish Binary [macos arm64]'
+        if: runner.os == 'macOS' && steps.should-publish.outputs.result == 'true'
+        env:
+          npm_config_target_arch: arm64
+        run: |
+          node scripts/module-packaging.js --publish "$(pnpm --silent pregyp reveal staged_tarball --silent)"
+
+      - name: 'Publish Binary [macos x64]'
+        if: runner.os == 'macOS' && steps.should-publish.outputs.result == 'true'
+        env:
+          npm_config_target_arch: x64
+        run: |
+          node scripts/module-packaging.js --publish "$(pnpm --silent pregyp reveal staged_tarball --silent)"
+
+      - name: 'Publish Binary [non macos]'
+        if: runner.os != 'macOS' && steps.should-publish.outputs.result == 'true'
+        run: |
+          node scripts/module-packaging.js --publish "$(pnpm --silent pregyp reveal staged_tarball --silent)"
+
+      - name: Upload Build Logs
+        if: always() && runner.os != 'Windows'
+        uses: ./.github/actions/upload-build-logs
+        with:
+          artifact-name: build-logs-${{ matrix.os }}-${{ matrix.libcurl-release }}-${{ matrix.electron-version && 'electron' || 'node' }}-${{ matrix.electron-version || matrix.node }}
+          retention-days: '3'

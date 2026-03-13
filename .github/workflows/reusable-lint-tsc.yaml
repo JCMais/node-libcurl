@@ -1,0 +1,35 @@
+name: Reusable Lint and TypeScript Check
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version to use'
+        type: string
+        required: false
+        default: '24'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  lint-and-tsc:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node and PNPM
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install node dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Run lint
+        run: pnpm lint
+
+      - name: Run tsc
+        run: pnpm build:dist
