@@ -4,6 +4,10 @@ const fs = require('fs')
 const path = require('path')
 
 const { triplet, moduleRoot, vcpkgRoot } = require('./vcpkg-common')
+const {
+  getAvailableVersions,
+  findBestVersion,
+} = require('./vcpkg-openssl-version')
 
 const modulePackageJson = require('../package.json')
 
@@ -75,8 +79,35 @@ async function createVcpkgJson() {
     'utf8',
   )
   const nodeOpenSSLVersion = process.versions.openssl.replace('+quic', '')
+
+  // Resolve OpenSSL version against what's available in vcpkg
+  let opensslVersion = nodeOpenSSLVersion
+  const availableVersions = getAvailableVersions(vcpkgRoot)
+
+  if (availableVersions) {
+    const result = findBestVersion(nodeOpenSSLVersion, availableVersions)
+    opensslVersion = result.version
+
+    if (!result.isExact) {
+      console.warn(
+        `WARNING: OpenSSL ${nodeOpenSSLVersion} is not available in vcpkg.`,
+      )
+      console.warn(`         Using ${opensslVersion} instead.`)
+      if (result.message) {
+        console.warn(`         ${result.message}`)
+      }
+    } else {
+      console.log(`Using OpenSSL ${opensslVersion} from vcpkg`)
+    }
+  } else {
+    console.warn('WARNING: Could not read vcpkg versions database.')
+    console.warn(
+      '         Attempting to use exact OpenSSL version from Node.js.',
+    )
+  }
+
   const vcpkgJson = vcpkgJsonTemplate
-    .replace('$$OPENSSL_VERSION$$', nodeOpenSSLVersion)
+    .replace('$$OPENSSL_VERSION$$', opensslVersion)
     .replace('$$NODE_LIBCURL_VERSION$$', modulePackageJson.version)
 
   fs.writeFileSync(path.join(moduleRoot, 'vcpkg.json'), vcpkgJson)
