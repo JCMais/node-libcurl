@@ -494,10 +494,10 @@ if [[ "$MACOS_UNIVERSAL_BUILD" == "true" ]]; then
   # play well with electron-builder which will try to lipo native add-ons
   # for different architectures.
   # --
-  lipo build/Release/node_libcurl.node -thin x86_64 -output lib/binding/node_libcurl.node
   lipo build/Release/node_libcurl.node -thin arm64 -output lib/binding/node_libcurl.node
-
   npm_config_target_arch=arm64 pnpm pregyp package testpackage --verbose
+
+  lipo build/Release/node_libcurl.node -thin x86_64 -output lib/binding/node_libcurl.node
   npm_config_target_arch=x64 pnpm pregyp package testpackage --verbose
 else
   pnpm pregyp package testpackage --verbose
