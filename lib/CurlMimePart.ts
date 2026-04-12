@@ -424,21 +424,35 @@ CurlMimePart.prototype.setDataStream = function (
 ): typeof CurlMimePart.prototype {
   let streamEnded = false
   let streamError: Error | null = null
+  let paused = false
+
+  // Defer unpause to the next event loop iteration to avoid calling
+  // curl_easy_pause() while libcurl is still processing the READFUNC_PAUSE
+  // return value from the read callback. Without this, the synchronous
+  // unpause can re-enter libcurl and cause a hang (observed on Linux).
+  const deferredUnpause = () => {
+    if (paused) {
+      paused = false
+      setImmediate(() => {
+        unpause()
+      })
+    }
+  }
 
   const onReadable = () => {
-    unpause()
+    deferredUnpause()
   }
 
   const onEnd = () => {
     streamEnded = true
-    unpause()
+    deferredUnpause()
     cleanup()
   }
 
   const onError = (err: Error) => {
     streamError = err
     streamEnded = true
-    unpause()
+    deferredUnpause()
     cleanup()
   }
 
@@ -473,6 +487,7 @@ CurlMimePart.prototype.setDataStream = function (
         if (streamEnded) {
           return null
         }
+        paused = true
         return CurlReadFunc.Pause
       }
 
