@@ -426,16 +426,22 @@ CurlMimePart.prototype.setDataStream = function (
   let streamError: Error | null = null
   let paused = false
 
-  // Defer unpause to the next event loop iteration to avoid calling
+  // Defer unpause to a later event loop iteration to avoid calling
   // curl_easy_pause() while libcurl is still processing the READFUNC_PAUSE
   // return value from the read callback. Without this, the synchronous
   // unpause can re-enter libcurl and cause a hang (observed on Linux).
+  //
+  // We use setTimeout(fn, 0) rather than setImmediate because setTimeout
+  // fires in the timer phase of the event loop, which is the same phase
+  // where libcurl's multi handle timeout callback fires. This ensures the
+  // unpause is processed in a compatible event loop phase across all
+  // Node.js versions.
   const deferredUnpause = () => {
     if (paused) {
       paused = false
-      setImmediate(() => {
+      setTimeout(() => {
         unpause()
-      })
+      }, 0)
     }
   }
 
