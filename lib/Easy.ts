@@ -745,7 +745,8 @@ const Easy = bindings.Easy as Easy
  * @remarks
  * For stream-based parts, you must provide the unpause callback that will be
  * called when more data is available. The callback should unpause the transfer
- * using `handle.pause(handle.pauseFlags & ~CurlPause.Recv)`.
+ * using `handle.pause(handle.pauseFlags & ~CurlPause.Send)` (mime upload data
+ * is sent via the read callback, so it pauses SEND, not RECV).
  *
  * Available since libcurl 7.56.0.
  *
@@ -774,7 +775,7 @@ const Easy = bindings.Easy as Easy
  *     name: 'logfile',
  *     stream: createReadStream('/path/to/log.txt'),
  *     unpause: () => {
- *       easy.pause(easy.pauseFlags & ~CurlPause.Recv)
+ *       easy.pause(easy.pauseFlags & ~CurlPause.Send)
  *     },
  *     size: 12345
  *   },
@@ -832,7 +833,7 @@ Easy.prototype.setMimePost = function (
         part.setDataStream(
           partSpec.stream,
           () => {
-            this.pause(this.pauseFlags & ~CurlPause.Recv)
+            this.pause(this.pauseFlags & ~CurlPause.Send)
           },
           partSpec.size,
         )

@@ -813,8 +813,8 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
         .addPart()
         .setName('stream_field')
         .setDataStream(stream, () => {
-          if (curl.handle.isPausedRecv) {
-            curl.pause(curl.handle.pauseFlags & ~CurlPause.Recv)
+          if (curl.handle.isPausedSend) {
+            curl.pause(curl.handle.pauseFlags & ~CurlPause.Send)
           }
         })
 
@@ -863,8 +863,8 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
         .setDataStream(
           stream,
           () => {
-            if (curl.handle.isPausedRecv) {
-              curl.pause(curl.handle.pauseFlags & ~CurlPause.Recv)
+            if (curl.handle.isPausedSend) {
+              curl.pause(curl.handle.pauseFlags & ~CurlPause.Send)
             }
           },
           testData.length,
@@ -913,8 +913,8 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
         .addPart()
         .setName('buffer_stream')
         .setDataStream(stream, () => {
-          if (curl.handle.isPausedRecv) {
-            curl.pause(curl.handle.pauseFlags & ~CurlPause.Recv)
+          if (curl.handle.isPausedSend) {
+            curl.pause(curl.handle.pauseFlags & ~CurlPause.Send)
           }
         })
 
@@ -961,8 +961,8 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
         .addPart()
         .setName('chained_stream')
         .setDataStream(stream, () => {
-          if (curl.handle.isPausedRecv) {
-            curl.pause(curl.handle.pauseFlags & ~CurlPause.Recv)
+          if (curl.handle.isPausedSend) {
+            curl.pause(curl.handle.pauseFlags & ~CurlPause.Send)
           }
         })
         .setType('text/plain')
@@ -1012,8 +1012,8 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
         .addPart()
         .setName('chunked_stream')
         .setDataStream(stream, () => {
-          if (curl.handle.isPausedRecv) {
-            curl.pause(curl.handle.pauseFlags & ~CurlPause.Recv)
+          if (curl.handle.isPausedSend) {
+            curl.pause(curl.handle.pauseFlags & ~CurlPause.Send)
           }
         })
 
@@ -1058,8 +1058,8 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 56, 0))('CurlMime', () => {
         .addPart()
         .setName('empty_stream')
         .setDataStream(stream, () => {
-          if (curl.handle.isPausedRecv) {
-            curl.pause(curl.handle.pauseFlags & ~CurlPause.Recv)
+          if (curl.handle.isPausedSend) {
+            curl.pause(curl.handle.pauseFlags & ~CurlPause.Send)
           }
         })
 
