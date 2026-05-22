@@ -78,10 +78,10 @@
     ]
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "2.0.0",
+    "@mapbox/node-pre-gyp": "2.0.3",
     "env-paths": "2.2.0",
     "node-addon-api": "8.5.0",
-    "node-gyp": "11.4.2",
+    "node-gyp": "12.3.0",
     "npmlog": "7.0.1",
     "rimraf": "5.0.5",
     "tslib": "2.6.2"
