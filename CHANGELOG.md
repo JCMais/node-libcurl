@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed vcpkg build failures when the exact OpenSSL version bundled with Node.js isn't present in the vcpkg registry. The build now resolves to the closest compatible version (preferring a newer patch on the same minor line, falling back to the closest lower patch, then the next minor) with a clear warning about the substitution. ([#447](https://github.com/JCMais/node-libcurl/pull/447))
 
 ### Added
+- Node.js 26 to the CI matrix. Prebuilt binaries are now published for Node 26 alongside the existing 22, 24, and 25 versions.
 
 ### Changed
 - The `unpause` callback documentation and examples for `CurlMimePart#setDataStream` and `Easy#setMimePost` now correctly reference `CurlPause.Send` instead of `CurlPause.Recv`. Mime upload data is supplied via the read callback, so pausing affects `CURLPAUSE_SEND`. ([#448](https://github.com/JCMais/node-libcurl/pull/448))

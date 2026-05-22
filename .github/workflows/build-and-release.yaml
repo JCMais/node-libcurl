@@ -61,6 +61,7 @@ jobs:
         libcurl-release:
           - ${{ needs.config.outputs.latest-libcurl-release }}
         node:
+          - 26
           - 25
           - 24
           - 22
