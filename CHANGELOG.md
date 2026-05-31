@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
-## [5.0.3] - 2026-05-31
+## [5.1.0] - 2026-05-31
 
 ### Fixed
 - Fixed macOS x64 prebuilt binary tarballs containing an arm64 binary instead of x86_64. The universal build packaging in `scripts/ci/build.sh` was extracting both architectures to the same output file before either was packaged, so the second `lipo` extraction overwrote the first. This affected all macOS releases since v5.0.0. ([#446](https://github.com/JCMais/node-libcurl/pull/446), fixes [#445](https://github.com/JCMais/node-libcurl/issues/445))
@@ -529,7 +529,8 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v5.0.2...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v5.1.0...HEAD
+[5.1.0]: https://github.com/JCMais/node-libcurl/compare/v5.0.2...v5.1.0
 [5.0.2]: https://github.com/JCMais/node-libcurl/compare/v5.0.1...v5.0.2
 [5.0.1]: https://github.com/JCMais/node-libcurl/compare/v5.0.0...v5.0.1
 [5.0.0]: https://github.com/JCMais/node-libcurl/compare/v4.1.0...v5.0.0
