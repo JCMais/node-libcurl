@@ -24,7 +24,7 @@ export interface MimeDataCallbacks {
    *
    * @remarks
    * When `CurlReadFunc.Pause` is returned, the transfer will be paused until it is
-   * explicitly resumed by calling `handle.pause(handle.pauseFlags & ~CurlPause.Recv)`.
+   * explicitly resumed by calling `handle.pause(handle.pauseFlags & ~CurlPause.Send)`.
    * When `CurlReadFunc.Abort` is returned, the transfer will be aborted.
    *
    * @example
@@ -360,8 +360,9 @@ declare class CurlMimePart {
    * `CurlReadFunc.Pause`, and the `unpause` callback is invoked when data becomes
    * available to resume the transfer.
    *
-   * The `unpause` function should unpause the curl handle's receive operation, typically
-   * by calling `handle.pause(handle.pauseFlags & ~CurlPause.Recv)`.
+   * The `unpause` function should unpause the curl handle's send operation (mime upload
+   * data is sent via the read callback), typically by calling
+   * `handle.pause(handle.pauseFlags & ~CurlPause.Send)`.
    *
    * For very large files, consider using {@link setFileData} instead, as it streams
    * directly from disk without going through Node.js streams.
@@ -380,7 +381,7 @@ declare class CurlMimePart {
    *   .addPart()
    *   .setName('document')
    *   .setDataStream(stream, () => {
-   *     curl.pause(curl.handle.pauseFlags & ~CurlPause.Recv)
+   *     curl.pause(curl.handle.pauseFlags & ~CurlPause.Send)
    *   })
    *   .setType('text/plain')
    * ```
@@ -402,7 +403,7 @@ declare class CurlMimePart {
    *   .setName('document')
    *   .setDataStream(
    *     stream,
-   *     () => curl.pause(curl.handle.pauseFlags & ~CurlPause.Recv),
+   *     () => curl.pause(curl.handle.pauseFlags & ~CurlPause.Send),
    *     size
    *   )
    * ```
@@ -424,21 +425,36 @@ CurlMimePart.prototype.setDataStream = function (
 ): typeof CurlMimePart.prototype {
   let streamEnded = false
   let streamError: Error | null = null
+  let paused = false
+
+  // Defer unpause to the next event loop iteration to avoid calling
+  // curl_easy_pause() while libcurl is still processing the READFUNC_PAUSE
+  // return value from the read callback. Without this, the synchronous
+  // unpause can re-enter libcurl and cause a hang (observed on Linux).
+  // This matches the pattern used by setUploadStream in Curl.ts.
+  const deferredUnpause = () => {
+    if (paused) {
+      paused = false
+      setImmediate(() => {
+        unpause()
+      })
+    }
+  }
 
   const onReadable = () => {
-    unpause()
+    deferredUnpause()
   }
 
   const onEnd = () => {
     streamEnded = true
-    unpause()
+    deferredUnpause()
     cleanup()
   }
 
   const onError = (err: Error) => {
     streamError = err
     streamEnded = true
-    unpause()
+    deferredUnpause()
     cleanup()
   }
 
@@ -473,6 +489,7 @@ CurlMimePart.prototype.setDataStream = function (
         if (streamEnded) {
           return null
         }
+        paused = true
         return CurlReadFunc.Pause
       }
 

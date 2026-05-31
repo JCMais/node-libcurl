@@ -257,6 +257,16 @@ if [ "$is_less_than_8_0_0" == "0" ] && [ ! -z "$NGHTTP3_BUILD_FOLDER" ] && [ ! -
   CPPFLAGS="$CPPFLAGS -I$NGTCP2_BUILD_FOLDER/include"
   LDFLAGS="$LDFLAGS -L$NGTCP2_BUILD_FOLDER/lib -Wl,-rpath,$NGTCP2_BUILD_FOLDER/lib"
   PKG_CONFIG_PATH="$NGTCP2_BUILD_FOLDER/lib/pkgconfig:$PKG_CONFIG_PATH"
+  # ngtcp2 1.17.0+ with OpenSSL 3.5+ uses the libngtcp2_crypto_ossl backend
+  # (the legacy quictls backend is gone). Its .pc file Requires libcrypto,
+  # so pkg-config needs to be able to find our statically-built OpenSSL.
+  # On Ubuntu/macOS the system OpenSSL .pc is in pkg-config's default path
+  # so this happens implicitly, but on Alpine containers there's no system
+  # OpenSSL and the resolve fails — libcurl then falls back to assuming
+  # the quictls backend and fails to compile (#includes ngtcp2_crypto_quictls.h).
+  if [ ! -z "$OPENSSL_BUILD_FOLDER" ]; then
+    PKG_CONFIG_PATH="$OPENSSL_BUILD_FOLDER/lib/pkgconfig:$PKG_CONFIG_PATH"
+  fi
   # no path, we set pkg config path instead
   # see https://github.com/curl/curl/issues/18188
   libcurl_args+=("--with-ngtcp2")

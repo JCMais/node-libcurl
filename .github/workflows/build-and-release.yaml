@@ -42,7 +42,7 @@ jobs:
       contents: write
       packages: write
     runs-on: ${{ matrix.os == 'alpine' && 'ubuntu-22.04' || matrix.os }}
-    container: ${{ matrix.os == 'alpine' && format('node:{0}-alpine3.21', matrix.node) || '' }}
+    container: ${{ matrix.os == 'alpine' && format('node:{0}-alpine3.22', matrix.node) || '' }}
     needs:
       - config
       - lint-and-tsc
@@ -61,6 +61,7 @@ jobs:
         libcurl-release:
           - ${{ needs.config.outputs.latest-libcurl-release }}
         node:
+          - 26
           - 25
           - 24
           - 22

@@ -494,11 +494,24 @@ if [[ "$MACOS_UNIVERSAL_BUILD" == "true" ]]; then
   # play well with electron-builder which will try to lipo native add-ons
   # for different architectures.
   # --
-  lipo build/Release/node_libcurl.node -thin x86_64 -output lib/binding/node_libcurl.node
-  lipo build/Release/node_libcurl.node -thin arm64 -output lib/binding/node_libcurl.node
+  native_arch=$(uname -m)
+  if [ "$native_arch" == "x86_64" ]; then
+    cross_arch="arm64"
+    native_npm_arch="x64"
+    cross_npm_arch="arm64"
+  else
+    cross_arch="x86_64"
+    native_npm_arch="arm64"
+    cross_npm_arch="x64"
+  fi
 
-  npm_config_target_arch=arm64 pnpm pregyp package testpackage --verbose
-  npm_config_target_arch=x64 pnpm pregyp package testpackage --verbose
+  # Package the cross-compiled architecture first (no testpackage - can't load it)
+  lipo build/Release/node_libcurl.node -thin $cross_arch -output lib/binding/node_libcurl.node
+  npm_config_target_arch=$cross_npm_arch pnpm pregyp package --verbose
+
+  # Package the native architecture (with testpackage to verify it loads)
+  lipo build/Release/node_libcurl.node -thin $native_arch -output lib/binding/node_libcurl.node
+  npm_config_target_arch=$native_npm_arch pnpm pregyp package testpackage --verbose
 else
   pnpm pregyp package testpackage --verbose
 fi

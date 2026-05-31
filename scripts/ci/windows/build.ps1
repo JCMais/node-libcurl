@@ -152,7 +152,10 @@ Write-Host "Set node-gyp path to ${globalNodeGypPath}"
 $target = $target -replace '^v', ''
 
 # Set npm config variables
-$env:npm_config_msvs_version = "2022"
+# msvs_version is intentionally not pinned. The windows-2025 runner is
+# transitioning from VS 2022 to VS 2026 (full rollout by 2026-06-15) and
+# the installed Visual Studio version varies across image revisions. Let
+# node-gyp auto-detect whichever supported MSVC toolset is present.
 $env:npm_config_build_from_source = "true"
 $env:npm_config_runtime = $runtime
 $env:npm_config_dist_url = $dist_url
@@ -160,7 +163,6 @@ $env:npm_config_target = $target
 $env:npm_config_node_gyp = $globalNodeGypPath
 
 Write-Host "Build configuration:" -ForegroundColor Green
-Write-Host "  npm_config_msvs_version: $env:npm_config_msvs_version" -ForegroundColor Cyan
 Write-Host "  npm_config_build_from_source: $env:npm_config_build_from_source" -ForegroundColor Cyan
 Write-Host "  npm_config_runtime: $env:npm_config_runtime" -ForegroundColor Cyan
 Write-Host "  npm_config_dist_url: $env:npm_config_dist_url" -ForegroundColor Cyan

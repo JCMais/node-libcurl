@@ -595,7 +595,14 @@ size_t CurlMimePart::StaticReadCallback(char* buffer, size_t size, size_t nitems
     }
 
     if (result.IsNumber()) {
-      return result.As<Napi::Number>().Int32Value();
+      int32_t returnValue = result.As<Napi::Number>().Int32Value();
+      // Track pause state so isPausedSend reflects reality.
+      // The mime data callback pauses SEND (it supplies upload data),
+      // matching the behavior of Easy::ReadFunction.
+      if (returnValue == CURL_READFUNC_PAUSE) {
+        part->easy->pauseState |= CURLPAUSE_SEND;
+      }
+      return static_cast<size_t>(returnValue);
     }
 
     // Invalid return type
