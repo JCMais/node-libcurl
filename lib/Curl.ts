@@ -749,15 +749,37 @@ class Curl extends EventEmitter {
     // Use custom Multi instance if set, otherwise use the default global one
     const multi = this.multiInstance || multiHandle
 
+    // On libcurl 8.17+ the multi handle uses the new CURLMOPT_NOTIFYFUNCTION API,
+    // and our NotifyCallback resolves the perform() promise while still inside
+    // curl_multi_socket_action. Microtask draining can then run the .then()
+    // synchronously and try to call curl_multi_remove_handle from there, which
+    // libcurl rejects with CURLM_RECURSIVE_API_CALL ("API function called from
+    // within callback"). Defer removeHandle to the next tick so libcurl has
+    // unwound its own call stack first.
+    //
+    // See: https://github.com/JCMais/node-libcurl/issues/439
+    const finalize = (cb: () => void) => {
+      setImmediate(() => {
+        try {
+          if (this.handle.isOpen && this.handle.isInsideMultiHandle) {
+            multi.removeHandle(this.handle)
+          }
+        } catch {
+          // If the user closed the handle inside their callback (the curly
+          // pattern does this), or the handle was already removed for any
+          // other reason, swallow — we still want to settle the request.
+        }
+        cb()
+      })
+    }
+
     multi
       .perform(this.handle)
       .then(() => {
-        multi.removeHandle(this.handle)
-        this.onEnd()
+        finalize(() => this.onEnd())
       })
       .catch((error) => {
-        multi.removeHandle(this.handle)
-        this.onError(error, error.code)
+        finalize(() => this.onError(error, error.code))
       })
 
     return this

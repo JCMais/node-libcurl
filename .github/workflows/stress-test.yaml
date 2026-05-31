@@ -1,0 +1,116 @@
+# Canary stress test for issues that only show up under concurrent load.
+# Currently exercises the deferred multi.removeHandle fix for issue #439
+# (CURLM_RECURSIVE_API_CALL), which reproduces most reliably on Alpine
+# with libcurl 8.17+ but is a real race on any platform.
+#
+# This workflow doesn't publish or deploy anything — it just builds the
+# addon and runs `pnpm test:stress`, which lives outside the default
+# vitest run because it's expensive and timing-sensitive.
+
+name: stress-test
+
+defaults:
+  run:
+    shell: bash
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+
+concurrency:
+  group: stress-test-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  config:
+    uses: ./.github/workflows/reusable-config.yaml
+
+  stress:
+    needs: config
+    runs-on: ${{ matrix.os == 'alpine' && 'ubuntu-22.04' || matrix.os }}
+    container: ${{ matrix.os == 'alpine' && format('node:{0}-alpine3.22', matrix.node) || '' }}
+    strategy:
+      # Each cell is informative on its own — we want to see which platform
+      # tripped, not give up on the rest.
+      fail-fast: false
+      matrix:
+        # Keep this matrix narrow on purpose. Alpine is where the recursive
+        # API call manifests most aggressively (~73% failure rate without
+        # the fix), so it's the highest-signal canary. Ubuntu is included
+        # to catch glibc-side timing surprises.
+        os:
+          - alpine
+          - ubuntu-22.04
+        node:
+          - 24
+    env:
+      LIBCURL_RELEASE: ${{ needs.config.outputs.latest-libcurl-release }}
+      LATEST_LIBCURL_RELEASE: ${{ needs.config.outputs.latest-libcurl-release }}
+      PUBLISH_BINARY: false
+      RUN_TESTS: false
+      RUN_PREGYP_CLEAN: false
+      GIT_COMMIT: ${{ github.sha }}
+      GIT_REF_NAME: ${{ github.ref_name }}
+    steps:
+      - name: Install updated git (Alpine)
+        if: matrix.os == 'alpine'
+        shell: sh
+        run: |
+          apk add --no-cache git bash
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Install System Packages
+        uses: ./.github/actions/install-system-packages
+
+      - name: Setup Node and PNPM
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: '${{ matrix.node }}'
+          skip-node-setup: ${{ matrix.os == 'alpine' && 'true' || 'false' }}
+
+      - name: Setup Libcurl Cache (Restore)
+        id: libcurl-deps-cache
+        uses: ./.github/actions/setup-libcurl-cache
+        with:
+          libcurl-release: ${{ needs.config.outputs.latest-libcurl-release }}
+          node-version: ${{ matrix.node }}
+          electron-config-cache: ${{ needs.config.outputs.electron-config-cache }}
+          mode: 'restore-only'
+
+      - name: Build addon
+        run: ./scripts/ci/build.sh
+
+      - name: Check if fully installed and built
+        id: built-and-installed
+        run: |
+          if [[ -f built-and-installed.hidden.txt ]]; then
+            echo "status=true" >> $GITHUB_OUTPUT
+          else
+            echo "status=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Libcurl Cache (Save)
+        if: steps.libcurl-deps-cache.outputs.cache-hit != 'true' && steps.built-and-installed.outputs.status == 'true'
+        uses: ./.github/actions/setup-libcurl-cache
+        with:
+          libcurl-release: ${{ needs.config.outputs.latest-libcurl-release }}
+          node-version: ${{ matrix.node }}
+          electron-config-cache: ${{ needs.config.outputs.electron-config-cache }}
+          mode: 'save-only'
+
+      - name: Run stress tests
+        run: pnpm test:stress
+
+      - name: Upload Build Logs
+        if: always()
+        uses: ./.github/actions/upload-build-logs
+        with:
+          artifact-name: stress-test-logs-${{ matrix.os }}-node-${{ matrix.node }}
+          retention-days: '3'
