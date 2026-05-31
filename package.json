@@ -61,6 +61,7 @@
     "prettier:all": "pnpm prettier lib/**/*.ts tools/**/*.js scripts/**/*.js test/**/*.ts examples/**/*.js",
     "test": "vitest run --testTimeout=60000",
     "test:coverage": "pnpm test -- --coverage.enabled=true",
+    "test:stress": "vitest run --config vitest.stress.config.ts",
     "test:watch": "vitest --testTimeout=60000",
     "preversion": "pnpm lint && pnpm clean:dist && pnpm build:dist"
   },
