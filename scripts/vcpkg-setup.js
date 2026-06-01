@@ -11,6 +11,11 @@ const {
 
 const modulePackageJson = require('../package.json')
 
+const commonEnv = {
+  ...process.env,
+  VCPKG_DISABLE_METRICS: '1',
+}
+
 async function setupVcpkg() {
   try {
     let vcpkgExe
@@ -46,6 +51,7 @@ async function setupVcpkg() {
           cwd: vcpkgRoot,
           maxBuffer: 10 * 1024 * 1024,
           stdio: 'inherit',
+          env: commonEnv,
         })
       }
     }
@@ -59,6 +65,7 @@ async function setupVcpkg() {
       cwd: moduleRoot,
       maxBuffer: 20 * 1024 * 1024,
       stdio: 'inherit',
+      env: commonEnv,
     })
 
     const installedRoot = path.join(moduleRoot, 'vcpkg_installed', triplet)

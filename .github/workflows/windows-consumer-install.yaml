@@ -1,0 +1,92 @@
+name: windows-consumer-install
+
+defaults:
+  run:
+    shell: pwsh
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/windows-consumer-install.yaml'
+      - 'binding.gyp'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'scripts/**'
+      - 'src/**'
+      - 'vcpkg.template.json'
+      - 'vcpkg-configuration.json'
+      - 'overlays/**'
+
+concurrency:
+  group: windows-consumer-install-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  electron-source-install:
+    runs-on: windows-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Setup Node and PNPM
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: '24'
+
+      - name: Build package tarball
+        run: |
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm build:dist
+          pnpm pack --pack-destination $env:RUNNER_TEMP
+
+      - name: Install as pnpm consumer from source
+        env:
+          npm_config_build_from_source: 'true'
+          npm_config_runtime: electron
+          npm_config_target: '39.1.1'
+          npm_config_disturl: https://electronjs.org/headers
+        run: |
+          $package = Get-ChildItem $env:RUNNER_TEMP -Filter 'node-libcurl-*.tgz' |
+            Select-Object -First 1
+
+          if (-not $package) {
+            throw 'Packed node-libcurl tarball was not found'
+          }
+
+          $consumerRoot = Join-Path $env:RUNNER_TEMP (
+            'node-libcurl-consumer-' + ('nested-' * 12)
+          )
+
+          New-Item -ItemType Directory -Force -Path $consumerRoot
+          Set-Location $consumerRoot
+          Set-Content -Path package.json -Value '{"private":true,"type":"commonjs"}'
+
+          pnpm add $package.FullName --fetch-timeout 300000
+
+          $curlExe = Get-ChildItem `
+            -Path (Join-Path $consumerRoot 'node_modules/node-libcurl') `
+            -Recurse `
+            -Filter curl.exe |
+            Where-Object { $_.FullName -like '*\vcpkg_installed\*\tools\curl\curl.exe' } |
+            Select-Object -First 1
+
+          if (-not $curlExe) {
+            throw 'vcpkg curl.exe was not found after install'
+          }
+
+          $curlVersion = & $curlExe.FullName --version
+          $curlVersion
+          $curlVersionText = $curlVersion -join "`n"
+
+          if ($curlVersionText -notmatch 'Features:.*\bIDN\b') {
+            throw 'Windows curl build did not retain IDN support'
+          }
+
+          if ($curlVersionText -match 'libidn2') {
+            throw 'Windows curl build still links libidn2'
+          }
