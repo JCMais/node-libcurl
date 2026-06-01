@@ -82,7 +82,7 @@ jobs:
           }
           '@)
 
-          pnpm add $package.FullName --allow-build node-libcurl --fetch-timeout 300000
+          pnpm add $package.FullName --allow-build=node-libcurl --fetch-timeout 300000
 
           $curlExe = Get-ChildItem `
             -Path (Join-Path $consumerRoot 'node_modules/node-libcurl') `
