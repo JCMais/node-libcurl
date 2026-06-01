@@ -101,11 +101,15 @@ jobs:
 
           pnpm add $package.FullName --allow-build=node-libcurl --fetch-timeout 300000
 
-          $curlExe = Get-ChildItem `
-            -Path (Join-Path $consumerRoot 'node_modules/node-libcurl') `
-            -Recurse `
-            -Filter curl.exe |
-            Where-Object { $_.FullName -like '*\vcpkg_installed\*\tools\curl\curl.exe' } |
+          # vcpkg_installed lives outside the consumer's node_modules on
+          # Windows (see scripts/vcpkg-common.js for why). The path is
+          # %LOCALAPPDATA%\node-libcurl-vcpkg\<moduleRootHash>-installed —
+          # `node scripts/vcpkg-get-info.js --include-dir` would print the
+          # final include path, but the simplest check is to scan the
+          # whole cache for any curl.exe in this run.
+          $vcpkgCacheRoot = Join-Path $env:LOCALAPPDATA 'node-libcurl-vcpkg'
+          $curlExe = Get-ChildItem -Path $vcpkgCacheRoot -Recurse -Filter curl.exe |
+            Where-Object { $_.FullName -like '*-installed\*\tools\curl\curl.exe' } |
             Select-Object -First 1
 
           if (-not $curlExe) {

@@ -33,6 +33,18 @@ const defaultVcpkgRoot = path.join(
 )
 const vcpkgRoot = process.env.VCPKG_ROOT || defaultVcpkgRoot
 
+// vcpkg_installed has the same MAX_PATH problem as the clone — pkg-config
+// from msys2 (used during dependency builds like libssh2 -> zlib/libcrypto)
+// silently fails to find .pc files once the absolute path passes ~260 chars.
+// Keep it out of the module root for the same reasons.
+const defaultVcpkgInstalledRoot = path.join(
+  process.env.LOCALAPPDATA || os.tmpdir(),
+  'node-libcurl-vcpkg',
+  `${moduleRootHash}-installed`,
+)
+const vcpkgInstalledRoot =
+  process.env.NODE_LIBCURL_VCPKG_INSTALLED_ROOT || defaultVcpkgInstalledRoot
+
 // Triplet mapping
 const arch = process.arch
 const tripletMap = {
@@ -51,6 +63,7 @@ if (!triplet) {
 module.exports = {
   triplet,
   vcpkgRoot,
+  vcpkgInstalledRoot,
   moduleRoot,
   arch,
 }

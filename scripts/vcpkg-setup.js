@@ -3,7 +3,12 @@ const { execSync: exec } = require('child_process')
 const fs = require('fs')
 const path = require('path')
 
-const { triplet, moduleRoot, vcpkgRoot } = require('./vcpkg-common')
+const {
+  triplet,
+  moduleRoot,
+  vcpkgRoot,
+  vcpkgInstalledRoot,
+} = require('./vcpkg-common')
 const {
   getAvailableVersions,
   findBestVersion,
@@ -65,9 +70,14 @@ async function setupVcpkg() {
 
     await createVcpkgJson()
 
-    // Install dependencies
+    // Install dependencies. --x-install-root sends `vcpkg_installed` to a
+    // path outside the module root so the per-port cmake builds (and the
+    // bundled msys2 pkg-config they call) don't trip over MAX_PATH when
+    // node-libcurl is being installed via a deep pnpm consumer path.
+    fs.mkdirSync(vcpkgInstalledRoot, { recursive: true })
     console.log(`Installing curl with ${triplet}...`)
-    const installCmd = `"${vcpkgExe}" install --triplet ${triplet}`
+    console.log(`  vcpkg_installed: ${vcpkgInstalledRoot}`)
+    const installCmd = `"${vcpkgExe}" install --triplet ${triplet} --x-install-root="${vcpkgInstalledRoot}"`
     exec(installCmd, {
       cwd: moduleRoot,
       maxBuffer: 20 * 1024 * 1024,
@@ -75,7 +85,7 @@ async function setupVcpkg() {
       env: commonEnv,
     })
 
-    const installedRoot = path.join(moduleRoot, 'vcpkg_installed', triplet)
+    const installedRoot = path.join(vcpkgInstalledRoot, triplet)
 
     console.log(`✓ vcpkg setup complete`)
     console.log(`  Installed to: ${installedRoot}`)
