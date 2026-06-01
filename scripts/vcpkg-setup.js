@@ -32,8 +32,14 @@ async function setupVcpkg() {
       // Bootstrap local vcpkg
       if (!fs.existsSync(vcpkgRoot)) {
         console.log('Cloning vcpkg locally...')
+        // `-c core.longpaths=true` lets git write files past Windows'
+        // 260-char MAX_PATH limit. vcpkg's pack/keep filenames already
+        // sit close to that limit on their own, and consumers installing
+        // node-libcurl via pnpm pile a deep `node_modules/.pnpm/<hash>/...`
+        // prefix on top — easy to overflow without this flag. On
+        // Linux/macOS the flag is a harmless no-op.
         exec(
-          `git clone https://github.com/microsoft/vcpkg.git "${vcpkgRoot}"`,
+          `git -c core.longpaths=true clone https://github.com/microsoft/vcpkg.git "${vcpkgRoot}"`,
           {
             cwd: path.dirname(vcpkgRoot),
             maxBuffer: 10 * 1024 * 1024,
