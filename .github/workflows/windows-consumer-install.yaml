@@ -28,6 +28,23 @@ jobs:
     timeout-minutes: 120
 
     steps:
+      - name: Enable Windows long paths (registry + git)
+        run: |
+          # The whole point of this job is exercising a deeply-nested
+          # consumer path. Windows' default MAX_PATH=260 ceiling makes
+          # vcpkg blow up the moment it tries to CreateProcessW its
+          # downloaded pwsh.exe (~270+ char path). Flip the registry
+          # opt-in and the git default to long-path mode — both are
+          # standard for Windows dev/CI environments dealing with
+          # deep node_modules.
+          New-ItemProperty `
+            -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' `
+            -Name 'LongPathsEnabled' `
+            -Value 1 `
+            -PropertyType DWORD `
+            -Force | Out-Null
+          git config --global core.longpaths true
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
