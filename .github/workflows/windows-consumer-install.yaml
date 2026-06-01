@@ -64,9 +64,25 @@ jobs:
 
           New-Item -ItemType Directory -Force -Path $consumerRoot
           Set-Location $consumerRoot
-          Set-Content -Path package.json -Value '{"private":true,"type":"commonjs"}'
+          # pnpm v10 blocks dependency install scripts by default. The consumer
+          # has to opt in for any package that needs its preinstall/install/
+          # postinstall to run — and node-libcurl needs all three to run the
+          # vcpkg setup and build the native addon. Without this approval the
+          # install completes "successfully" but leaves the package non-
+          # functional (no vcpkg-installed curl.exe, no native binding).
+          # This is the exact failure mode real pnpm-v10 consumers hit, so we
+          # encode the workaround here rather than masking it.
+          Set-Content -Path package.json -Value (@'
+          {
+            "private": true,
+            "type": "commonjs",
+            "pnpm": {
+              "onlyBuiltDependencies": ["node-libcurl"]
+            }
+          }
+          '@)
 
-          pnpm add $package.FullName --fetch-timeout 300000
+          pnpm add $package.FullName --allow-build node-libcurl --fetch-timeout 300000
 
           $curlExe = Get-ChildItem `
             -Path (Join-Path $consumerRoot 'node_modules/node-libcurl') `
