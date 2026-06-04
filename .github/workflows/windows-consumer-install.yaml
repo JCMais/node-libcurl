@@ -68,6 +68,15 @@ jobs:
           npm_config_target: '39.1.1'
           npm_config_disturl: https://electronjs.org/headers
         run: |
+          # PowerShell does NOT fail the step on a non-zero exit from a
+          # native command unless we tell it to. Without this, a failed
+          # `pnpm add` (gyp couldn't find VS, native build threw, etc.)
+          # would slide right past and the curl.exe check below would
+          # happily find the vcpkg-built curl from preinstall and report
+          # success — exactly what fooled us on the last run.
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandErrorActionPreference = $true
+
           $package = Get-ChildItem $env:RUNNER_TEMP -Filter 'node-libcurl-*.tgz' |
             Select-Object -First 1
 
@@ -99,7 +108,36 @@ jobs:
           }
           '@)
 
+          # pnpm v10 uses its own bundled node-gyp (v11.x as of pnpm 10.16),
+          # which doesn't know about Visual Studio 2026 (v145 toolset). The
+          # windows-latest runner is being migrated to VS 2026 ahead of the
+          # 2026-06-15 cutover, so pnpm's bundled gyp fails the build with
+          # `unknown version "undefined" found at C:\Program Files\Microsoft
+          # Visual Studio\18\Enterprise`. Override with a fresh node-gyp 12.x,
+          # which added VS 2026 detection in v12.1.0 — same workaround
+          # documented in scripts/ci/windows/build.ps1.
+          npm install --global node-gyp@latest
+          $globalNodeGypPath = Join-Path (npm prefix -g) 'node_modules\node-gyp\bin\node-gyp.js'
+          $env:npm_config_node_gyp = $globalNodeGypPath
+          Write-Host "Pointing pnpm at node-gyp: $globalNodeGypPath"
+
           pnpm add $package.FullName --allow-build=node-libcurl --fetch-timeout 300000
+          if ($LASTEXITCODE -ne 0) {
+            throw "pnpm add exited with code $LASTEXITCODE"
+          }
+
+          # The actual addon — this is what consumers `require()` at runtime,
+          # so it's the most important thing to verify exists. Without the
+          # node-gyp override above this never got written, and the previous
+          # "passing" run was just finding the vcpkg byproduct.
+          $consumerPkgRoot = Join-Path $consumerRoot 'node_modules\node-libcurl'
+          $addon = Get-ChildItem -Path $consumerPkgRoot -Recurse -Filter node_libcurl.node |
+            Select-Object -First 1
+
+          if (-not $addon) {
+            throw 'node_libcurl.node was not built; the consumer install would not be loadable at runtime'
+          }
+          Write-Host "Built addon at: $($addon.FullName) ($($addon.Length) bytes)"
 
           # vcpkg_installed lives outside the consumer's node_modules on
           # Windows (see scripts/vcpkg-common.js for why). The path is
