@@ -84,8 +84,16 @@ jobs:
             throw 'Packed node-libcurl tarball was not found'
           }
 
+          # 'nested-' * 4 puts the consumer at ~110 chars before node_modules,
+          # which mirrors what real-world pnpm monorepos hit (workspace +
+          # a couple of nested package depths). The previous 'nested-' * 12
+          # forced moduleRoot to ~256 chars, leaving no headroom under
+          # MAX_PATH for MSVC's c1xx.exe — that compiler front-end doesn't
+          # carry the long-path app manifest, so the registry opt-in does
+          # nothing for it. With *4 we have ~135 chars of slack inside the
+          # 260-char ceiling for MSBuild's intermediate/log files.
           $consumerRoot = Join-Path $env:RUNNER_TEMP (
-            'node-libcurl-consumer-' + ('nested-' * 12)
+            'node-libcurl-consumer-' + ('nested-' * 4)
           )
 
           New-Item -ItemType Directory -Force -Path $consumerRoot
