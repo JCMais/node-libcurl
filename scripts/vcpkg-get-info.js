@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 
-const { triplet, moduleRoot } = require('./vcpkg-common')
+const { triplet, vcpkgInstalledRoot } = require('./vcpkg-common')
 
 // Exit if not Windows
 if (process.platform !== 'win32') {
@@ -10,7 +10,7 @@ if (process.platform !== 'win32') {
 
 const args = process.argv.slice(2)
 
-const installedRoot = path.join(moduleRoot, 'vcpkg_installed', triplet)
+const installedRoot = path.join(vcpkgInstalledRoot, triplet)
 
 // Collect all .lib files
 const libDir = path.join(installedRoot, 'lib')

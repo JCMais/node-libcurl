@@ -1,0 +1,175 @@
+name: windows-consumer-install
+
+defaults:
+  run:
+    shell: pwsh
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/windows-consumer-install.yaml'
+      - 'binding.gyp'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'scripts/**'
+      - 'src/**'
+      - 'vcpkg.template.json'
+      - 'vcpkg-configuration.json'
+      - 'overlays/**'
+
+concurrency:
+  group: windows-consumer-install-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  electron-source-install:
+    runs-on: windows-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Enable Windows long paths (registry + git)
+        run: |
+          # The whole point of this job is exercising a deeply-nested
+          # consumer path. Windows' default MAX_PATH=260 ceiling makes
+          # vcpkg blow up the moment it tries to CreateProcessW its
+          # downloaded pwsh.exe (~270+ char path). Flip the registry
+          # opt-in and the git default to long-path mode — both are
+          # standard for Windows dev/CI environments dealing with
+          # deep node_modules.
+          New-ItemProperty `
+            -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' `
+            -Name 'LongPathsEnabled' `
+            -Value 1 `
+            -PropertyType DWORD `
+            -Force | Out-Null
+          git config --global core.longpaths true
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Setup Node and PNPM
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: '24'
+
+      - name: Build package tarball
+        run: |
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm build:dist
+          pnpm pack --pack-destination $env:RUNNER_TEMP
+
+      - name: Install as pnpm consumer from source
+        env:
+          npm_config_build_from_source: 'true'
+          npm_config_runtime: electron
+          npm_config_target: '39.1.1'
+          npm_config_disturl: https://electronjs.org/headers
+        run: |
+          # PowerShell does NOT fail the step on a non-zero exit from a
+          # native command unless we tell it to. Without this, a failed
+          # `pnpm add` (gyp couldn't find VS, native build threw, etc.)
+          # would slide right past and the curl.exe check below would
+          # happily find the vcpkg-built curl from preinstall and report
+          # success — exactly what fooled us on the last run.
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandErrorActionPreference = $true
+
+          $package = Get-ChildItem $env:RUNNER_TEMP -Filter 'node-libcurl-*.tgz' |
+            Select-Object -First 1
+
+          if (-not $package) {
+            throw 'Packed node-libcurl tarball was not found'
+          }
+
+          # 'nested-' * 4 puts the consumer at ~110 chars before node_modules,
+          # which mirrors what real-world pnpm monorepos hit (workspace +
+          # a couple of nested package depths). The previous 'nested-' * 12
+          # forced moduleRoot to ~256 chars, leaving no headroom under
+          # MAX_PATH for MSVC's c1xx.exe — that compiler front-end doesn't
+          # carry the long-path app manifest, so the registry opt-in does
+          # nothing for it. With *4 we have ~135 chars of slack inside the
+          # 260-char ceiling for MSBuild's intermediate/log files.
+          $consumerRoot = Join-Path $env:RUNNER_TEMP (
+            'node-libcurl-consumer-' + ('nested-' * 4)
+          )
+
+          New-Item -ItemType Directory -Force -Path $consumerRoot
+          Set-Location $consumerRoot
+          # pnpm v10 blocks dependency install scripts by default. The consumer
+          # has to opt in for any package that needs its preinstall/install/
+          # postinstall to run — and node-libcurl needs all three to run the
+          # vcpkg setup and build the native addon. Without this approval the
+          # install completes "successfully" but leaves the package non-
+          # functional (no vcpkg-installed curl.exe, no native binding).
+          # This is the exact failure mode real pnpm-v10 consumers hit, so we
+          # encode the workaround here rather than masking it.
+          Set-Content -Path package.json -Value (@'
+          {
+            "private": true,
+            "type": "commonjs",
+            "pnpm": {
+              "onlyBuiltDependencies": ["node-libcurl"]
+            }
+          }
+          '@)
+
+          # pnpm v10 uses its own bundled node-gyp (v11.x as of pnpm 10.16),
+          # which doesn't know about Visual Studio 2026 (v145 toolset). The
+          # windows-latest runner is being migrated to VS 2026 ahead of the
+          # 2026-06-15 cutover, so pnpm's bundled gyp fails the build with
+          # `unknown version "undefined" found at C:\Program Files\Microsoft
+          # Visual Studio\18\Enterprise`. Override with a fresh node-gyp 12.x,
+          # which added VS 2026 detection in v12.1.0 — same workaround
+          # documented in scripts/ci/windows/build.ps1.
+          npm install --global node-gyp@latest
+          $globalNodeGypPath = Join-Path (npm prefix -g) 'node_modules\node-gyp\bin\node-gyp.js'
+          $env:npm_config_node_gyp = $globalNodeGypPath
+          Write-Host "Pointing pnpm at node-gyp: $globalNodeGypPath"
+
+          pnpm add $package.FullName --allow-build=node-libcurl --fetch-timeout 300000
+          if ($LASTEXITCODE -ne 0) {
+            throw "pnpm add exited with code $LASTEXITCODE"
+          }
+
+          # The actual addon — this is what consumers `require()` at runtime,
+          # so it's the most important thing to verify exists. Without the
+          # node-gyp override above this never got written, and the previous
+          # "passing" run was just finding the vcpkg byproduct.
+          $consumerPkgRoot = Join-Path $consumerRoot 'node_modules\node-libcurl'
+          $addon = Get-ChildItem -Path $consumerPkgRoot -Recurse -Filter node_libcurl.node |
+            Select-Object -First 1
+
+          if (-not $addon) {
+            throw 'node_libcurl.node was not built; the consumer install would not be loadable at runtime'
+          }
+          Write-Host "Built addon at: $($addon.FullName) ($($addon.Length) bytes)"
+
+          # vcpkg_installed lives outside the consumer's node_modules on
+          # Windows (see scripts/vcpkg-common.js for why). The path is
+          # %LOCALAPPDATA%\node-libcurl-vcpkg\<moduleRootHash>-installed —
+          # `node scripts/vcpkg-get-info.js --include-dir` would print the
+          # final include path, but the simplest check is to scan the
+          # whole cache for any curl.exe in this run.
+          $vcpkgCacheRoot = Join-Path $env:LOCALAPPDATA 'node-libcurl-vcpkg'
+          $curlExe = Get-ChildItem -Path $vcpkgCacheRoot -Recurse -Filter curl.exe |
+            Where-Object { $_.FullName -like '*-installed\*\tools\curl\curl.exe' } |
+            Select-Object -First 1
+
+          if (-not $curlExe) {
+            throw 'vcpkg curl.exe was not found after install'
+          }
+
+          $curlVersion = & $curlExe.FullName --version
+          $curlVersion
+          $curlVersionText = $curlVersion -join "`n"
+
+          if ($curlVersionText -notmatch 'Features:.*\bIDN\b') {
+            throw 'Windows curl build did not retain IDN support'
+          }
+
+          if ($curlVersionText -match 'libidn2') {
+            throw 'Windows curl build still links libidn2'
+          }

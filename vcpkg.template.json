@@ -13,7 +13,6 @@
         "ldap",
         "gsasl",
         "idn",
-        "idn2",
         "openssl",
         "ssh",
         "sspi",

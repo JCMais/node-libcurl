@@ -34,7 +34,7 @@ runs:
     - name: Setup vcpkg
       shell: pwsh
       env:
-        VCPKG_DISABLE_METRICS: false
+        VCPKG_DISABLE_METRICS: '1'
       run: |
         cd vcpkg
         .\bootstrap-vcpkg.bat

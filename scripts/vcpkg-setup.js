@@ -3,13 +3,23 @@ const { execSync: exec } = require('child_process')
 const fs = require('fs')
 const path = require('path')
 
-const { triplet, moduleRoot, vcpkgRoot } = require('./vcpkg-common')
+const {
+  triplet,
+  moduleRoot,
+  vcpkgRoot,
+  vcpkgInstalledRoot,
+} = require('./vcpkg-common')
 const {
   getAvailableVersions,
   findBestVersion,
 } = require('./vcpkg-openssl-version')
 
 const modulePackageJson = require('../package.json')
+
+const commonEnv = {
+  ...process.env,
+  VCPKG_DISABLE_METRICS: '1',
+}
 
 async function setupVcpkg() {
   try {
@@ -26,9 +36,16 @@ async function setupVcpkg() {
     } else {
       // Bootstrap local vcpkg
       if (!fs.existsSync(vcpkgRoot)) {
-        console.log('Cloning vcpkg locally...')
+        console.log(`Cloning vcpkg into ${vcpkgRoot}...`)
+        // `-c core.longpaths=true` lets git write files past Windows'
+        // 260-char MAX_PATH limit. vcpkg's pack/keep filenames already
+        // sit close to that limit on their own, and consumers installing
+        // node-libcurl via pnpm pile a deep `node_modules/.pnpm/<hash>/...`
+        // prefix on top — easy to overflow without this flag. On
+        // Linux/macOS the flag is a harmless no-op.
+        fs.mkdirSync(path.dirname(vcpkgRoot), { recursive: true })
         exec(
-          `git clone https://github.com/microsoft/vcpkg.git "${vcpkgRoot}"`,
+          `git -c core.longpaths=true clone https://github.com/microsoft/vcpkg.git "${vcpkgRoot}"`,
           {
             cwd: path.dirname(vcpkgRoot),
             maxBuffer: 10 * 1024 * 1024,
@@ -46,22 +63,29 @@ async function setupVcpkg() {
           cwd: vcpkgRoot,
           maxBuffer: 10 * 1024 * 1024,
           stdio: 'inherit',
+          env: commonEnv,
         })
       }
     }
 
     await createVcpkgJson()
 
-    // Install dependencies
+    // Install dependencies. --x-install-root sends `vcpkg_installed` to a
+    // path outside the module root so the per-port cmake builds (and the
+    // bundled msys2 pkg-config they call) don't trip over MAX_PATH when
+    // node-libcurl is being installed via a deep pnpm consumer path.
+    fs.mkdirSync(vcpkgInstalledRoot, { recursive: true })
     console.log(`Installing curl with ${triplet}...`)
-    const installCmd = `"${vcpkgExe}" install --triplet ${triplet}`
+    console.log(`  vcpkg_installed: ${vcpkgInstalledRoot}`)
+    const installCmd = `"${vcpkgExe}" install --triplet ${triplet} --x-install-root="${vcpkgInstalledRoot}"`
     exec(installCmd, {
       cwd: moduleRoot,
       maxBuffer: 20 * 1024 * 1024,
       stdio: 'inherit',
+      env: commonEnv,
     })
 
-    const installedRoot = path.join(moduleRoot, 'vcpkg_installed', triplet)
+    const installedRoot = path.join(vcpkgInstalledRoot, triplet)
 
     console.log(`✓ vcpkg setup complete`)
     console.log(`  Installed to: ${installedRoot}`)
