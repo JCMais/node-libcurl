@@ -14,6 +14,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
+## [5.1.1] - 2026-06-05
+
+### Fixed
+- Fixed Windows source builds linking against `libidn2` (and its `libunistring` transitive dep) instead of using the Windows-native WinIDN backed by `Normaliz.lib`. The vcpkg manifest was requesting both the `idn` and `idn2` curl features, which forced vcpkg's curl port to pull libidn2 in; only `idn` is needed and lets the port pick WinIDN on Windows. Smaller binary, fewer transitive deps.
+- Fixed Windows source builds failing in deeply-nested consumer paths (typical of pnpm v10 monorepos) with `CreateProcessW failed with 206 (The filename or extension is too long)`. vcpkg's bundled `pwsh.exe` sits at `vcpkg/downloads/tools/powershell-core-<ver>-windows/pwsh.exe` — easy to push past Windows' MAX_PATH from inside a deep `node_modules/.pnpm/` tree. vcpkg's clone now goes to `%LOCALAPPDATA%\node-libcurl-vcpkg\<moduleRootHash>\` regardless of where the package lives, so the toolchain's internal paths stay short.
+- Fixed Windows source builds failing with `pkg-config: 'libcrypto'/'zlib' not found` while building libssh2 in nested consumer paths. `vcpkg_installed` was also being written inside the deep module root, and msys2 pkg-config's `PKG_CONFIG_PATH` parsing tripped over both the path length and the drive-letter colon. `vcpkg_installed` now goes to `%LOCALAPPDATA%\node-libcurl-vcpkg\<hash>-installed` via `--x-install-root`, and `vcpkg-get-info.js` resolves against that path so `binding.gyp` still finds the libs.
+- Fixed `vcpkg.exe`'s git clone failing with `Filename too long` while writing pack `.keep` files on deep paths. The clone now passes `git -c core.longpaths=true`.
+- Propagate `VCPKG_DISABLE_METRICS=1` to all vcpkg subprocess invocations from `scripts/vcpkg-setup.js` (it was being set in the env action but lost when the install script spawned `vcpkg.exe`).
+
+### Changed
+- A consumer install of node-libcurl under pnpm v10 now requires opting node-libcurl's lifecycle scripts in via `pnpm.onlyBuiltDependencies: ["node-libcurl"]` in the consumer's `package.json` (or `pnpm add --allow-build=node-libcurl`). pnpm v10's default scripts-off policy otherwise leaves the package installed but non-functional — no vcpkg setup, no native addon build. This isn't a node-libcurl change per se, but is now exercised by the new `windows-consumer-install` CI workflow so the regression-protected path is documented.
+
 ## [5.1.0] - 2026-05-31
 
 ### Fixed
@@ -530,7 +542,8 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v5.1.0...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v5.1.1...HEAD
+[5.1.1]: https://github.com/JCMais/node-libcurl/compare/v5.1.0...v5.1.1
 [5.1.0]: https://github.com/JCMais/node-libcurl/compare/v5.0.2...v5.1.0
 [5.0.2]: https://github.com/JCMais/node-libcurl/compare/v5.0.1...v5.0.2
 [5.0.1]: https://github.com/JCMais/node-libcurl/compare/v5.0.0...v5.0.1
