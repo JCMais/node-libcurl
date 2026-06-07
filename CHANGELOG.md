@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Breaking Change
 
 ### Fixed
+- Fixed Windows source builds against Node.js 26 failing with `LINK : fatal error LNK1117: syntax error in option 'opt:lldltojobs=2'`. Node 26 was built with clang-cl + lld + ThinLTO and its installed `common.gypi` propagates `enable_thin_lto=true` to downstream addons, which then appends `-flto=thin` to `cl.exe` and `/opt:lldltojobs=<n>` to `link.exe` — both invalid for the regular MSVC toolchain. Force `enable_lto` and `enable_thin_lto` off in `binding.gyp` so those conditions evaluate to false. Affects every consumer building node-libcurl from source on Windows + Node 26.
 
 ### Added
 

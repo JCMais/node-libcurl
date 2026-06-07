@@ -14,7 +14,22 @@
     'node_libcurl_debug%': 'false',
     'node_libcurl_asan_debug%': 'false',
     'node_libcurl_cpp_std%': 'c++20',
-    'macos_universal_build%': 'false'
+    'macos_universal_build%': 'false',
+    # Node.js 26 was built with clang-cl + lld and ThinLTO enabled, and
+    # its installed common.gypi propagates `enable_thin_lto=true` to
+    # downstream native addons. When the addon is then built with the
+    # regular MSVC toolchain (the overwhelmingly common case for
+    # consumers), the conditions inside common.gypi append `-flto=thin`
+    # to cl.exe's AdditionalOptions and `/opt:lldltojobs=<n>` to
+    # link.exe's AdditionalOptions. cl.exe warns and ignores `-flto=thin`,
+    # but link.exe bails with `LNK1117: syntax error in option` on the
+    # bogus `/OPT:lldltojobs=` value (link.exe's /OPT: only takes
+    # REF/ICF/NOREF/NOICF/LBR/NOLBR). Force these off so the conditions
+    # evaluate false and the flags are never emitted. Affects every
+    # consumer trying to build node-libcurl from source against Node 26
+    # on Windows; harmless everywhere else.
+    'enable_lto': 'false',
+    'enable_thin_lto': 'false',
   },
   'targets': [
     {
