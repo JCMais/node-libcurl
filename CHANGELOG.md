@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Breaking Change
 
 ### Fixed
+- Fixed Windows source builds against Node.js 26 failing with `LINK : fatal error LNK1117: syntax error in option 'opt:lldltojobs=2'`. Node 26 was built with clang-cl + lld + ThinLTO (PR [nodejs/node#63114](https://github.com/nodejs/node/pull/63114), released in v26.3.0), and node-gyp's `create-config-gypi.js` seeds the addon's `config.gypi` from `process.config` of the running Node binary — picking up `enable_thin_lto: true` and `lto_jobs: <n>` from how Node itself was built. Node's installed `common.gypi` then unconditionally appends `-flto=thin` to MSVC `cl.exe`'s `AdditionalOptions` and `/opt:lldltojobs=<n>` to `link.exe`'s. MSVC ignores `-flto=thin` (warning) but rejects `/opt:lldltojobs=<n>` because `/OPT:` only accepts `REF/ICF/NOREF/NOICF/LBR/NOLBR`. Force them off via `npm_config_enable_thin_lto=false` + `npm_config_enable_lto=false` in the Windows build script, which node-gyp forwards as `-Denable_thin_lto=false` gyp defines (top precedence — `binding.gyp` `variables` don't override `config.gypi`'s, they're a separate gyp scope).
 
 ### Added
 

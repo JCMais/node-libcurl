@@ -162,11 +162,30 @@ $env:npm_config_dist_url = $dist_url
 $env:npm_config_target = $target
 $env:npm_config_node_gyp = $globalNodeGypPath
 
+# Disable LTO/ThinLTO for the addon build. Node 26 ships with
+# enable_thin_lto=true baked into process.config because the Node binary
+# itself was built with clang-cl + lld + ThinLTO (PR nodejs/node#63114,
+# released in v26.3.0). node-gyp's create-config-gypi.js seeds config.gypi
+# from process.config when neither --nodedir nor --dist-url is set, so
+# common.gypi's `enable_thin_lto=="true"` conditions fire and emit
+# `-flto=thin` to cl.exe and `/opt:lldltojobs=<n>` to link.exe. Those are
+# clang-cl/lld-link flags; MSVC's cl.exe warns and ignores `-flto=thin`,
+# but link.exe rejects `/opt:lldltojobs=<n>` with `LNK1117` because
+# /OPT: only accepts REF/ICF/NOREF/NOICF/LBR/NOLBR.
+#
+# Setting npm_config_enable_thin_lto/enable_lto here makes node-gyp
+# forward them as `-Denable_thin_lto=false -Denable_lto=false` gyp
+# defines, which take precedence over config.gypi (binding.gyp variables
+# don't — they're a separate scope and lose to config.gypi).
+$env:npm_config_enable_thin_lto = "false"
+$env:npm_config_enable_lto = "false"
+
 Write-Host "Build configuration:" -ForegroundColor Green
 Write-Host "  npm_config_build_from_source: $env:npm_config_build_from_source" -ForegroundColor Cyan
 Write-Host "  npm_config_runtime: $env:npm_config_runtime" -ForegroundColor Cyan
 Write-Host "  npm_config_dist_url: $env:npm_config_dist_url" -ForegroundColor Cyan
 Write-Host "  npm_config_target: $env:npm_config_target" -ForegroundColor Cyan
+Write-Host "  npm_config_enable_thin_lto: $env:npm_config_enable_thin_lto" -ForegroundColor Cyan
 
 # Install dependencies and build
 Write-Host "Installing dependencies..." -ForegroundColor Blue
