@@ -452,12 +452,17 @@ describe.runIf(isWebSocketSupported)(
           multi.onMessage((error) => {
             if (error) {
               reject(error)
+              return
             }
 
             resolve()
           })
 
           multi.addHandle(easy)
+        }).finally(() => {
+          multi.removeHandle(easy)
+          multi.close()
+          easy.close()
         })
       })
 
@@ -551,8 +556,13 @@ describe.runIf(isWebSocketSupported)(
         'calling wsStartFrame outside of READFUNCTION is undefined behavior',
         () => {
           const easy = new Easy()
-          const result = easy.wsStartFrame(CurlWs.Text, 0)
-          expect(result).not.toBe(CurlCode.CURLE_OK)
+
+          try {
+            const result = easy.wsStartFrame(CurlWs.Text, 0)
+            expect(result).not.toBe(CurlCode.CURLE_OK)
+          } finally {
+            easy.close()
+          }
         },
       )
     })
@@ -656,11 +666,13 @@ describe.skipIf(isWsStartFrameSupported)(
     it('should require libcurl 8.16.0 or newer', () => {
       const easy = new Easy()
 
-      expect(() => {
-        easy.wsStartFrame(CurlWs.Text, 0)
-      }).toThrow('wsStartFrame requires libcurl >= 8.16.0')
-
-      easy.close()
+      try {
+        expect(() => {
+          easy.wsStartFrame(CurlWs.Text, 0)
+        }).toThrow('wsStartFrame requires libcurl >= 8.16.0')
+      } finally {
+        easy.close()
+      }
     })
   },
   5000,
