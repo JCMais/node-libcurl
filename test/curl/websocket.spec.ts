@@ -448,6 +448,7 @@ describe.runIf(isWebSocketSupported)(
           return message.length
         })
 
+        let isAddedToMulti = false
         return new Promise<void>((resolve, reject) => {
           multi.onMessage((error) => {
             if (error) {
@@ -459,8 +460,11 @@ describe.runIf(isWebSocketSupported)(
           })
 
           multi.addHandle(easy)
+          isAddedToMulti = true
         }).finally(() => {
-          multi.removeHandle(easy)
+          if (isAddedToMulti) {
+            multi.removeHandle(easy)
+          }
           multi.close()
           easy.close()
         })
