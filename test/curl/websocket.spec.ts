@@ -449,7 +449,7 @@ describe.runIf(isWebSocketSupported)(
         })
 
         let isAddedToMulti = false
-        return new Promise<void>((resolve, reject) => {
+        const completion = new Promise<void>((resolve, reject) => {
           multi.onMessage((error) => {
             if (error) {
               reject(error)
@@ -461,13 +461,39 @@ describe.runIf(isWebSocketSupported)(
 
           multi.addHandle(easy)
           isAddedToMulti = true
-        }).finally(() => {
-          if (isAddedToMulti) {
-            multi.removeHandle(easy)
-          }
-          multi.close()
-          easy.close()
         })
+
+        const closeHandles = () => {
+          let firstError: unknown
+          const attempt = (close: () => void) => {
+            try {
+              close()
+            } catch (error) {
+              firstError ??= error
+            }
+          }
+
+          if (isAddedToMulti) {
+            attempt(() => multi.removeHandle(easy))
+          }
+          attempt(() => multi.close())
+          attempt(() => easy.close())
+
+          return firstError
+        }
+
+        return completion.then(
+          () => {
+            const cleanupError = closeHandles()
+            if (cleanupError !== undefined) {
+              throw cleanupError
+            }
+          },
+          (error) => {
+            closeHandles()
+            throw error
+          },
+        )
       })
 
       it('should return null when not in WebSocket context', () => {
