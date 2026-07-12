@@ -1262,7 +1262,8 @@ Napi::Value Easy::WsRecv(const Napi::CallbackInfo& info) {
   char* bufContent = buffer.Data();
   size_t bufLength = buffer.Length();
   size_t n = 0;
-  const struct curl_ws_frame* metaPtr = nullptr;
+  // curl_ws_recv changed this output from mutable to const in libcurl 8.2.
+  decltype(curl_ws_meta(this->ch)) metaPtr = nullptr;
 
   CURLcode curlRet = curl_ws_recv(this->ch, bufContent, bufLength, &n, &metaPtr);
 

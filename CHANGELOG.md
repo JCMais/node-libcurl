@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - Fixed source builds with libcurl 7.86.0 through 8.15.x referencing `curl_ws_start_frame`, which was not added until libcurl 8.16.0.
+- Fixed source builds with libcurl 7.86.0 through 8.1.x, whose `curl_ws_recv` metadata parameter uses a mutable pointer.
 
 ### Added
 

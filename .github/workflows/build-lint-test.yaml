@@ -53,6 +53,12 @@ jobs:
           - os: ubuntu-22.04
             libcurl-release: ${{ needs.config.outputs.oldest-libcurl-release }}
             node: 24
+          # curl_ws_recv used a mutable metadata pointer through libcurl 8.1;
+          # keep a representative older WebSocket release in the matrix.
+          - os: ubuntu-22.04
+            libcurl-release: 7.88.1
+            node: 26
+            compile_only: true
           # curl_ws_start_frame was added in 8.16.0; keep the last older
           # release in the matrix to catch accidental references to it.
           - os: ubuntu-22.04
