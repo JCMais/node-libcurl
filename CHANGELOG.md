@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Breaking Change
 
 ### Fixed
+- Fixed source builds with libcurl 7.86.0 through 8.15.x referencing `curl_ws_start_frame`, which was not added until libcurl 8.16.0.
 
 ### Added
 

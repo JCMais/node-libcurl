@@ -1369,7 +1369,7 @@ Napi::Value Easy::WsStartFrame(const Napi::CallbackInfo& info) {
     throw CurlError::New(env, "Curl handle is closed.", CURLE_BAD_FUNCTION_ARGUMENT);
   }
 
-#if NODE_LIBCURL_VER_GE(7, 86, 0)
+#if NODE_LIBCURL_VER_GE(8, 16, 0)
   if (info.Length() < 2 || !info[0].IsNumber() || !info[1].IsNumber()) {
     throw CurlError::New(env, "Missing flags and/or frame length arguments.",
                          CURLE_BAD_FUNCTION_ARGUMENT);
@@ -1381,7 +1381,7 @@ Napi::Value Easy::WsStartFrame(const Napi::CallbackInfo& info) {
   CURLcode result = curl_ws_start_frame(this->ch, flags, frameLength);
   return Napi::Number::New(env, static_cast<int32_t>(result));
 #else
-  throw CurlError::New(env, "WebSocket support requires libcurl >= 7.86.0", CURLE_NOT_BUILT_IN);
+  throw CurlError::New(env, "wsStartFrame requires libcurl >= 8.16.0", CURLE_NOT_BUILT_IN);
 #endif
 }
 

@@ -23,8 +23,10 @@ import {
 import { withCommonTestOptions } from '../helper/commonOptions'
 import { setTimeout } from 'node:timers/promises'
 
-// WebSocket tests require libcurl >= 7.86.0
+// The base WebSocket APIs were added in libcurl 7.86.0.
 const isWebSocketSupported = Curl.isVersionGreaterOrEqualThan(7, 86, 0)
+// curl_ws_start_frame was added later, in libcurl 8.16.0.
+const isWsStartFrameSupported = Curl.isVersionGreaterOrEqualThan(8, 16, 0)
 
 describe.runIf(isWebSocketSupported)(
   'WebSocket',
@@ -383,7 +385,7 @@ describe.runIf(isWebSocketSupported)(
         expect(performCode).toBe(CurlCode.CURLE_OK)
       })
 
-      it('should work with Multi handle', () => {
+      it.runIf(isWsStartFrameSupported)('should work with Multi handle', () => {
         const multi = new Multi()
         const easy = new Easy()
         withCommonTestOptions(easy)
@@ -545,11 +547,14 @@ describe.runIf(isWebSocketSupported)(
         easy.close()
       })
 
-      it('calling wsStartFrame outside of READFUNCTION is undefined behavior', () => {
-        const easy = new Easy()
-        const result = easy.wsStartFrame(CurlWs.Text, 0)
-        expect(result).not.toBe(CurlCode.CURLE_OK)
-      })
+      it.runIf(isWsStartFrameSupported)(
+        'calling wsStartFrame outside of READFUNCTION is undefined behavior',
+        () => {
+          const easy = new Easy()
+          const result = easy.wsStartFrame(CurlWs.Text, 0)
+          expect(result).not.toBe(CurlCode.CURLE_OK)
+        },
+      )
     })
 
     describe('Frame types', () => {
@@ -638,6 +643,22 @@ describe.skipIf(isWebSocketSupported)(
       expect(() => {
         easy.wsMeta()
       }).toThrow('WebSocket support requires libcurl >= 7.86.0')
+
+      easy.close()
+    })
+  },
+  5000,
+)
+
+describe.skipIf(isWsStartFrameSupported)(
+  'wsStartFrame - Version Check',
+  () => {
+    it('should require libcurl 8.16.0 or newer', () => {
+      const easy = new Easy()
+
+      expect(() => {
+        easy.wsStartFrame(CurlWs.Text, 0)
+      }).toThrow('wsStartFrame requires libcurl >= 8.16.0')
 
       easy.close()
     })

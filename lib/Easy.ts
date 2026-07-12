@@ -616,6 +616,8 @@ declare class Easy {
    *
    * This should only be called from within a READFUNCTION callback. Calling it from anywhere else is undefined behavior.
    *
+   * Requires libcurl >= 8.16.0
+   *
    * Official libcurl documentation: [`curl_ws_start_frame()`](https://curl.se/libcurl/c/curl_ws_start_frame.html)
    */
   wsStartFrame(flags: number, frameLength: number): CurlCode

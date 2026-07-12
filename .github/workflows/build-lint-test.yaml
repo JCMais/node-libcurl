@@ -53,6 +53,12 @@ jobs:
           - os: ubuntu-22.04
             libcurl-release: ${{ needs.config.outputs.oldest-libcurl-release }}
             node: 24
+          # curl_ws_start_frame was added in 8.16.0; keep the last older
+          # release in the matrix to catch accidental references to it.
+          - os: ubuntu-22.04
+            libcurl-release: 8.15.0
+            node: 26
+            compile_only: true
     env:
       LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
       LATEST_LIBCURL_RELEASE: ${{ matrix.libcurl-release }}
@@ -142,7 +148,7 @@ jobs:
 
       - name: 'Run tests'
         # no way to run vitest tests using electron's main process, so no point doing this here
-        if: matrix.electron-version == ''
+        if: matrix.electron-version == '' && matrix.compile_only != true
         run: pnpm test:coverage
 
       - name: Upload coverage to Codecov
