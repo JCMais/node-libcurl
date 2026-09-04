@@ -168,6 +168,10 @@ void Multi::Dispose() {
     this->mh = nullptr;
   }
 
+  // Release the self reference taken in the constructor once libuv has
+  // finished closing the timer embedded in this instance.
+  this->CloseTimerAsync();
+
   curl->AdjustHandleMemory(CURL_HANDLE_TYPE_MULTI, -1);
 }
 
