@@ -175,6 +175,10 @@ void Multi::Dispose() {
   // Must happen while the environment is still valid: napi_async_destroy.
   this->asyncContext.reset();
 
+  // Release the self reference taken in the constructor once libuv has
+  // finished closing the timer embedded in this instance.
+  this->CloseTimerAsync();
+
   curl->AdjustHandleMemory(CURL_HANDLE_TYPE_MULTI, -1);
 }
 
