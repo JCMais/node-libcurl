@@ -189,6 +189,10 @@ void Multi::Dispose() {
   // A callback scope that is still open holds its own reference (see SocketAction).
   this->asyncContext.reset();
 
+  // Release the self reference taken in the constructor once libuv has
+  // finished closing the timer embedded in this instance.
+  this->CloseTimerAsync();
+
   curl->AdjustHandleMemory(CURL_HANDLE_TYPE_MULTI, -1);
 }
 
