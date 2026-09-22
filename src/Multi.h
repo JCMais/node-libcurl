@@ -85,6 +85,11 @@ class Multi : public Napi::ObjectWrap<Multi> {
   napi_async_cleanup_hook_handle removeHandle;
   uint64_t id;
 
+  // Both libuv callbacks below (OnSocket / OnTimeout) call into JS from outside
+  // any JS context, so they need a callback scope. One long-lived async context
+  // per Multi is enough, and avoids a napi_async_init per socket event.
+  std::unique_ptr<Napi::AsyncContext> asyncContext;
+
   std::map<curl_socket_t, CurlSocketContext*> socketContextMap;
 
   // Notification API support (libcurl >= 8.17.0)

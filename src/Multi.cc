@@ -78,6 +78,10 @@ Multi::Multi(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Multi>(info), id
   // We need to keep the reference alive for the duration of the timer.
   this->Ref();
 
+  // Used by OnSocket / OnTimeout to open a callback scope when entering JS from
+  // libuv. Created once here rather than per event.
+  this->asyncContext = std::make_unique<Napi::AsyncContext>(env, "node-libcurl:Multi");
+
   // Enable notification API if requested and supported
   if (shouldUseNotificationsApi) {
 #if NODE_LIBCURL_VER_GE(8, 17, 0)
@@ -167,6 +171,9 @@ void Multi::Dispose() {
     assert(code == CURLM_OK);
     this->mh = nullptr;
   }
+
+  // Must happen while the environment is still valid: napi_async_destroy.
+  this->asyncContext.reset();
 
   curl->AdjustHandleMemory(CURL_HANDLE_TYPE_MULTI, -1);
 }
@@ -840,6 +847,17 @@ void Multi::NotifyCallback(CURLM* multi, unsigned int notification, CURL* easy, 
 UV_TIMER_CB(Multi::OnTimeout) {
   Multi* obj = static_cast<Multi*>(timer->data);
 
+  // This runs from libuv, that is, from outside any JS context. Node.js only
+  // performs a microtask checkpoint when a callback scope is closed, so without
+  // one the promise CallOnMessageCallback settles below stays queued until
+  // something else happens to drain the microtask queue - which, for a caller
+  // awaiting one request at a time, is the next tick of this very timer.
+  if (!obj->asyncContext) return;
+
+  Napi::Env env = obj->Env();
+  Napi::HandleScope handleScope(env);
+  Napi::CallbackScope callbackScope(env, *obj->asyncContext);
+
   NODE_LIBCURL_DEBUG_LOG(obj, "Multi::OnTimeout", "");
 
   // Check comment on node_libcurl.cc
@@ -866,6 +884,14 @@ void Multi::OnSocket(uv_poll_t* handle, int status, int events) {
   if (events & UV_WRITABLE) flags |= CURL_CSELECT_OUT;
 
   Multi::CurlSocketContext* ctx = static_cast<Multi::CurlSocketContext*>(handle->data);
+
+  // See the comment in Multi::OnTimeout - a callback scope is required here for
+  // the microtask checkpoint to run.
+  if (!ctx->multi->asyncContext) return;
+
+  Napi::Env env = ctx->multi->Env();
+  Napi::HandleScope handleScope(env);
+  Napi::CallbackScope callbackScope(env, *ctx->multi->asyncContext);
 
   NODE_LIBCURL_DEBUG_LOG(ctx->multi, "Multi::OnSocket", "events: " + std::to_string(events));
 
