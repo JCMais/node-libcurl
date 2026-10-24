@@ -88,7 +88,8 @@ class Multi : public Napi::ObjectWrap<Multi> {
   // Both libuv callbacks below (OnSocket / OnTimeout) call into JS from outside
   // any JS context, so they need a callback scope. One long-lived async context
   // per Multi is enough, and avoids a napi_async_init per socket event.
-  std::unique_ptr<Napi::AsyncContext> asyncContext;
+  // Shared so an open scope can keep it alive across close() (see OnTimeout).
+  std::shared_ptr<Napi::AsyncContext> asyncContext;
 
   std::map<curl_socket_t, CurlSocketContext*> socketContextMap;
 
