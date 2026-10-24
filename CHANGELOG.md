@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Breaking Change
 
 ### Fixed
+- Fixed `end` (and the promise returned by `Multi#perform`) not being delivered on Node.js 26 until some other JavaScript callback ran, which made requests awaited one at a time take ~1s each (libcurl's multi timer period) or never complete in an otherwise idle process. `Multi::OnSocket` and `Multi::OnTimeout` called into JavaScript from libuv without a callback scope, so the microtask queue was not drained afterwards. Before Node.js 26.4.0 an unrelated drain in `CheckImmediate` hid this ([nodejs/node#62969](https://github.com/nodejs/node/pull/62969)). Both now open a `Napi::CallbackScope`. As a side effect, `process.nextTick` callbacks and microtasks queued from inside data, header, progress, and other easy callbacks now run once the libuv callback that dispatched them returns, instead of after each individual callback. This matches how Node.js core runs callbacks. ([#455](https://github.com/JCMais/node-libcurl/pull/455), fixes [#454](https://github.com/JCMais/node-libcurl/issues/454))
 
 ### Added
 
