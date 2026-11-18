@@ -750,12 +750,16 @@ class Curl extends EventEmitter {
     const multi = this.multiInstance || multiHandle
 
     // On libcurl 8.17+ the multi handle uses the new CURLMOPT_NOTIFYFUNCTION API,
-    // and our NotifyCallback resolves the perform() promise while still inside
-    // curl_multi_socket_action. Microtask draining can then run the .then()
-    // synchronously and try to call curl_multi_remove_handle from there, which
-    // libcurl rejects with CURLM_RECURSIVE_API_CALL ("API function called from
-    // within callback"). Defer removeHandle to the next tick so libcurl has
-    // unwound its own call stack first.
+    // and our NotifyCallback settles the perform() promise while still inside
+    // curl_multi_socket_action. Calling curl_multi_remove_handle from there is
+    // rejected by libcurl with CURLM_RECURSIVE_API_CALL ("API function called
+    // from within callback").
+    //
+    // Since #455 the native side enters JS through a callback scope that only
+    // drains microtasks once curl_multi_socket_action has returned, so the
+    // .then() below no longer runs while libcurl is on the stack. The
+    // setImmediate is kept as a second guard for #439, at the cost of one extra
+    // event loop phase before `end` / `error` are emitted.
     //
     // See: https://github.com/JCMais/node-libcurl/issues/439
     const finalize = (cb: () => void) => {
