@@ -20,11 +20,11 @@
     {
       'target_name': '<(module_name)',
       'type': 'loadable_module',
-      'dependencies': [
-        # https://github.com/nodejs/node-addon-api/blob/main/doc/setup.md
-        # using exceptions (instead of maybe, like we used to have on nan)
-        "<!(node -p \"require('node-addon-api').targets\"):node_addon_api_except",
-      ],
+      # node-addon-api is used with C++ exceptions (instead of maybe, like we
+      # used to have on nan), see
+      # https://github.com/nodejs/node-addon-api/blob/main/doc/setup.md
+      # On Windows the settings from its node_addon_api_except target are
+      # inlined below, see the comment there.
       'sources': [
         'src/node_libcurl.cc',
         'src/Easy.cc',
@@ -77,7 +77,9 @@
                 '/std:<(node_libcurl_cpp_std)',
                 '/MP', #compile across multiple CPUs
               ],
-              "ExceptionHandling": 1, 
+              "ExceptionHandling": 1,
+              # From node-addon-api's except.gypi, see the defines below.
+              'EnablePREfast': 'true',
             },
             'VCLinkerTool': {
               'AdditionalOptions': [
@@ -120,7 +122,18 @@
             '<!@(node "<(module_root_dir)/scripts/openssl-disable.js")'
           ],
           'defines': [
-            'CURL_STATICLIB'
+            'CURL_STATICLIB',
+            # Inlined from node-addon-api's except.gypi instead of depending on
+            # its node_addon_api_except target. That target is header-only,
+            # but the msvs generator still emits a .vcxproj for it next to
+            # node-addon-api's real location, which in a pnpm store is a
+            # sibling of node-libcurl's own folder, and MSBuild writes its
+            # intermediate files there. In a deeply nested consumer those
+            # paths pass MAX_PATH, and MSBuild 18 (Visual Studio 2026) fails
+            # with PathTooLongException in WriteLinesToFile.
+            # Keep in sync with node_modules/node-addon-api/except.gypi.
+            'NAPI_CPP_EXCEPTIONS',
+            '_HAS_EXCEPTIONS=1',
           ],
           'conditions': [
             ['curl_include_dirs==""', {
@@ -137,6 +150,9 @@
             }]
           ]
         }, { # OS != "win"
+          'dependencies': [
+            "<!(node -p \"require('node-addon-api').targets\"):node_addon_api_except",
+          ],
             # Use level 2 optimizations
           'cflags': [
             '-O2',
