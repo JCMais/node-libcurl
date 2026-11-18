@@ -27,6 +27,10 @@ class Multi : public Napi::ObjectWrap<Multi> {
   Multi(const Napi::CallbackInfo& info);
   ~Multi();
 
+  // Runs from node_api_post_finalizer, outside the GC, so Dispose can call
+  // Node-API functions that are not allowed inside a GC finalizer.
+  void Finalize(Napi::Env env) override;
+
   // Static methods for JS class initialization
   static Napi::Function Init(Napi::Env env, Napi::Object exports);
 
@@ -61,9 +65,10 @@ class Multi : public Napi::ObjectWrap<Multi> {
   };
 
   // Private methods
-  void StopTimer();
   void CloseTimerAsync();
   void Dispose();
+  void CleanupMultiHandle();
+  CURLMcode SocketAction(curl_socket_t sockfd, int flags);
   void ProcessMessages();
   void CallOnMessageCallback(CURL* easy, CURLcode statusCode);
 
@@ -88,8 +93,16 @@ class Multi : public Napi::ObjectWrap<Multi> {
   // Both libuv callbacks below (OnSocket / OnTimeout) call into JS from outside
   // any JS context, so they need a callback scope. One long-lived async context
   // per Multi is enough, and avoids a napi_async_init per socket event.
-  // Shared so an open scope can keep it alive across close() (see OnTimeout).
+  // Shared so an open scope can keep it alive across close() (see SocketAction).
   std::shared_ptr<Napi::AsyncContext> asyncContext;
+
+  // libcurl rejects curl_multi_cleanup with CURLM_RECURSIVE_API_CALL while
+  // curl_multi_socket_action is on the stack (for example, close() called from
+  // onMessage with the notifications API, or from an Easy callback). Dispose
+  // then sets cleanupPending, and SocketAction runs the cleanup once libcurl
+  // has returned.
+  bool isInsideSocketAction = false;
+  bool cleanupPending = false;
 
   std::map<curl_socket_t, CurlSocketContext*> socketContextMap;
 
