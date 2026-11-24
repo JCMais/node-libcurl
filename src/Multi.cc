@@ -815,6 +815,7 @@ int Multi::CbPushFunction(CURL* parent, CURL* child, size_t numberOfHeaders,
   Napi::Env env = it->second.Env();
   Napi::HandleScope scope(env);
   auto curl = env.GetInstanceData<Curl>();
+  Http2PushFrameHeaders* pushHeaders = nullptr;
 
   try {
     Napi::Object parentEasyJsObj = parentEasyObj->Value();
@@ -827,6 +828,7 @@ int Multi::CbPushFunction(CURL* parent, CURL* child, size_t numberOfHeaders,
         headersExternal,
         Napi::Number::New(env, numberOfHeaders),
     });
+    pushHeaders = Http2PushFrameHeaders::Unwrap(http2PushFrameJsObj);
 
     Napi::Function callback = it->second.Value();
     // TODO(jonathan, migration): capture this when perform is called or similar (either on Easy or
@@ -847,7 +849,10 @@ int Multi::CbPushFunction(CURL* parent, CURL* child, size_t numberOfHeaders,
   } catch (const Napi::Error&) {
     // See the note at the top of this function, we must not rethrow this error.
     // Show some Debug message?
-    return returnValue;
+  }
+
+  if (pushHeaders) {
+    pushHeaders->Invalidate();
   }
 
   return returnValue;
