@@ -184,6 +184,11 @@
         ['OS=="linux"', {
           'conditions': [
             ['curl_static_build=="true"', {
+              # Keep libcurl on its bundled Brotli decoder when the host
+              # runtime exports its own copy of the same symbols.
+              'ldflags': [
+                '-Wl,--exclude-libs,libbrotlidec.a:libbrotlicommon.a',
+              ],
               # pretty sure cflags adds that
               'defines': [
                 'CURL_STATICLIB',

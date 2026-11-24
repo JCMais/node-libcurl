@@ -284,11 +284,8 @@ fi
 ###################
 # Build brotli
 ###################
-# Brotli version must match Node.js one
-# But brotli only started being shipped with Node 12
-BROTLI_NODEJS=$(node -e "console.log(process.versions.brotli || '')")
-BROTLI_DEFAULT_RELEASE=${BROTLI_NODEJS:-1.0.7}
-BROTLI_RELEASE=${BROTLI_RELEASE:-$BROTLI_DEFAULT_RELEASE}
+# Pin a patched upstream release even when the build runtime bundles an older decoder.
+BROTLI_RELEASE=${BROTLI_RELEASE:-1.2.1}
 BROTLI_DEST_FOLDER=$PREFIX_DIR/deps/brotli
 echo "Building brotli v$BROTLI_RELEASE"
 ./scripts/ci/build-brotli.sh $BROTLI_RELEASE $BROTLI_DEST_FOLDER >$LOGS_FOLDER/build-brotli.log 2>&1
@@ -347,17 +344,29 @@ if [[ $LIBCURL_RELEASE == "LATEST" ]]; then
   LIBCURL_RELEASE=$LATEST_LIBCURL_RELEASE
 fi
 LIBCURL_DEST_FOLDER=$PREFIX_DIR/deps/libcurl
+export LIBCURL_BUILD_FOLDER=$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE
+if [[ -f "$LIBCURL_BUILD_FOLDER/lib/libcurl.a" ]]; then
+  cached_curl_version=$("$LIBCURL_BUILD_FOLDER/bin/curl" --version 2>/dev/null) || cached_curl_version=
+  if [[ " ${cached_curl_version%%$'\n'*} " != *" brotli/$BROTLI_RELEASE "* ]]; then
+    echo "Cached libcurl does not use Brotli $BROTLI_RELEASE; rebuilding libcurl"
+    export FORCE_REBUILD_LIBCURL=true
+  fi
+fi
 echo "Building libcurl v$LIBCURL_RELEASE - Latest is v$LATEST_LIBCURL_RELEASE"
 ./scripts/ci/build-libcurl.sh $LIBCURL_RELEASE $LIBCURL_DEST_FOLDER || (echo "libcurl failed build log:" && cat_slower $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log && exit 1)
 echo "libcurl successful build log:"
 cat_slower $LIBCURL_DEST_FOLDER/source/$LIBCURL_RELEASE/config.log
 
-export LIBCURL_BUILD_FOLDER=$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE
 ls -al $LIBCURL_BUILD_FOLDER/lib
 export PATH=$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin:$PATH
 export LIBCURL_RELEASE=$LIBCURL_RELEASE
 
-curl --version
+curl_version=$("$LIBCURL_BUILD_FOLDER/bin/curl" --version)
+echo "$curl_version"
+if [[ " ${curl_version%%$'\n'*} " != *" brotli/$BROTLI_RELEASE "* ]]; then
+  echo "ERROR: expected libcurl to use Brotli $BROTLI_RELEASE" >&2
+  exit 1
+fi
 curl-config --version
 curl-config --libs
 curl-config --static-libs
