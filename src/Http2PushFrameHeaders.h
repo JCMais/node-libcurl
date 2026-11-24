@@ -22,7 +22,12 @@ class Http2PushFrameHeaders : public Napi::ObjectWrap<Http2PushFrameHeaders> {
   // Constructor - must be public for ObjectWrap
   Http2PushFrameHeaders(const Napi::CallbackInfo& info);
 
+  // libcurl owns the headers and keeps them alive only during the push callback.
+  void Invalidate() { this->headers = nullptr; }
+
  private:
+  void RequireValidHeaders(Napi::Env env) const;
+
   // Copy constructors cannot be used
   Http2PushFrameHeaders(const Http2PushFrameHeaders& that) = delete;
   Http2PushFrameHeaders& operator=(const Http2PushFrameHeaders& that) = delete;

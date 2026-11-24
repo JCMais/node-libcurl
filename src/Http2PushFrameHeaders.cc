@@ -59,8 +59,16 @@ Napi::Function Http2PushFrameHeaders::Init(Napi::Env env, Napi::Object exports) 
   return func;
 }
 
+void Http2PushFrameHeaders::RequireValidHeaders(Napi::Env env) const {
+  if (!this->headers) {
+    throw Napi::Error::New(
+        env, "This Http2PushFrameHeaders instance is only valid during the PUSHFUNCTION callback");
+  }
+}
+
 Napi::Value Http2PushFrameHeaders::GetByIndex(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
+  this->RequireValidHeaders(env);
 
   if (info.Length() < 1) {
     throw Napi::TypeError::New(env, "Wrong number of arguments");
@@ -84,6 +92,7 @@ Napi::Value Http2PushFrameHeaders::GetByIndex(const Napi::CallbackInfo& info) {
 
 Napi::Value Http2PushFrameHeaders::GetByName(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
+  this->RequireValidHeaders(env);
 
   if (info.Length() < 1) {
     throw Napi::TypeError::New(env, "Wrong number of arguments");
