@@ -4,5 +4,13 @@
     "repository": "https://github.com/microsoft/vcpkg",
     "baseline": "50c0cb48a0cf2f6fc5c7b2c0d2bafbe26d0a7ca2"
   },
+  "registries": [
+    {
+      "kind": "git",
+      "repository": "https://github.com/microsoft/vcpkg",
+      "baseline": "61d7eaeb094a6acbc23d9c2e54de9208175fda47",
+      "packages": ["brotli"]
+    }
+  ],
   "overlay-ports": ["./overlays"]
 }

@@ -37,7 +37,7 @@ runs:
       id: cache-key
       shell: sh
       run: |
-        echo "cache-key=${{ inputs.cache-key-prefix }}${{ runner.os }}${{ runner.arch == 'ARM64' && '-arm64' || '' }}-libcurl-${{ inputs.libcurl-release }}-deps-cache-${{ inputs.electron-version && 'electron' || 'node' }}-${{ inputs.electron-version || inputs.node-version }}" >> $GITHUB_OUTPUT
+        echo "cache-key=${{ inputs.cache-key-prefix }}${{ runner.os }}${{ runner.arch == 'ARM64' && '-arm64' || '' }}-libcurl-${{ inputs.libcurl-release }}-deps-cache-${{ inputs.electron-version && 'electron' || 'node' }}-${{ inputs.electron-version || inputs.node-version }}-${{ hashFiles('scripts/ci/build.sh', 'scripts/ci/build-brotli.sh', 'scripts/ci/build-libcurl.sh') }}" >> $GITHUB_OUTPUT
     # Restore-only mode (for workflows that save separately)
     - name: Restore libcurl deps cache
       if: inputs.mode == 'restore-only'

@@ -268,7 +268,7 @@ Installing with `yarn add node-libcurl` or `npm install node-libcurl` should dow
 
 The prebuilt binary is statically built with the following library versions, features and protocols (library versions may change between Node.js versions):
 ```
-Version: libcurl/8.17.0 OpenSSL/3.5.2 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 libidn2/2.1.1 libssh2/1.10.0 nghttp2/1.66.0 ngtcp2/1.17.0 nghttp3/1.12.0 OpenLDAP/2.6.9
+Version: libcurl/8.17.0 OpenSSL/3.5.2 zlib/1.3.1 brotli/1.2.1 zstd/1.5.7 libidn2/2.1.1 libssh2/1.10.0 nghttp2/1.66.0 ngtcp2/1.17.0 nghttp3/1.12.0 OpenLDAP/2.6.9
 Protocols: dict, file, ftp, ftps, gopher, gophers, http, https, imap, imaps, ldap, ldaps, mqtt, pop3, pop3s, rtsp, scp, sftp, smb, smbs, smtp, smtps, telnet, tftp, ws, wss
 Features: AsynchDNS, IDN, IPv6, Largefile, NTLM, SSL, libz, brotli, TLS-SRP, HTTP2, UnixSockets, HTTPS-proxy, alt-svc
 ```
@@ -293,7 +293,7 @@ npm_config_build_from_source=true yarn add node-libcurl
 
 The prebuilt binaries are statically linked with `brotli`, `libidn2`, `libssh2`, `openLDAP`, `OpenSSL` `nghttp2`, `zstd` and `zlib`.
 
-The `brotli`, `nghttp2`, `OpenSSL` and `zlib` versions **must** match the version Node.js uses, this is necessary to avoid any possible issues by mixing library symbols of different versions, since Node.js also exports some of the symbols of their deps.
+The `nghttp2`, `OpenSSL` and `zlib` versions **must** match the version Node.js uses to avoid mixing library symbols from different versions. The build pins Brotli separately to a patched release. Keep Node.js or Electron up to date to patch the runtime's own decoder.
 
 In case you are building the addon yourself with the libraries mentioned above, you must make sure their version is ABI compatible with the one Node.js uses, otherwise you are probably going to hit a Segmentation Fault.
 

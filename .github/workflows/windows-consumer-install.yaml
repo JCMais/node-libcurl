@@ -166,6 +166,10 @@ jobs:
           $curlVersion
           $curlVersionText = $curlVersion -join "`n"
 
+          if ($curlVersionText -notmatch '\bbrotli/1\.2\.1\b') {
+            throw 'Windows curl build did not link the patched Brotli 1.2.1 decoder'
+          }
+
           if ($curlVersionText -notmatch 'Features:.*\bIDN\b') {
             throw 'Windows curl build did not retain IDN support'
           }
