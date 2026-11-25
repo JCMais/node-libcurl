@@ -29,6 +29,7 @@ class Easy : public Napi::ObjectWrap<Easy> {
  public:
   Easy(const Napi::CallbackInfo& info);
   ~Easy();
+  void Finalize(Napi::Env env) override;
 
   static Napi::Function Init(Napi::Env env, Napi::Object exports);
 
@@ -78,6 +79,11 @@ class Easy : public Napi::ObjectWrap<Easy> {
   // Helper to create Easy from CURL handle
   static Napi::Object FromCURLHandle(Napi::Env env, CURL* handle);
 
+  // Resets state that is only valid for the duration of a single transfer.
+  // Must be called whenever a new transfer is started with this handle
+  // (Easy::Perform, Multi::AddHandle and Multi::Perform).
+  void ResetPerTransferState();
+
  private:
   // Internal class for cleanup management
   class ToFree;
@@ -115,6 +121,9 @@ class Easy : public Napi::ObjectWrap<Easy> {
   // Memory management
   std::shared_ptr<ToFree> toFree = nullptr;
 
+  // Keep the Share wrapper alive while libcurl uses it.
+  Napi::ObjectReference usedShareRef;
+
   // HSTS cache
   std::vector<Napi::Reference<Napi::Object>> hstsReadCache;
   bool wasHstsReadCacheSet = false;
@@ -124,7 +133,8 @@ class Easy : public Napi::ObjectWrap<Easy> {
 
   // Static cURL callbacks
   static size_t ReadFunction(char* ptr, size_t size, size_t nmemb, void* userdata);
-  static size_t SeekFunction(void* userdata, curl_off_t offset, int origin);
+  // must match curl_seek_callback: int (*)(void *, curl_off_t, int)
+  static int SeekFunction(void* userdata, curl_off_t offset, int origin);
   static size_t HeaderFunction(char* ptr, size_t size, size_t nmemb, void* userdata);
   static size_t WriteFunction(char* ptr, size_t size, size_t nmemb, void* userdata);
   static long CbChunkBgn(curl_fileinfo* transferInfo, void* ptr, int remains);

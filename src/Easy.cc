@@ -23,6 +23,7 @@
 #include "macros.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <iostream>
 
@@ -43,19 +44,20 @@ const napi_type_tag EASY_TYPE_TAG = {
 // ToFree class for memory management
 class Easy::ToFree {
  public:
-  std::vector<std::vector<char>> str;
-  std::vector<curl_slist*> slist;
-  std::vector<curl_mime*> mime;
-  std::vector<std::unique_ptr<CurlHttpPost>> post;
+  std::map<CURLoption, std::shared_ptr<curl_slist>> lists;
+  std::shared_ptr<std::vector<char>> postFields;
+  std::shared_ptr<CurlHttpPost> httpPost;
 
-  ~ToFree() {
-    for (auto& list : slist) {
-      if (list) curl_slist_free_all(list);
+  // MIME attachments retain the existing shared lifetime across duplicates.
+  struct MimeList {
+    std::vector<curl_mime*> handles;
+
+    ~MimeList() {
+      for (auto* handle : handles) curl_mime_free(handle);
     }
-    for (auto& m : mime) {
-      if (m) curl_mime_free(m);
-    }
-  }
+  };
+
+  std::shared_ptr<MimeList> mime = std::make_shared<MimeList>();
 };
 
 // Constructor
@@ -137,6 +139,21 @@ Easy::~Easy() {
   }
 }
 
+// node-addon-api schedules Finalize outside GC. curl_easy_cleanup and MIME
+// cleanup can invoke callbacks, while releasing an AsyncContext uses Node-API.
+void Easy::Finalize(Napi::Env env) {
+  if (!this->isOpen) return;
+
+  // The wrapper object is gone, so callbacks no longer have a JS receiver.
+  // Preserve callbacks during explicit close, where the receiver is live.
+  this->callbacks.clear();
+#if NODE_LIBCURL_VER_GE(7, 74, 0)
+  curl_easy_setopt(this->ch, CURLOPT_HSTSWRITEFUNCTION, nullptr);
+#endif
+  curl_easy_setopt(this->ch, CURLOPT_VERBOSE, 0L);
+  this->Dispose();
+}
+
 // Dispose persistent objects and references stored during the life of this obj.
 void Easy::Dispose() {
   NODE_LIBCURL_DEBUG_LOG(this, "Easy::Dispose", "");
@@ -147,6 +164,11 @@ void Easy::Dispose() {
   curl_easy_cleanup(this->ch);
   this->ch = nullptr;
   this->isOpen = false;
+
+  // the libcurl handle no longer exists, so it no longer uses the share.
+  // Note that this must not be done on reset: curl_easy_reset keeps the
+  // share association
+  this->usedShareRef.Reset();
 
   const auto curl = this->Env().GetInstanceData<Curl>();
   curl->AdjustHandleMemory(CURL_HANDLE_TYPE_EASY, -1);
@@ -162,6 +184,7 @@ void Easy::Dispose() {
 void Easy::DisposeInternalData() {
   this->callbacks.clear();
   this->hstsReadCache.clear();
+  this->wasHstsReadCacheSet = false;
 
   this->cbOnSocketEvent.Reset();
   this->callbackError.Reset();
@@ -241,8 +264,8 @@ void Easy::CopyOtherData(Easy* orig) {
     this->cbOnSocketEventAsyncContext = orig->cbOnSocketEventAsyncContext;
   }
 
-  // Copy shared ToFree data
-  this->toFree = orig->toFree;
+  // Copy each option reference so replacing it on either handle is independent.
+  *this->toFree = *orig->toFree;
 }
 
 void Easy::CallSocketEvent(int status, int events) {
@@ -276,6 +299,12 @@ void Easy::MonitorSockets() {
   curl_socket_t socket;
   retCurl = curl_easy_getinfo(this->ch, CURLINFO_ACTIVESOCKET, &socket);
 
+  // check the return code before the socket value - on failure the socket
+  // variable was never written to
+  if (retCurl != CURLE_OK) {
+    throw CurlError::New(this->Env(), "Failed to receive socket", retCurl, true);
+  }
+
   if (socket == CURL_SOCKET_BAD) {
     throw CurlError::New(this->Env(), "Received invalid socket from the current connection!",
                          CURLE_BAD_FUNCTION_ARGUMENT);
@@ -283,11 +312,11 @@ void Easy::MonitorSockets() {
 #else
   long socket;  // NOLINT(runtime/int)
   retCurl = curl_easy_getinfo(this->ch, CURLINFO_LASTSOCKET, &socket);
-#endif
 
   if (retCurl != CURLE_OK) {
     throw CurlError::New(this->Env(), "Failed to receive socket", retCurl, true);
   }
+#endif
 
   this->socketPollHandle = new uv_poll_t;
 
@@ -300,6 +329,11 @@ void Easy::MonitorSockets() {
   retUv = uv_poll_init_socket(loop, this->socketPollHandle, socket);
 
   if (retUv < 0) {
+    // release the handle, otherwise it would leak and any later
+    // monitorSocketEvents() call would wrongly report "Already monitoring"
+    delete this->socketPollHandle;
+    this->socketPollHandle = nullptr;
+
     std::string errorMsg =
         std::string("Failed to poll on connection socket. Reason: ") + UV_ERROR_STRING(retUv);
 
@@ -314,10 +348,27 @@ void Easy::MonitorSockets() {
         assert(obj);
         obj->CallSocketEvent(status, events);
       });
+
+  if (retUv < 0) {
+    // initialized handles must go through uv_close, a plain delete is not safe
+    uv_close(reinterpret_cast<uv_handle_t*>(this->socketPollHandle),
+             [](uv_handle_t* handle) { delete handle; });
+    this->socketPollHandle = nullptr;
+
+    std::string errorMsg =
+        std::string("Failed to start polling on socket. Reason: ") + UV_ERROR_STRING(retUv);
+
+    throw CurlError::New(this->Env(), errorMsg.c_str(), CURLE_INTERFACE_FAILED);
+  }
+
   this->isMonitoringSockets = true;
 }
 
 void Easy::UnmonitorSockets() {
+  if (!this->socketPollHandle) {
+    throw CurlError::New(this->Env(), "Not monitoring sockets!", CURLE_BAD_FUNCTION_ARGUMENT);
+  }
+
   int retUv;
   retUv = uv_poll_stop(this->socketPollHandle);
 
@@ -330,6 +381,10 @@ void Easy::UnmonitorSockets() {
 
   uv_close(reinterpret_cast<uv_handle_t*>(this->socketPollHandle),
            [](uv_handle_t* handle) { delete handle; });
+  // the poll handle is deleted by the close callback above - drop our pointer
+  // so the handle can be monitored again and a double unmonitor cannot
+  // touch freed memory
+  this->socketPollHandle = nullptr;
   this->isMonitoringSockets = false;
 }
 
@@ -337,7 +392,9 @@ void inline Easy::throwErrorMultiInterfaceAware(const Napi::Error& error) noexce
   Napi::HandleScope scope(this->Env());
 
   if (this->isInsideMultiHandle) {
-    this->callbackError.Reset(error.Value());
+    // refcount 1: the default (0) creates a weak reference, and the error
+    // object could be collected before the Multi consumes it
+    this->callbackError.Reset(error.Value(), 1);
   } else {
     error.ThrowAsJavaScriptException();
   }
@@ -455,6 +512,10 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
       case CURLOPT_SHARE:
         if (value.IsNull()) {
           setOptRetCode = curl_easy_setopt(this->ch, CURLOPT_SHARE, NULL);
+
+          if (setOptRetCode == CURLE_OK) {
+            this->usedShareRef.Reset();
+          }
         } else {
           if (!value.IsObject() ||
               !value.As<Napi::Object>().InstanceOf(curl->ShareConstructor.Value())) {
@@ -471,13 +532,29 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
           }
 
           setOptRetCode = curl_easy_setopt(this->ch, CURLOPT_SHARE, share->sh);
+
+          if (setOptRetCode == CURLE_OK) {
+            this->usedShareRef.Reset();
+
+            // libcurl keeps a pointer to the share until it is unset or this
+            // easy handle is disposed.
+            this->usedShareRef = Napi::Persistent(value.As<Napi::Object>());
+          }
         }
         break;
     }
     // linked list options
   } else if ((optionId = IsInsideCurlConstantStruct(curlOptionLinkedList, opt))) {
     if (value.IsNull()) {
-      setOptRetCode = curl_easy_setopt(this->ch, static_cast<CURLoption>(optionId), NULL);
+      const auto option = static_cast<CURLoption>(optionId);
+      setOptRetCode = curl_easy_setopt(this->ch, option, nullptr);
+      if (setOptRetCode == CURLE_OK) {
+        if (option == CURLOPT_HTTPPOST) {
+          this->toFree->httpPost.reset();
+        } else {
+          this->toFree->lists.erase(option);
+        }
+      }
       // HTTPPOST is a special case, since it's an array of objects.
     } else if (optionId == CURLOPT_HTTPPOST) {
       std::string invalidArrayMsg = "HTTPPOST option value should be an Array of Objects.";
@@ -487,7 +564,7 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
       }
 
       Napi::Array rows = value.As<Napi::Array>();
-      auto httpPost = std::make_unique<CurlHttpPost>();
+      auto httpPost = std::make_shared<CurlHttpPost>();
 
       // [{ key : val }]
       for (uint32_t i = 0, len = rows.Length(); i < len; ++i) {
@@ -597,7 +674,7 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
 
       setOptRetCode = curl_easy_setopt(this->ch, CURLOPT_HTTPPOST, httpPost->first);
       if (setOptRetCode == CURLE_OK) {
-        this->toFree->post.push_back(std::move(httpPost));
+        this->toFree->httpPost = std::move(httpPost);
       }
 
 #if NODE_LIBCURL_VER_GE(7, 56, 0)
@@ -631,10 +708,13 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
       }
 #endif
 
-      setOptRetCode = curl_easy_setopt(this->ch, CURLOPT_MIMEPOST, curlMime->mime);
+      auto& handles = this->toFree->mime->handles;
+      const bool isNew = std::find(handles.begin(), handles.end(), curlMime->mime) == handles.end();
+      if (isNew) handles.reserve(handles.size() + 1);
 
-      if (setOptRetCode == CURLE_OK) {
-        this->toFree->mime.push_back(curlMime->mime);
+      setOptRetCode = curl_easy_setopt(this->ch, CURLOPT_MIMEPOST, curlMime->mime);
+      if (setOptRetCode == CURLE_OK && isNew) {
+        handles.push_back(curlMime->mime);
       }
 #endif
 
@@ -643,49 +723,60 @@ Napi::Value Easy::SetOpt(const Napi::CallbackInfo& info) {
         throw Napi::TypeError::New(env, "Option value must be an Array.");
       }
 
-      // convert value to curl linked list (curl_slist)
-      curl_slist* slist = NULL;
+      std::unique_ptr<curl_slist, decltype(&curl_slist_free_all)> list(nullptr, curl_slist_free_all);
       Napi::Array array = value.As<Napi::Array>();
 
       for (uint32_t i = 0, len = array.Length(); i < len; ++i) {
-        std::string item = array.Get(i).As<Napi::String>().Utf8Value();
-        slist = curl_slist_append(slist, item.c_str());
+        Napi::Value element = array.Get(i);
+        if (!element.IsString()) {
+          throw Napi::TypeError::New(env, "Option value must be an Array of Strings.");
+        }
+
+        std::string item = element.As<Napi::String>().Utf8Value();
+        curl_slist* appended = curl_slist_append(list.get(), item.c_str());
+        if (!appended) {
+          throw Napi::Error::New(env, "Could not append value to the list.");
+        }
+        // On success, the returned list owns the previous nodes.
+        list.release();
+        list.reset(appended);
       }
 
-      setOptRetCode = curl_easy_setopt(this->ch, static_cast<CURLoption>(optionId), slist);
-
+      auto option = static_cast<CURLoption>(optionId);
+      std::shared_ptr<curl_slist> replacement(std::move(list));
+      auto& previous = this->toFree->lists[option];
+      setOptRetCode = curl_easy_setopt(this->ch, option, replacement.get());
       if (setOptRetCode == CURLE_OK) {
-        this->toFree->slist.push_back(slist);
+        previous = std::move(replacement);
       }
     }
 
     // check if option is string, and the value is correct
   } else if ((optionId = IsInsideCurlConstantStruct(curlOptionString, opt))) {
+    auto option = static_cast<CURLoption>(optionId);
     if (value.IsNull()) {
-      setOptRetCode = curl_easy_setopt(this->ch, static_cast<CURLoption>(optionId), NULL);
+      setOptRetCode = curl_easy_setopt(this->ch, option, nullptr);
+      if (setOptRetCode == CURLE_OK && option == CURLOPT_POSTFIELDS) {
+        this->toFree->postFields.reset();
+      }
     } else {
       if (!value.IsString()) {
         throw Napi::TypeError::New(env, "Option value must be a string.");
       }
 
       std::string valueStr = value.As<Napi::String>().Utf8Value();
-
-      // libcurl makes a copy of the strings after version 7.17, CURLOPT_POSTFIELD
-      // is the only exception
-      if (static_cast<CURLoption>(optionId) == CURLOPT_POSTFIELDS) {
-        std::vector<char> valueChar(valueStr.begin(), valueStr.end());
-        valueChar.push_back(0);
-
-        setOptRetCode =
-            curl_easy_setopt(this->ch, static_cast<CURLoption>(optionId), &valueChar[0]);
-
+      if (option == CURLOPT_POSTFIELDS) {
+        auto bytes = std::make_shared<std::vector<char>>(valueStr.begin(), valueStr.end());
+        bytes->push_back(0);
+        setOptRetCode = curl_easy_setopt(this->ch, option, bytes->data());
         if (setOptRetCode == CURLE_OK) {
-          this->toFree->str.push_back(std::move(valueChar));
+          this->toFree->postFields = std::move(bytes);
         }
-
       } else {
-        setOptRetCode =
-            curl_easy_setopt(this->ch, static_cast<CURLoption>(optionId), valueStr.c_str());
+        setOptRetCode = curl_easy_setopt(this->ch, option, valueStr.c_str());
+        if (setOptRetCode == CURLE_OK && option == CURLOPT_COPYPOSTFIELDS) {
+          this->toFree->postFields.reset();
+        }
       }
     }
 
@@ -1095,20 +1186,34 @@ Napi::Value Easy::GetInfo(const Napi::CallbackInfo& info) {
         }
       }
     }
-  } catch (const std::exception& e) {
-    // Inside Easy::GetInfoImpl we throw an exception with the error code
-    //  so we can get it here and set the code to the correct value
-    std::string errMsg = e.what();
-    std::string errCode;
-    std::copy_if(errMsg.begin(), errMsg.end(), std::back_inserter(errCode), ::isdigit);
-    code = static_cast<CURLcode>(errCode.length() > 0 ? std::stoi(errCode)
-                                                      : CURLE_BAD_FUNCTION_ARGUMENT);
+  } catch (Napi::Error& e) {
+    // GetInfoTmpl throws a CurlError carrying the failing CURLcode in the
+    // "code" property - read it directly instead of scraping digits out of
+    // the message (which also picked up digits belonging to the message
+    // itself, and could throw out of std::stoi)
+    Napi::Value codeValue = e.Value().Get("code");
+    code = codeValue.IsNumber() ? static_cast<CURLcode>(codeValue.As<Napi::Number>().Int32Value())
+                                : CURLE_BAD_FUNCTION_ARGUMENT;
+  } catch (const std::exception&) {
+    code = CURLE_BAD_FUNCTION_ARGUMENT;
   }
 
   Napi::Object ret = Napi::Object::New(env);
   ret.Set("code", Napi::Number::New(env, static_cast<int32_t>(code)));
   ret.Set("data", retVal);
   return ret;
+}
+
+void Easy::ResetPerTransferState() {
+  this->isCbProgressAlreadyAborted = false;
+
+  for (auto& entry : this->hstsReadCache) {
+    entry.Reset();
+  }
+  this->hstsReadCache.clear();
+  this->wasHstsReadCacheSet = false;
+
+  this->callbackError.Reset();
 }
 
 Napi::Value Easy::Perform(const Napi::CallbackInfo& info) {
@@ -1119,6 +1224,8 @@ Napi::Value Easy::Perform(const Napi::CallbackInfo& info) {
   }
 
   NODE_LIBCURL_DEBUG_LOG(this, "Easy::Perform", "performing request");
+
+  this->ResetPerTransferState();
 
   LocaleGuard localeGuard;
   CURLcode code = curl_easy_perform(this->ch);
@@ -1599,7 +1706,7 @@ size_t Easy::OnHeader(char* data, size_t size, size_t nmemb) {
 size_t Easy::ReadFunction(char* ptr, size_t size, size_t nmemb, void* userdata) {
   Easy* obj = static_cast<Easy*>(userdata);
 
-  int32_t returnValue = CURL_READFUNC_ABORT;
+  int64_t returnValue = CURL_READFUNC_ABORT;
   int32_t fd = obj->readDataFileDescriptor;
   size_t n = size * nmemb;
 
@@ -1613,7 +1720,12 @@ size_t Easy::ReadFunction(char* ptr, size_t size, size_t nmemb, void* userdata) 
     try {
       Napi::Function cb = it->second.Value();
 
-      Napi::Buffer<char> buffer = Napi::Buffer<char>::New(env, static_cast<uint32_t>(n));
+      Napi::Buffer<char> buffer = Napi::Buffer<char>::New(env, n);
+      // napi buffers are not zero-initialized (think Buffer.allocUnsafe) -
+      // without this the callback could read stale heap contents
+      if (buffer.Data()) {
+        std::memset(buffer.Data(), 0, n);
+      }
 
       // TODO(jonathan, migration): capture this when perform is called (either on Easy or Multi)
       Napi::AsyncContext asyncContext(env, "Easy::ReadFunction");
@@ -1638,14 +1750,25 @@ size_t Easy::ReadFunction(char* ptr, size_t size, size_t nmemb, void* userdata) 
         return returnValue;
       }
 
-      returnValue = result.As<Napi::Number>().Int32Value();
-
-      char* data = buffer.Data();
-      bool hasData = !!data && returnValue > 0 && returnValue < CURL_READFUNC_ABORT;
-
-      if (hasData) {
-        std::memcpy(ptr, data, returnValue);
+      double count = result.As<Napi::Number>().DoubleValue();
+      if (count == CURL_READFUNC_ABORT) return CURL_READFUNC_ABORT;
+      if (count == CURL_READFUNC_PAUSE) {
+        obj->pauseState |= CURLPAUSE_SEND;
+        return CURL_READFUNC_PAUSE;
       }
+
+      if (!std::isfinite(count) || count < 0 || count > n || std::trunc(count) != count) {
+        Napi::TypeError typeError = Napi::TypeError::New(
+            env, "READFUNCTION must return an integer byte count within the buffer size.");
+        obj->throwErrorMultiInterfaceAware(typeError);
+        return CURL_READFUNC_ABORT;
+      }
+
+      size_t bytesRead = static_cast<size_t>(count);
+      if (bytesRead) {
+        std::memcpy(ptr, buffer.Data(), bytesRead);
+      }
+      return bytesRead;
 
     } catch (const Napi::Error& e) {
       obj->throwErrorMultiInterfaceAware(e);
@@ -1660,9 +1783,6 @@ size_t Easy::ReadFunction(char* ptr, size_t size, size_t nmemb, void* userdata) 
 
     // get the offset
     curl_off_t offset = obj->readDataOffset;
-    if (offset >= 0) {
-      obj->readDataOffset += n;
-    }
 
     uv_fs_t readReq;
 
@@ -1681,6 +1801,12 @@ size_t Easy::ReadFunction(char* ptr, size_t size, size_t nmemb, void* userdata) 
     returnValue = uv_fs_read(loop, &readReq, fd, &uvbuf, 1, offset, NULL);
 #endif
     uv_fs_req_cleanup(&readReq);
+
+    // advance by the amount actually read - advancing by the requested size
+    // would skip data after a short read
+    if (offset >= 0 && returnValue > 0) {
+      obj->readDataOffset += returnValue;
+    }
   }
 
   if (returnValue < 0) {
@@ -1694,7 +1820,7 @@ size_t Easy::ReadFunction(char* ptr, size_t size, size_t nmemb, void* userdata) 
   return static_cast<size_t>(returnValue);
 }
 
-size_t Easy::SeekFunction(void* userdata, curl_off_t offset, int origin) {
+int Easy::SeekFunction(void* userdata, curl_off_t offset, int origin) {
   Easy* obj = static_cast<Easy*>(userdata);
 
   int32_t returnValue = CURL_SEEKFUNC_FAIL;
@@ -1715,11 +1841,13 @@ size_t Easy::SeekFunction(void* userdata, curl_off_t offset, int origin) {
         // TODO(jonathan, migration): capture this when perform is called (either on Easy or Multi)
         Napi::AsyncContext asyncContext(env, "Easy::SeekFunction");
 
-        Napi::Value result =
-            cb.MakeCallback(obj->Value(),
-                            {Napi::Number::New(env, static_cast<uint32_t>(offset)),
-                             Napi::Number::New(env, static_cast<uint32_t>(origin))},
-                            asyncContext);
+        Napi::Value result = cb.MakeCallback(
+            obj->Value(),
+            {// JS numbers hold integers up to 2^53 exactly, more than
+             // enough for file offsets - a uint32 cast would wrap for
+             // offsets >= 4GiB and corrupt resumed transfers
+             Napi::Number::New(env, static_cast<double>(offset)), Napi::Number::New(env, origin)},
+            asyncContext);
 
         // This is in theory not needed, as we have exceptions enabled
         if (env.IsExceptionPending()) {
@@ -2216,9 +2344,11 @@ int Easy::CbHstsRead(CURL* handle, struct curl_hstsentry* sts, void* userdata) {
         return returnValue;
       }
 
-      // Set host name
-      strncpy(sts->name, hostStrValue.c_str(), sts->namelen);
-      sts->name[sts->namelen - 1] = '\0';  // Ensure null termination
+      // Set host name - the buffer behind sts->name holds namelen + 1 bytes
+      // (see hsts_pull in libcurl's hsts.c), so terminating at the actual
+      // length is in-bounds and does not truncate max-length hostnames
+      std::memcpy(sts->name, hostStrValue.c_str(), hostStrValue.length());
+      sts->name[hostStrValue.length()] = '\0';
 
       // Set includeSubDomains
       if (!includeSubDomainsProperty.IsUndefined() && !includeSubDomainsProperty.IsNull()) {

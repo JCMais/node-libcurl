@@ -269,6 +269,36 @@ describe.runIf(Curl.isVersionGreaterOrEqualThan(7, 74, 0))('Callbacks', () => {
       })
     })
 
+    it('preserves hostnames with exactly maxHostLengthBytes characters', async () => {
+      curl.setOpt('HSTS_CTRL', CurlHsts.Enable)
+      // no network needed: the HSTS cache is loaded when the transfer starts
+      // (even if the connection fails) and saved when the handle is closed
+      curl.setOpt('URL', 'http://localhost:1/')
+
+      let longHost = ''
+      curl.setOpt('HSTSREADFUNCTION', function (options) {
+        longHost = `${'a'.repeat(options.maxHostLengthBytes - 4)}.com`
+        return [{ host: longHost, includeSubDomains: false }]
+      })
+
+      const savedHosts: string[] = []
+      curl.setOpt('HSTSWRITEFUNCTION', function (data) {
+        savedHosts.push(data.host)
+        return CurlHstsCallback.Ok
+      })
+
+      await new Promise<void>((resolve) => {
+        curl.on('end', () => resolve())
+        // the request itself fails (connection refused) - that is fine
+        curl.on('error', () => resolve())
+        curl.perform()
+      })
+
+      curl.close()
+
+      expect(savedHosts).toContain(longHost)
+    })
+
     it('returning invalid data from HSTSREADFUNCTION should throw an error', async () => {
       curl.setOpt('HSTS_CTRL', CurlHsts.Enable)
 

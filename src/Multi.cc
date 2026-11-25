@@ -353,8 +353,8 @@ Napi::Value Multi::AddHandle(const Napi::CallbackInfo& info) {
 
   NODE_LIBCURL_DEBUG_LOG(this, "Multi::AddHandle", "adding handle " + std::to_string(easy->id));
 
-  // reset callback error in case it is set
-  easy->callbackError.Reset();
+  // reset state that is only valid for a single transfer
+  easy->ResetPerTransferState();
 
   // Check comment on node_libcurl.cc
   LocaleGuard localeGuard;
@@ -442,8 +442,8 @@ Napi::Value Multi::Perform(const Napi::CallbackInfo& info) {
   // Create deferred promise
   auto deferred = Napi::Promise::Deferred::New(env);
 
-  // reset callback error in case it is set
-  easy->callbackError.Reset();
+  // reset state that is only valid for a single transfer
+  easy->ResetPerTransferState();
 
   // Check comment on node_libcurl.cc
   LocaleGuard localeGuard;
