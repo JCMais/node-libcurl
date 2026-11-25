@@ -61,7 +61,7 @@ void Share::Dispose() {
   this->isOpen = false;
 
   CURLSHcode code = curl_share_cleanup(this->sh);
-  assert(code == CURLSHE_OK);
+  assert((code == CURLSHE_OK || code == CURLSHE_IN_USE) && "Failed to cleanup share handle.");
 
   auto curl = this->Env().GetInstanceData<Curl>();
   curl->AdjustHandleMemory(CURL_HANDLE_TYPE_SHARE, -1);
@@ -132,7 +132,14 @@ Napi::Value Share::Close(const Napi::CallbackInfo& info) {
     throw CurlError::New(env, "Share handle already closed.", CURLSHE_INVALID);
   }
 
-  this->Dispose();
+  CURLSHcode code = curl_share_cleanup(this->sh);
+  if (code != CURLSHE_OK) {
+    throw CurlError::New(env, "Could not close share handle", code, true);
+  }
+
+  this->isOpen = false;
+  this->sh = nullptr;
+  env.GetInstanceData<Curl>()->AdjustHandleMemory(CURL_HANDLE_TYPE_SHARE, -1);
 
   return env.Undefined();
 }

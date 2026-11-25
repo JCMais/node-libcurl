@@ -608,7 +608,7 @@ size_t CurlMimePart::StaticReadCallback(char* buffer, size_t size, size_t nitems
     // Invalid return type
     return CURL_READFUNC_ABORT;
   } catch (const Napi::Error& error) {
-    part->easy->callbackError.Reset(error.Value());
+    part->easy->callbackError.Reset(error.Value(), 1);
     return CURL_READFUNC_ABORT;
   }
 }
@@ -635,7 +635,7 @@ int CurlMimePart::StaticSeekCallback(void* userdata, curl_off_t offset, int orig
 
     return CURL_SEEKFUNC_FAIL;
   } catch (const Napi::Error& error) {
-    part->easy->callbackError.Reset(error.Value());
+    part->easy->callbackError.Reset(error.Value(), 1);
     return CURL_SEEKFUNC_FAIL;
   }
 }
