@@ -59,15 +59,21 @@ export function parseHeaders(headersString: string): HeaderInfo[] {
       continue
     }
 
-    const header = headers[i].split(/:\s(.+)/)
-    if (header[0].toUpperCase() === 'SET-COOKIE') {
+    // the whitespace after the colon is optional (RFC 7230, header-field = field-name ":" OWS field-value OWS)
+    const colonIndex = headers[i].indexOf(':')
+    const headerName =
+      colonIndex === -1 ? headers[i] : headers[i].slice(0, colonIndex)
+    const headerValue =
+      colonIndex === -1 ? '' : headers[i].slice(colonIndex + 1).trim()
+
+    if (headerName.toUpperCase() === 'SET-COOKIE') {
       if (!currHeaders['Set-Cookie']) {
         currHeaders['Set-Cookie'] = []
       }
 
-      currHeaders['Set-Cookie'].push(header[1])
+      currHeaders['Set-Cookie'].push(headerValue)
     } else {
-      currHeaders[header[0]] = header[1]
+      currHeaders[headerName] = headerValue
     }
   }
 

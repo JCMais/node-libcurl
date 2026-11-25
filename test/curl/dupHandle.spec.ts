@@ -101,6 +101,10 @@ describe('dupHandle()', () => {
       })
     })
 
+    serverInstance.app.get('/ua', (req, res) => {
+      res.send(String(req.headers['user-agent']))
+    })
+
     await serverInstance.listen()
     await fs.writeFile(imageFilename, buffer)
   })
@@ -108,6 +112,7 @@ describe('dupHandle()', () => {
   afterAll(async () => {
     await fs.unlink(imageFilename)
     await serverInstance.close()
+    serverInstance.app._router.stack.pop()
     serverInstance.app._router.stack.pop()
     serverInstance.app._router.stack.pop()
   })
@@ -143,6 +148,39 @@ describe('dupHandle()', () => {
     expect(parsedData.size).toBe(size)
     expect(parsedData.name).toBe(imageFilename.split(path.sep).pop())
     expect(parsedData.type).toBe(httpPostData[0].type)
+  })
+
+  it('should keep a custom USERAGENT set on the original handle', async () => {
+    const customUserAgent = 'my-custom-user-agent/1.0'
+
+    curl.setOpt('URL', `${serverInstance.url}/ua`)
+    curl.setOpt('USERAGENT', customUserAgent)
+
+    duplicatedCurl = curl.dupHandle()
+
+    const result = await new Promise<{ status: number; data: string }>(
+      (resolve, reject) => {
+        duplicatedCurl.on('end', (status, data) => {
+          resolve({ status, data: data as string })
+        })
+
+        duplicatedCurl.on('error', reject)
+
+        duplicatedCurl.perform()
+      },
+    )
+
+    expect(result.status).toBe(200)
+    expect(result.data).toBe(customUserAgent)
+  })
+
+  it('should copy the stream event listeners', () => {
+    curl.setOpt('URL', `${serverInstance.url}/ua`)
+    curl.on('stream', () => {})
+
+    duplicatedCurl = curl.dupHandle()
+
+    expect(duplicatedCurl.listeners('stream')).toHaveLength(1)
   })
 
   it('should correctly send POSTFIELDS data when duplicated', async () => {
