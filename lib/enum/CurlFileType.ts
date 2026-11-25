@@ -22,4 +22,8 @@ export enum CurlFileType {
   NamedPipe,
   Socket,
   Door,
+  /**
+   * Is possible only on Sun Solaris now
+   */
+  Unknown,
 }
