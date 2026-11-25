@@ -51,6 +51,7 @@ const std::vector<CurlConstant> curlOptionBlob = {
     {"PROXY_CAINFO_BLOB", CURLOPT_PROXY_CAINFO_BLOB},
 #endif
 
+    {"PROXY_ISSUERCERT_BLOB", CURLOPT_PROXY_ISSUERCERT_BLOB},
     {"PROXY_SSLCERT_BLOB", CURLOPT_PROXY_SSLCERT_BLOB},
     {"PROXY_SSLKEY_BLOB", CURLOPT_PROXY_SSLKEY_BLOB},
     {"SSLCERT_BLOB", CURLOPT_SSLCERT_BLOB},
@@ -64,6 +65,7 @@ const std::vector<CurlConstant> curlOptionFunction = {
     {"FNMATCH_FUNCTION", CURLOPT_FNMATCH_FUNCTION},
     {"DEBUGFUNCTION", CURLOPT_DEBUGFUNCTION},
     {"HEADERFUNCTION", CURLOPT_HEADERFUNCTION},
+    {"INTERLEAVEFUNCTION", CURLOPT_INTERLEAVEFUNCTION},
 
 #if NODE_LIBCURL_VER_GE(7, 74, 0)
     {"HSTSREADFUNCTION", CURLOPT_HSTSREADFUNCTION},
@@ -77,6 +79,10 @@ const std::vector<CurlConstant> curlOptionFunction = {
     {"PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION},
     {"READFUNCTION", CURLOPT_READFUNCTION},
     {"SEEKFUNCTION", CURLOPT_SEEKFUNCTION},
+
+#if NODE_LIBCURL_VER_GE(7, 84, 0)
+    {"SSH_HOSTKEYFUNCTION", CURLOPT_SSH_HOSTKEYFUNCTION},
+#endif
 
 #if NODE_LIBCURL_VER_GE(7, 64, 0)
     {"TRAILERFUNCTION", CURLOPT_TRAILERFUNCTION},
@@ -106,6 +112,10 @@ const std::vector<CurlConstant> curlOptionInteger = {
     {"CA_CACHE_TIMEOUT", CURLOPT_CA_CACHE_TIMEOUT},
 #endif
 
+#if NODE_LIBCURL_VER_GE(7, 64, 1)
+    {"ALTSVC_CTRL", CURLOPT_ALTSVC_CTRL},
+#endif
+
     {"CERTINFO", CURLOPT_CERTINFO},
     {"CONNECTTIMEOUT", CURLOPT_CONNECTTIMEOUT},
     {"CONNECTTIMEOUT_MS", CURLOPT_CONNECTTIMEOUT_MS},
@@ -113,6 +123,20 @@ const std::vector<CurlConstant> curlOptionInteger = {
     {"COOKIESESSION", CURLOPT_COOKIESESSION},
     {"CRLF", CURLOPT_CRLF},
     {"DIRLISTONLY", CURLOPT_DIRLISTONLY},
+    {"FTPSSLAUTH", CURLOPT_FTPSSLAUTH},
+    {"FTP_SSL_CCC", CURLOPT_FTP_SSL_CCC},
+
+#if NODE_LIBCURL_VER_GE(7, 81, 0)
+    {"MIME_OPTIONS", CURLOPT_MIME_OPTIONS},
+#endif
+
+#if NODE_LIBCURL_VER_GE(7, 48, 0)
+    {"TFTP_NO_OPTIONS", CURLOPT_TFTP_NO_OPTIONS},
+#endif
+
+#if NODE_LIBCURL_VER_GE(7, 86, 0)
+    {"WS_OPTIONS", CURLOPT_WS_OPTIONS},
+#endif
 
 #if NODE_LIBCURL_VER_GE(7, 60, 0)
     {"DISALLOW_USERNAME_IN_URL", CURLOPT_DISALLOW_USERNAME_IN_URL},
@@ -364,8 +388,21 @@ const std::vector<CurlConstant> curlOptionLinkedList = {
 
 // This should be kept in sync with the options on scripts/utils/curlOptionsBlacklist.js
 const std::vector<CurlConstant> curlOptionNotImplemented = {
+// Options that are used internally (their *FUNCTION counterparts are
+// implemented and manage the data pointers themselves).
+#if NODE_LIBCURL_VER_GE(7, 74, 0)
+    {"HSTSREADDATA", CURLOPT_HSTSREADDATA},
+    {"HSTSWRITEDATA", CURLOPT_HSTSWRITEDATA},
+#endif
+#if NODE_LIBCURL_VER_GE(7, 80, 0)
+    {"PREREQDATA", CURLOPT_PREREQDATA},
+#endif
+#if NODE_LIBCURL_VER_GE(7, 84, 0)
+    {"SSH_HOSTKEYDATA", CURLOPT_SSH_HOSTKEYDATA},
+#endif
+
     // Options that are complex to add support for.
-    {"SSL_CTX_FUNCTION", CURLOPT_TELNETOPTIONS},
+    {"SSL_CTX_FUNCTION", CURLOPT_SSL_CTX_FUNCTION},
     {"OPENSOCKETFUNCTION", CURLOPT_OPENSOCKETFUNCTION},
     {"CLOSESOCKETFUNCTION", CURLOPT_CLOSESOCKETFUNCTION},
     {"SOCKOPTFUNCTION", CURLOPT_SOCKOPTFUNCTION},
@@ -418,7 +455,6 @@ const std::vector<CurlConstant> curlOptionNotImplemented = {
 #endif
 
     // Maybe?
-    {"INTERLEAVEFUNCTION", CURLOPT_INTERLEAVEFUNCTION},
     {"SSH_KEYFUNCTION", CURLOPT_SSH_KEYFUNCTION},
     {"STDERR", CURLOPT_STDERR},
 
@@ -444,10 +480,22 @@ const std::vector<CurlConstant> curlOptionString = {
     {"CAPATH", CURLOPT_CAPATH},
     {"COOKIE", CURLOPT_COOKIE},
     {"COOKIEFILE", CURLOPT_COOKIEFILE},
+#if NODE_LIBCURL_VER_GE(7, 53, 0)
+    {"ABSTRACT_UNIX_SOCKET", CURLOPT_ABSTRACT_UNIX_SOCKET},
+#endif
+
+#if NODE_LIBCURL_VER_GE(7, 64, 1)
+    {"ALTSVC", CURLOPT_ALTSVC},
+#endif
+
     {"COOKIEJAR", CURLOPT_COOKIEJAR},
     {"COOKIELIST", CURLOPT_COOKIELIST},
     {"CRLFILE", CURLOPT_CRLFILE},
     {"CUSTOMREQUEST", CURLOPT_CUSTOMREQUEST},
+
+#if NODE_LIBCURL_VER_GE(7, 80, 0)
+    {"SSH_HOST_PUBLIC_KEY_SHA256", CURLOPT_SSH_HOST_PUBLIC_KEY_SHA256},
+#endif
 
 #if NODE_LIBCURL_VER_GE(7, 45, 0)
     {"DEFAULT_PROTOCOL", CURLOPT_DEFAULT_PROTOCOL},
@@ -640,6 +688,11 @@ const std::vector<CurlConstant> curlMultiOptionInteger = {
     // Also see: https://github.com/curl/curl/pull/3651
     {"MAX_PIPELINE_LENGTH", CURLMOPT_MAX_PIPELINE_LENGTH},
     {"PIPELINING", CURLMOPT_PIPELINING},
+
+#if NODE_LIBCURL_VER_GE(8, 20, 0)
+    {"QUICK_EXIT", CURLMOPT_QUICK_EXIT},
+    {"RESOLVE_THREADS_MAX", CURLMOPT_RESOLVE_THREADS_MAX},
+#endif
 };
 
 // This should be kept in sync with the options on scripts/utils/multiOptionsBlacklist.js
@@ -775,6 +828,9 @@ const std::vector<CurlConstant> curlInfoOffT = {
 #if NODE_LIBCURL_VER_GE(8, 2, 0)
     {"CONN_ID", CURLINFO_CONN_ID},
     {"XFER_ID", CURLINFO_XFER_ID},
+#endif
+#if NODE_LIBCURL_VER_GE(8, 20, 0)
+    {"SIZE_DELIVERED", CURLINFO_SIZE_DELIVERED},
 #endif
 #if NODE_LIBCURL_VER_GE(8, 6, 0)
     {"QUEUE_TIME_T", CURLINFO_QUEUE_TIME_T},

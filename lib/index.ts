@@ -39,6 +39,7 @@ export * from './CurlMultiError'
 export * from './CurlSharedError'
 
 // enums
+export * from './enum/CurlAltSvc'
 export * from './enum/CurlAuth'
 export * from './enum/CurlChunk'
 export * from './enum/CurlCode'

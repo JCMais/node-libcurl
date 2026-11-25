@@ -20,21 +20,25 @@ export enum CurlSshKeyType {
    */
   Unknown = 0,
   /**
+   * RSA1 key (obsolete SSH protocol version 1)
+   */
+  Rsa1 = 1,
+  /**
    * RSA key
    */
-  Rsa = 1,
+  Rsa = 2,
   /**
    * DSS key
    */
-  Dss = 2,
+  Dss = 3,
   /**
    * ECDSA key
    */
-  Ecdsa = 3,
+  Ecdsa = 4,
   /**
    * ED25519 key
    */
-  Ed25519 = 4,
+  Ed25519 = 5,
 }
 
 /**
@@ -55,4 +59,8 @@ export enum CurlSshKeyMatch {
    * The host key is rejected, the connection is canceled.
    */
   Mismatch = 1,
+  /**
+   * No matching host/key was found (reported by CURLOPT_SSH_KEYFUNCTION).
+   */
+  Missing = 2,
 }

@@ -128,11 +128,16 @@ export enum CurlVersion {
    * Unicode support on Windows
    */
   Unicode = 1 << 27,
-
-  // TODO(jonathan): when we add HSTS support - add it in here as 1 << 28
-
+  /**
+   * HSTS is supported
+   */
+  Hsts = 1 << 28,
   /**
    * libgsasl is supported
    */
   Gsasl = 1 << 29,
+  /**
+   * The libcurl API is thread-safe
+   */
+  ThreadSafe = 1 << 30,
 }
