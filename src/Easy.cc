@@ -2692,12 +2692,22 @@ int Easy::CbSshHostKey(void* clientp, int keytype, const char* key, size_t keyle
 #endif
 }
 
+// A refused or failed push is cleaned up by libcurl.
+void Easy::DisownHandle() {
+  this->ch = nullptr;
+  this->isOpen = false;
+  this->isInsideMultiHandle = false;
+  this->Env().GetInstanceData<Curl>()->AdjustHandleMemory(CURL_HANDLE_TYPE_EASY, -1);
+  this->DisposeInternalData();
+}
+
 Napi::Object Easy::FromCURLHandle(Napi::Env env, CURL* handle) {
   // this is a static method possibly called from outside a Node.js callstack
   // thus we need to properly handle the scopes.
   Napi::EscapableHandleScope scope(env);
 
   Napi::External<CURL> curlEasyHandle = Napi::External<CURL>::New(env, handle);
+  curlEasyHandle.TypeTag(&EASY_TYPE_TAG);
 
   auto curl = env.GetInstanceData<Curl>();
   auto newInstance = curl->EasyConstructor.New({curlEasyHandle});

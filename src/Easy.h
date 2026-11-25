@@ -76,6 +76,8 @@ class Easy : public Napi::ObjectWrap<Easy> {
   // Callback error for Multi interface
   Napi::ObjectReference callbackError;
 
+  void DisownHandle();
+
   // Helper to create Easy from CURL handle
   static Napi::Object FromCURLHandle(Napi::Env env, CURL* handle);
 
