@@ -32,7 +32,7 @@ import {
 import { CurlInfoName } from './generated/CurlInfo'
 
 import { CurlChunk } from './enum/CurlChunk'
-import { CurlCode } from './enum/CurlCode'
+import { CurlCode, CurlMultiCode } from './enum/CurlCode'
 import { CurlFeature } from './enum/CurlFeature'
 import { CurlFnMatchFunc } from './enum/CurlFnMatchFunc'
 import { CurlFtpMethod } from './enum/CurlFtpMethod'
@@ -233,6 +233,9 @@ class Curl extends EventEmitter {
   protected streamUserSuppliedProgressFunction: CurlOptionValueType['xferInfoFunction'] =
     null
   protected nextPauseFlags: CurlPause | null = null
+
+  private multiInUse?: Multi
+  private isClosing = false
 
   /**
    * @param cloneHandle {@link Easy | `Easy`} handle that should be used instead of creating a new one.
@@ -764,6 +767,8 @@ class Curl extends EventEmitter {
     // See: https://github.com/JCMais/node-libcurl/issues/439
     const finalize = (cb: () => void) => {
       setImmediate(() => {
+        if (this.isClosing || !this.handle.isOpen) return
+
         try {
           if (this.handle.isOpen && this.handle.isInsideMultiHandle) {
             multi.removeHandle(this.handle)
@@ -773,18 +778,22 @@ class Curl extends EventEmitter {
           // pattern does this), or the handle was already removed for any
           // other reason, swallow — we still want to settle the request.
         }
+        this.multiInUse = undefined
         cb()
       })
     }
 
-    multi
-      .perform(this.handle)
-      .then(() => {
-        finalize(() => this.onEnd())
-      })
-      .catch((error) => {
-        finalize(() => this.onError(error, error.code))
-      })
+    try {
+      const transfer = multi.perform(this.handle)
+      this.multiInUse = multi
+      transfer.then(
+        () => finalize(() => this.onEnd()),
+        (error) => finalize(() => this.onError(error, error.code)),
+      )
+    } catch (error) {
+      this.isRunning = false
+      throw error
+    }
 
     return this
   }
@@ -904,20 +913,49 @@ class Curl extends EventEmitter {
    * Official libcurl documentation: [`curl_easy_cleanup()`](http://curl.haxx.se/libcurl/c/curl_easy_cleanup.html)
    */
   close() {
-    if (!this.handle.isOpen) {
-      return
+    if (this.isClosing || !this.handle.isOpen) return
+    this.isClosing = true
+
+    const finish = () => {
+      if (this.handle.isInsideMultiHandle) {
+        const multi = this.multiInUse ?? multiHandle
+        multi.removeHandle(this.handle)
+      }
+
+      this.removeAllListeners()
+      this.cleanupReadFunctionStreamEvents()
+      this.handle.setOpt(Curl.option.WRITEFUNCTION, null)
+      this.handle.setOpt(Curl.option.HEADERFUNCTION, null)
+      this.handle.close()
+      this.isRunning = false
+      this.multiInUse = undefined
     }
 
-    this.removeAllListeners()
+    try {
+      finish()
+    } catch (error) {
+      const code = (error as { code?: unknown })?.code
+      if (
+        code === CurlMultiCode.CURLM_RECURSIVE_API_CALL ||
+        code === CurlMultiCode.CURLM_BAD_HANDLE
+      ) {
+        // A callback can close the Curl or its Multi while libcurl is still on
+        // the stack. Retry after the socket action and any pending cleanup.
+        setImmediate(() => {
+          try {
+            finish()
+          } finally {
+            this.isClosing = false
+          }
+        })
+        return
+      }
 
-    if (this.handle.isInsideMultiHandle) {
-      multiHandle.removeHandle(this.handle)
+      this.isClosing = false
+      throw error
     }
 
-    this.handle.setOpt(Curl.option.WRITEFUNCTION, null)
-    this.handle.setOpt(Curl.option.HEADERFUNCTION, null)
-
-    this.handle.close()
+    this.isClosing = false
   }
 
   /**

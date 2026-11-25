@@ -101,9 +101,8 @@ declare class Multi {
    * The {@link Http2PushFrameHeaders | `Http2PushFrameHeaders`} object is only valid during
    *  this callback. Its `getByName()` and `getByIndex()` methods throw after the callback returns.
    *
-   * In case you have denied the push, you **must** also not use the `duplicatedHandle`
-   *  outside of this callback, as libcurl would already have closed it and you would
-   *  try to access memory that has been freed.
+   * The `duplicatedHandle` is closed by libcurl if you deny the push.
+   * HTTP/2 push dispatch requires libcurl 8.4.0 or newer.
    *
    * Errors thrown inside this callback will have the same effect than returning `CurlPush.Deny`.
    *

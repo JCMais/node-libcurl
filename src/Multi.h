@@ -66,8 +66,10 @@ class Multi : public Napi::ObjectWrap<Multi> {
 
   // Private methods
   void CloseTimerAsync();
-  void Dispose();
+  void Dispose(bool rejectPending = false);
   void CleanupMultiHandle();
+  void TrackHandle(Easy* easy);
+  void ResolvePushOwnership();
   CURLMcode SocketAction(curl_socket_t sockfd, int flags);
   void ProcessMessages();
   void CallOnMessageCallback(CURL* easy, CURLcode statusCode);
@@ -83,6 +85,11 @@ class Multi : public Napi::ObjectWrap<Multi> {
 
   // Promise-based perform tracking
   std::map<CURL*, std::shared_ptr<Napi::Promise::Deferred>> handlePromiseMap;
+
+  // Keep Easy wrappers alive until their handles are removed.
+  std::map<CURL*, Easy*> attachedHandles;
+  std::map<CURL*, Easy*> pendingPushes;
+  bool rejectPendingOnClose = false;
 
   // Timer for timeout handling
   uv_timer_t timeout;

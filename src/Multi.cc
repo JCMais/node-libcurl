@@ -158,12 +158,13 @@ void Multi::Finalize(Napi::Env env) {
   this->Dispose();
 }
 
-void Multi::Dispose() {
+void Multi::Dispose(bool rejectPending) {
   if (!this->isOpen) return;
 
   NODE_LIBCURL_DEBUG_LOG(this, "Multi::Dispose", "");
 
   this->isOpen = false;
+  this->rejectPendingOnClose = rejectPending;
 
   // no point on running the timer anymore
   uv_timer_stop(&this->timeout);
@@ -197,11 +198,42 @@ void Multi::Dispose() {
 }
 
 void Multi::CleanupMultiHandle() {
+  for (const auto& [handle, easy] : this->attachedHandles) {
+    curl_multi_remove_handle(this->mh, handle);
+    easy->isInsideMultiHandle = false;
+    easy->Unref();
+  }
+  this->attachedHandles.clear();
+  this->amountOfHandles = 0;
+
   CURLMcode code = curl_multi_cleanup(this->mh);
   assert(code == CURLM_OK && "curl_multi_cleanup failed");
   (void)code;
   this->mh = nullptr;
   this->cleanupPending = false;
+
+  while (!this->socketContextMap.empty()) {
+    auto* ctx = this->socketContextMap.begin()->second;
+    uv_poll_stop(&ctx->pollHandle);
+    Multi::DestroyCurlSocketContext(ctx);
+  }
+
+  if (this->rejectPendingOnClose && !this->handlePromiseMap.empty()) {
+    Napi::Env env = this->Env();
+    Napi::HandleScope scope(env);
+    auto error = CurlError::New(env, "Multi handle closed during transfer", CURLM_BAD_HANDLE);
+    for (const auto& entry : this->handlePromiseMap) {
+      entry.second->Reject(error.Value());
+    }
+  }
+  this->handlePromiseMap.clear();
+}
+
+void Multi::TrackHandle(Easy* easy) {
+  this->attachedHandles.emplace(easy->ch, easy);
+  easy->Ref();
+  easy->isInsideMultiHandle = true;
+  ++this->amountOfHandles;
 }
 
 // Initialize the class for export
@@ -364,8 +396,7 @@ Napi::Value Multi::AddHandle(const Napi::CallbackInfo& info) {
     throw CurlError::New(env, "Could not add easy handle to the multi handle.", code, true);
   }
 
-  ++this->amountOfHandles;
-  easy->isInsideMultiHandle = true;
+  this->TrackHandle(easy);
 
   return Napi::Number::New(env, static_cast<int>(code));
 }
@@ -397,6 +428,13 @@ Napi::Value Multi::RemoveHandle(const Napi::CallbackInfo& info) {
   NODE_LIBCURL_DEBUG_LOG(this, "Multi::RemoveHandle",
                          "removing handle " + std::to_string(easy->id));
 
+  auto attached = this->attachedHandles.find(easy->ch);
+  if (attached == this->attachedHandles.end()) {
+    if (!easy->isInsideMultiHandle) return Napi::Number::New(env, CURLM_OK);
+    throw CurlError::New(env, "Easy handle belongs to another Multi or is still being pushed",
+                         CURLM_BAD_EASY_HANDLE);
+  }
+
   CURLMcode code = curl_multi_remove_handle(this->mh, easy->ch);
 
   if (code != CURLM_OK) {
@@ -405,6 +443,16 @@ Napi::Value Multi::RemoveHandle(const Napi::CallbackInfo& info) {
 
   --this->amountOfHandles;
   easy->isInsideMultiHandle = false;
+  this->attachedHandles.erase(attached);
+
+  auto pending = this->handlePromiseMap.find(easy->ch);
+  if (pending != this->handlePromiseMap.end()) {
+    auto error =
+        CurlError::New(env, "Easy handle removed during transfer", CURLM_BAD_EASY_HANDLE);
+    pending->second->Reject(error.Value());
+    this->handlePromiseMap.erase(pending);
+  }
+  easy->Unref();
 
   return Napi::Number::New(env, static_cast<int>(code));
 }
@@ -453,8 +501,7 @@ Napi::Value Multi::Perform(const Napi::CallbackInfo& info) {
     throw CurlError::New(env, "Could not add easy handle to the multi handle.", code, true);
   }
 
-  ++this->amountOfHandles;
-  easy->isInsideMultiHandle = true;
+  this->TrackHandle(easy);
 
   // Store the deferred promise for this handle
   this->handlePromiseMap[easy->ch] = std::make_shared<Napi::Promise::Deferred>(std::move(deferred));
@@ -511,7 +558,7 @@ Napi::Value Multi::Close(const Napi::CallbackInfo& info) {
 
   NODE_LIBCURL_DEBUG_LOG(this, "Multi::Close", "");
 
-  this->Dispose();
+  this->Dispose(true);
 
   return env.Undefined();
 }
@@ -606,6 +653,8 @@ void Multi::CallOnMessageCallback(CURL* easy, CURLcode handleCode) {
     return;
   }
 
+  if (this->cbOnMessage.IsEmpty()) return;
+
   Napi::Function callback = this->cbOnMessage.Value();
 
   // Create arguments: error (null or Error object), Easy instance
@@ -694,8 +743,6 @@ void Multi::DestroyCurlSocketContext(CurlSocketContext* ctx) {
   if (!uv_is_closing(handle)) {
     uv_close(handle, [](uv_handle_t* handle) {
       auto ctx = static_cast<CurlSocketContext*>(handle->data);
-      NODE_LIBCURL_DEBUG_LOG(ctx->multi, "Multi::DestroyCurlSocketContext",
-                             "Closed socket context for socket: " + std::to_string(ctx->sockfd));
       delete ctx;
     });
   }
@@ -722,8 +769,9 @@ int Multi::HandleSocket(CURL* easy, curl_socket_t s, int action, void* userp, vo
     // set event based on the current action
     int events = 0;
 
-    if (action != CURL_POLL_IN) events |= UV_WRITABLE;
-    if (action != CURL_POLL_OUT) events |= UV_READABLE;
+    if (action == CURL_POLL_OUT || action == CURL_POLL_INOUT) events |= UV_WRITABLE;
+    if (action == CURL_POLL_IN || action == CURL_POLL_INOUT) events |= UV_READABLE;
+    if (events == 0) return uv_poll_stop(&ctx->pollHandle);
 
     NODE_LIBCURL_DEBUG_LOG(obj, "Multi::HandleSocket",
                            "Starting poll for socket: " + std::to_string(s) +
@@ -782,6 +830,10 @@ int Multi::HandleTimeout(CURLM* multi,
 
 int Multi::CbPushFunction(CURL* parent, CURL* child, size_t numberOfHeaders,
                           struct curl_pushheaders* headers, void* userPtr) {
+#if !NODE_LIBCURL_VER_GE(8, 4, 0)
+  // curl_multi_get_handles is required to confirm that libcurl adopted a push.
+  return CURL_PUSH_DENY;
+#else
   // Note:
   //  We cannot throw js errors inside this callback
   //   as there is no way to signal libcurl to mark this request as failed
@@ -792,13 +844,10 @@ int Multi::CbPushFunction(CURL* parent, CURL* child, size_t numberOfHeaders,
   int returnValue = CURL_PUSH_DENY;
 
   Multi* obj = static_cast<Multi*>(userPtr);
-  assert(obj);
-  assert(obj->isOpen);
+  if (!obj || !obj->isOpen) return CURL_PUSH_DENY;
 
   auto it = obj->callbacks.find(CURLMOPT_PUSHFUNCTION);
-  assert(it != obj->callbacks.end() && "PUSHFUNCTION callback not set.");
-
-  if (it->second.IsEmpty()) {
+  if (it == obj->callbacks.end() || it->second.IsEmpty()) {
     return CURL_PUSH_DENY;
   }
 
@@ -816,10 +865,14 @@ int Multi::CbPushFunction(CURL* parent, CURL* child, size_t numberOfHeaders,
   Napi::HandleScope scope(env);
   auto curl = env.GetInstanceData<Curl>();
   Http2PushFrameHeaders* pushHeaders = nullptr;
+  Easy* childWrapper = nullptr;
 
   try {
     Napi::Object parentEasyJsObj = parentEasyObj->Value();
     Napi::Object childEasyJsObj = Easy::FromCURLHandle(env, child);
+    childWrapper = Easy::Unwrap(childEasyJsObj);
+    // libcurl owns the child throughout PUSHFUNCTION, including while calling JS.
+    childWrapper->isInsideMultiHandle = true;
 
     auto headersExternal = Napi::External<curl_pushheaders>::New(env, headers);
     headersExternal.TypeTag(&HTTP2_PUSH_FRAME_HEADERS_TYPE_TAG);
@@ -844,7 +897,9 @@ int Multi::CbPushFunction(CURL* parent, CURL* child, size_t numberOfHeaders,
                                                             asyncContext);
 
     if (!returnValueCallback.IsEmpty() && returnValueCallback.IsNumber()) {
-      returnValue = returnValueCallback.As<Napi::Number>().Int32Value();
+      double decision = returnValueCallback.As<Napi::Number>().DoubleValue();
+      if (decision == CURL_PUSH_OK && obj->isOpen) returnValue = CURL_PUSH_OK;
+      if (decision == CURL_PUSH_ERROROUT) returnValue = CURL_PUSH_ERROROUT;
     }
   } catch (const Napi::Error&) {
     // See the note at the top of this function, we must not rethrow this error.
@@ -855,7 +910,39 @@ int Multi::CbPushFunction(CURL* parent, CURL* child, size_t numberOfHeaders,
     pushHeaders->Invalidate();
   }
 
+  if (childWrapper) {
+    // libcurl may still use the child while accepting or discarding the push.
+    // Keep the wrapper and its option data alive until the socket action ends.
+    obj->pendingPushes.emplace(child, childWrapper);
+    childWrapper->Ref();
+    childWrapper->isOpen = false;
+  }
+
   return returnValue;
+#endif
+}
+
+void Multi::ResolvePushOwnership() {
+#if NODE_LIBCURL_VER_GE(8, 4, 0)
+  if (this->pendingPushes.empty()) return;
+
+  CURL** handles = curl_multi_get_handles(this->mh);
+  if (!handles) return;
+
+  for (const auto& [handle, easy] : this->pendingPushes) {
+    CURL** current = handles;
+    while (*current && *current != handle) ++current;
+    if (*current) {
+      easy->isOpen = true;
+      this->TrackHandle(easy);
+    } else {
+      easy->DisownHandle();
+    }
+    easy->Unref();
+  }
+  this->pendingPushes.clear();
+  curl_free(handles);
+#endif
 }
 
 #if NODE_LIBCURL_VER_GE(8, 17, 0)
@@ -866,7 +953,7 @@ void Multi::NotifyCallback(CURLM* multi, unsigned int notification, CURL* easy, 
   NODE_LIBCURL_DEBUG_LOG(obj, "Multi::NotifyCallback",
                          "notification: " + std::to_string(notification));
 
-  if (notification == CURLMNOTIFY_INFO_READ) {
+  if (notification == CURLMNOTIFY_INFO_READ && obj->pendingPushes.empty()) {
     obj->ProcessMessages();
   }
 }
@@ -910,6 +997,9 @@ CURLMcode Multi::SocketAction(curl_socket_t sockfd, int flags) {
   } while (code == CURLM_CALL_MULTI_PERFORM);
   this->isInsideSocketAction = false;
 
+  const bool hadPendingPushes = !this->pendingPushes.empty();
+  this->ResolvePushOwnership();
+
   // close() was called while libcurl was on the stack, finish it now.
   if (this->cleanupPending) {
     this->CleanupMultiHandle();
@@ -917,7 +1007,7 @@ CURLMcode Multi::SocketAction(curl_socket_t sockfd, int flags) {
 
   // When notifications are enabled, libcurl will call our NotifyCallback when needed.
   // ProcessMessages is a no-op if the handle was closed above.
-  if (!this->useNotificationsApi) {
+  if (this->pendingPushes.empty() && (!this->useNotificationsApi || hadPendingPushes)) {
     this->ProcessMessages();
   }
 
