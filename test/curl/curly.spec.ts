@@ -18,12 +18,17 @@ describe('curly', () => {
   beforeAll(async () => {
     serverInstance = createServer()
     allMethodsWithMultipleReqResTypes(serverInstance.app)
+    serverInstance.app.get('/content-type-casing', (_req, res) => {
+      res.writeHead(200, { 'Content-Type': 'Application/JSON; charset=utf-8' })
+      res.end('{"test": true}')
+    })
     await serverInstance.listen()
   })
 
   afterAll(async () => {
     await serverInstance.close()
     // beautiful is not it?
+    serverInstance.app._router.stack.pop()
     serverInstance.app._router.stack.pop()
   })
 
@@ -125,6 +130,16 @@ describe('curly', () => {
       expect(data).toHaveProperty('test', true)
     })
 
+    it('matches content-types case-insensitively', async () => {
+      // media types are case-insensitive per RFC 7231 section 3.1.1.1
+      const { statusCode, data } = await curly.get<Record<string, any>>(
+        `${serverInstance.url}/content-type-casing`,
+      )
+
+      expect(statusCode).toBe(200)
+      expect(data).toEqual({ test: true })
+    })
+
     it('default content-type parsers work - *', async () => {
       const { statusCode, data } = await curly.get<Buffer>(
         `${serverInstance.url}/all?type=something`,
@@ -163,6 +178,42 @@ describe('curly', () => {
       )
       expect(req2.statusCode).toBe(200)
       expect(req2.data).toBeInstanceOf(Buffer)
+    })
+
+    it('adds a parser for a content-type not covered by the defaults with the curlyResponseBodyParsers option', async () => {
+      const options = {
+        curlyResponseBodyParsers: {
+          'application/something': (data: Buffer, header: any[]) => {
+            expect(data).toBeInstanceOf(Buffer)
+            expect(Array.isArray(header)).toBe(true)
+
+            return 'something-parsed'
+          },
+        },
+      }
+
+      const { statusCode, data } = await curly.get<string>(
+        `${serverInstance.url}/all?type=something`,
+        options,
+      )
+      expect(statusCode).toBe(200)
+      expect(data).toBe('something-parsed')
+    })
+
+    it('user supplied parsers have precedence over default wildcard parsers', async () => {
+      const options = {
+        curlyResponseBodyParsers: {
+          // the default text/* parser would also match this content-type
+          'text/html': (_data: Buffer, _header: any[]) => 'html-parsed',
+        },
+      }
+
+      const { statusCode, data } = await curly.get<string>(
+        `${serverInstance.url}/all`,
+        options,
+      )
+      expect(statusCode).toBe(200)
+      expect(data).toBe('html-parsed')
     })
 
     it('overrides all content-type parsers with the curlyResponseBodyParser option - json', async () => {
@@ -248,16 +299,44 @@ describe('curly', () => {
   })
 
   describe('error handling', () => {
-    it('throw error on invalid curlyProgressCallback', () => {
+    it('rejects with an error on invalid curlyProgressCallback', async () => {
       const options = {
         curlyProgressCallback: 'I should have been a function :)',
       }
 
-      expect(() =>
+      await expect(
         curly
           // @ts-expect-error not assignable!
           .get<string>(`${serverInstance.url}/all?type=json`, options),
-      ).toThrow(/^curlyProgressCallback must be a function/)
+      ).rejects.toThrow(/^curlyProgressCallback must be a function/)
+    })
+
+    it('rejects the promise (instead of throwing synchronously) when an invalid option is given', async () => {
+      let promise: Promise<any> | null = null
+
+      expect(() => {
+        promise = curly.get(`${serverInstance.url}/all`, {
+          // @ts-expect-error invalid option on purpose
+          thisOptionDoesNotExist: 'abc',
+        })
+      }).not.toThrow()
+
+      await expect(promise).rejects.toThrow(/Unknown option/)
+    })
+
+    it('rejects the promise (instead of throwing synchronously) when curlyProgressCallback is not a function', async () => {
+      let promise: Promise<any> | null = null
+
+      expect(() => {
+        promise = curly.get(`${serverInstance.url}/all`, {
+          // @ts-expect-error invalid value on purpose
+          curlyProgressCallback: 'not-a-function',
+        })
+      }).not.toThrow()
+
+      await expect(promise).rejects.toThrow(
+        /curlyProgressCallback must be a function/,
+      )
     })
 
     it('throw error on invalid response body parser in option curlyResponseBodyParsers', async () => {

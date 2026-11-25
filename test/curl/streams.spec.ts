@@ -4,12 +4,12 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { describe, beforeAll, afterAll, it, expect } from 'vitest'
+import { describe, beforeAll, afterAll, it, expect, vi } from 'vitest'
 
 import { Readable } from 'stream'
 import crypto from 'crypto'
 
-import { Curl, CurlCode, CurlEasyError, curly } from '../../lib'
+import { Curl, CurlCode, CurlEasyError, CurlFeature, curly } from '../../lib'
 
 import { createServer } from '../helper/server'
 import { allMethodsWithMultipleReqResTypes } from '../helper/commonRoutes'
@@ -112,11 +112,17 @@ describe('streams', () => {
       putUploadBuffer: randomBuffer,
     })
 
+    serverInstance.app.get('/big-payload', (_req, res) => {
+      res.set('Content-Type', 'application/octet-stream')
+      res.send(crypto.randomBytes(4 * 1024 * 1024))
+    })
+
     await serverInstance.listen()
   })
 
   afterAll(async () => {
     await serverInstance.close()
+    serverInstance.app._router.stack.pop()
     serverInstance.app._router.stack.pop()
   })
 
@@ -490,6 +496,27 @@ describe('streams', () => {
       expect(streamUpload.listenerCount('end')).toBe(1)
     })
 
+    it('removes the previous stream listeners when replacing the upload stream', () => {
+      const firstStream = getReadableStreamForBuffer(randomBuffer)
+      const secondStream = getReadableStreamForBuffer(randomBuffer)
+
+      const curl = new Curl()
+      try {
+        curl.setUploadStream(firstStream)
+        expect(firstStream.listenerCount('end')).toBe(1)
+
+        curl.setUploadStream(secondStream)
+        // the first stream must not influence the upload anymore - its
+        // end/error/close events would mutate the shared upload state
+        expect(firstStream.listenerCount('end')).toBe(0)
+        expect(firstStream.listenerCount('error')).toBe(0)
+        expect(firstStream.listenerCount('close')).toBe(0)
+        expect(secondStream.listenerCount('end')).toBe(1)
+      } finally {
+        curl.close()
+      }
+    })
+
     it('resets stream back to null after calling setUploadStream(null)', async () => {
       const streamUpload = getReadableStreamForBuffer(randomBuffer)
 
@@ -501,5 +528,84 @@ describe('streams', () => {
       curl.setUploadStream(null)
       expect(streamUpload.listenerCount('end')).toBe(0)
     })
+
+    it('applies backpressure when the consumer is slower than the producer', async () => {
+      const highWaterMark = 16 * 1024
+
+      const curl = new Curl()
+      withCommonTestOptions(curl)
+      curl.setOpt('URL', `${serverInstance.url}/big-payload`)
+      curl.enable(CurlFeature.StreamResponse)
+      curl.setStreamResponseHighWaterMark(highWaterMark)
+      // force libcurl chunks to not align with the stream read sizes, which is
+      // what happens in the real world due to network fragmentation
+      curl.setOpt('BUFFERSIZE', 10000)
+
+      let maxBuffered = 0
+      let totalReceived = 0
+
+      try {
+        await new Promise<void>((resolve, reject) => {
+          curl.on('stream', async (stream) => {
+            try {
+              for await (const chunk of stream) {
+                // reading from the stream drains everything buffered so far into
+                // a single chunk, so the chunk size shows how much data piled up
+                // inside the stream while the consumer was busy
+                maxBuffered = Math.max(maxBuffered, (chunk as Buffer).length)
+                totalReceived += (chunk as Buffer).length
+                // slow consumer
+                await sleep(1)
+              }
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
+          })
+          curl.on('error', reject)
+          curl.perform()
+        })
+
+        expect(totalReceived).toBe(4 * 1024 * 1024)
+        // if backpressure works, the amount buffered inside the response
+        // stream stays in the same order of magnitude as the highWaterMark.
+        // Without it the response body piles up in the stream buffer.
+        expect(maxBuffered).toBeLessThanOrEqual(highWaterMark * 8)
+      } finally {
+        curl.close()
+      }
+    })
+
+    it.each([true, false])(
+      'restores NOPROGRESS=%s after a stream request',
+      async (noProgress) => {
+        const curl = new Curl()
+        withCommonTestOptions(curl)
+        curl.setOpt('URL', `${serverInstance.url}/all`)
+        curl.setOpt('NOPROGRESS', noProgress)
+        curl.enable(CurlFeature.StreamResponse)
+        const setOpt = vi.spyOn(curl.handle, 'setOpt')
+
+        try {
+          await new Promise<void>((resolve, reject) => {
+            curl.on('stream', (stream) => stream.resume())
+            curl.on('end', () => resolve())
+            curl.on('error', reject)
+            curl.perform()
+          })
+
+          const calls = setOpt.mock.calls.filter(
+            ([option]) => option === Curl.option.NOPROGRESS,
+          )
+          expect(calls).toEqual([
+            [Curl.option.NOPROGRESS, false],
+            [Curl.option.NOPROGRESS, noProgress],
+          ])
+        } finally {
+          setOpt.mockRestore()
+          curl.close()
+        }
+      },
+    )
   })
 })

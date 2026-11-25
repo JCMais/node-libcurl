@@ -7,7 +7,6 @@
 import './moduleSetup'
 
 import { EventEmitter } from 'events'
-import { StringDecoder } from 'string_decoder'
 import { Readable } from 'stream'
 
 import pkg from '../package.json'
@@ -71,7 +70,6 @@ const bindings: typeof NodeLibcurlNativeBinding = require('../lib/binding/node_l
 
 const { Curl: _Curl, CurlVersionInfo } = bindings
 
-const decoder = new StringDecoder('utf8')
 // Handle used by curl instances created by the Curl wrapper.
 const multiHandle = new Multi()
 
@@ -144,7 +142,7 @@ class Curl extends EventEmitter {
   /**
    * Returns the number of handles currently open in the internal {@link Multi | `Multi`} handle being used.
    */
-  static getCount = multiHandle.getCount
+  static getCount = multiHandle.getCount.bind(multiHandle)
 
   /**
    * Whether this instance is running or not ({@link perform | `perform()`} was called).
@@ -233,6 +231,7 @@ class Curl extends EventEmitter {
   protected streamUserSuppliedProgressFunction: CurlOptionValueType['xferInfoFunction'] =
     null
   protected nextPauseFlags: CurlPause | null = null
+  private noProgress: boolean | number = true
 
   /**
    * @param cloneHandle {@link Easy | `Easy`} handle that should be used instead of creating a new one.
@@ -254,7 +253,11 @@ class Curl extends EventEmitter {
       this.defaultHeaderFunction.bind(this),
     )
 
-    handle.setOpt(Curl.option.USERAGENT, Curl.defaultUserAgent)
+    // a cloned handle already carries the USERAGENT (default or custom)
+    // copied from the original handle - it must not be overwritten here
+    if (!cloneHandle) {
+      handle.setOpt(Curl.option.USERAGENT, Curl.defaultUserAgent)
+    }
   }
 
   /**
@@ -275,9 +278,10 @@ class Curl extends EventEmitter {
    * @protected
    */
   onError(error: Error, errorCode: CurlCode) {
+    const streamError = this.streamError
     this.resetInternalState()
 
-    this.emit('error', error, errorCode, this)
+    this.emit('error', streamError || error, errorCode, this)
   }
 
   /**
@@ -303,7 +307,9 @@ class Curl extends EventEmitter {
       ? mergeChunks(this.chunks, this.chunksLength)
       : Buffer.alloc(0)
 
-    const data = isDataParsingEnabled ? decoder.write(dataRaw) : dataRaw
+    // dataRaw is always a complete payload here, so a stateful decoder must
+    // not be used - leftover state would leak into the next decode
+    const data = isDataParsingEnabled ? dataRaw.toString('utf8') : dataRaw
     const headers = this.getHeaders()
 
     const { code, data: status } = this.handle.getInfo(Curl.info.RESPONSE_CODE)
@@ -416,6 +422,14 @@ class Curl extends EventEmitter {
     }
 
     const code = this.handle.setOpt(optionIdOrName, value)
+    if (
+      code === CurlCode.CURLE_OK &&
+      (optionIdOrName === 'NOPROGRESS' ||
+        optionIdOrName === Curl.option.NOPROGRESS) &&
+      (typeof value === 'number' || typeof value === 'boolean')
+    ) {
+      this.noProgress = value
+    }
 
     if (code !== CurlCode.CURLE_OK) {
       throw new Error(
@@ -518,7 +532,17 @@ class Curl extends EventEmitter {
       )
     }
 
+    // replacing a previously set stream: remove its listeners, otherwise its
+    // end/error/close events would keep mutating the shared upload state and
+    // could truncate or abort the new stream's upload
+    if (this.readFunctionStream) {
+      this.cleanupReadFunctionStreamEvents()
+    }
+
     this.readFunctionStream = stream
+    this.streamReadFunctionShouldEnd = false
+    this.streamReadFunctionShouldPause = false
+    this.streamReadFunctionPaused = this.isRunning && this.handle.isPausedSend
 
     const resumeIfPaused = () => {
       if (this.streamReadFunctionPaused) {
@@ -533,8 +557,8 @@ class Curl extends EventEmitter {
           // a connection that has already finished
           // this can happen if some error has been throw
           // in the meantime
-          if (this.isRunning) {
-            this.pause(CurlPause.Cont)
+          if (this.isRunning && this.readFunctionStream === stream) {
+            this.pause(this.handle.pauseFlags & ~CurlPause.Send)
           }
         })
       }
@@ -743,7 +767,7 @@ class Curl extends EventEmitter {
       this.features & CurlFeature.StreamResponse || this.readFunctionStream
     if (isStreamEnabled) {
       this.setProgressCallback(this.streamModeProgressFunction.bind(this))
-      this.setOpt('NOPROGRESS', false)
+      this.handle.setOpt(Curl.option.NOPROGRESS, false)
     }
 
     // Use custom Multi instance if set, otherwise use the default global one
@@ -836,7 +860,15 @@ class Curl extends EventEmitter {
   reset() {
     this.removeAllListeners()
     this.handle.reset()
+    this.resetInternalState(false)
+    this.noProgress = true
 
+    // features are tied to the request lifecycle of this instance, not to the
+    // native handle, so they must be cleared here - otherwise things like the
+    // StreamResponse flag would leak into the next request (which is fatal for
+    // pooled handles, see curly's object pool)
+    this.features = CurlFeature.Empty
+    this.streamWriteFunctionHighWaterMark = undefined
     // add callbacks back as reset will remove them
     this.handle.setOpt(
       Curl.option.WRITEFUNCTION,
@@ -846,6 +878,8 @@ class Curl extends EventEmitter {
       Curl.option.HEADERFUNCTION,
       this.defaultHeaderFunction.bind(this),
     )
+
+    this.handle.setOpt(Curl.option.USERAGENT, Curl.defaultUserAgent)
 
     return this
   }
@@ -861,9 +895,10 @@ class Curl extends EventEmitter {
    */
   dupHandle(shouldCopyEventListeners = true) {
     const duplicatedHandle = new Curl(this.handle.dupHandle())
-    const eventsToCopy = ['end', 'error', 'data', 'header']
+    const eventsToCopy = ['end', 'error', 'data', 'header', 'stream']
 
     duplicatedHandle.features = this.features
+    duplicatedHandle.noProgress = this.noProgress
 
     if (shouldCopyEventListeners) {
       for (let i = 0; i < eventsToCopy.length; i += 1) {
@@ -923,7 +958,7 @@ class Curl extends EventEmitter {
   /**
    * This is used to reset a few properties to their pre-request state.
    */
-  protected resetInternalState() {
+  protected resetInternalState(resetHandleOptions = true) {
     this.isRunning = false
 
     this.chunks = []
@@ -933,12 +968,16 @@ class Curl extends EventEmitter {
 
     const wasStreamEnabled = this.writeFunctionStream || this.readFunctionStream
 
-    if (wasStreamEnabled) {
+    if (wasStreamEnabled && resetHandleOptions && this.handle.isOpen) {
       this.setProgressCallback(null)
+      // perform() sets NOPROGRESS to false when streams are used - restore it,
+      // otherwise libcurl would enable its built-in progress meter (which
+      // writes to stderr) for the next requests made with this same instance
+      this.handle.setOpt(Curl.option.NOPROGRESS, this.noProgress)
     }
 
     // reset back the READFUNCTION if there was a stream we were reading from
-    if (this.readFunctionStream) {
+    if (this.readFunctionStream && resetHandleOptions && this.handle.isOpen) {
       this.setOpt('READFUNCTION', null)
     }
 
@@ -952,6 +991,8 @@ class Curl extends EventEmitter {
     this.streamReadFunctionPaused = false
     // common
     this.streamPauseNext = false
+    this.streamPendingReadSize = 0
+    this.nextPauseFlags = null
     this.streamContinueNext = false
     this.streamError = false
     this.streamUserSuppliedProgressFunction = null
@@ -986,7 +1027,7 @@ class Curl extends EventEmitter {
       : Buffer.alloc(0)
 
     return isHeaderParsingEnabled
-      ? parseHeaders(decoder.write(headersRaw))
+      ? parseHeaders(headersRaw.toString('utf8'))
       : headersRaw
   }
 
@@ -1061,6 +1102,11 @@ class Curl extends EventEmitter {
         autoDestroy: true,
         highWaterMark: this.streamWriteFunctionHighWaterMark,
         destroy(error, cb) {
+          if (handle.writeFunctionStream !== writeFunctionStream) {
+            cb(error)
+            return
+          }
+
           handle.streamError =
             error ||
             new Error('Curl response stream was unexpectedly destroyed')
@@ -1085,10 +1131,35 @@ class Curl extends EventEmitter {
           cb(null)
         },
         read(size) {
+          if (handle.writeFunctionStream !== writeFunctionStream) return
+
           handle.streamPendingReadSize += size
 
           if (handle.handle.isPausedRecv && handle.isRunning) {
             handle.nextPauseFlags = handle.handle.pauseFlags & ~CurlPause.Recv
+
+            // unpause on the next event loop iteration - this read() call can
+            // be running from inside the WRITEFUNCTION itself (via push), in
+            // which case libcurl is still inside its own stack. Waiting for
+            // the progress callback to consume nextPauseFlags is not enough:
+            // a paused transfer generates no events, so the unpause could be
+            // delayed by up to a second (libcurl's internal progress timer)
+            setImmediate(() => {
+              if (
+                handle.writeFunctionStream === writeFunctionStream &&
+                handle.isRunning &&
+                handle.handle.isPausedRecv &&
+                handle.streamPendingReadSize > 0
+              ) {
+                handle.nextPauseFlags = null
+                try {
+                  handle.pause(handle.handle.pauseFlags & ~CurlPause.Recv)
+                } catch {
+                  // the transfer finished or errored in the meantime - the
+                  // error itself is handled by the usual error paths
+                }
+              }
+            })
           }
         },
       })
@@ -1114,8 +1185,12 @@ class Curl extends EventEmitter {
       )
 
       if (code !== CurlCode.CURLE_OK) {
-        const error = new Error('Could not get status code of request')
-        this.emit('error', error, code, this)
+        // do not emit 'error' directly from here: returning -1 below fails
+        // the transfer, which already emits 'error' through the regular
+        // error path - a direct emit would produce two 'error' events for
+        // the same request (and crash the process when the first handler
+        // removed all listeners, like the curly object pool does)
+        this.streamError = new Error('Could not get status code of request')
         return -1
       }
 
@@ -1130,11 +1205,20 @@ class Curl extends EventEmitter {
     }
 
     // write to the stream
-    if (!this.streamPendingReadSize) {
+    // libcurl chunk sizes rarely align with the read sizes requested by the
+    // stream, so the counter must pause on <= 0, not only on exactly 0 -
+    // otherwise once it crosses below zero backpressure would never be
+    // applied again
+    if (this.streamPendingReadSize <= 0) {
       return CurlWriteFunc.Pause
     }
 
     this.streamPendingReadSize -= chunk.length
+    if (this.streamPendingReadSize < 0) {
+      // the surplus delivered above what was requested is already inside the
+      // stream buffer and accounted for by the stream itself
+      this.streamPendingReadSize = 0
+    }
     this.writeFunctionStream!.push(chunk)
 
     return size * nmemb

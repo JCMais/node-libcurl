@@ -384,72 +384,81 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
   ): Promise<CurlyResult<ResultData>> {
     const curlHandle = getFromPool()
 
-    curlHandle.enable(CurlFeature.NoDataParsing)
-
-    curlHandle.setOpt('URL', `${options.curlyBaseUrl || ''}${url}`)
-
     const finalOptions = {
       ...defaultOptions,
       ...options,
     }
 
-    for (const key of Object.keys(finalOptions)) {
-      const keyTyped = key as keyof CurlyOptions
-
-      const optionName: CurlOptionName =
-        keyTyped in CurlOptionCamelCaseMap
-          ? CurlOptionCamelCaseMap[
-              keyTyped as keyof typeof CurlOptionCamelCaseMap
-            ]
-          : (keyTyped as CurlOptionName)
-
-      // if it begins with curly we do not set it on the curlHandle
-      // as it's an specific option for curly
-      if (optionName.startsWith('curly')) continue
-
-      // @ts-ignore @TODO Try to type this
-      curlHandle.setOpt(optionName, finalOptions[key])
-    }
-
-    // streams!
     const {
       curlyStreamResponse,
       curlyStreamResponseHighWaterMark,
       curlyStreamUpload,
       curlyMimePost,
     } = finalOptions
-    const isUsingStream = !!(curlyStreamResponse || curlyStreamUpload)
 
-    if (finalOptions.curlyProgressCallback) {
-      if (typeof finalOptions.curlyProgressCallback !== 'function') {
-        throw new TypeError(
-          'curlyProgressCallback must be a function with signature (number, number, number, number) => number',
-        )
+    // any error thrown while setting up the handle must reject the returned
+    // promise (not propagate synchronously) and release the acquired handle
+    // back to the pool, otherwise it would leak
+    try {
+      curlHandle.enable(CurlFeature.NoDataParsing)
+
+      curlHandle.setOpt('URL', `${options.curlyBaseUrl || ''}${url}`)
+
+      for (const key of Object.keys(finalOptions)) {
+        const keyTyped = key as keyof CurlyOptions
+
+        const optionName: CurlOptionName =
+          keyTyped in CurlOptionCamelCaseMap
+            ? CurlOptionCamelCaseMap[
+                keyTyped as keyof typeof CurlOptionCamelCaseMap
+              ]
+            : (keyTyped as CurlOptionName)
+
+        // if it begins with curly we do not set it on the curlHandle
+        // as it's an specific option for curly
+        if (optionName.startsWith('curly')) continue
+
+        // @ts-ignore @TODO Try to type this
+        curlHandle.setOpt(optionName, finalOptions[key])
       }
 
-      const fnToCall = isUsingStream
-        ? 'setStreamProgressCallback'
-        : 'setProgressCallback'
+      // streams!
+      const isUsingStream = !!(curlyStreamResponse || curlyStreamUpload)
 
-      curlHandle[fnToCall](finalOptions.curlyProgressCallback)
-    }
+      if (finalOptions.curlyProgressCallback) {
+        if (typeof finalOptions.curlyProgressCallback !== 'function') {
+          throw new TypeError(
+            'curlyProgressCallback must be a function with signature (number, number, number, number) => number',
+          )
+        }
 
-    if (curlyStreamResponse) {
-      curlHandle.enable(CurlFeature.StreamResponse)
+        const fnToCall = isUsingStream
+          ? 'setStreamProgressCallback'
+          : 'setProgressCallback'
 
-      if (curlyStreamResponseHighWaterMark) {
-        curlHandle.setStreamResponseHighWaterMark(
-          curlyStreamResponseHighWaterMark,
-        )
+        curlHandle[fnToCall](finalOptions.curlyProgressCallback)
       }
-    }
 
-    if (curlyStreamUpload) {
-      curlHandle.setUploadStream(curlyStreamUpload)
-    }
+      if (curlyStreamResponse) {
+        curlHandle.enable(CurlFeature.StreamResponse)
 
-    if (curlyMimePost && curlyMimePost.length > 0) {
-      curlHandle.setMimePost(curlyMimePost)
+        if (curlyStreamResponseHighWaterMark) {
+          curlHandle.setStreamResponseHighWaterMark(
+            curlyStreamResponseHighWaterMark,
+          )
+        }
+      }
+
+      if (curlyStreamUpload) {
+        curlHandle.setUploadStream(curlyStreamUpload)
+      }
+
+      if (curlyMimePost && curlyMimePost.length > 0) {
+        curlHandle.setMimePost(curlyMimePost)
+      }
+    } catch (error) {
+      returnToPool(curlHandle)
+      return Promise.reject(error)
     }
 
     const lowerCaseHeadersIfNecessary = (headers: HeaderInfo[]) => {
@@ -512,19 +521,30 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
 
           // remove the metadata of the content-type, like charset
           // See https://tools.ietf.org/html/rfc7231#section-3.1.1.5
-          contentType = contentType.split(';')[0]
+          // media types are case-insensitive (RFC 7231 section 3.1.1.1)
+          contentType = contentType.split(';')[0].trim().toLowerCase()
 
-          const responseBodyParsers = {
-            ...curly.defaultResponseBodyParsers,
-            ...finalOptions.curlyResponseBodyParsers,
-          }
+          // user supplied parsers must be checked before the default ones,
+          // otherwise they would never match anything not already covered by the
+          // defaults, as the default '*' parser matches everything
+          const userResponseBodyParsers =
+            finalOptions.curlyResponseBodyParsers || {}
+          const responseBodyParsers: Array<[string, CurlyResponseBodyParser]> =
+            [
+              ...Object.entries(userResponseBodyParsers),
+              ...Object.entries(curly.defaultResponseBodyParsers).filter(
+                ([contentTypeFormat]) =>
+                  !(contentTypeFormat in userResponseBodyParsers),
+              ),
+            ]
 
           let foundParser = finalOptions.curlyResponseBodyParser
+          let wildcardParser: CurlyResponseBodyParser | undefined = undefined
 
           if (typeof foundParser === 'undefined') {
-            for (const [contentTypeFormat, parser] of Object.entries(
-              responseBodyParsers,
-            )) {
+            for (const [contentTypeFormatRaw, parser] of responseBodyParsers) {
+              const contentTypeFormat = contentTypeFormatRaw.toLowerCase()
+
               if (typeof parser !== 'function') {
                 return reject(
                   new TypeError(
@@ -536,8 +556,10 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
                 foundParser = parser
                 break
               } else if (contentTypeFormat === '*') {
-                foundParser = parser
-                break
+                // '*' matches everything - only use it if nothing more specific matches
+                if (!wildcardParser) {
+                  wildcardParser = parser
+                }
               } else {
                 const partsFormat = contentTypeFormat.split('/')
                 const partsContentType = contentType.split('/')
@@ -553,6 +575,10 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
                   break
                 }
               }
+            }
+
+            if (typeof foundParser === 'undefined') {
+              foundParser = wildcardParser
             }
           }
 
@@ -590,6 +616,13 @@ const create = (defaultOptions: CurlyOptions = {}): CurlyFunction => {
         // has been resolved with it
         // so instead of rejecting the original promise
         // we are emitting the error event on the stream
+        //
+        // note: emit (not stream.destroy(error)) is intentional - the
+        // response stream has a custom _destroy that swallows the passed
+        // error (it is resurfaced through this very code path), so
+        // destroy(error) here would silently drop it. Per Node.js stream
+        // conventions, consumers must attach an 'error' listener (async
+        // iterators and pipeline() do this automatically).
         if (stream) {
           stream.emit('error', errorToUse)
         } else {
