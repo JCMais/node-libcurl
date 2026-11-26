@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Breaking Change
 
 ### Fixed
+
+### Added
+
+### Changed
+
+## [5.2.0] - 2026-11-25
+
+### Fixed
+- Release the Multi wrapper after `Multi#close()` so it can be collected. ([#457](https://github.com/JCMais/node-libcurl/pull/457), fixes [#453](https://github.com/JCMais/node-libcurl/issues/453))
+- HTTP/2 push header accessors throw after the push callback returns. ([#460](https://github.com/JCMais/node-libcurl/pull/460), fixes [#452](https://github.com/JCMais/node-libcurl/issues/452))
 - `Multi#perform()` now rejects if its transfer is removed or its Multi is closed. Multi keeps attached Easy handles alive, detaches them during shutdown, and releases their socket watchers. Transfers added without `onMessage` can complete safely, and Multi stops polling sockets when libcurl requests no events. ([#464](https://github.com/JCMais/node-libcurl/pull/464))
 - `Curl#close()` now cancels active transfers on their owning Multi, including transfers using `setMulti()`. Closing from a transfer callback defers cleanup until libcurl returns. ([#464](https://github.com/JCMais/node-libcurl/pull/464))
 - Restored HTTP/2 server push callbacks on libcurl 8.4 and later. Accepted pushes are tracked by the Multi, and denied pushes close the offered Easy handle. ([#464](https://github.com/JCMais/node-libcurl/pull/464))
@@ -33,6 +43,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added `CurlAltSvc` and the enum members `CurlFileType.Unknown`, `CurlMultiNetworkChanged.ClearAll`, `CurlSshKeyType.Rsa1`, `CurlSshKeyMatch.Missing`, `CurlVersion.Hsts`, and `CurlVersion.ThreadSafe`. ([#461](https://github.com/JCMais/node-libcurl/pull/461))
 
 ### Changed
+- The security policy supports v5 and describes when a fix may be offered for the previous major version. ([#459](https://github.com/JCMais/node-libcurl/pull/459))
 
 ## [5.1.2] - 2026-06-08
 
@@ -567,7 +578,8 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v5.1.2...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v5.2.0...HEAD
+[5.2.0]: https://github.com/JCMais/node-libcurl/compare/v5.1.2...v5.2.0
 [5.1.2]: https://github.com/JCMais/node-libcurl/compare/v5.1.1...v5.1.2
 [5.1.1]: https://github.com/JCMais/node-libcurl/compare/v5.1.0...v5.1.1
 [5.1.0]: https://github.com/JCMais/node-libcurl/compare/v5.0.2...v5.1.0
