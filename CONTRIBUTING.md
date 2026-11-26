@@ -1,5 +1,6 @@
 # Contributing<!-- omit in toc -->
 
+- [AI usage policy](#ai-usage-policy)
 - [Contributing with Issues](#contributing-with-issues)
 - [Contributing with Code](#contributing-with-code)
   - [C/C++](#cc)
@@ -18,6 +19,14 @@
     - [Semver Major / Minor / Patch](#semver-major--minor--patch)
     - [Prereleases](#prereleases)
     - [Build Matrix](#build-matrix)
+
+## AI usage policy
+
+AI tools are welcome in node-libcurl. Disclosure is optional. You should assume AI was involved in all recent contributions, including work by maintainers.
+
+You’re responsible for everything you submit. For a pull request, understand the changes, run the relevant checks, and be ready to explain your decisions during review. For a bug report, verify the finding yourself and describe what you observed. Keep submissions focused so maintainers can review them efficiently.
+
+We close low-effort submissions that shift basic verification to maintainers. This includes unverified claims, changes the contributor can’t explain, and generated reports that bury the issue. The same standards apply to everyone, including maintainers.
 
 ## Contributing with Issues
 
